@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Nearby Places – ZeroWait</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="navbar">
+    <div class="logo">ZeroWait</div>
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="how-it-works.html">How It Works</a>
+        <a href="login.html" class="btn">Login</a>
+    </nav>
+</header>
+
+<section class="booking-panel">
+    <h2 id="pageTitle">Nearby Places</h2>
+    <p style="text-align:center; color:#555; margin-bottom:30px;">
+        Sorted by estimated waiting time
+    </p>
+
+    <div id="results"></div>
+</section>
+
+<footer>
+    <p>© 2025 ZeroWait. All rights reserved.</p>
+</footer>
+
+<script>
+/* ================================
+   Nearby Page Logic (Client Only)
+================================ */
+
+// Read stored data
+const serviceType = localStorage.getItem("serviceType") || "salon";
+
+// Service labels (generic)
+const serviceLabels = {
+    salon: "Salons",
+    restaurant: "Restaurants",
+    clinic: "Clinics",
+    entertainment: "Places"
+};
+
+// Update page title
+document.getElementById("pageTitle").innerText =
+    `Nearby ${serviceLabels[serviceType]}`;
+
+// Mock nearby places (MVP demo data)
+const places = [
+    { name: "Urban Style", distance: "0.8 km", wait: 12 },
+    { name: "City Care Center", distance: "1.5 km", wait: 25 },
+    { name: "Downtown Hub", distance: "2.1 km", wait: 45 },
+    { name: "QuickServe Point", distance: "3.4 km", wait: 70 }
+];
+
+// Sort by waiting time
+places.sort((a, b) => a.wait - b.wait);
+
+// Render results
+const resultsDiv = document.getElementById("results");
+
+places.forEach(place => {
+    const item = document.createElement("div");
+    item.className = "booking-item";
+
+    // Crowd indicator
+    let crowd = "🟢 Low";
+    if (place.wait > 30) crowd = "🟡 Medium";
+    if (place.wait > 60) crowd = "🔴 High";
+
+    item.innerHTML = `
+        <div>
+            <strong>${place.name}</strong>
+            <p>
+                📍 ${place.distance} • 
+                ⏱️ ~${place.wait} mins wait • 
+                ${crowd} crowd
+            </p>
+        </div>
+        <button class="btn primary">Join Queue</button>
+    `;
+
+    resultsDiv.appendChild(item);
+});
+
+// Queue button action
+document.querySelectorAll(".primary").forEach(btn => {
+    btn.addEventListener("click", () => {
+        alert("You’ve joined the queue! Live updates coming soon.");
+    });
+});
+</script>
+
+</body>
+</html>
