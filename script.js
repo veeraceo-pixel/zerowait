@@ -1,9 +1,13 @@
 /* ================================
-   ZeroWait – Core Client Logic
-   Generic & Scalable
+   ZeroWait – Client Logic
 ================================ */
 
-/* ---------- Location Handling ---------- */
+/* ---------- Elements ---------- */
+const modal = document.getElementById("serviceModal");
+const openModalBtn = document.getElementById("openServiceModal");
+const closeModalBtn = document.querySelector(".close-modal");
+
+/* ---------- Location ---------- */
 function getUserLocation(callback) {
     if (!navigator.geolocation) {
         alert("Geolocation is not supported by your browser.");
@@ -16,56 +20,34 @@ function getUserLocation(callback) {
                 lat: position.coords.latitude,
                 lng: position.coords.longitude
             };
-
             localStorage.setItem("userLocation", JSON.stringify(location));
-            callback(location);
+            callback();
         },
         () => {
-            alert("Please allow location access to find nearby places.");
+            alert("Please allow location access to continue.");
         }
     );
 }
 
-/* ---------- Hero Buttons ---------- */
-const findNearbyBtn = document.getElementById("findNearbyBtn");
-const checkWaitBtn = document.getElementById("checkWaitBtn");
+/* ---------- Modal Open / Close ---------- */
+openModalBtn.addEventListener("click", () => {
+    modal.style.display = "flex";
+});
 
-if (findNearbyBtn) {
-    findNearbyBtn.addEventListener("click", () => {
-        // Default service (salon) unless user selects another
-        localStorage.setItem("serviceType", "salon");
+closeModalBtn.addEventListener("click", () => {
+    modal.style.display = "none";
+});
 
-        getUserLocation(() => {
-            window.location.href = "nearby.html";
-        });
-    });
-}
-
-if (checkWaitBtn) {
-    checkWaitBtn.addEventListener("click", () => {
-        localStorage.setItem("serviceType", "salon");
-
-        getUserLocation(() => {
-            window.location.href = "nearby.html";
-        });
-    });
-}
-
-/* ---------- Category Selection ---------- */
+/* ---------- Service Selection ---------- */
 document.querySelectorAll(".category-card").forEach(card => {
     card.addEventListener("click", () => {
         const serviceType = card.dataset.service;
         localStorage.setItem("serviceType", serviceType);
 
+        modal.style.display = "none";
+
         getUserLocation(() => {
             window.location.href = "nearby.html";
         });
-    });
-});
-
-/* ---------- Booking / Queue Buttons ---------- */
-document.querySelectorAll(".primary").forEach(button => {
-    button.addEventListener("click", () => {
-        alert("Queue-based booking will be available soon!");
     });
 });
