@@ -1,99 +1,109 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Nearby Places – ZeroWait</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<title>Nearby Services – ZeroWait</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="style.css">
+
+<style>
+.page {
+    display: flex;
+    height: calc(100vh - 70px);
+}
+#map {
+    flex: 1;
+}
+#list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    background: #f9f9f9;
+}
+.place-card {
+    background: white;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+.place-card:hover {
+    border-left: 4px solid #ff5a5f;
+}
+</style>
 </head>
+
 <body>
 
 <header class="navbar">
     <div class="logo">ZeroWait</div>
-    <nav>
-        <a href="index.html">Home</a>
-        <a href="how-it-works.html">How It Works</a>
-        <a href="login.html" class="btn">Login</a>
-    </nav>
 </header>
 
-<section class="booking-panel">
-    <h2 id="pageTitle">Nearby Places</h2>
-    <p style="text-align:center; color:#555; margin-bottom:30px;">
-        Sorted by estimated waiting time
-    </p>
-
-    <div id="results"></div>
-</section>
-
-<footer>
-    <p>© 2025 ZeroWait. All rights reserved.</p>
-</footer>
+<div class="page">
+    <div id="map"></div>
+    <div id="list"></div>
+</div>
 
 <script>
-/* ================================
-   Nearby Page Logic (Client Only)
-================================ */
-
-// Read stored data
 const serviceType = localStorage.getItem("serviceType") || "salon";
+const location = JSON.parse(localStorage.getItem("userLocation"));
 
-// Service labels (generic)
-const serviceLabels = {
-    salon: "Salons",
-    restaurant: "Restaurants",
-    clinic: "Clinics",
-    entertainment: "Places"
-};
+let map;
+let service;
+let markers = [];
 
-// Update page title
-document.getElementById("pageTitle").innerText =
-    `Nearby ${serviceLabels[serviceType]}`;
-
-// Mock nearby places (MVP demo data)
-const places = [
-    { name: "Urban Style", distance: "0.8 km", wait: 12 },
-    { name: "City Care Center", distance: "1.5 km", wait: 25 },
-    { name: "Downtown Hub", distance: "2.1 km", wait: 45 },
-    { name: "QuickServe Point", distance: "3.4 km", wait: 70 }
-];
-
-// Sort by waiting time
-places.sort((a, b) => a.wait - b.wait);
-
-// Render results
-const resultsDiv = document.getElementById("results");
-
-places.forEach(place => {
-    const item = document.createElement("div");
-    item.className = "booking-item";
-
-    // Crowd indicator
-    let crowd = "🟢 Low";
-    if (place.wait > 30) crowd = "🟡 Medium";
-    if (place.wait > 60) crowd = "🔴 High";
-
-    item.innerHTML = `
-        <div>
-            <strong>${place.name}</strong>
-            <p>
-                📍 ${place.distance} • 
-                ⏱️ ~${place.wait} mins wait • 
-                ${crowd} crowd
-            </p>
-        </div>
-        <button class="btn primary">Join Queue</button>
-    `;
-
-    resultsDiv.appendChild(item);
-});
-
-// Queue button action
-document.querySelectorAll(".primary").forEach(btn => {
-    btn.addEventListener("click", () => {
-        alert("You’ve joined the queue! Live updates coming soon.");
+function initMap() {
+    map = new google.maps.Map(document.getElementById("map"), {
+        center: location,
+        zoom: 14
     });
-});
+
+    service = new google.maps.places.PlacesService(map);
+
+    service.nearbySearch(
+        {
+            location,
+            radius: 3000,
+            type: serviceType === "salon" ? "beauty_salon" : serviceType
+        },
+        renderResults
+    );
+}
+
+function renderResults(results, status) {
+    if (status !== google.maps.places.PlacesServiceStatus.OK) return;
+
+    const list = document.getElementById("list");
+    list.innerHTML = "";
+
+    results.forEach(place => {
+        const marker = new google.maps.Marker({
+            map,
+            position: place.geometry.location,
+            title: place.name
+        });
+
+        markers.push(marker);
+
+        const card = document.createElement("div");
+        card.className = "place-card";
+        card.innerHTML = `
+            <h3>${place.name}</h3>
+            <p>📍 ${place.vicinity || "Nearby"}</p>
+        `;
+
+        card.onclick = () => {
+            map.panTo(place.geometry.location);
+            map.setZoom(16);
+        };
+
+        list.appendChild(card);
+    });
+}
+</script>
+
+<script async
+src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPF8ukBKw8yPpWnuT8b_pAZAqFn63wq_E&libraries=places&callback=initMap">
 </script>
 
 </body>
