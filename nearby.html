@@ -28,7 +28,7 @@
     cursor: pointer;
 }
 .place-card:hover {
-    border-left: 4px solid #ff5a5f;
+    border-left: 4px solid #1a73e8;
 }
 </style>
 </head>
@@ -48,14 +48,38 @@
 const serviceType = localStorage.getItem("serviceType") || "salon";
 const location = JSON.parse(localStorage.getItem("userLocation"));
 
+if (!location) {
+    alert("Location not found. Please go back and allow location access.");
+    window.location.href = "index.html";
+}
+
+const serviceMap = {
+    salon: "beauty_salon",
+    restaurant: "restaurant",
+    clinic: "doctor"
+};
+
 let map;
 let service;
-let markers = [];
 
 function initMap() {
     map = new google.maps.Map(document.getElementById("map"), {
         center: location,
         zoom: 14
+    });
+
+    // User marker
+    new google.maps.Marker({
+        position: location,
+        map,
+        title: "You are here",
+        icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 8,
+            fillColor: "#1a73e8",
+            fillOpacity: 1,
+            strokeWeight: 2
+        }
     });
 
     service = new google.maps.places.PlacesService(map);
@@ -64,14 +88,17 @@ function initMap() {
         {
             location,
             radius: 3000,
-            type: serviceType === "salon" ? "beauty_salon" : serviceType
+            type: serviceMap[serviceType]
         },
         renderResults
     );
 }
 
 function renderResults(results, status) {
-    if (status !== google.maps.places.PlacesServiceStatus.OK) return;
+    if (status !== google.maps.places.PlacesServiceStatus.OK) {
+        alert("No nearby services found.");
+        return;
+    }
 
     const list = document.getElementById("list");
     list.innerHTML = "";
@@ -83,13 +110,14 @@ function renderResults(results, status) {
             title: place.name
         });
 
-        markers.push(marker);
-
         const card = document.createElement("div");
         card.className = "place-card";
         card.innerHTML = `
             <h3>${place.name}</h3>
-            <p>📍 ${place.vicinity || "Nearby"}</p>
+            <p>
+              ⭐ ${place.rating || "N/A"}<br>
+              📍 ${place.vicinity || "Nearby"}
+            </p>
         `;
 
         card.onclick = () => {
@@ -103,7 +131,7 @@ function renderResults(results, status) {
 </script>
 
 <script async
-src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPF8ukBKw8yPpWnuT8b_pAZAqFn63wq_E&libraries=places&callback=initMap">
+src="https://maps.googleapis.com/maps/api/js?key=YOUR_NEW_API_KEY&libraries=places&callback=initMap">
 </script>
 
 </body>
