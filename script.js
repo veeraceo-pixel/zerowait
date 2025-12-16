@@ -6,11 +6,13 @@
 const modal = document.getElementById("serviceModal");
 const openModalBtn = document.getElementById("openServiceModal");
 const closeModalBtn = document.querySelector(".close-modal");
+const categoryCards = document.querySelectorAll(".category-card");
 
 /* ---------- Location ---------- */
 function getUserLocation(callback) {
     if (!navigator.geolocation) {
         alert("Geolocation is not supported by your browser.");
+        callback();
         return;
     }
 
@@ -24,27 +26,28 @@ function getUserLocation(callback) {
             callback();
         },
         () => {
-            alert("Please allow location access to continue.");
+            alert("Location access denied. Showing nearby results.");
+            callback();
         }
     );
 }
 
-/* ---------- Modal Open / Close ---------- */
+/* ---------- Modal Controls ---------- */
 openModalBtn.addEventListener("click", () => {
-    modal.style.display = "flex";
+    modal.classList.add("active");
 });
 
 closeModalBtn.addEventListener("click", () => {
-    modal.style.display = "none";
+    modal.classList.remove("active");
 });
 
 /* ---------- Service Selection ---------- */
-document.querySelectorAll(".category-card").forEach(card => {
+categoryCards.forEach(card => {
     card.addEventListener("click", () => {
         const serviceType = card.dataset.service;
-        localStorage.setItem("serviceType", serviceType);
 
-        modal.style.display = "none";
+        localStorage.setItem("serviceType", serviceType);
+        modal.classList.remove("active");
 
         getUserLocation(() => {
             window.location.href = "nearby.html";
