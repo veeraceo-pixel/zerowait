@@ -18,71 +18,52 @@
     </nav>
 </header>
 
-<!-- HERO SECTION -->
+<!-- HERO -->
 <section class="hero">
     <div class="hero-text">
         <h1>Never Wait Again — Book Instantly</h1>
         <p>
-            Find nearby places with real-time waiting times and join the queue in seconds.
+            Find nearby services with real-time waiting times and join the queue in seconds.
         </p>
 
         <div class="hero-buttons">
-            <button class="btn primary" id="findNearbyBtn">
-                📍 Find Places Near Me
-            </button>
-            <button class="btn outline" id="checkWaitBtn">
-                ⏱️ Check Live Waiting Time
+            <button class="btn primary" id="openServiceModal">
+                📍 Find Services Near Me
             </button>
         </div>
 
         <div class="steps">
-            <div class="step">Detect Location</div>
+            <div class="step">Choose Service</div>
             <div class="step">Compare Waiting Time</div>
-            <div class="step">Join Queue Instantly</div>
+            <div class="step">Join Queue</div>
         </div>
     </div>
 </section>
 
-<!-- CATEGORIES -->
-<section class="services">
-    <h2>What are you looking for?</h2>
-    <div class="service-grid">
-        <div class="card category-card" data-service="salon">💇 Salon</div>
-        <div class="card category-card" data-service="restaurant">🍽 Restaurant</div>
-        <div class="card category-card" data-service="clinic">🏥 Clinic</div>
-        <div class="card category-card" data-service="entertainment">🎭 Entertainment</div>
+<!-- SERVICE SELECTION MODAL -->
+<div id="serviceModal" class="modal-overlay">
+    <div class="modal">
+        <h2>What are you looking for?</h2>
+        <p>Select a service to continue</p>
+
+        <div class="service-grid">
+            <div class="card category-card" data-service="salon">💇 Salon</div>
+            <div class="card category-card" data-service="restaurant">🍽 Restaurant</div>
+            <div class="card category-card" data-service="clinic">🏥 Clinic</div>
+        </div>
+
+        <button class="btn outline close-modal">Cancel</button>
     </div>
-</section>
+</div>
 
 <!-- FEATURES -->
 <section class="features">
     <h2>Why ZeroWait?</h2>
     <div class="feature-grid">
         <div class="feature">⏱ Real-time waiting time</div>
-        <div class="feature">⚡ Join queues instantly</div>
-        <div class="feature">🔔 Smart turn notifications</div>
-        <div class="feature">📍 Location-based discovery</div>
-    </div>
-</section>
-
-<!-- SAMPLE LIVE RESULTS (GENERIC) -->
-<section class="booking-panel">
-    <h2>Available Nearby</h2>
-
-    <div class="booking-item">
-        <div>
-            <strong>Urban Style</strong>
-            <p>0.8 km • ⏱️ ~12 mins wait</p>
-        </div>
-        <button class="btn primary">Join Queue</button>
-    </div>
-
-    <div class="booking-item">
-        <div>
-            <strong>City Care Center</strong>
-            <p>1.5 km • ⏱️ ~25 mins wait</p>
-        </div>
-        <button class="btn primary">Join Queue</button>
+        <div class="feature">⚡ Queue-based booking</div>
+        <div class="feature">🔔 Smart notifications</div>
+        <div class="feature">📍 Nearby discovery</div>
     </div>
 </section>
 
@@ -93,4 +74,3 @@
 <script src="script.js"></script>
 </body>
 </html>
-
