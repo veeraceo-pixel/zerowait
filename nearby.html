@@ -12,27 +12,30 @@ body {
   background: #f5f7fb;
 }
 
-.header {
+header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  padding: 15px 20px;
+  padding: 15px 40px;
   background: white;
   border-bottom: 1px solid #ddd;
 }
 
-.home-btn {
-  background: #2563eb;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-  margin-right: 15px;
+.logo {
+  font-size: 22px;
+  font-weight: bold;
+  color: #2563eb;
+}
+
+nav a {
+  margin-left: 25px;
+  text-decoration: none;
+  color: #333;
 }
 
 .container {
   display: flex;
-  height: calc(100vh - 60px);
+  height: calc(100vh - 70px);
 }
 
 #map {
@@ -52,23 +55,38 @@ body {
   margin-bottom: 15px;
 }
 
-.center {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-  font-size: 20px;
-  color: #666;
+.badge {
+  display: inline-block;
+  background: #e5edff;
+  color: #2563eb;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 13px;
+  margin-top: 5px;
+}
+
+.btn {
+  margin-top: 10px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">
-  <button class="home-btn" onclick="goHome()">Home</button>
-  <h2 id="title">Nearby Services</h2>
-</div>
+<header>
+  <div class="logo">ZeroWait</div>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="#">About Us</a>
+    <a href="#">How It Works</a>
+    <a href="#">Login</a>
+  </nav>
+</header>
 
 <div class="container">
   <div id="map"></div>
@@ -76,29 +94,35 @@ body {
 </div>
 
 <script>
-function goHome() {
-  window.location.href = "index.html";
-}
-
 const type = new URLSearchParams(window.location.search).get("type");
 const list = document.getElementById("list");
-const title = document.getElementById("title");
 
 if (!type) {
-  list.innerHTML = "<div class='center'>No service selected</div>";
-  document.getElementById("map").style.display = "none";
+  list.innerHTML = "No service selected";
 }
-else if (type === "clinic") {
-  title.innerText = "Clinics – Coming Soon";
-  list.innerHTML = "<div class='center'>Clinics feature coming soon 🚧</div>";
-  document.getElementById("map").style.display = "none";
-}
-else {
-  title.innerText = type === "salon" ? "Nearby Salons" : "Nearby Restaurants";
 
+if (type === "clinic") {
+  list.innerHTML = "<h3>Clinics coming soon 🚧</h3>";
+  document.getElementById("map").style.display = "none";
+}
+
+if (type === "salon" || type === "restaurant") {
   list.innerHTML = `
-    <div class="card"><strong>${type === "salon" ? "Vintage Nail & Beauty" : "Urban Eats"}</strong><br>⏱ 23 min</div>
-    <div class="card"><strong>${type === "salon" ? "Roop Beauty Salon" : "Spice Kitchen"}</strong><br>⏱ 18 min</div>
+    <div class="card">
+      <strong>Vintage Nail & Beauty</strong><br>
+      📍 2.1 km away<br>
+      ⏱ 23 min wait
+      <div class="badge">Medium</div><br>
+      <button class="btn">Join Queue</button>
+    </div>
+
+    <div class="card">
+      <strong>Roop Beauty Salon</strong><br>
+      📍 1.4 km away<br>
+      ⏱ 19 min wait
+      <div class="badge">Low</div><br>
+      <button class="btn">Join Queue</button>
+    </div>
   `;
 }
 </script>
@@ -113,7 +137,7 @@ function initMap() {
 
   new google.maps.Map(document.getElementById("map"), {
     center: { lat: 53.4808, lng: -2.2426 },
-    zoom: 13
+    zoom: 12
   });
 }
 </script>
