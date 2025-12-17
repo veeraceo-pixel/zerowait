@@ -1,37 +1,80 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
 <title>Nearby Services – ZeroWait</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 <style>
-body { margin:0; font-family: Arial, sans-serif; }
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f5f7fb;
+}
+
 header {
-  height:70px;
-  background:#fff;
-  display:flex;
-  align-items:center;
-  gap:15px;
-  padding:0 20px;
-  box-shadow:0 1px 6px rgba(0,0,0,0.1);
+  background: #fff;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
 }
-header button {
-  padding:8px 14px;
-  border:none;
-  border-radius:6px;
-  cursor:pointer;
-  background:#2563eb;
-  color:white;
+
+header h2 {
+  margin: 0;
+  color: #2563eb;
 }
-.page { display:flex; height:calc(100vh - 70px); }
-#map { flex:1; }
-#list { flex:1; padding:15px; overflow:auto; background:#f5f7fb; }
+
+.home-btn {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.page {
+  display: flex;
+  height: calc(100vh - 60px);
+}
+
+#map {
+  flex: 1;
+}
+
+#list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
 .card {
-  background:white;
-  padding:15px;
-  border-radius:10px;
-  margin-bottom:15px;
+  background: #fff;
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.wait {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  background: #fde68a;
+}
+
+.join {
+  margin-top: 10px;
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
 }
 </style>
 </head>
@@ -39,8 +82,8 @@ header button {
 <body>
 
 <header>
-  <button onclick="location.href='index.html'">← Home</button>
-  <strong>ZeroWait</strong>
+  <button class="home-btn" onclick="goHome()">Home</button>
+  <h2>ZeroWait</h2>
 </header>
 
 <div class="page">
@@ -49,58 +92,96 @@ header button {
 </div>
 
 <script>
+let map;
+let service;
+
+function goHome() {
+  window.location.href = "index.html";
+}
+
+// Get service type safely from URL
 const params = new URLSearchParams(window.location.search);
-const serviceType = params.get("service") || "salon";
+const serviceType = params.get("type");
 
-const fallback = { lat: 12.9716, lng: 77.5946 };
+if (!serviceType) {
+  alert("Service type missing. Redirecting home.");
+  goHome();
+}
 
-navigator.geolocation.getCurrentPosition(
-  pos => startMap({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-  () => startMap(fallback)
-);
+// Convert to Google Places types
+function getPlaceType(type) {
+  if (type === "salon") return "beauty_salon";
+  if (type === "restaurant") return "restaurant";
+  return null;
+}
 
-function startMap(location) {
-  const map = new google.maps.Map(document.getElementById("map"), {
+// Generate fake wait time (demo purpose)
+function getWaitTime() {
+  const min = Math.floor(Math.random() * 30) + 10;
+  return `${min} min`;
+}
+
+// Initialize map ONLY after location is ready
+function initMapWithLocation(position) {
+  const location = {
+    lat: position.coords.latitude,
+    lng: position.coords.longitude
+  };
+
+  map = new google.maps.Map(document.getElementById("map"), {
     center: location,
     zoom: 14
   });
 
-  const service = new google.maps.places.PlacesService(map);
+  service = new google.maps.places.PlacesService(map);
 
-  const searchTypes = {
-    salon: ["beauty_salon"],
-    restaurant: ["restaurant"],
-    clinic: ["hospital", "doctor", "pharmacy"]
-  };
-
-  searchTypes[serviceType].forEach(type => {
-    service.nearbySearch(
-      { location, radius: 3000, type },
-      render
-    );
-  });
-
-  function render(results, status) {
-    if (status !== "OK") return;
-    const list = document.getElementById("list");
-
-    results.forEach(p => {
-      new google.maps.Marker({ map, position: p.geometry.location });
-      const wait = Math.floor(Math.random()*25)+10;
-      list.innerHTML += `
-        <div class="card">
-          <strong>${p.name}</strong>
-          <p>${p.vicinity || ""}</p>
-          <p>⏱ ${wait} mins (demo)</p>
-        </div>
-      `;
-    });
-  }
+  service.nearbySearch(
+    {
+      location,
+      radius: 3000,
+      type: getPlaceType(serviceType)
+    },
+    renderResults
+  );
 }
+
+function renderResults(results, status) {
+  if (status !== google.maps.places.PlacesServiceStatus.OK) {
+    alert("No places found");
+    return;
+  }
+
+  const list = document.getElementById("list");
+  list.innerHTML = "";
+
+  results.forEach(place => {
+    new google.maps.Marker({
+      map,
+      position: place.geometry.location
+    });
+
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <h3>${place.name}</h3>
+      <p>📍 ${place.vicinity || ""}</p>
+      <span class="wait">⏱ ${getWaitTime()}</span><br/>
+      <button class="join">Join Queue</button>
+    `;
+
+    list.appendChild(card);
+  });
+}
+
+// Request location EVERY TIME (fixes blank page issue)
+navigator.geolocation.getCurrentPosition(
+  initMapWithLocation,
+  () => alert("Location access required to show nearby services")
+);
 </script>
 
 <script async
-  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAG-Qv4aH4xE2VFAMImB_xwG4J8TmehUMQ&libraries=places">
+src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAG-Qv4aH4xE2VFAMImB_xwG4J8TmehUMQ&libraries=places">
 </script>
 
 </body>
