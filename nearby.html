@@ -6,59 +6,31 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-}
-
+body { margin:0; font-family: Arial, sans-serif; }
 header {
-  height: 70px;
-  background: #ffffff;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 20px;
-  box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+  height:70px;
+  background:#fff;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:0 20px;
+  box-shadow:0 1px 6px rgba(0,0,0,0.1);
 }
-
 header button {
-  padding: 8px 14px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
+  padding:8px 14px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
 }
-
-.home {
-  background: #2563eb;
-  color: white;
-}
-
-.back {
-  background: #e5e7eb;
-}
-
-.page {
-  display: flex;
-  height: calc(100vh - 70px);
-}
-
-#map {
-  flex: 1;
-}
-
-#list {
-  flex: 1;
-  overflow-y: auto;
-  padding: 15px;
-  background: #f5f7fb;
-}
-
+.home { background:#2563eb; color:white; }
+.page { display:flex; height:calc(100vh - 70px); }
+#map { flex:1; }
+#list { flex:1; padding:15px; overflow:auto; background:#f5f7fb; }
 .card {
-  background: white;
-  padding: 15px;
-  border-radius: 10px;
-  margin-bottom: 15px;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+  background:white;
+  padding:15px;
+  border-radius:10px;
+  margin-bottom:15px;
 }
 </style>
 </head>
@@ -67,7 +39,6 @@ header button {
 
 <header>
   <button class="home" onclick="location.href='index.html'">Home</button>
-  <button class="back" onclick="history.back()">Back</button>
   <strong>ZeroWait</strong>
 </header>
 
@@ -77,74 +48,54 @@ header button {
 </div>
 
 <script>
-let map;
-let service;
+const params = new URLSearchParams(window.location.search);
+const serviceType = params.get("service") || "salon";
 
-// SAFE fallback location (Bangalore)
-const fallbackLocation = { lat: 12.9716, lng: 77.5946 };
+const fallback = { lat: 12.9716, lng: 77.5946 }; // Bangalore
 
-const storedLocation = localStorage.getItem("userLocation");
-const locationData = storedLocation ? JSON.parse(storedLocation) : fallbackLocation;
+navigator.geolocation.getCurrentPosition(
+  pos => startMap({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+  () => startMap(fallback)
+);
 
-const serviceType = localStorage.getItem("serviceType") || "salon";
-
-function initMap() {
-  map = new google.maps.Map(document.getElementById("map"), {
-    center: locationData,
+function startMap(location) {
+  const map = new google.maps.Map(document.getElementById("map"), {
+    center: location,
     zoom: 14
   });
 
-  service = new google.maps.places.PlacesService(map);
+  const service = new google.maps.places.PlacesService(map);
 
-  const typeMap = {
+  const types = {
     salon: "beauty_salon",
     restaurant: "restaurant",
     clinic: "doctor"
   };
 
   service.nearbySearch(
-    {
-      location: locationData,
-      radius: 3000,
-      type: typeMap[serviceType]
-    },
-    showResults
+    { location, radius: 3000, type: types[serviceType] },
+    (results, status) => {
+      if (status !== "OK") return;
+
+      const list = document.getElementById("list");
+      results.forEach(p => {
+        new google.maps.Marker({ map, position: p.geometry.location });
+        const wait = Math.floor(Math.random()*30)+10;
+        list.innerHTML += `
+          <div class="card">
+            <strong>${p.name}</strong>
+            <p>${p.vicinity || ""}</p>
+            <p>⏱ ${wait} mins (demo)</p>
+          </div>
+        `;
+      });
+    }
   );
-}
-
-function showResults(results, status) {
-  if (status !== google.maps.places.PlacesServiceStatus.OK) {
-    alert("Places API error: " + status);
-    return;
-  }
-
-  const list = document.getElementById("list");
-  list.innerHTML = "";
-
-  results.forEach(place => {
-    new google.maps.Marker({
-      map,
-      position: place.geometry.location,
-      title: place.name
-    });
-
-    const wait = Math.floor(Math.random() * 30) + 10;
-
-    const div = document.createElement("div");
-    div.className = "card";
-    div.innerHTML = `
-      <strong>${place.name}</strong>
-      <p>${place.vicinity || "Nearby"}</p>
-      <p>⏱ Estimated wait: ${wait} mins (demo)</p>
-    `;
-
-    list.appendChild(div);
-  });
 }
 </script>
 
 <script async
-  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAG-Qv4aH4xE2VFAMImB_xwG4J8TmehUMQ&libraries=places&callback=initMap">
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAG-Qv4aH4xE2VFAMImB_xwG4J8TmehUMQ&libraries=places">
 </script>
 
 </body>
