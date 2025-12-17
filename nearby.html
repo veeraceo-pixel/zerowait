@@ -1,137 +1,173 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
 <title>Nearby Services – ZeroWait</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<link rel="stylesheet" href="style.css" />
 
 <style>
+/* Layout */
 .page {
     display: flex;
     height: calc(100vh - 70px);
 }
+
+/* Map */
 #map {
     flex: 1;
 }
+
+/* List */
 #list {
     flex: 1;
     overflow-y: auto;
     padding: 20px;
     background: #f9f9f9;
 }
+
 .place-card {
-    background: white;
+    background: #ffffff;
     padding: 15px;
     margin-bottom: 15px;
     border-radius: 10px;
     cursor: pointer;
+    transition: all 0.2s ease;
 }
+
 .place-card:hover {
-    border-left: 4px solid #1a73e8;
+    border-left: 4px solid #ff5a5f;
+    background: #fff7f7;
+}
+
+.place-card h3 {
+    margin: 0 0 6px;
+    font-size: 18px;
+}
+
+.place-card p {
+    margin: 0;
+    color: #555;
+    font-size: 14px;
 }
 </style>
 </head>
 
 <body>
 
+<!-- Header -->
 <header class="navbar">
     <div class="logo">ZeroWait</div>
 </header>
 
+<!-- Page -->
 <div class="page">
     <div id="map"></div>
-    <div id="list"></div>
+    <div id="list">
+        <p>Finding nearby services…</p>
+    </div>
 </div>
 
+<!-- SCRIPT -->
 <script>
-const serviceType = localStorage.getItem("serviceType") || "salon";
-const location = JSON.parse(localStorage.getItem("userLocation"));
+/* ================================
+   ZeroWait – Nearby Page Logic
+================================ */
 
-if (!location) {
-    alert("Location not found. Please go back and allow location access.");
-    window.location.href = "index.html";
+// Get selected service and user location
+const serviceType = localStorage.getItem("serviceType") || "salon";
+const userLocation = JSON.parse(localStorage.getItem("userLocation"));
+
+if (!userLocation) {
+    alert("Location not found. Please allow location access.");
 }
 
-const serviceMap = {
-    salon: "beauty_salon",
-    restaurant: "restaurant",
-    clinic: "doctor"
-};
-
+// Globals
 let map;
-let service;
+let placesService;
+let markers = [];
 
+/* ---------- Init Map ---------- */
 function initMap() {
     map = new google.maps.Map(document.getElementById("map"), {
-        center: location,
+        center: userLocation,
         zoom: 14
     });
 
-    // User marker
-    new google.maps.Marker({
-        position: location,
-        map,
-        title: "You are here",
-        icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 8,
-            fillColor: "#1a73e8",
-            fillOpacity: 1,
-            strokeWeight: 2
-        }
-    });
+    placesService = new google.maps.places.PlacesService(map);
 
-    service = new google.maps.places.PlacesService(map);
-
-    service.nearbySearch(
-        {
-            location,
-            radius: 3000,
-            type: serviceMap[serviceType]
-        },
-        renderResults
-    );
+    searchNearby();
 }
 
-function renderResults(results, status) {
-    if (status !== google.maps.places.PlacesServiceStatus.OK) {
-        alert("No nearby services found.");
-        return;
-    }
+/* ---------- Search Places ---------- */
+function searchNearby() {
+    const request = {
+        location: userLocation,
+        radius: 3000,
+        type: getGooglePlaceType(serviceType)
+    };
 
+    placesService.nearbySearch(request, renderResults);
+}
+
+/* ---------- Render Results ---------- */
+function renderResults(results, status) {
     const list = document.getElementById("list");
     list.innerHTML = "";
 
+    if (status !== google.maps.places.PlacesServiceStatus.OK || !results.length) {
+        list.innerHTML = "<p>No services found nearby.</p>";
+        return;
+    }
+
     results.forEach(place => {
+        // Marker
         const marker = new google.maps.Marker({
-            map,
+            map: map,
             position: place.geometry.location,
             title: place.name
         });
 
+        markers.push(marker);
+
+        // Card
         const card = document.createElement("div");
         card.className = "place-card";
         card.innerHTML = `
             <h3>${place.name}</h3>
-            <p>
-              ⭐ ${place.rating || "N/A"}<br>
-              📍 ${place.vicinity || "Nearby"}
-            </p>
+            <p>📍 ${place.vicinity || "Nearby"}</p>
         `;
 
-        card.onclick = () => {
+        card.addEventListener("click", () => {
             map.panTo(place.geometry.location);
             map.setZoom(16);
-        };
+        });
 
         list.appendChild(card);
     });
 }
+
+/* ---------- Service Type Mapping ---------- */
+function getGooglePlaceType(type) {
+    switch (type) {
+        case "salon":
+            return "beauty_salon";
+        case "restaurant":
+            return "restaurant";
+        case "clinic":
+            return "doctor";
+        default:
+            return "establishment";
+    }
+}
 </script>
 
-<script async
-src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAG-Qv4aH4xE2VFAMImB_xwG4J8TmehUMQ&libraries=places&callback=initMap">
+<!-- GOOGLE MAPS -->
+<script
+  async
+  defer
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAG-Qv4aH4xE2VFAMImB_xwG4J8TmehUMQ&libraries=places&callback=initMap">
 </script>
 
 </body>
