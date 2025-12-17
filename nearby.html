@@ -1,25 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
 <title>Nearby Services – ZeroWait</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 <style>
-html, body {
-  height: 100%;
+body {
   margin: 0;
   font-family: Arial, sans-serif;
   background: #f5f7fb;
 }
 
 header {
-  height: 70px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 40px;
-  background: white;
+  padding: 15px 40px;
+  background: #fff;
   border-bottom: 1px solid #ddd;
 }
 
@@ -42,15 +40,16 @@ nav a {
 
 #map {
   flex: 1;
-  height: 100%;
-  min-height: 400px;
 }
 
 .list {
   width: 420px;
   padding: 20px;
   overflow-y: auto;
-  background: #f5f7fb;
+}
+
+h2 {
+  margin-top: 0;
 }
 
 .card {
@@ -95,87 +94,132 @@ nav a {
 
 <div class="container">
   <div id="map"></div>
-  <div class="list" id="list"></div>
+  <div class="list">
+    <h2 id="title">Nearby Services</h2>
+    <div id="results"></div>
+  </div>
 </div>
 
 <script>
 const params = new URLSearchParams(window.location.search);
 const type = params.get("type");
-const list = document.getElementById("list");
 
 if (!type) {
-  list.innerHTML = "<h3>Select a service from Home</h3>";
+  alert("Service type missing. Redirecting to home.");
+  window.location.href = "index.html";
 }
 
-if (type === "clinic") {
-  list.innerHTML = "<h3>Clinics coming soon 🚧</h3>";
-  document.getElementById("map").style.display = "none";
-}
+const serviceMap = {
+  salon: "beauty_salon",
+  restaurant: "restaurant",
+  clinic: "hospital"
+};
 
-if (type === "salon" || type === "restaurant") {
-  list.innerHTML = `
-    <div class="card">
-      <strong>Vintage Nail & Beauty</strong><br>
-      📍 2.1 km away<br>
-      ⏱ 23 min wait
-      <div class="badge">Medium</div><br>
-      <button class="btn" onclick="alert('Queue joined (demo)')">Join Queue</button>
-    </div>
+const titleMap = {
+  salon: "Nearby Salons",
+  restaurant: "Nearby Restaurants",
+  clinic: "Nearby Clinics"
+};
 
-    <div class="card">
-      <strong>Roop Beauty Salon</strong><br>
-      📍 1.4 km away<br>
-      ⏱ 19 min wait
-      <div class="badge">Low</div><br>
-      <button class="btn" onclick="alert('Queue joined (demo)')">Join Queue</button>
-    </div>
-  `;
-}
-</script>
+document.getElementById("title").innerText = titleMap[type];
 
-<script>
+let map, service, userLocation;
+
 function initMap() {
-  if (!type || type === "clinic") return;
-
-  const fallbackLocation = { lat: 53.4808, lng: -2.2426 }; // Manchester
-
-  if (!navigator.geolocation) {
-    loadMap(fallbackLocation);
-    return;
-  }
-
   navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      loadMap({
-        lat: pos.coords.latitude,
-        lng: pos.coords.longitude
+    position => {
+      userLocation = {
+        lat: position.coords.latitude,
+        lng: position.coords.longitude
+      };
+
+      map = new google.maps.Map(document.getElementById("map"), {
+        center: userLocation,
+        zoom: 14
       });
+
+      new google.maps.Marker({
+        position: userLocation,
+        map,
+        icon: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+        title: "You are here"
+      });
+
+      service = new google.maps.places.PlacesService(map);
+      searchPlaces();
     },
     () => {
-      console.warn("Location denied, using Manchester");
-      loadMap(fallbackLocation);
+      alert("Location access denied. Please allow location.");
     }
   );
 }
 
-function loadMap(location) {
-  const map = new google.maps.Map(document.getElementById("map"), {
-    center: location,
-    zoom: 13
-  });
+function searchPlaces() {
+  service.nearbySearch(
+    {
+      location: userLocation,
+      radius: 3000,
+      type: serviceMap[type]
+    },
+    renderResults
+  );
+}
 
-  new google.maps.Marker({
-    position: location,
-    map,
-    title: "You are here"
+function renderResults(results, status) {
+  const container = document.getElementById("results");
+  container.innerHTML = "";
+
+  if (status !== google.maps.places.PlacesServiceStatus.OK || !results.length) {
+    container.innerHTML = "<p>No results found.</p>";
+    return;
+  }
+
+  results.slice(0, 8).forEach(place => {
+    const marker = new google.maps.Marker({
+      map,
+      position: place.geometry.location
+    });
+
+    const distanceKm = getDistance(
+      userLocation.lat,
+      userLocation.lng,
+      place.geometry.location.lat(),
+      place.geometry.location.lng()
+    ).toFixed(1);
+
+    container.innerHTML += `
+      <div class="card">
+        <strong>${place.name}</strong><br>
+        📍 ${distanceKm} km away<br>
+        ⭐ Rating: ${place.rating || "N/A"}<br>
+        <span class="badge">${place.opening_hours?.open_now ? "Open" : "Closed"}</span><br>
+        <button class="btn" onclick="joinQueue('${place.name}')">Join Queue</button>
+      </div>
+    `;
   });
+}
+
+function joinQueue(name) {
+  alert("Joined queue for " + name + " (demo)");
+}
+
+// Distance formula
+function getDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) *
+    Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 }
 </script>
 
 <script
-  src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap"
-  async defer>
-</script>
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAG-Qv4aH4xE2VFAMImB_xwG4J8TmehUMQ&libraries=places&callback=initMap"
+  async defer></script>
 
 </body>
 </html>
