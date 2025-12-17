@@ -142,6 +142,23 @@ function initMap() {
   });
 }
 </script>
+<!-- Join Queue Modal -->
+<div id="queueModal" class="modal-overlay">
+  <div class="modal">
+    <h2>Join Queue</h2>
+
+    <label>Name</label>
+    <input type="text" id="userName" placeholder="Enter your name">
+
+    <label>Phone</label>
+    <input type="tel" id="userPhone" placeholder="Enter phone number">
+
+    <div class="modal-actions">
+      <button onclick="closeQueueModal()" class="btn-secondary">Cancel</button>
+      <button onclick="confirmQueue()" class="btn-primary">Confirm</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
