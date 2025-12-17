@@ -12,6 +12,7 @@ body {
   background: #f5f7fb;
 }
 
+/* HEADER */
 header {
   display: flex;
   justify-content: space-between;
@@ -33,6 +34,7 @@ nav a {
   color: #333;
 }
 
+/* LAYOUT */
 .container {
   display: flex;
   height: calc(100vh - 70px);
@@ -48,6 +50,7 @@ nav a {
   overflow-y: auto;
 }
 
+/* CARDS */
 .card {
   background: white;
   padding: 16px;
@@ -72,6 +75,59 @@ nav a {
   border: none;
   padding: 8px 14px;
   border-radius: 6px;
+  cursor: pointer;
+}
+
+/* MODAL */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: white;
+  padding: 25px;
+  width: 320px;
+  border-radius: 10px;
+}
+
+.modal label {
+  display: block;
+  margin-top: 10px;
+}
+
+.modal input {
+  width: 100%;
+  padding: 8px;
+  margin-top: 4px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.btn-secondary {
+  background: #e5e7eb;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
 }
 </style>
 </head>
@@ -80,13 +136,12 @@ nav a {
 
 <header>
   <div class="logo">ZeroWait</div>
-<nav style="padding:15px 40px; background:#fff; border-bottom:1px solid #ddd;">
-  <a href="index.html">Home</a>
-  <a href="about.html">About Us</a>
-  <a href="how-it-works.html">How It Works</a>
-  <a href="login.html">Login</a>
-</nav>
-
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="about.html">About Us</a>
+    <a href="how-it-works.html">How It Works</a>
+    <a href="login.html">Login</a>
+  </nav>
 </header>
 
 <div class="container">
@@ -94,10 +149,30 @@ nav a {
   <div class="list" id="list"></div>
 </div>
 
+<!-- JOIN QUEUE MODAL -->
+<div id="queueModal" class="modal-overlay">
+  <div class="modal">
+    <h2>Join Queue</h2>
+
+    <label>Name</label>
+    <input type="text" id="userName" placeholder="Enter your name">
+
+    <label>Phone</label>
+    <input type="tel" id="userPhone" placeholder="Enter phone number">
+
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeQueueModal()">Cancel</button>
+      <button class="btn-primary" onclick="confirmQueue()">Confirm</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const type = new URLSearchParams(window.location.search).get("type");
 const list = document.getElementById("list");
+let selectedService = "";
 
+/* RENDER LIST */
 if (!type) {
   list.innerHTML = "No service selected";
 }
@@ -114,7 +189,7 @@ if (type === "salon" || type === "restaurant") {
       📍 2.1 km away<br>
       ⏱ 23 min wait
       <div class="badge">Medium</div><br>
-      <button class="btn">Join Queue</button>
+      <button class="btn" onclick="openQueueModal('Vintage Nail & Beauty')">Join Queue</button>
     </div>
 
     <div class="card">
@@ -122,15 +197,44 @@ if (type === "salon" || type === "restaurant") {
       📍 1.4 km away<br>
       ⏱ 19 min wait
       <div class="badge">Low</div><br>
-      <button class="btn">Join Queue</button>
+      <button class="btn" onclick="openQueueModal('Roop Beauty Salon')">Join Queue</button>
     </div>
   `;
+}
+
+/* MODAL LOGIC */
+function openQueueModal(serviceName) {
+  selectedService = serviceName;
+  document.getElementById("queueModal").style.display = "flex";
+}
+
+function closeQueueModal() {
+  document.getElementById("queueModal").style.display = "none";
+}
+
+function confirmQueue() {
+  const name = document.getElementById("userName").value.trim();
+  const phone = document.getElementById("userPhone").value.trim();
+
+  if (!name || !phone) {
+    alert("Please enter name and phone");
+    return;
+  }
+
+  alert(
+    `✅ Queue Joined!\n\nService: ${selectedService}\nName: ${name}\nPhone: ${phone}`
+  );
+
+  document.getElementById("userName").value = "";
+  document.getElementById("userPhone").value = "";
+  closeQueueModal();
 }
 </script>
 
 <script
   src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAG-Qv4aH4xE2VFAMImB_xwG4J8TmehUMQ&callback=initMap"
-  async defer></script>
+  async defer>
+</script>
 
 <script>
 function initMap() {
@@ -142,23 +246,6 @@ function initMap() {
   });
 }
 </script>
-<!-- Join Queue Modal -->
-<div id="queueModal" class="modal-overlay">
-  <div class="modal">
-    <h2>Join Queue</h2>
-
-    <label>Name</label>
-    <input type="text" id="userName" placeholder="Enter your name">
-
-    <label>Phone</label>
-    <input type="tel" id="userPhone" placeholder="Enter phone number">
-
-    <div class="modal-actions">
-      <button onclick="closeQueueModal()" class="btn-secondary">Cancel</button>
-      <button onclick="confirmQueue()" class="btn-primary">Confirm</button>
-    </div>
-  </div>
-</div>
 
 </body>
 </html>
