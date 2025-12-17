@@ -12,7 +12,6 @@ body {
   background: #f5f7fb;
 }
 
-/* HEADER */
 .header {
   display: flex;
   align-items: center;
@@ -31,12 +30,6 @@ body {
   margin-right: 15px;
 }
 
-.title {
-  font-size: 20px;
-  font-weight: bold;
-}
-
-/* LAYOUT */
 .container {
   display: flex;
   height: calc(100vh - 60px);
@@ -48,9 +41,8 @@ body {
 
 .list {
   width: 420px;
-  background: #f7f9fc;
-  overflow-y: auto;
   padding: 20px;
+  overflow-y: auto;
 }
 
 .card {
@@ -58,21 +50,6 @@ body {
   padding: 16px;
   border-radius: 10px;
   margin-bottom: 15px;
-}
-
-.wait {
-  margin-top: 10px;
-  font-size: 14px;
-}
-
-.join {
-  margin-top: 12px;
-  background: #2563eb;
-  color: white;
-  border: none;
-  padding: 8px 14px;
-  border-radius: 6px;
-  cursor: pointer;
 }
 
 .center {
@@ -90,12 +67,12 @@ body {
 
 <div class="header">
   <button class="home-btn" onclick="goHome()">Home</button>
-  <div class="title" id="pageTitle">Nearby Services</div>
+  <h2 id="title">Nearby Services</h2>
 </div>
 
 <div class="container">
   <div id="map"></div>
-  <div class="list" id="serviceList"></div>
+  <div class="list" id="list"></div>
 </div>
 
 <script>
@@ -103,65 +80,40 @@ function goHome() {
   window.location.href = "index.html";
 }
 
-// ✅ READ SERVICE TYPE FROM URL
-const params = new URLSearchParams(window.location.search);
-const serviceType = params.get("type");
+const type = new URLSearchParams(window.location.search).get("type");
+const list = document.getElementById("list");
+const title = document.getElementById("title");
 
-const title = document.getElementById("pageTitle");
-const list = document.getElementById("serviceList");
-
-// 🛑 SAFETY CHECK
-if (!serviceType) {
-  title.innerText = "No Service Selected";
-  list.innerHTML = "<div class='center'>Please go back and select a service.</div>";
+if (!type) {
+  list.innerHTML = "<div class='center'>No service selected</div>";
+  document.getElementById("map").style.display = "none";
 }
-
-// 🚧 CLINIC COMING SOON
-else if (serviceType === "clinic") {
+else if (type === "clinic") {
   title.innerText = "Clinics – Coming Soon";
   list.innerHTML = "<div class='center'>Clinics feature coming soon 🚧</div>";
   document.getElementById("map").style.display = "none";
 }
-
-// ✅ SALON & RESTAURANT
 else {
-  title.innerText =
-    serviceType === "salon" ? "Nearby Salons" : "Nearby Restaurants";
+  title.innerText = type === "salon" ? "Nearby Salons" : "Nearby Restaurants";
 
   list.innerHTML = `
-    <div class="card">
-      <strong>${serviceType === "salon" ? "Vintage Nail & Beauty" : "Urban Eats"}</strong>
-      <div class="wait">⏱ 23 min · Medium wait</div>
-      <button class="join">Join Queue</button>
-    </div>
-
-    <div class="card">
-      <strong>${serviceType === "salon" ? "Roop Beauty Salon" : "Spice Kitchen"}</strong>
-      <div class="wait">⏱ 19 min · Low wait</div>
-      <button class="join">Join Queue</button>
-    </div>
+    <div class="card"><strong>${type === "salon" ? "Vintage Nail & Beauty" : "Urban Eats"}</strong><br>⏱ 23 min</div>
+    <div class="card"><strong>${type === "salon" ? "Roop Beauty Salon" : "Spice Kitchen"}</strong><br>⏱ 18 min</div>
   `;
 }
 </script>
 
-<!-- GOOGLE MAPS -->
 <script
   src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAG-Qv4aH4xE2VFAMImB_xwG4J8TmehUMQ&callback=initMap"
-  async defer>
-</script>
+  async defer></script>
 
 <script>
 function initMap() {
-  if (serviceType === "clinic" || !serviceType) return;
+  if (!type || type === "clinic") return;
 
-  const map = new google.maps.Map(document.getElementById("map"), {
+  new google.maps.Map(document.getElementById("map"), {
     center: { lat: 53.4808, lng: -2.2426 },
-    zoom: 13,
-  });
-
-  new google.maps.Marker({
-    position: { lat: 53.4808, lng: -2.2426 },
-    map: map,
+    zoom: 13
   });
 }
 </script>
