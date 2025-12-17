@@ -41,13 +41,12 @@ nav a {
 
 .hero h1 {
   font-size: 42px;
-  margin-bottom: 10px;
 }
 
 .hero p {
   color: #555;
   font-size: 18px;
-  margin-bottom: 35px;
+  margin-bottom: 30px;
 }
 
 .main-btn {
@@ -57,12 +56,11 @@ nav a {
   padding: 16px 32px;
   border-radius: 8px;
   font-size: 16px;
-  opacity: 0.85;
-  cursor: default;
+  cursor: pointer;
 }
 
 .categories {
-  margin-top: 35px;
+  margin-top: 40px;
   display: flex;
   justify-content: center;
   gap: 20px;
@@ -70,7 +68,6 @@ nav a {
 }
 
 .category {
-  display: inline-block;
   background: #eff6ff;
   border: 2px solid #2563eb;
   color: #2563eb;
@@ -113,20 +110,19 @@ footer {
   <h1>Never Wait Again — Book Instantly</h1>
   <p>Find nearby services and join queues in seconds.</p>
 
-  <!-- NOT CLICKABLE -->
-  <button class="main-btn">📍 Find Services Near Me</button>
+  <!-- Scroll Button -->
+  <button class="main-btn" onclick="document.getElementById('cats').scrollIntoView({behavior:'smooth'})">
+    📍 Find Services Near Me
+  </button>
 
-  <!-- REAL LINKS (GUARANTEED REDIRECT) -->
-  <div class="categories">
+  <div id="cats" class="categories">
     <a class="category" href="nearby.html?service=salon">💇 Salon</a>
     <a class="category" href="nearby.html?service=restaurant">🍽 Restaurant</a>
     <a class="category" href="nearby.html?service=clinic">🏥 Clinic</a>
   </div>
 </section>
 
-<footer>
-  © 2025 ZeroWait. All rights reserved.
-</footer>
+<footer>© 2025 ZeroWait</footer>
 
 </body>
 </html>
