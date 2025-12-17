@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8">
 <title>ZeroWait – Skip the Wait</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 body {
@@ -34,6 +34,11 @@ nav a {
   margin-left: 20px;
   text-decoration: none;
   color: #333;
+  font-weight: 500;
+}
+
+nav a:hover {
+  color: #2563eb;
 }
 
 /* HERO */
@@ -125,10 +130,10 @@ footer {
 <header>
   <div class="logo">ZeroWait</div>
   <nav>
-    <a href="#">Home</a>
-    <a href="#">About</a>
-    <a href="#">How it works</a>
-    <a href="#">Login</a>
+    <a href="index.html">Home</a>
+    <a href="about.html">About Us</a>
+    <a href="how-it-works.html">How It Works</a>
+    <a href="login.html">Login</a>
   </nav>
 </header>
 
@@ -141,9 +146,9 @@ footer {
 
   <!-- CLICKABLE CATEGORIES -->
   <div class="categories">
-    <div class="category" onclick="chooseService('salon')">💇 Salon</div>
-    <div class="category" onclick="chooseService('restaurant')">🍽 Restaurant</div>
-    <div class="category" onclick="chooseService('clinic')">🏥 Clinic</div>
+    <div class="category" data-service="salon">💇 Salon</div>
+    <div class="category" data-service="restaurant">🍽 Restaurant</div>
+    <div class="category" data-service="clinic">🏥 Clinic</div>
   </div>
 
   <div class="steps">
@@ -158,31 +163,32 @@ footer {
 </footer>
 
 <script>
-function chooseService(service) {
-  if (!navigator.geolocation) {
-    alert("Geolocation not supported");
-    return;
-  }
+document.querySelectorAll(".category").forEach(card => {
+  card.addEventListener("click", () => {
+    const service = card.dataset.service;
 
-  navigator.geolocation.getCurrentPosition(
-    (position) => {
-      localStorage.setItem("serviceType", service);
-      localStorage.setItem(
-        "userLocation",
-        JSON.stringify({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude
-        })
-      );
-
-      // 🔴 THIS LINE IS THE REDIRECT
-      window.location.href = "nearby.html";
-    },
-    () => {
-      alert("Please allow location access to continue");
+    if (!navigator.geolocation) {
+      alert("Geolocation not supported");
+      return;
     }
-  );
-}
+
+    navigator.geolocation.getCurrentPosition(
+      position => {
+        localStorage.setItem("serviceType", service);
+        localStorage.setItem(
+          "userLocation",
+          JSON.stringify({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          })
+        );
+
+        window.location.href = "nearby.html";
+      },
+      () => alert("Please allow location access to continue")
+    );
+  });
+});
 </script>
 
 </body>
