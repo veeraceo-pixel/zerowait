@@ -48,10 +48,6 @@ nav a {
   overflow-y: auto;
 }
 
-h2 {
-  margin-top: 0;
-}
-
 .card {
   background: white;
   padding: 16px;
@@ -86,9 +82,6 @@ h2 {
   <div class="logo">ZeroWait</div>
   <nav>
     <a href="index.html">Home</a>
-    <a href="about.html">About Us</a>
-    <a href="how-it-works.html">How It Works</a>
-    <a href="login.html">Login</a>
   </nav>
 </header>
 
@@ -96,70 +89,101 @@ h2 {
   <div id="map"></div>
   <div class="list">
     <h2 id="title">Nearby Services</h2>
-    <div id="results"></div>
+    <div id="results">Loading...</div>
   </div>
 </div>
 
 <script>
-const params = new URLSearchParams(window.location.search);
-const type = params.get("type");
+/* ================================
+   SAFE STATE HANDLING
+================================ */
 
-if (!type) {
-  alert("Service type missing. Redirecting to home.");
-  window.location.href = "index.html";
+const params = new URLSearchParams(window.location.search);
+let serviceType = params.get("type") || localStorage.getItem("serviceType");
+
+if (!serviceType) {
+  document.getElementById("results").innerHTML =
+    "<p>Please select a service from Home page.</p>";
+  throw new Error("Service type missing");
 }
 
-const serviceMap = {
+localStorage.setItem("serviceType", serviceType);
+
+const SERVICE_MAP = {
   salon: "beauty_salon",
   restaurant: "restaurant",
   clinic: "hospital"
 };
 
-const titleMap = {
+const TITLE_MAP = {
   salon: "Nearby Salons",
   restaurant: "Nearby Restaurants",
   clinic: "Nearby Clinics"
 };
 
-document.getElementById("title").innerText = titleMap[type];
+document.getElementById("title").innerText = TITLE_MAP[serviceType];
 
-let map, service, userLocation;
+let map, placesService, userLocation;
 
-function initMap() {
+/* ================================
+   LOCATION (WITH CACHE)
+================================ */
+
+function getLocation(callback) {
+  const cached = localStorage.getItem("userLocation");
+  if (cached) {
+    userLocation = JSON.parse(cached);
+    callback();
+    return;
+  }
+
   navigator.geolocation.getCurrentPosition(
-    position => {
+    pos => {
       userLocation = {
-        lat: position.coords.latitude,
-        lng: position.coords.longitude
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude
       };
-
-      map = new google.maps.Map(document.getElementById("map"), {
-        center: userLocation,
-        zoom: 14
-      });
-
-      new google.maps.Marker({
-        position: userLocation,
-        map,
-        icon: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png",
-        title: "You are here"
-      });
-
-      service = new google.maps.places.PlacesService(map);
-      searchPlaces();
+      localStorage.setItem("userLocation", JSON.stringify(userLocation));
+      callback();
     },
     () => {
-      alert("Location access denied. Please allow location.");
+      alert("Location permission required");
     }
   );
 }
 
+/* ================================
+   GOOGLE MAPS INIT
+================================ */
+
+function initMap() {
+  getLocation(() => {
+    map = new google.maps.Map(document.getElementById("map"), {
+      center: userLocation,
+      zoom: 14
+    });
+
+    new google.maps.Marker({
+      map,
+      position: userLocation,
+      icon: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png"
+    });
+
+    placesService = new google.maps.places.PlacesService(map);
+    searchPlaces();
+  });
+}
+
+/* ================================
+   PLACES SEARCH
+================================ */
+
 function searchPlaces() {
-  service.nearbySearch(
+  placesService.nearbySearch(
     {
       location: userLocation,
       radius: 3000,
-      type: serviceMap[type]
+      type: SERVICE_MAP[serviceType]
     },
     renderResults
   );
@@ -169,51 +193,34 @@ function renderResults(results, status) {
   const container = document.getElementById("results");
   container.innerHTML = "";
 
-  if (status !== google.maps.places.PlacesServiceStatus.OK || !results.length) {
-    container.innerHTML = "<p>No results found.</p>";
+  if (
+    status !== google.maps.places.PlacesServiceStatus.OK ||
+    !results.length
+  ) {
+    container.innerHTML =
+      "<p>No nearby services found. Try again later.</p>";
     return;
   }
 
   results.slice(0, 8).forEach(place => {
-    const marker = new google.maps.Marker({
+    new google.maps.Marker({
       map,
       position: place.geometry.location
     });
 
-    const distanceKm = getDistance(
-      userLocation.lat,
-      userLocation.lng,
-      place.geometry.location.lat(),
-      place.geometry.location.lng()
-    ).toFixed(1);
-
     container.innerHTML += `
       <div class="card">
         <strong>${place.name}</strong><br>
-        📍 ${distanceKm} km away<br>
-        ⭐ Rating: ${place.rating || "N/A"}<br>
-        <span class="badge">${place.opening_hours?.open_now ? "Open" : "Closed"}</span><br>
-        <button class="btn" onclick="joinQueue('${place.name}')">Join Queue</button>
+        ⭐ ${place.rating || "N/A"}<br>
+        <span class="badge">
+          ${place.opening_hours?.open_now ? "Open" : "Closed"}
+        </span><br>
+        <button class="btn" onclick="alert('Queue joined (demo)')">
+          Join Queue
+        </button>
       </div>
     `;
   });
-}
-
-function joinQueue(name) {
-  alert("Joined queue for " + name + " (demo)");
-}
-
-// Distance formula
-function getDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * Math.PI / 180) *
-    Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 }
 </script>
 
