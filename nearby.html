@@ -6,17 +6,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body {
+html, body {
+  height: 100%;
   margin: 0;
   font-family: Arial, sans-serif;
   background: #f5f7fb;
 }
 
 header {
+  height: 70px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px 40px;
+  padding: 0 40px;
   background: white;
   border-bottom: 1px solid #ddd;
 }
@@ -40,12 +42,15 @@ nav a {
 
 #map {
   flex: 1;
+  height: 100%;
+  min-height: 400px;
 }
 
 .list {
   width: 420px;
   padding: 20px;
   overflow-y: auto;
+  background: #f5f7fb;
 }
 
 .card {
@@ -99,7 +104,7 @@ const type = params.get("type");
 const list = document.getElementById("list");
 
 if (!type) {
-  list.innerHTML = "<h3>Please select a service from Home</h3>";
+  list.innerHTML = "<h3>Select a service from Home</h3>";
 }
 
 if (type === "clinic") {
@@ -108,8 +113,6 @@ if (type === "clinic") {
 }
 
 if (type === "salon" || type === "restaurant") {
-  document.title = `Nearby ${type === "salon" ? "Salons" : "Restaurants"} – ZeroWait`;
-
   list.innerHTML = `
     <div class="card">
       <strong>Vintage Nail & Beauty</strong><br>
@@ -131,46 +134,46 @@ if (type === "salon" || type === "restaurant") {
 </script>
 
 <script>
-let map;
-
 function initMap() {
   if (!type || type === "clinic") return;
 
+  const fallbackLocation = { lat: 53.4808, lng: -2.2426 }; // Manchester
+
   if (!navigator.geolocation) {
-    alert("Geolocation not supported");
+    loadMap(fallbackLocation);
     return;
   }
 
   navigator.geolocation.getCurrentPosition(
-    (position) => {
-      const userLocation = {
-        lat: position.coords.latitude,
-        lng: position.coords.longitude
-      };
-
-      map = new google.maps.Map(document.getElementById("map"), {
-        center: userLocation,
-        zoom: 13
-      });
-
-      new google.maps.Marker({
-        position: userLocation,
-        map,
-        title: "You are here",
-        icon: {
-          url: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png"
-        }
+    (pos) => {
+      loadMap({
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude
       });
     },
     () => {
-      alert("Location permission denied");
+      console.warn("Location denied, using Manchester");
+      loadMap(fallbackLocation);
     }
   );
+}
+
+function loadMap(location) {
+  const map = new google.maps.Map(document.getElementById("map"), {
+    center: location,
+    zoom: 13
+  });
+
+  new google.maps.Marker({
+    position: location,
+    map,
+    title: "You are here"
+  });
 }
 </script>
 
 <script
-  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAG-Qv4aH4xE2VFAMImB_xwG4J8TmehUMQ&callback=initMap"
+  src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap"
   async defer>
 </script>
 
