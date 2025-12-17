@@ -54,3 +54,37 @@ categoryCards.forEach(card => {
         });
     });
 });
+
+
+let selectedServiceName = "";
+
+function openQueueModal(serviceName) {
+  selectedServiceName = serviceName;
+  document.getElementById("queueModal").style.display = "flex";
+}
+
+function closeQueueModal() {
+  document.getElementById("queueModal").style.display = "none";
+}
+
+function confirmQueue() {
+  const name = document.getElementById("userName").value.trim();
+  const phone = document.getElementById("userPhone").value.trim();
+
+  if (!name || !phone) {
+    alert("Please enter name and phone");
+    return;
+  }
+
+  alert(
+    `✅ Queue Joined!\n\n` +
+    `Service: ${selectedServiceName}\n` +
+    `Name: ${name}\n` +
+    `Phone: ${phone}`
+  );
+
+  document.getElementById("userName").value = "";
+  document.getElementById("userPhone").value = "";
+  closeQueueModal();
+}
+
