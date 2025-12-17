@@ -213,3 +213,34 @@ body {
   padding: 8px 14px;
   cursor: pointer;
 }
+
+/* ================================
+   Mobile Responsive Fix
+================================ */
+
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+    height: auto;
+  }
+
+  #map {
+    height: 45vh;
+    width: 100%;
+  }
+
+  .list {
+    width: 100%;
+    height: auto;
+  }
+
+  header {
+    padding: 12px 20px;
+  }
+
+  nav a {
+    margin-left: 15px;
+    font-size: 14px;
+  }
+}
+
