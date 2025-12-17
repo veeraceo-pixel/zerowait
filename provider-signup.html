@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Provider Signup – ZeroWait</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f5f7fb;
+}
+
+.container {
+  max-width: 500px;
+  margin: 60px auto;
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+}
+
+input, select {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+}
+
+button {
+  width: 100%;
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 6px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h2>Register Your Business</h2>
+
+  <input id="name" placeholder="Business Name">
+  <select id="type">
+    <option value="salon">Salon</option>
+    <option value="restaurant">Restaurant</option>
+    <option value="clinic">Clinic</option>
+  </select>
+  <input id="city" placeholder="City">
+  <button onclick="signup()">Continue</button>
+</div>
+
+<script>
+function signup() {
+  const provider = {
+    name: name.value,
+    type: type.value,
+    city: city.value,
+    queue: []
+  };
+
+  localStorage.setItem("provider", JSON.stringify(provider));
+  window.location.href = "provider-dashboard.html";
+}
+</script>
+
+</body>
+</html>
