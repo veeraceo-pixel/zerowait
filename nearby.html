@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8">
 <title>Nearby Services – ZeroWait</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 body {
@@ -13,12 +13,13 @@ body {
 }
 
 header {
-  background: #fff;
-  padding: 14px 24px;
+  height: 64px;
+  background: #ffffff;
   display: flex;
   align-items: center;
   gap: 16px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  padding: 0 20px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.1);
 }
 
 header h2 {
@@ -28,7 +29,7 @@ header h2 {
 
 .home-btn {
   background: #2563eb;
-  color: #fff;
+  color: white;
   border: none;
   padding: 8px 14px;
   border-radius: 6px;
@@ -37,7 +38,7 @@ header h2 {
 
 .page {
   display: flex;
-  height: calc(100vh - 60px);
+  height: calc(100vh - 64px);
 }
 
 #map {
@@ -47,11 +48,11 @@ header h2 {
 #list {
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
+  padding: 16px;
 }
 
 .card {
-  background: #fff;
+  background: #ffffff;
   padding: 16px;
   border-radius: 12px;
   margin-bottom: 14px;
@@ -60,7 +61,7 @@ header h2 {
 
 .wait {
   display: inline-block;
-  margin-top: 8px;
+  margin-top: 6px;
   padding: 4px 10px;
   border-radius: 12px;
   font-size: 12px;
@@ -82,7 +83,7 @@ header h2 {
 <body>
 
 <header>
-  <button class="home-btn" onclick="goHome()">Home</button>
+  <button class="home-btn" onclick="location.href='index.html'">← Home</button>
   <h2>ZeroWait</h2>
 </header>
 
@@ -92,59 +93,66 @@ header h2 {
 </div>
 
 <script>
+/* ========= GLOBAL STATE ========= */
 let map;
-let service;
+let placesService;
 
-function goHome() {
-  window.location.href = "index.html";
-}
-
-// Get service type safely from URL
+/* ========= READ SERVICE TYPE ========= */
 const params = new URLSearchParams(window.location.search);
 const serviceType = params.get("type");
 
 if (!serviceType) {
-  alert("Service type missing. Redirecting home.");
-  goHome();
+  alert("Missing service type. Redirecting to home.");
+  window.location.href = "index.html";
 }
 
-// Convert to Google Places types
-function getPlaceType(type) {
+/* ========= TYPE MAPPING ========= */
+function getGoogleType(type) {
   if (type === "salon") return "beauty_salon";
   if (type === "restaurant") return "restaurant";
   return null;
 }
 
-// Generate fake wait time (demo purpose)
+/* ========= DEMO WAIT TIME ========= */
 function getWaitTime() {
-  const min = Math.floor(Math.random() * 30) + 10;
-  return `${min} min`;
+  return Math.floor(Math.random() * 25) + 10 + " mins";
 }
 
-// Initialize map ONLY after location is ready
-function initMapWithLocation(position) {
-  const location = {
-    lat: position.coords.latitude,
-    lng: position.coords.longitude
-  };
+/* ========= GOOGLE MAP CALLBACK ========= */
+function initMap() {
+  if (!navigator.geolocation) {
+    alert("Geolocation not supported");
+    return;
+  }
 
-  map = new google.maps.Map(document.getElementById("map"), {
-    center: location,
-    zoom: 14
-  });
+  navigator.geolocation.getCurrentPosition(
+    position => {
+      const userLocation = {
+        lat: position.coords.latitude,
+        lng: position.coords.longitude
+      };
 
-  service = new google.maps.places.PlacesService(map);
+      map = new google.maps.Map(document.getElementById("map"), {
+        center: userLocation,
+        zoom: 14
+      });
 
-  service.nearbySearch(
-    {
-      location,
-      radius: 3000,
-      type: getPlaceType(serviceType)
+      placesService = new google.maps.places.PlacesService(map);
+
+      placesService.nearbySearch(
+        {
+          location: userLocation,
+          radius: 3000,
+          type: getGoogleType(serviceType)
+        },
+        renderResults
+      );
     },
-    renderResults
+    () => alert("Please allow location access")
   );
 }
 
+/* ========= RENDER RESULTS ========= */
 function renderResults(results, status) {
   if (status !== google.maps.places.PlacesServiceStatus.OK) {
     alert("No places found");
@@ -172,16 +180,11 @@ function renderResults(results, status) {
     list.appendChild(card);
   });
 }
-
-// Request location EVERY TIME (fixes blank page issue)
-navigator.geolocation.getCurrentPosition(
-  initMapWithLocation,
-  () => alert("Location access required to show nearby services")
-);
 </script>
 
+<!-- ✅ CRITICAL: callback=initMap -->
 <script async
-src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAG-Qv4aH4xE2VFAMImB_xwG4J8TmehUMQ&libraries=places">
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAG-Qv4aH4xE2VFAMImB_xwG4J8TmehUMQ&libraries=places&callback=initMap">
 </script>
 
 </body>
