@@ -15,7 +15,8 @@ body {
 header {
   display: flex;
   justify-content: space-between;
-  padding: 15px 30px;
+  align-items: center;
+  padding: 15px 40px;
   background: white;
   border-bottom: 1px solid #ddd;
 }
@@ -24,6 +25,13 @@ header {
   font-size: 22px;
   font-weight: bold;
   color: #2563eb;
+}
+
+nav a {
+  margin-left: 25px;
+  text-decoration: none;
+  color: #333;
+  font-weight: 500;
 }
 
 .hero {
@@ -43,10 +51,8 @@ header {
   font-size: 16px;
   border-radius: 8px;
   margin-top: 20px;
-  cursor: default;
 }
 
-/* CATEGORY BUTTONS */
 .categories {
   display: flex;
   justify-content: center;
@@ -69,12 +75,18 @@ header {
 
 <header>
   <div class="logo">ZeroWait</div>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="#">About Us</a>
+    <a href="#">How It Works</a>
+    <a href="#">Login</a>
+  </nav>
 </header>
 
 <div class="hero">
   <h1>Never Wait Again — Book Instantly</h1>
   <p>Find nearby services with real-time waiting times.</p>
-  <button>Find Services Near Me</button>
+  <button disabled>Find Services Near Me</button>
 
   <div class="categories">
     <div class="category" onclick="go('salon')">💇 Salon</div>
