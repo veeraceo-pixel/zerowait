@@ -10,13 +10,11 @@ body {
   margin: 0;
   font-family: Arial, sans-serif;
   background: #f8fafc;
-  color: #111;
 }
 
-/* NAVBAR */
 header {
   height: 70px;
-  background: #ffffff;
+  background: white;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -34,43 +32,35 @@ nav a {
   margin-left: 20px;
   text-decoration: none;
   color: #333;
-  font-weight: 500;
 }
 
-nav a:hover {
-  color: #2563eb;
-}
-
-/* HERO */
 .hero {
   text-align: center;
-  padding: 90px 20px 60px;
+  padding: 90px 20px;
 }
 
 .hero h1 {
   font-size: 42px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .hero p {
-  font-size: 18px;
   color: #555;
+  font-size: 18px;
   margin-bottom: 35px;
 }
 
-/* MAIN BUTTON (NOT CLICKABLE) */
 .main-btn {
   background: #2563eb;
   color: white;
   border: none;
   padding: 16px 32px;
-  font-size: 16px;
   border-radius: 8px;
+  font-size: 16px;
   opacity: 0.85;
   cursor: default;
 }
 
-/* CATEGORIES */
 .categories {
   margin-top: 35px;
   display: flex;
@@ -80,6 +70,7 @@ nav a:hover {
 }
 
 .category {
+  display: inline-block;
   background: #eff6ff;
   border: 2px solid #2563eb;
   color: #2563eb;
@@ -87,7 +78,7 @@ nav a:hover {
   border-radius: 14px;
   font-size: 18px;
   font-weight: 600;
-  cursor: pointer;
+  text-decoration: none;
   transition: 0.2s;
   min-width: 180px;
 }
@@ -98,29 +89,10 @@ nav a:hover {
   transform: translateY(-3px);
 }
 
-/* STEPS */
-.steps {
-  margin-top: 40px;
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  flex-wrap: wrap;
-}
-
-.step {
-  background: white;
-  padding: 14px 22px;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-}
-
-/* FOOTER */
 footer {
   margin-top: 60px;
-  padding: 20px;
   text-align: center;
   color: #666;
-  font-size: 14px;
 }
 </style>
 </head>
@@ -139,57 +111,22 @@ footer {
 
 <section class="hero">
   <h1>Never Wait Again — Book Instantly</h1>
-  <p>Find nearby services, compare waiting time, and join queues in seconds.</p>
+  <p>Find nearby services and join queues in seconds.</p>
 
   <!-- NOT CLICKABLE -->
   <button class="main-btn">📍 Find Services Near Me</button>
 
-  <!-- CLICKABLE CATEGORIES -->
+  <!-- REAL LINKS (GUARANTEED REDIRECT) -->
   <div class="categories">
-    <div class="category" data-service="salon">💇 Salon</div>
-    <div class="category" data-service="restaurant">🍽 Restaurant</div>
-    <div class="category" data-service="clinic">🏥 Clinic</div>
-  </div>
-
-  <div class="steps">
-    <div class="step">Choose Service</div>
-    <div class="step">Compare Waiting Time</div>
-    <div class="step">Join Queue</div>
+    <a class="category" href="nearby.html?service=salon">💇 Salon</a>
+    <a class="category" href="nearby.html?service=restaurant">🍽 Restaurant</a>
+    <a class="category" href="nearby.html?service=clinic">🏥 Clinic</a>
   </div>
 </section>
 
 <footer>
   © 2025 ZeroWait. All rights reserved.
 </footer>
-
-<script>
-document.querySelectorAll(".category").forEach(card => {
-  card.addEventListener("click", () => {
-    const service = card.dataset.service;
-
-    if (!navigator.geolocation) {
-      alert("Geolocation not supported");
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      position => {
-        localStorage.setItem("serviceType", service);
-        localStorage.setItem(
-          "userLocation",
-          JSON.stringify({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          })
-        );
-
-        window.location.href = "nearby.html";
-      },
-      () => alert("Please allow location access to continue")
-    );
-  });
-});
-</script>
 
 </body>
 </html>
