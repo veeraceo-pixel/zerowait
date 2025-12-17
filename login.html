@@ -1,24 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Login – ZeroWait</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background:#f5f7fb;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  height:100vh;
+}
+
+.card {
+  background:white;
+  padding:40px;
+  border-radius:10px;
+  width:320px;
+}
+
+input {
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+}
+
+button {
+  width:100%;
+  margin-top:20px;
+  padding:10px;
+  background:#2563eb;
+  color:white;
+  border:none;
+  border-radius:6px;
+}
+</style>
+</head>
 <body>
 
-<header class="navbar">
-  <div class="logo">ZeroWait</div>
-  <nav>
-    <a href="index.html">Home</a>
-    <a href="about.html">About Us</a>
-    <a href="how-it-works.html">How It Works</a>
-  </nav>
-</header>
-
-<section class="hero">
-  <h1>Login</h1>
-
-  <form class="card" style="max-width:400px;margin:auto;">
-    <input type="email" placeholder="Email" required><br><br>
-    <input type="password" placeholder="Password" required><br><br>
-    <button class="btn primary">Login</button>
-    <p><br>New user? <a href="signup.html">Sign up</a></p>
-  </form>
-</section>
+<div class="card">
+  <h2>Login</h2>
+  <input type="email" placeholder="Email">
+  <input type="password" placeholder="Password">
+  <button disabled>Login (Coming Soon)</button>
+</div>
 
 </body>
-
+</html>
