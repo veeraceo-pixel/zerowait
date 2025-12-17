@@ -1,76 +1,207 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>ZeroWait – Skip the Wait</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="./style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ZeroWait – Skip the Wait</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: #f7f9fc;
+      color: #222;
+    }
+
+    /* ---------- HEADER ---------- */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 40px;
+      background: #fff;
+      border-bottom: 1px solid #eee;
+    }
+
+    header h1 {
+      color: #2563eb;
+      font-size: 22px;
+      margin: 0;
+    }
+
+    nav a {
+      margin-left: 20px;
+      text-decoration: none;
+      color: #333;
+      font-size: 15px;
+    }
+
+    /* ---------- HERO ---------- */
+    .hero {
+      text-align: center;
+      padding: 80px 20px 60px;
+    }
+
+    .hero h2 {
+      font-size: 42px;
+      margin-bottom: 10px;
+    }
+
+    .hero p {
+      font-size: 18px;
+      color: #555;
+      margin-bottom: 30px;
+    }
+
+    .primary-btn {
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      padding: 14px 28px;
+      font-size: 16px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .primary-btn:hover {
+      background: #1e4ed8;
+    }
+
+    /* ---------- CATEGORY SECTION ---------- */
+    .category-section {
+      margin-top: 35px;
+    }
+
+    .category-title {
+      margin-bottom: 16px;
+      color: #555;
+      font-size: 15px;
+    }
+
+    .categories {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .category-card {
+      background: #fff;
+      border: 2px solid #2563eb;
+      color: #2563eb;
+      padding: 16px 22px;
+      border-radius: 14px;
+      min-width: 160px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .category-card:hover {
+      background: #2563eb;
+      color: #fff;
+      transform: translateY(-3px);
+    }
+
+    /* ---------- WHY SECTION ---------- */
+    .why {
+      padding: 60px 40px;
+    }
+
+    .why h3 {
+      font-size: 26px;
+      margin-bottom: 30px;
+    }
+
+    .why-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+    }
+
+    .why-card {
+      background: #fff;
+      padding: 20px;
+      border-radius: 14px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      font-size: 15px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      color: #777;
+      font-size: 14px;
+    }
+  </style>
 </head>
+
 <body>
 
-<header class="navbar">
-    <div class="logo">ZeroWait</div>
+  <!-- HEADER -->
+  <header>
+    <h1>ZeroWait</h1>
     <nav>
-        <a href="index.html">Home</a>
-        <a href="about.html">About Us</a>
-        <a href="how-it-works.html">How It Works</a>
-        <a href="login.html" class="btn">Login</a>
+      <a href="#">Home</a>
+      <a href="#">About Us</a>
+      <a href="#">How It Works</a>
+      <a href="#">Login</a>
     </nav>
-</header>
+  </header>
 
-<!-- HERO -->
-<section class="hero">
-    <div class="hero-text">
-        <h1>Never Wait Again — Book Instantly</h1>
-        <p>
-            Find nearby services with real-time waiting times and join the queue in seconds.
-        </p>
+  <!-- HERO -->
+  <section class="hero">
+    <h2>Never Wait Again — Book Instantly</h2>
+    <p>Find nearby services with real-time waiting times and join the queue in seconds.</p>
 
-        <div class="hero-buttons">
-            <button class="btn primary" id="openServiceModal">
-                📍 Find Services Near Me
-            </button>
+    <button class="primary-btn" onclick="goToNearby('all')">
+      📍 Find Services Near Me
+    </button>
+
+    <!-- CATEGORY SHORTCUTS -->
+    <div class="category-section">
+      <div class="category-title">Or choose a service</div>
+      <div class="categories">
+        <div class="category-card" onclick="goToNearby('salon')">
+          💇 Salon
         </div>
- 
-        <div class="steps">
-            <div class="step">Choose Service</div>
-            <div class="step">Compare Waiting Time</div>
-            <div class="step">Join Queue</div>
+        <div class="category-card" onclick="goToNearby('restaurant')">
+          🍽 Restaurant
         </div>
-    </div>
-</section>
-
-<!-- SERVICE SELECTION MODAL -->
-<div id="serviceModal" class="modal-overlay">
-    <div class="modal">
-        <h2>What are you looking for?</h2>
-        <p>Select a service to continue</p>
-
-        <div class="service-grid">
-            <div class="card category-card" data-service="salon">💇 Salon</div>
-            <div class="card category-card" data-service="restaurant">🍽 Restaurant</div>
-            <div class="card category-card" data-service="clinic">🏥 Clinic</div>
+        <div class="category-card" onclick="goToNearby('clinic')">
+          🏥 Clinic
         </div>
-
-        <button class="btn outline close-modal">Cancel</button>
+      </div>
     </div>
-</div>
+  </section>
 
-<!-- FEATURES -->
-<section class="features">
-    <h2>Why ZeroWait?</h2>
-    <div class="feature-grid">
-        <div class="feature">⏱ Real-time waiting time</div>
-        <div class="feature">⚡ Queue-based booking</div>
-        <div class="feature">🔔 Smart notifications</div>
-        <div class="feature">📍 Nearby discovery</div>
+  <!-- WHY -->
+  <section class="why">
+    <h3>Why ZeroWait?</h3>
+    <div class="why-grid">
+      <div class="why-card">⏱ Real-time waiting time</div>
+      <div class="why-card">⚡ Queue-based booking</div>
+      <div class="why-card">🔔 Smart notifications</div>
+      <div class="why-card">📍 Nearby discovery</div>
     </div>
-</section>
+  </section>
 
-<footer>
-    <p>© 2025 ZeroWait. All rights reserved.</p>
-</footer>
+  <footer>
+    © 2025 ZeroWait. All rights reserved.
+  </footer>
 
-<script src="script.js"></script>
+  <!-- SCRIPT -->
+  <script>
+    function goToNearby(type) {
+      localStorage.setItem("serviceType", type);
+      window.location.href = "nearby.html";
+    }
+  </script>
+
 </body>
 </html>
