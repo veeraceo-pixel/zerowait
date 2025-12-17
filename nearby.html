@@ -17,7 +17,7 @@ header {
   justify-content: space-between;
   align-items: center;
   padding: 15px 40px;
-  background: #fff;
+  background: white;
   border-bottom: 1px solid #ddd;
 }
 
@@ -31,7 +31,6 @@ nav a {
   margin-left: 25px;
   text-decoration: none;
   color: #333;
-  font-weight: 500;
 }
 
 .container {
@@ -47,7 +46,6 @@ nav a {
   width: 420px;
   padding: 20px;
   overflow-y: auto;
-  background: #f9fafb;
 }
 
 .card {
@@ -55,7 +53,6 @@ nav a {
   padding: 16px;
   border-radius: 10px;
   margin-bottom: 15px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
 }
 
 .badge {
@@ -65,7 +62,6 @@ nav a {
   padding: 4px 10px;
   border-radius: 20px;
   font-size: 13px;
-  margin-top: 6px;
 }
 
 .btn {
@@ -77,10 +73,6 @@ nav a {
   border-radius: 6px;
   cursor: pointer;
 }
-
-h2 {
-  margin-top: 0;
-}
 </style>
 </head>
 
@@ -90,9 +82,9 @@ h2 {
   <div class="logo">ZeroWait</div>
   <nav>
     <a href="index.html">Home</a>
-    <a href="#">About Us</a>
-    <a href="#">How It Works</a>
-    <a href="#">Login</a>
+    <a href="about.html">About Us</a>
+    <a href="how-it-works.html">How It Works</a>
+    <a href="login.html">Login</a>
   </nav>
 </header>
 
@@ -102,107 +94,79 @@ h2 {
 </div>
 
 <script>
-/* ---------- SAFE SERVICE TYPE HANDLING ---------- */
 const params = new URLSearchParams(window.location.search);
-let serviceType = params.get("type");
-
-// persist type so refresh never breaks
-if (serviceType) {
-  localStorage.setItem("serviceType", serviceType);
-} else {
-  serviceType = localStorage.getItem("serviceType");
-}
-
-// final fallback
-if (!serviceType) {
-  serviceType = "salon";
-}
-
-/* ---------- DATA ---------- */
-const DATA = {
-  salon: [
-    {
-      name: "Vintage Nail & Beauty",
-      distance: "2.1 km",
-      wait: "23 min",
-      level: "Medium"
-    },
-    {
-      name: "Roop Beauty Salon",
-      distance: "1.4 km",
-      wait: "19 min",
-      level: "Low"
-    }
-  ],
-  restaurant: [
-    {
-      name: "Istanbul Grill Manchester",
-      distance: "1.9 km",
-      wait: "15 min",
-      level: "Low"
-    },
-    {
-      name: "My Lahore Manchester",
-      distance: "2.5 km",
-      wait: "28 min",
-      level: "High"
-    }
-  ]
-};
-
-/* ---------- RENDER LIST ---------- */
+const type = params.get("type");
 const list = document.getElementById("list");
 
-function renderList() {
-  if (serviceType === "clinic") {
-    list.innerHTML = "<h2>Clinics</h2><p>🚧 Coming soon</p>";
-    document.getElementById("map").style.display = "none";
-    return;
-  }
-
-  const items = DATA[serviceType];
-  document.getElementById("map").style.display = "block";
-
-  list.innerHTML = `<h2>Nearby ${serviceType === "salon" ? "Salons" : "Restaurants"}</h2>`;
-
-  items.forEach(item => {
-    list.innerHTML += `
-      <div class="card">
-        <strong>${item.name}</strong><br>
-        📍 ${item.distance} away<br>
-        ⏱ ${item.wait} wait<br>
-        <span class="badge">${item.level}</span><br>
-        <button class="btn" onclick="joinQueue('${item.name}')">Join Queue</button>
-      </div>
-    `;
-  });
+if (!type) {
+  list.innerHTML = "<h3>Please select a service from Home</h3>";
 }
 
-/* ---------- JOIN QUEUE (TESTABLE) ---------- */
-function joinQueue(name) {
-  alert("✅ Joined queue for: " + name);
+if (type === "clinic") {
+  list.innerHTML = "<h3>Clinics coming soon 🚧</h3>";
+  document.getElementById("map").style.display = "none";
 }
 
-/* ---------- MAP ---------- */
+if (type === "salon" || type === "restaurant") {
+  document.title = `Nearby ${type === "salon" ? "Salons" : "Restaurants"} – ZeroWait`;
+
+  list.innerHTML = `
+    <div class="card">
+      <strong>Vintage Nail & Beauty</strong><br>
+      📍 2.1 km away<br>
+      ⏱ 23 min wait
+      <div class="badge">Medium</div><br>
+      <button class="btn" onclick="alert('Queue joined (demo)')">Join Queue</button>
+    </div>
+
+    <div class="card">
+      <strong>Roop Beauty Salon</strong><br>
+      📍 1.4 km away<br>
+      ⏱ 19 min wait
+      <div class="badge">Low</div><br>
+      <button class="btn" onclick="alert('Queue joined (demo)')">Join Queue</button>
+    </div>
+  `;
+}
+</script>
+
+<script>
 let map;
 
 function initMap() {
-  const manchester = { lat: 53.4808, lng: -2.2426 };
+  if (!type || type === "clinic") return;
 
-  map = new google.maps.Map(document.getElementById("map"), {
-    center: manchester,
-    zoom: 12
-  });
+  if (!navigator.geolocation) {
+    alert("Geolocation not supported");
+    return;
+  }
 
-  new google.maps.Marker({
-    position: manchester,
-    map,
-    title: "You are here"
-  });
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const userLocation = {
+        lat: position.coords.latitude,
+        lng: position.coords.longitude
+      };
+
+      map = new google.maps.Map(document.getElementById("map"), {
+        center: userLocation,
+        zoom: 13
+      });
+
+      new google.maps.Marker({
+        position: userLocation,
+        map,
+        title: "You are here",
+        icon: {
+          url: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png"
+        }
+      });
+    },
+    () => {
+      alert("Location permission denied");
+    }
+  );
 }
-
-/* ---------- INIT ---------- */
-renderList();
 </script>
 
 <script
