@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8">
 <title>Nearby Services – ZeroWait</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 body {
@@ -17,7 +17,7 @@ header {
   justify-content: space-between;
   align-items: center;
   padding: 15px 40px;
-  background: white;
+  background: #fff;
   border-bottom: 1px solid #ddd;
 }
 
@@ -47,6 +47,7 @@ nav a {
   width: 420px;
   padding: 20px;
   overflow-y: auto;
+  background: #f9fafb;
 }
 
 .card {
@@ -54,6 +55,7 @@ nav a {
   padding: 16px;
   border-radius: 10px;
   margin-bottom: 15px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
 }
 
 .badge {
@@ -63,7 +65,7 @@ nav a {
   padding: 4px 10px;
   border-radius: 20px;
   font-size: 13px;
-  margin-left: 6px;
+  margin-top: 6px;
 }
 
 .btn {
@@ -76,10 +78,8 @@ nav a {
   cursor: pointer;
 }
 
-.center {
-  text-align: center;
-  margin-top: 50px;
-  color: #555;
+h2 {
+  margin-top: 0;
 }
 </style>
 </head>
@@ -102,133 +102,111 @@ nav a {
 </div>
 
 <script>
-/* ------------------------------
-   SAFE SERVICE TYPE HANDLING
---------------------------------*/
+/* ---------- SAFE SERVICE TYPE HANDLING ---------- */
 const params = new URLSearchParams(window.location.search);
-const serviceType = params.get("type") || "salon";
+let serviceType = params.get("type");
 
-const GOOGLE_TYPE_MAP = {
-  salon: ["beauty_salon", "hair_care"],
-  restaurant: ["restaurant"]
+// persist type so refresh never breaks
+if (serviceType) {
+  localStorage.setItem("serviceType", serviceType);
+} else {
+  serviceType = localStorage.getItem("serviceType");
+}
+
+// final fallback
+if (!serviceType) {
+  serviceType = "salon";
+}
+
+/* ---------- DATA ---------- */
+const DATA = {
+  salon: [
+    {
+      name: "Vintage Nail & Beauty",
+      distance: "2.1 km",
+      wait: "23 min",
+      level: "Medium"
+    },
+    {
+      name: "Roop Beauty Salon",
+      distance: "1.4 km",
+      wait: "19 min",
+      level: "Low"
+    }
+  ],
+  restaurant: [
+    {
+      name: "Istanbul Grill Manchester",
+      distance: "1.9 km",
+      wait: "15 min",
+      level: "Low"
+    },
+    {
+      name: "My Lahore Manchester",
+      distance: "2.5 km",
+      wait: "28 min",
+      level: "High"
+    }
+  ]
 };
 
+/* ---------- RENDER LIST ---------- */
 const list = document.getElementById("list");
 
-/* ------------------------------
-   CLINIC → COMING SOON
---------------------------------*/
-if (serviceType === "clinic") {
-  document.getElementById("map").style.display = "none";
-  list.innerHTML = `
-    <div class="center">
-      <h2>Clinics</h2>
-      <p>Coming soon 🚧</p>
-    </div>
-  `;
+function renderList() {
+  if (serviceType === "clinic") {
+    list.innerHTML = "<h2>Clinics</h2><p>🚧 Coming soon</p>";
+    document.getElementById("map").style.display = "none";
+    return;
+  }
+
+  const items = DATA[serviceType];
+  document.getElementById("map").style.display = "block";
+
+  list.innerHTML = `<h2>Nearby ${serviceType === "salon" ? "Salons" : "Restaurants"}</h2>`;
+
+  items.forEach(item => {
+    list.innerHTML += `
+      <div class="card">
+        <strong>${item.name}</strong><br>
+        📍 ${item.distance} away<br>
+        ⏱ ${item.wait} wait<br>
+        <span class="badge">${item.level}</span><br>
+        <button class="btn" onclick="joinQueue('${item.name}')">Join Queue</button>
+      </div>
+    `;
+  });
 }
 
-/* ------------------------------
-   MAP + PLACES
---------------------------------*/
+/* ---------- JOIN QUEUE (TESTABLE) ---------- */
+function joinQueue(name) {
+  alert("✅ Joined queue for: " + name);
+}
+
+/* ---------- MAP ---------- */
 let map;
-let placesService;
 
 function initMap() {
-  if (serviceType === "clinic") return;
+  const manchester = { lat: 53.4808, lng: -2.2426 };
 
-  getUserLocation().then(location => {
-    map = new google.maps.Map(document.getElementById("map"), {
-      center: location,
-      zoom: 13
-    });
+  map = new google.maps.Map(document.getElementById("map"), {
+    center: manchester,
+    zoom: 12
+  });
 
-    new google.maps.Marker({
-      position: location,
-      map,
-      title: "You are here"
-    });
-
-    placesService = new google.maps.places.PlacesService(map);
-    searchPlaces(location);
+  new google.maps.Marker({
+    position: manchester,
+    map,
+    title: "You are here"
   });
 }
 
-/* ------------------------------
-   USER LOCATION (SAFE)
---------------------------------*/
-function getUserLocation() {
-  return new Promise(resolve => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        () => resolve({ lat: 53.4808, lng: -2.2426 }) // Manchester fallback
-      );
-    } else {
-      resolve({ lat: 53.4808, lng: -2.2426 });
-    }
-  });
-}
-
-/* ------------------------------
-   SEARCH PLACES
---------------------------------*/
-function searchPlaces(location) {
-  list.innerHTML = "";
-
-  const types = GOOGLE_TYPE_MAP[serviceType];
-
-  types.forEach(type => {
-    placesService.nearbySearch(
-      {
-        location,
-        radius: 5000,
-        type
-      },
-      renderResults
-    );
-  });
-}
-
-/* ------------------------------
-   RENDER RESULTS
---------------------------------*/
-function renderResults(results, status) {
-  if (status !== google.maps.places.PlacesServiceStatus.OK) return;
-
-  results.slice(0, 5).forEach(place => {
-    new google.maps.Marker({
-      map,
-      position: place.geometry.location
-    });
-
-    const wait = Math.floor(Math.random() * 30) + 5;
-    const level = wait < 15 ? "Low" : wait < 25 ? "Medium" : "High";
-
-    const card = document.createElement("div");
-    card.className = "card";
-    card.innerHTML = `
-      <strong>${place.name}</strong><br>
-      📍 ${place.vicinity || "Nearby"}<br>
-      ⏱ ${wait} min wait
-      <span class="badge">${level}</span><br>
-      <button class="btn" onclick="joinQueue('${place.place_id}')">Join Queue</button>
-    `;
-
-    list.appendChild(card);
-  });
-}
-
-/* ------------------------------
-   JOIN QUEUE (DEMO)
---------------------------------*/
-function joinQueue(placeId) {
-  alert("Joined queue successfully!\n(Backend integration next)");
-}
+/* ---------- INIT ---------- */
+renderList();
 </script>
 
 <script
-  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAG-Qv4aH4xE2VFAMImB_xwG4J8TmehUMQ&libraries=places&callback=initMap"
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAG-Qv4aH4xE2VFAMImB_xwG4J8TmehUMQ&callback=initMap"
   async defer>
 </script>
 
