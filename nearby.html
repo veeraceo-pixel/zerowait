@@ -12,7 +12,7 @@ header {
   background:#fff;
   display:flex;
   align-items:center;
-  gap:10px;
+  gap:15px;
   padding:0 20px;
   box-shadow:0 1px 6px rgba(0,0,0,0.1);
 }
@@ -21,8 +21,9 @@ header button {
   border:none;
   border-radius:6px;
   cursor:pointer;
+  background:#2563eb;
+  color:white;
 }
-.home { background:#2563eb; color:white; }
 .page { display:flex; height:calc(100vh - 70px); }
 #map { flex:1; }
 #list { flex:1; padding:15px; overflow:auto; background:#f5f7fb; }
@@ -38,7 +39,7 @@ header button {
 <body>
 
 <header>
-  <button class="home" onclick="location.href='index.html'">Home</button>
+  <button onclick="location.href='index.html'">← Home</button>
   <strong>ZeroWait</strong>
 </header>
 
@@ -51,7 +52,7 @@ header button {
 const params = new URLSearchParams(window.location.search);
 const serviceType = params.get("service") || "salon";
 
-const fallback = { lat: 12.9716, lng: 77.5946 }; // Bangalore
+const fallback = { lat: 12.9716, lng: 77.5946 };
 
 navigator.geolocation.getCurrentPosition(
   pos => startMap({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
@@ -66,31 +67,35 @@ function startMap(location) {
 
   const service = new google.maps.places.PlacesService(map);
 
-  const types = {
-    salon: "beauty_salon",
-    restaurant: "restaurant",
-    clinic: "doctor"
+  const searchTypes = {
+    salon: ["beauty_salon"],
+    restaurant: ["restaurant"],
+    clinic: ["hospital", "doctor", "pharmacy"]
   };
 
-  service.nearbySearch(
-    { location, radius: 3000, type: types[serviceType] },
-    (results, status) => {
-      if (status !== "OK") return;
+  searchTypes[serviceType].forEach(type => {
+    service.nearbySearch(
+      { location, radius: 3000, type },
+      render
+    );
+  });
 
-      const list = document.getElementById("list");
-      results.forEach(p => {
-        new google.maps.Marker({ map, position: p.geometry.location });
-        const wait = Math.floor(Math.random()*30)+10;
-        list.innerHTML += `
-          <div class="card">
-            <strong>${p.name}</strong>
-            <p>${p.vicinity || ""}</p>
-            <p>⏱ ${wait} mins (demo)</p>
-          </div>
-        `;
-      });
-    }
-  );
+  function render(results, status) {
+    if (status !== "OK") return;
+    const list = document.getElementById("list");
+
+    results.forEach(p => {
+      new google.maps.Marker({ map, position: p.geometry.location });
+      const wait = Math.floor(Math.random()*25)+10;
+      list.innerHTML += `
+        <div class="card">
+          <strong>${p.name}</strong>
+          <p>${p.vicinity || ""}</p>
+          <p>⏱ ${wait} mins (demo)</p>
+        </div>
+      `;
+    });
+  }
 }
 </script>
 
