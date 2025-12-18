@@ -16,7 +16,7 @@ header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px 40px;
+  padding: 15px 30px;
   background: #fff;
   border-bottom: 1px solid #ddd;
 }
@@ -28,7 +28,7 @@ header {
 }
 
 nav a {
-  margin-left: 25px;
+  margin-left: 20px;
   text-decoration: none;
   color: #333;
 }
@@ -46,6 +46,7 @@ nav a {
   width: 420px;
   padding: 20px;
   overflow-y: auto;
+  background: #f9fafb;
 }
 
 .card {
@@ -62,6 +63,7 @@ nav a {
   padding: 4px 10px;
   border-radius: 20px;
   font-size: 13px;
+  margin-top: 6px;
 }
 
 .btn {
@@ -72,6 +74,14 @@ nav a {
   padding: 8px 14px;
   border-radius: 6px;
   cursor: pointer;
+}
+
+.notice {
+  background: #fff7ed;
+  padding: 12px;
+  border-radius: 8px;
+  color: #92400e;
+  margin-bottom: 15px;
 }
 </style>
 </head>
@@ -89,13 +99,13 @@ nav a {
   <div id="map"></div>
   <div class="list">
     <h2 id="title">Nearby Services</h2>
-    <div id="results">Loading...</div>
+    <div id="results">Loading nearby services...</div>
   </div>
 </div>
 
 <script>
 /* ================================
-   SAFE STATE HANDLING
+   SERVICE TYPE – SAFE HANDLING
 ================================ */
 
 const params = new URLSearchParams(window.location.search);
@@ -103,12 +113,13 @@ let serviceType = params.get("type") || localStorage.getItem("serviceType");
 
 if (!serviceType) {
   document.getElementById("results").innerHTML =
-    "<p>Please select a service from Home page.</p>";
-  throw new Error("Service type missing");
+    "<p>Please select a service from the Home page.</p>";
 }
 
+/* Persist safely */
 localStorage.setItem("serviceType", serviceType);
 
+/* Service mapping */
 const SERVICE_MAP = {
   salon: "beauty_salon",
   restaurant: "restaurant",
@@ -121,22 +132,16 @@ const TITLE_MAP = {
   clinic: "Nearby Clinics"
 };
 
-document.getElementById("title").innerText = TITLE_MAP[serviceType];
+document.getElementById("title").innerText =
+  TITLE_MAP[serviceType] || "Nearby Services";
 
 let map, placesService, userLocation;
 
 /* ================================
-   LOCATION (WITH CACHE)
+   LOCATION (NO WRONG COUNTRY)
 ================================ */
 
-function getLocation(callback) {
-  const cached = localStorage.getItem("userLocation");
-  if (cached) {
-    userLocation = JSON.parse(cached);
-    callback();
-    return;
-  }
-
+function getUserLocation(cb) {
   navigator.geolocation.getCurrentPosition(
     pos => {
       userLocation = {
@@ -144,20 +149,21 @@ function getLocation(callback) {
         lng: pos.coords.longitude
       };
       localStorage.setItem("userLocation", JSON.stringify(userLocation));
-      callback();
+      cb();
     },
     () => {
-      alert("Location permission required");
-    }
+      alert("Please allow location access to find nearby services.");
+    },
+    { enableHighAccuracy: true }
   );
 }
 
 /* ================================
-   GOOGLE MAPS INIT
+   MAP INIT
 ================================ */
 
 function initMap() {
-  getLocation(() => {
+  getUserLocation(() => {
     map = new google.maps.Map(document.getElementById("map"), {
       center: userLocation,
       zoom: 14
@@ -166,11 +172,21 @@ function initMap() {
     new google.maps.Marker({
       map,
       position: userLocation,
-      icon: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png"
+      icon: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+      title: "You are here"
     });
 
+    if (serviceType === "clinic") {
+      document.getElementById("results").innerHTML = `
+        <div class="notice">
+          Clinics support is coming soon 🚧
+        </div>
+      `;
+      return;
+    }
+
     placesService = new google.maps.places.PlacesService(map);
-    searchPlaces();
+    searchNearby();
   });
 }
 
@@ -178,7 +194,7 @@ function initMap() {
    PLACES SEARCH
 ================================ */
 
-function searchPlaces() {
+function searchNearby() {
   placesService.nearbySearch(
     {
       location: userLocation,
@@ -198,14 +214,15 @@ function renderResults(results, status) {
     !results.length
   ) {
     container.innerHTML =
-      "<p>No nearby services found. Try again later.</p>";
+      "<p>No nearby services found.</p>";
     return;
   }
 
   results.slice(0, 8).forEach(place => {
     new google.maps.Marker({
       map,
-      position: place.geometry.location
+      position: place.geometry.location,
+      title: place.name
     });
 
     container.innerHTML += `
@@ -213,14 +230,22 @@ function renderResults(results, status) {
         <strong>${place.name}</strong><br>
         ⭐ ${place.rating || "N/A"}<br>
         <span class="badge">
-          ${place.opening_hours?.open_now ? "Open" : "Closed"}
+          ${place.opening_hours?.open_now ? "Open Now" : "Closed"}
         </span><br>
-        <button class="btn" onclick="alert('Queue joined (demo)')">
+        <button class="btn" onclick="joinQueue()">
           Join Queue
         </button>
       </div>
     `;
   });
+}
+
+/* ================================
+   DEMO QUEUE
+================================ */
+
+function joinQueue() {
+  alert("Queue feature is in demo mode for now 🚀");
 }
 </script>
 
