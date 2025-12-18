@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
 <title>Provider Dashboard – ZeroWait</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 <style>
 body {
@@ -13,103 +13,107 @@ body {
 }
 
 header {
-  background: #fff;
-  padding: 15px 40px;
+  background: white;
+  padding: 16px 32px;
   border-bottom: 1px solid #ddd;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.logo {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: bold;
   color: #2563eb;
 }
 
 .container {
-  max-width: 700px;
-  margin: 40px auto;
-  background: #fff;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.06);
-}
-
-h2 {
-  margin-top: 0;
-}
-
-.stat {
-  font-size: 18px;
-  margin: 15px 0;
-}
-
-.queue {
-  font-size: 42px;
-  font-weight: bold;
-  color: #2563eb;
-}
-
-button {
-  padding: 12px 18px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 15px;
-  margin-right: 10px;
-}
-
-.primary { background:#2563eb; color:white; }
-.danger { background:#ef4444; color:white; }
-.secondary { background:#9ca3af; color:white; }
-
-.list {
-  margin-top: 25px;
+  max-width: 600px;
+  margin: 30px auto;
+  padding: 20px;
 }
 
 .card {
-  background:#f9fafb;
-  padding:12px;
-  border-radius:8px;
-  margin-bottom:10px;
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+  margin-bottom: 20px;
+}
+
+label {
+  font-weight: bold;
+  display: block;
+  margin-bottom: 6px;
+}
+
+input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  margin-bottom: 10px;
+}
+
+button {
+  padding: 12px;
+  width: 100%;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+button:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+.queue-item {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
 }
 </style>
 </head>
 
 <body>
 
-<header>
-  <div class="logo">ZeroWait – Dashboard</div>
-  <button onclick="logout()" class="secondary">Logout</button>
-</header>
+<header>ZeroWait – Provider Dashboard</header>
 
 <div class="container">
-  <h2 id="bizName">Loading...</h2>
 
-  <div class="stat">Queue Status: <strong id="status">--</strong></div>
-  <div class="stat">People Waiting</div>
-  <div class="queue" id="count">0</div>
+  <!-- AVG TIME -->
+  <div class="card">
+    <label>Average Service Time (minutes)</label>
+    <input type="number" id="avgServiceTime" value="10" />
+  </div>
 
-  <br>
+  <!-- ADD CUSTOMER -->
+  <div class="card">
+    <button id="addCustomerBtn">➕ Add Customer</button>
+  </div>
 
-  <button class="primary" onclick="addCustomer()">➕ Add Customer</button>
-  <button class="danger" onclick="nextCustomer()">➡ Next Customer</button>
-  <button class="secondary" onclick="toggleQueue()">Open / Close Queue</button>
+  <!-- WAIT TIME -->
+  <div class="card">
+    <strong>Current Waiting Time:</strong>
+    <div id="waitingTime">0 mins</div>
+  </div>
 
-  <div class="list" id="queueList"></div>
+  <!-- QUEUE LIST -->
+  <div class="card">
+    <strong>Queue</strong>
+    <div id="queueList"></div>
+  </div>
+
 </div>
 
-<!-- Firebase -->
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
+/* ================= FIREBASE CONFIG ================= */
 const firebaseConfig = {
   apiKey: "AIzaSyAJFGE5OFfn-OhDNJ_rWO5oi2d2CHl2fXE",
   authDomain: "zerowait-c21fc.firebaseapp.com",
-  projectId: "zerowait-c21fc"
+  projectId: "zerowait-c21fc",
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -117,96 +121,69 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-let providerId;
-let queueRef;
-
-/* =====================
-   AUTH CHECK
-===================== */
-auth.onAuthStateChanged(async user => {
+/* ================= AUTH GUARD ================= */
+auth.onAuthStateChanged(user => {
   if (!user) {
-    window.location.href = "provider-login.html";
+    alert("Not logged in");
     return;
   }
-
-  providerId = user.uid;
-  queueRef = db.collection("queues").doc(providerId);
-
-  const providerSnap = await db.collection("providers").doc(providerId).get();
-  document.getElementById("bizName").innerText =
-    providerSnap.data().name;
-
-  listenQueue();
+  initDashboard(user.uid);
 });
 
-/* =====================
-   REALTIME QUEUE
-===================== */
-function listenQueue() {
-  queueRef.onSnapshot(doc => {
+/* ================= DASHBOARD LOGIC ================= */
+function initDashboard(uid) {
+
+  const queueRef = db.collection("queues").doc(uid);
+  const addBtn = document.getElementById("addCustomerBtn");
+  const waitText = document.getElementById("waitingTime");
+  const list = document.getElementById("queueList");
+
+  // Ensure queue exists
+  queueRef.get().then(doc => {
     if (!doc.exists) {
       queueRef.set({
-        isOpen: true,
-        customers: []
+        customers: [],
+        isOpen: true
       });
-      return;
     }
+  });
+
+  // Live updates
+  queueRef.onSnapshot(doc => {
+    if (!doc.exists) return;
 
     const data = doc.data();
-    document.getElementById("status").innerText =
-      data.isOpen ? "Open 🟢" : "Closed 🔴";
+    const customers = data.customers || [];
 
-    document.getElementById("count").innerText =
-      data.customers.length;
+    // Enable button
+    addBtn.disabled = !data.isOpen;
 
-    const list = document.getElementById("queueList");
+    // Calculate wait
+    const avg = Number(document.getElementById("avgServiceTime").value || 10);
+    waitText.innerText = customers.length * avg + " mins";
+
+    // Render queue
     list.innerHTML = "";
-
-    data.customers.forEach((c, i) => {
-      list.innerHTML += `
-        <div class="card">
-          ${i + 1}. ${c.name}
-        </div>
-      `;
+    customers.forEach((c, i) => {
+      const div = document.createElement("div");
+      div.className = "queue-item";
+      div.innerText = (i + 1) + ". " + c.name;
+      list.appendChild(div);
     });
   });
-}
 
-/* =====================
-   ACTIONS
-===================== */
-function addCustomer() {
-  const name = prompt("Customer name");
-  if (!name) return;
+  // Add customer
+  addBtn.onclick = () => {
+    const name = prompt("Customer name");
+    if (!name) return;
 
-  queueRef.update({
-    customers: firebase.firestore.FieldValue.arrayUnion({
-      name,
-      joinedAt: Date.now()
-    })
-  });
-}
-
-function nextCustomer() {
-  queueRef.get().then(doc => {
-    const customers = doc.data().customers;
-    customers.shift();
-    queueRef.update({ customers });
-  });
-}
-
-function toggleQueue() {
-  queueRef.get().then(doc => {
     queueRef.update({
-      isOpen: !doc.data().isOpen
+      customers: firebase.firestore.FieldValue.arrayUnion({
+        name,
+        joinedAt: Date.now()
+      })
     });
-  });
-}
-
-function logout() {
-  auth.signOut().then(() => {
-    window.location.href = "provider-login.html";
-  });
+  };
 }
 </script>
 
