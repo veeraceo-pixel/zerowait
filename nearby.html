@@ -1,257 +1,100 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>Nearby Services – ZeroWait</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-<style>
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #f5f7fb;
-}
-
-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 30px;
-  background: #fff;
-  border-bottom: 1px solid #ddd;
-}
-
-.logo {
-  font-size: 22px;
-  font-weight: bold;
-  color: #2563eb;
-}
-
-nav a {
-  margin-left: 20px;
-  text-decoration: none;
-  color: #333;
-}
-
-.container {
-  display: flex;
-  height: calc(100vh - 70px);
-}
-
-#map {
-  flex: 1;
-}
-
-.list {
-  width: 420px;
-  padding: 20px;
-  overflow-y: auto;
-  background: #f9fafb;
-}
-
-.card {
-  background: white;
-  padding: 16px;
-  border-radius: 10px;
-  margin-bottom: 15px;
-}
-
-.badge {
-  display: inline-block;
-  background: #e5edff;
-  color: #2563eb;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 13px;
-  margin-top: 6px;
-}
-
-.btn {
-  margin-top: 10px;
-  background: #2563eb;
-  color: white;
-  border: none;
-  padding: 8px 14px;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.notice {
-  background: #fff7ed;
-  padding: 12px;
-  border-radius: 8px;
-  color: #92400e;
-  margin-bottom: 15px;
-}
-</style>
+    <meta charset="UTF-8" />
+    <title>Nearby Services – ZeroWait</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+        body { margin: 0; font-family: Arial, sans-serif; background: #f5f7fb; }
+        header { display: flex; justify-content: space-between; align-items: center; padding: 15px 30px; background: #fff; border-bottom: 1px solid #ddd; }
+        .logo { font-size: 22px; font-weight: bold; color: #2563eb; }
+        nav a { margin-left: 20px; text-decoration: none; color: #333; }
+        .container { display: flex; height: calc(100vh - 70px); }
+        #map { flex: 1; }
+        .list { width: 420px; padding: 20px; overflow-y: auto; background: #f9fafb; }
+        .card { background: white; padding: 16px; border-radius: 10px; margin-bottom: 15px; }
+        .badge { display: inline-block; background: #e5edff; color: #2563eb; padding: 4px 10px; border-radius: 20px; font-size: 13px; margin-top: 6px; }
+        .btn { margin-top: 10px; background: #2563eb; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; }
+        .notice { background: #fff7ed; padding: 12px; border-radius: 8px; color: #92400e; margin-bottom: 15px; }
+    </style>
 </head>
-
 <body>
-
-<header>
-  <div class="logo">ZeroWait</div>
-  <nav>
-    <a href="index.html">Home</a>
-  </nav>
-</header>
-
-<div class="container">
-  <div id="map"></div>
-  <div class="list">
-    <h2 id="title">Nearby Services</h2>
-    <div id="results">Loading nearby services...</div>
-  </div>
-</div>
-
-<script>
-/* ================================
-   SERVICE TYPE – SAFE HANDLING
-================================ */
-
-const params = new URLSearchParams(window.location.search);
-let serviceType = params.get("type") || localStorage.getItem("serviceType");
-
-if (!serviceType) {
-  document.getElementById("results").innerHTML =
-    "<p>Please select a service from the Home page.</p>";
-}
-
-/* Persist safely */
-localStorage.setItem("serviceType", serviceType);
-
-/* Service mapping */
-const SERVICE_MAP = {
-  salon: "beauty_salon",
-  restaurant: "restaurant",
-  clinic: "hospital"
-};
-
-const TITLE_MAP = {
-  salon: "Nearby Salons",
-  restaurant: "Nearby Restaurants",
-  clinic: "Nearby Clinics"
-};
-
-document.getElementById("title").innerText =
-  TITLE_MAP[serviceType] || "Nearby Services";
-
-let map, placesService, userLocation;
-
-/* ================================
-   LOCATION (NO WRONG COUNTRY)
-================================ */
-
-function getUserLocation(cb) {
-  navigator.geolocation.getCurrentPosition(
-    pos => {
-      userLocation = {
-        lat: pos.coords.latitude,
-        lng: pos.coords.longitude
-      };
-      localStorage.setItem("userLocation", JSON.stringify(userLocation));
-      cb();
-    },
-    () => {
-      alert("Please allow location access to find nearby services.");
-    },
-    { enableHighAccuracy: true }
-  );
-}
-
-/* ================================
-   MAP INIT
-================================ */
-
-function initMap() {
-  getUserLocation(() => {
-    map = new google.maps.Map(document.getElementById("map"), {
-      center: userLocation,
-      zoom: 14
-    });
-
-    new google.maps.Marker({
-      map,
-      position: userLocation,
-      icon: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png",
-      title: "You are here"
-    });
-
-    if (serviceType === "clinic") {
-      document.getElementById("results").innerHTML = `
-        <div class="notice">
-          Clinics support is coming soon 🚧
+    <header>
+        <div class="logo">ZeroWait</div>
+        <nav><a href="index.html">Home</a></nav>
+    </header>
+    <div class="container">
+        <div id="map"></div>
+        <div class="list">
+            <h2 id="title">Nearby Services</h2>
+            <div id="results">Loading nearby services...</div>
         </div>
-      `;
-      return;
-    }
+    </div>
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        let serviceType = params.get("type") || localStorage.getItem("serviceType") || 'salon';
+        localStorage.setItem("serviceType", serviceType);
 
-    placesService = new google.maps.places.PlacesService(map);
-    searchNearby();
-  });
-}
+        const SERVICE_MAP = { salon: "beauty_salon", restaurant: "restaurant", clinic: "hospital" };
+        const TITLE_MAP = { salon: "Nearby Salons", restaurant: "Nearby Restaurants", clinic: "Nearby Clinics" };
+        document.getElementById("title").innerText = TITLE_MAP[serviceType] || "Nearby Services";
 
-/* ================================
-   PLACES SEARCH
-================================ */
+        let map, placesService, userLocation;
 
-function searchNearby() {
-  placesService.nearbySearch(
-    {
-      location: userLocation,
-      radius: 3000,
-      type: SERVICE_MAP[serviceType]
-    },
-    renderResults
-  );
-}
+        function getUserLocation(cb) {
+            navigator.geolocation.getCurrentPosition(
+                pos => {
+                    userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                    localStorage.setItem("userLocation", JSON.stringify(userLocation));
+                    cb();
+                },
+                () => { alert("Please allow location access to find nearby services."); },
+                { enableHighAccuracy: true }
+            );
+        }
 
-function renderResults(results, status) {
-  const container = document.getElementById("results");
-  container.innerHTML = "";
+        function initMap() {
+            getUserLocation(() => {
+                map = new google.maps.Map(document.getElementById("map"), { center: userLocation, zoom: 14 });
+                new google.maps.Marker({ map, position: userLocation, icon: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png", title: "You are here" });
+                
+                if (serviceType === "clinic") {
+                    document.getElementById("results").innerHTML = `<div class="notice">Clinics support is coming soon 🚧</div>`;
+                    return;
+                }
+                placesService = new google.maps.places.PlacesService(map);
+                searchNearby();
+            });
+        }
 
-  if (
-    status !== google.maps.places.PlacesServiceStatus.OK ||
-    !results.length
-  ) {
-    container.innerHTML =
-      "<p>No nearby services found.</p>";
-    return;
-  }
+        function searchNearby() {
+            placesService.nearbySearch({ location: userLocation, radius: 3000, type: SERVICE_MAP[serviceType] }, renderResults);
+        }
 
-  results.slice(0, 8).forEach(place => {
-    new google.maps.Marker({
-      map,
-      position: place.geometry.location,
-      title: place.name
-    });
+        function renderResults(results, status) {
+            const container = document.getElementById("results");
+            container.innerHTML = "";
+            if (status !== google.maps.places.PlacesServiceStatus.OK || !results.length) {
+                container.innerHTML = "<p>No nearby services found.</p>";
+                return;
+            }
+            results.slice(0, 8).forEach(place => {
+                new google.maps.Marker({ map, position: place.geometry.location, title: place.name });
+                container.innerHTML += `
+                    <div class="card">
+                        <strong>${place.name}</strong><br>
+                        ⭐ ${place.rating || "N/A"}<br>
+                        <span class="badge">${place.opening_hours?.open_now ? "Open Now" : "Closed"}</span><br>
+                        <button class="btn" onclick="goToQueue('${place.place_id}', '${encodeURIComponent(place.name)}')">Join Queue</button>
+                    </div>
+                `;
+            });
+        }
 
-    container.innerHTML += `
-      <div class="card">
-        <strong>${place.name}</strong><br>
-        ⭐ ${place.rating || "N/A"}<br>
-        <span class="badge">
-          ${place.opening_hours?.open_now ? "Open Now" : "Closed"}
-        </span><br>
-        <button class="btn" onclick="joinQueue()">
-          Join Queue
-        </button>
-      </div>
-    `;
-  });
-}
-
-/* ================================
-   DEMO QUEUE
-================================ */
-
-function joinQueue() {
-  alert("Queue feature is in demo mode for now 🚀");
-}
-</script>
-
-<script
-  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAG-Qv4aH4xE2VFAMImB_xwG4J8TmehUMQ&libraries=places&callback=initMap"
-  async defer></script>
-
+        function goToQueue(id, name) {
+            window.location.href = `join-queue.html?provider=${id}&name=${name}`;
+        }
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAG-Qv4aH4xE2VFAMImB_xwG4J8TmehUMQ&libraries=places&callback=initMap" async defer></script>
 </body>
 </html>
