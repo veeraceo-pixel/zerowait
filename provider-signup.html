@@ -141,6 +141,7 @@ const db = firebase.firestore();
    PROVIDER REGISTRATION
 ================================ */
 
+<script>
 function registerProvider() {
   const btn = document.querySelector("button");
   btn.disabled = true;
@@ -159,8 +160,12 @@ function registerProvider() {
     return;
   }
 
+  console.log("Starting signup...");
+
   auth.createUserWithEmailAndPassword(email, password)
     .then(cred => {
+      console.log("Auth success", cred.user.uid);
+
       return db.collection("providers").doc(cred.user.uid).set({
         name,
         serviceType: type,
@@ -170,17 +175,42 @@ function registerProvider() {
       });
     })
     .then(() => {
-      alert("✅ Signup successful! Redirecting to dashboard...");
+      console.log("Firestore write success");
+
+      // SHOW SUCCESS CLEARLY
+      document.body.innerHTML = `
+        <div style="
+          display:flex;
+          justify-content:center;
+          align-items:center;
+          height:100vh;
+          font-family:Arial;
+        ">
+          <div style="
+            background:white;
+            padding:40px;
+            border-radius:12px;
+            text-align:center;
+            box-shadow:0 10px 25px rgba(0,0,0,0.1)
+          ">
+            <h2>✅ Signup Successful</h2>
+            <p>Redirecting to dashboard...</p>
+          </div>
+        </div>
+      `;
+
       setTimeout(() => {
         window.location.href = "provider-dashboard.html";
-      }, 1200);
+      }, 1500);
     })
     .catch(err => {
+      console.error("Signup error:", err);
       alert(err.message);
       btn.disabled = false;
       btn.innerText = "Create Provider Account";
     });
 }
+</script>
 
 </script>
 
