@@ -142,6 +142,10 @@ const db = firebase.firestore();
 ================================ */
 
 function registerProvider() {
+  const btn = document.querySelector("button");
+  btn.disabled = true;
+  btn.innerText = "Creating account...";
+
   const name = document.getElementById("businessName").value.trim();
   const type = document.getElementById("serviceType").value;
   const avgTime = document.getElementById("avgTime").value;
@@ -150,6 +154,8 @@ function registerProvider() {
 
   if (!name || !type || !avgTime || !email || !password) {
     alert("Please fill all fields");
+    btn.disabled = false;
+    btn.innerText = "Create Provider Account";
     return;
   }
 
@@ -164,13 +170,18 @@ function registerProvider() {
       });
     })
     .then(() => {
-      alert("Provider registered successfully!");
-      window.location.href = "provider-dashboard.html";
+      alert("✅ Signup successful! Redirecting to dashboard...");
+      setTimeout(() => {
+        window.location.href = "provider-dashboard.html";
+      }, 1200);
     })
     .catch(err => {
       alert(err.message);
+      btn.disabled = false;
+      btn.innerText = "Create Provider Account";
     });
 }
+
 </script>
 
 </body>
