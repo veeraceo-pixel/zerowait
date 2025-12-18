@@ -1,97 +1,176 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
 <title>Provider Signup – ZeroWait</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 <style>
 body {
+  margin: 0;
   font-family: Arial, sans-serif;
   background: #f5f7fb;
-  margin: 0;
 }
+
 header {
-  padding: 15px 30px;
+  padding: 15px 40px;
+  background: #fff;
+  border-bottom: 1px solid #ddd;
+}
+
+.logo {
+  font-size: 22px;
+  font-weight: bold;
+  color: #2563eb;
+}
+
+.container {
+  max-width: 500px;
+  margin: 40px auto;
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
+
+h2 {
+  margin-bottom: 20px;
+}
+
+label {
+  display: block;
+  margin-top: 15px;
+  font-weight: bold;
+}
+
+input, select {
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+button {
+  margin-top: 25px;
+  width: 100%;
+  padding: 12px;
   background: #2563eb;
   color: white;
-}
-#map {
-  height: 50vh;
-}
-.list {
-  padding: 20px;
-}
-.card {
-  background: white;
-  padding: 15px;
-  border-radius: 10px;
-  margin-bottom: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
   cursor: pointer;
+}
+
+button:hover {
+  background: #1d4ed8;
+}
+
+.note {
+  margin-top: 15px;
+  font-size: 13px;
+  color: #555;
 }
 </style>
 </head>
 
 <body>
 
-<header>Register Your Business</header>
-<div id="map"></div>
-<div class="list" id="list">Loading nearby businesses...</div>
+<header>
+  <div class="logo">ZeroWait – Provider</div>
+</header>
+
+<div class="container">
+  <h2>Register Your Business</h2>
+
+  <label>Business Name</label>
+  <input type="text" id="businessName" placeholder="e.g. Vintage Nail & Beauty" />
+
+  <label>Service Type</label>
+  <select id="serviceType">
+    <option value="">Select service</option>
+    <option value="salon">Salon</option>
+    <option value="restaurant">Restaurant</option>
+    <option value="clinic">Clinic</option>
+  </select>
+
+  <label>Average Service Time (minutes)</label>
+  <input type="number" id="avgTime" placeholder="e.g. 10" />
+
+  <label>Email</label>
+  <input type="email" id="email" placeholder="owner@email.com" />
+
+  <label>Password</label>
+  <input type="password" id="password" placeholder="Minimum 6 characters" />
+
+  <button onclick="registerProvider()">Create Provider Account</button>
+
+  <p class="note">
+    After signup, you will manage your live queue from the dashboard.
+  </p>
+</div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-let map, service;
-let providers = JSON.parse(localStorage.getItem("providers")) || [];
+/* ================================
+   FIREBASE CONFIG
+   (Replace with your own keys)
+================================ */
 
-function initMap() {
-  navigator.geolocation.getCurrentPosition(pos => {
-    const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+const firebaseConfig = {
+  apiKey: "YOUR_FIREBASE_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "XXXX",
+  appId: "XXXX"
+};
 
-    map = new google.maps.Map(document.getElementById("map"), {
-      center: loc,
-      zoom: 14
-    });
+firebase.initializeApp(firebaseConfig);
 
-    service = new google.maps.places.PlacesService(map);
-    service.nearbySearch(
-      { location: loc, radius: 3000, type: "beauty_salon" },
-      render
-    );
-  });
-}
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-function render(results, status) {
-  if (status !== google.maps.places.PlacesServiceStatus.OK) return;
+/* ================================
+   PROVIDER REGISTRATION
+================================ */
 
-  const list = document.getElementById("list");
-  list.innerHTML = "";
+function registerProvider() {
+  const name = document.getElementById("businessName").value.trim();
+  const type = document.getElementById("serviceType").value;
+  const avgTime = document.getElementById("avgTime").value;
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
 
-  results.slice(0, 10).forEach(p => {
-    const div = document.createElement("div");
-    div.className = "card";
-    div.innerHTML = `<strong>${p.name}</strong><br>${p.vicinity || ""}`;
+  if (!name || !type || !avgTime || !email || !password) {
+    alert("Please fill all fields");
+    return;
+  }
 
-    div.onclick = () => {
-      providers.push({
-        placeId: p.place_id,
-        name: p.name,
-        type: "salon",
-        avgTime: 10,
-        queue: []
+  auth.createUserWithEmailAndPassword(email, password)
+    .then(cred => {
+      return db.collection("providers").doc(cred.user.uid).set({
+        name,
+        serviceType: type,
+        avgServiceTime: Number(avgTime),
+        isOpen: true,
+        createdAt: new Date()
       });
-      localStorage.setItem("providers", JSON.stringify(providers));
-      localStorage.setItem("activeProvider", p.place_id);
+    })
+    .then(() => {
+      alert("Provider registered successfully!");
       window.location.href = "provider-dashboard.html";
-    };
-
-    list.appendChild(div);
-  });
+    })
+    .catch(err => {
+      alert(err.message);
+    });
 }
-</script>
-
-<script async
-src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAG-Qv4aH4xE2VFAMImB_xwG4J8TmehUMQ&libraries=places&callback=initMap">
 </script>
 
 </body>
 </html>
-
