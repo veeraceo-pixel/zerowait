@@ -7,93 +7,207 @@
 
 <style>
 body {
+  margin: 0;
   font-family: Arial, sans-serif;
   background: #f5f7fb;
 }
+
+header {
+  background: #fff;
+  padding: 15px 40px;
+  border-bottom: 1px solid #ddd;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-size: 22px;
+  font-weight: bold;
+  color: #2563eb;
+}
+
 .container {
-  max-width: 600px;
+  max-width: 700px;
   margin: 40px auto;
+  background: #fff;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.06);
 }
-.card {
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-  margin-bottom: 20px;
+
+h2 {
+  margin-top: 0;
 }
+
+.stat {
+  font-size: 18px;
+  margin: 15px 0;
+}
+
+.queue {
+  font-size: 42px;
+  font-weight: bold;
+  color: #2563eb;
+}
+
 button {
-  background: #2563eb;
-  color: white;
+  padding: 12px 18px;
   border: none;
-  padding: 8px 12px;
-  border-radius: 6px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+  margin-right: 10px;
+}
+
+.primary { background:#2563eb; color:white; }
+.danger { background:#ef4444; color:white; }
+.secondary { background:#9ca3af; color:white; }
+
+.list {
+  margin-top: 25px;
+}
+
+.card {
+  background:#f9fafb;
+  padding:12px;
+  border-radius:8px;
+  margin-bottom:10px;
 }
 </style>
 </head>
 
 <body>
 
+<header>
+  <div class="logo">ZeroWait – Dashboard</div>
+  <button onclick="logout()" class="secondary">Logout</button>
+</header>
+
 <div class="container">
-  <h2 id="title"></h2>
+  <h2 id="bizName">Loading...</h2>
 
-  <div class="card">
-    <label>Avg Service Time (mins)</label>
-    <input type="number" id="avgTime">
-  </div>
+  <div class="stat">Queue Status: <strong id="status">--</strong></div>
+  <div class="stat">People Waiting</div>
+  <div class="queue" id="count">0</div>
 
-  <div class="card">
-    <button onclick="add()">➕ Add Customer</button>
-    <div id="queue"></div>
-  </div>
+  <br>
 
-  <div class="card">
-    <strong>Waiting Time:</strong>
-    <span id="wait"></span>
-  </div>
+  <button class="primary" onclick="addCustomer()">➕ Add Customer</button>
+  <button class="danger" onclick="nextCustomer()">➡ Next Customer</button>
+  <button class="secondary" onclick="toggleQueue()">Open / Close Queue</button>
+
+  <div class="list" id="queueList"></div>
 </div>
 
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
 <script>
-const providers = JSON.parse(localStorage.getItem("providers")) || [];
-const id = localStorage.getItem("activeProvider");
-const provider = providers.find(p => p.placeId === id);
-
-document.getElementById("title").innerText = provider.name;
-const avgInput = document.getElementById("avgTime");
-avgInput.value = provider.avgTime;
-
-function save() {
-  localStorage.setItem("providers", JSON.stringify(providers));
-  render();
-}
-
-avgInput.oninput = () => {
-  provider.avgTime = Number(avgInput.value);
-  save();
+const firebaseConfig = {
+  apiKey: "AIzaSyAJFGE5OFfn-OhDNJ_rWO5oi2d2CHl2fXE",
+  authDomain: "zerowait-c21fc.firebaseapp.com",
+  projectId: "zerowait-c21fc"
 };
 
-function add() {
-  provider.queue.push(Date.now());
-  save();
-}
+firebase.initializeApp(firebaseConfig);
 
-function remove(i) {
-  provider.queue.splice(i, 1);
-  save();
-}
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-function render() {
-  const q = document.getElementById("queue");
-  q.innerHTML = "";
-  provider.queue.forEach((_, i) => {
-    q.innerHTML += `
-      <div>Customer ${i + 1}
-      <button onclick="remove(${i})">Done</button></div>
-    `;
+let providerId;
+let queueRef;
+
+/* =====================
+   AUTH CHECK
+===================== */
+auth.onAuthStateChanged(async user => {
+  if (!user) {
+    window.location.href = "provider-login.html";
+    return;
+  }
+
+  providerId = user.uid;
+  queueRef = db.collection("queues").doc(providerId);
+
+  const providerSnap = await db.collection("providers").doc(providerId).get();
+  document.getElementById("bizName").innerText =
+    providerSnap.data().name;
+
+  listenQueue();
+});
+
+/* =====================
+   REALTIME QUEUE
+===================== */
+function listenQueue() {
+  queueRef.onSnapshot(doc => {
+    if (!doc.exists) {
+      queueRef.set({
+        isOpen: true,
+        customers: []
+      });
+      return;
+    }
+
+    const data = doc.data();
+    document.getElementById("status").innerText =
+      data.isOpen ? "Open 🟢" : "Closed 🔴";
+
+    document.getElementById("count").innerText =
+      data.customers.length;
+
+    const list = document.getElementById("queueList");
+    list.innerHTML = "";
+
+    data.customers.forEach((c, i) => {
+      list.innerHTML += `
+        <div class="card">
+          ${i + 1}. ${c.name}
+        </div>
+      `;
+    });
   });
-  document.getElementById("wait").innerText =
-    provider.queue.length * provider.avgTime + " mins";
 }
 
-render();
+/* =====================
+   ACTIONS
+===================== */
+function addCustomer() {
+  const name = prompt("Customer name");
+  if (!name) return;
+
+  queueRef.update({
+    customers: firebase.firestore.FieldValue.arrayUnion({
+      name,
+      joinedAt: Date.now()
+    })
+  });
+}
+
+function nextCustomer() {
+  queueRef.get().then(doc => {
+    const customers = doc.data().customers;
+    customers.shift();
+    queueRef.update({ customers });
+  });
+}
+
+function toggleQueue() {
+  queueRef.get().then(doc => {
+    queueRef.update({
+      isOpen: !doc.data().isOpen
+    });
+  });
+}
+
+function logout() {
+  auth.signOut().then(() => {
+    window.location.href = "provider-login.html";
+  });
+}
 </script>
 
 </body>
