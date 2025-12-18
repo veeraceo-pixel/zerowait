@@ -1,191 +1,110 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>Provider Dashboard – ZeroWait</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-<style>
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #f5f7fb;
-}
-
-header {
-  background: white;
-  padding: 16px 32px;
-  border-bottom: 1px solid #ddd;
-  font-size: 20px;
-  font-weight: bold;
-  color: #2563eb;
-}
-
-.container {
-  max-width: 600px;
-  margin: 30px auto;
-  padding: 20px;
-}
-
-.card {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.05);
-  margin-bottom: 20px;
-}
-
-label {
-  font-weight: bold;
-  display: block;
-  margin-bottom: 6px;
-}
-
-input {
-  width: 100%;
-  padding: 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  margin-bottom: 10px;
-}
-
-button {
-  padding: 12px;
-  width: 100%;
-  background: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-button:disabled {
-  background: #9ca3af;
-  cursor: not-allowed;
-}
-
-.queue-item {
-  padding: 10px;
-  border-bottom: 1px solid #eee;
-}
-</style>
+    <meta charset="UTF-8" />
+    <title>Provider Dashboard – ZeroWait</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+        body { margin: 0; font-family: Arial, sans-serif; background: #f5f7fb; }
+        header { background: white; padding: 16px 32px; border-bottom: 1px solid #ddd; font-size: 20px; font-weight: bold; color: #2563eb; display: flex; justify-content: space-between; align-items: center; }
+        .container { max-width: 600px; margin: 30px auto; padding: 20px; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        label { font-weight: bold; display: block; margin-bottom: 6px; }
+        input { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #ccc; margin-bottom: 10px; box-sizing: border-box; }
+        button { padding: 12px; width: 100%; background: #2563eb; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
+        button:disabled { background: #9ca3af; cursor: not-allowed; }
+        .queue-item { padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .qr-box { text-align: center; margin-top: 10px; }
+        #qrcode img { margin: 0 auto; }
+        .logout-btn { background: #ef4444; width: auto; padding: 8px 15px; font-size: 14px; }
+    </style>
 </head>
-
 <body>
-
-<header>ZeroWait – Provider Dashboard</header>
-
-<div class="container">
-
-  <!-- AVG TIME -->
-  <div class="card">
-    <label>Average Service Time (minutes)</label>
-    <input type="number" id="avgServiceTime" value="10" />
-  </div>
-
-  <!-- ADD CUSTOMER -->
-  <div class="card">
-    <button id="addCustomerBtn">➕ Add Customer</button>
-  </div>
-
-  <!-- WAIT TIME -->
-  <div class="card">
-    <strong>Current Waiting Time:</strong>
-    <div id="waitingTime">0 mins</div>
-  </div>
-
-  <!-- QUEUE LIST -->
-  <div class="card">
-    <strong>Queue</strong>
-    <div id="queueList"></div>
-  </div>
-
-</div>
-
-<!-- FIREBASE -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
-<script>
-/* ================= FIREBASE CONFIG ================= */
-const firebaseConfig = {
-  apiKey: "AIzaSyAJFGE5OFfn-OhDNJ_rWO5oi2d2CHl2fXE",
-  authDomain: "zerowait-c21fc.firebaseapp.com",
-  projectId: "zerowait-c21fc",
-};
-
-firebase.initializeApp(firebaseConfig);
-
-const auth = firebase.auth();
-const db = firebase.firestore();
-
-/* ================= AUTH GUARD ================= */
-auth.onAuthStateChanged(user => {
-  if (!user) {
-    alert("Not logged in");
-    return;
-  }
-  initDashboard(user.uid);
-});
-
-/* ================= DASHBOARD LOGIC ================= */
-function initDashboard(uid) {
-
-  const queueRef = db.collection("queues").doc(uid);
-  const addBtn = document.getElementById("addCustomerBtn");
-  const waitText = document.getElementById("waitingTime");
-  const list = document.getElementById("queueList");
-
-  // Ensure queue exists
-  queueRef.get().then(doc => {
-    if (!doc.exists) {
-      queueRef.set({
-        customers: [],
-        isOpen: true
-      });
-    }
-  });
-
-  // Live updates
-  queueRef.onSnapshot(doc => {
-    if (!doc.exists) return;
-
-    const data = doc.data();
-    const customers = data.customers || [];
-
-    // Enable button
-    addBtn.disabled = !data.isOpen;
-
-    // Calculate wait
-    const avg = Number(document.getElementById("avgServiceTime").value || 10);
-    waitText.innerText = customers.length * avg + " mins";
-
-    // Render queue
-    list.innerHTML = "";
-    customers.forEach((c, i) => {
-      const div = document.createElement("div");
-      div.className = "queue-item";
-      div.innerText = (i + 1) + ". " + c.name;
-      list.appendChild(div);
-    });
-  });
-
-  // Add customer
-  addBtn.onclick = () => {
-    const name = prompt("Customer name");
-    if (!name) return;
-
-    queueRef.update({
-      customers: firebase.firestore.FieldValue.arrayUnion({
-        name,
-        joinedAt: Date.now()
-      })
-    });
-  };
-}
-</script>
-
+    <header>
+        <div>ZeroWait – Provider Dashboard</div>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </header>
+    <div class="container">
+        <div class="card">
+            <label>Share Your Queue Link</label>
+            <div id="qrLink" style="font-size: 14px; color: #666; margin-bottom: 15px; word-break: break-all;">Loading...</div>
+            <div class="qr-box">
+                <div id="qrcode"></div>
+            </div>
+        </div>
+        <div class="card">
+            <label>Average Service Time (minutes)</label>
+            <input type="number" id="avgServiceTime" value="10" />
+        </div>
+        <div class="card">
+            <button id="addCustomerBtn">➕ Add Manual Customer</button>
+        </div>
+        <div class="card">
+            <strong>Current Waiting Time:</strong>
+            <div id="waitingTime">0 mins</div>
+        </div>
+        <div class="card">
+            <strong>Queue</strong>
+            <div id="queueList"></div>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAJFGE5OFfn-OhDNJ_rWO5oi2d2CHl2fXE",
+            authDomain: "zerowait-c21fc.firebaseapp.com",
+            projectId: "zerowait-c21fc",
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        auth.onAuthStateChanged(user => {
+            if (!user) { window.location.href = "login.html"; return; }
+            initDashboard(user.uid);
+        });
+        function logout() { auth.signOut().then(() => window.location.href = "login.html"); }
+        function initDashboard(uid) {
+            const queueRef = db.collection("queues").doc(uid);
+            const addBtn = document.getElementById("addCustomerBtn");
+            const waitText = document.getElementById("waitingTime");
+            const list = document.getElementById("queueList");
+            const qrLinkDiv = document.getElementById("qrLink");
+            const currentURL = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
+            const joinLink = `${currentURL}/join-queue.html?provider=${uid}`;
+            qrLinkDiv.innerText = joinLink;
+            new QRCode(document.getElementById("qrcode"), { text: joinLink, width: 128, height: 128 });
+            queueRef.get().then(doc => { if (!doc.exists) { queueRef.set({ customers: [], isOpen: true }); } });
+            queueRef.onSnapshot(doc => {
+                if (!doc.exists) return;
+                const data = doc.data();
+                const customers = data.customers || [];
+                addBtn.disabled = !data.isOpen;
+                const avg = Number(document.getElementById("avgServiceTime").value || 10);
+                waitText.innerText = customers.length * avg + " mins";
+                list.innerHTML = "";
+                customers.forEach((c, i) => {
+                    const div = document.createElement("div");
+                    div.className = "queue-item";
+                    div.innerHTML = `<span>${i + 1}. ${c.name}</span> <button style="width:auto; padding: 4px 8px; background: #666; font-size: 12px;" onclick="removeCustomer(${i})">Done</button>`;
+                    list.appendChild(div);
+                });
+            });
+            addBtn.onclick = () => {
+                const name = prompt("Customer name");
+                if (!name) return;
+                queueRef.update({ customers: firebase.firestore.FieldValue.arrayUnion({ name, joinedAt: Date.now() }) });
+            };
+            window.removeCustomer = (index) => {
+                queueRef.get().then(doc => {
+                    const customers = doc.data().customers;
+                    customers.splice(index, 1);
+                    queueRef.update({ customers: customers });
+                });
+            };
+        }
+    </script>
 </body>
 </html>
