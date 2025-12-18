@@ -1,64 +1,113 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>ZeroWait – Skip the Wait</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; background: #f5f7fb; }
-        header { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; background: white; border-bottom: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .logo { font-size: 24px; font-weight: bold; color: #2563eb; }
-        nav a { margin-left: 30px; text-decoration: none; color: #333; font-weight: 500; transition: color 0.3s; }
-        nav a:hover { color: #2563eb; }
-        .hero { text-align: center; padding: 100px 20px; }
-        .hero h1 { font-size: 48px; color: #1f2937; margin-bottom: 15px; }
-        .hero p { font-size: 18px; color: #6b7280; margin-bottom: 30px; }
-        .categories { display: flex; justify-content: center; gap: 20px; margin-top: 40px; flex-wrap: wrap; }
-        .category { background: #2563eb; color: white; padding: 20px 30px; border-radius: 10px; cursor: pointer; font-size: 18px; font-weight: bold; transition: background 0.3s, transform 0.2s; border: none; }
-        .category:hover { background: #1d4ed8; transform: translateY(-2px); }
-    </style>
+  <meta charset="UTF-8">
+  <title>ZeroWait – Skip the Wait</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background: #f5f7fb; }
+    header { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; background: white; border-bottom: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    .logo { font-size: 24px; font-weight: bold; color: #2563eb; }
+    nav a { margin-left: 30px; text-decoration: none; color: #333; font-weight: 500; transition: color 0.3s; }
+    nav a:hover { color: #2563eb; }
+    .hero { text-align: center; padding: 100px 20px; }
+    .hero h1 { font-size: 48px; color: #1f2937; margin-bottom: 15px; }
+    .hero p { font-size: 18px; color: #6b7280; margin-bottom: 30px; }
+    .categories { display: flex; justify-content: center; gap: 20px; margin-top: 40px; flex-wrap: wrap; }
+    .category { background: #2563eb; color: white; padding: 20px 30px; border-radius: 10px; cursor: pointer; font-size: 18px; font-weight: bold; transition: background 0.3s, transform 0.2s; border: none; }
+    .category:hover { background: #1d4ed8; transform: translateY(-2px); }
+  </style>
 </head>
 <body>
-    <header>
-        <div class="logo">ZeroWait</div>
-        <nav id="nav">
-            <a href="index.html">Home</a>
-            <a href="about.html">About Us</a>
-            <a href="how-it-works.html">How It Works</a>
-            <span id="authLinks">
-                <a href="login.html">Login</a>
-                <a href="provider-signup.html">Provider Signup</a>
-            </span>
-        </nav>
-    </header>
-    <div class="hero">
-        <h1>Never Wait Again</h1>
-        <p>Book instantly. Skip the queue. Save your time.</p>
-        <div class="categories">
-            <button class="category" onclick="go('salon')">💇 Salon</button>
-            <button class="category" onclick="go('restaurant')">🍽️ Restaurant</button>
-            <button class="category" onclick="go('clinic')">🏥 Clinic</button>
-        </div>
+  <header>
+    <div class="logo">ZeroWait</div>
+    <nav id="nav">
+      <a href="index.html">Home</a>
+      <a href="about.html">About Us</a>
+      <a href="how-it-works.html">How It Works</a>
+      <span id="authLinks">
+        <a href="login.html">Login</a>
+        <a href="provider-signup.html">Provider Signup</a>
+      </span>
+    </nav>
+  </header>
+
+  <div class="hero">
+    <h1>Never Wait Again</h1>
+    <p>Book instantly. Skip the queue. Save your time.</p>
+    <div class="categories">
+      <button class="category" onclick="goToCategory('salon')">💇 Salon</button>
+      <button class="category" onclick="goToCategory('restaurant')">🍽️ Restaurant</button>
+      <button class="category" onclick="goToCategory('clinic')">🏥 Clinic</button>
     </div>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script>
-        firebase.initializeApp({
-            apiKey: "AIzaSyAJFGE5OFfn-OhDNJ_rWO5oi2d2CHl2fXE",
-            authDomain: "zerowait-c21fc.firebaseapp.com",
-            projectId: "zerowait-c21fc",
-        });
-        const auth = firebase.auth();
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                document.getElementById('authLinks').innerHTML = `
-                    <a href="provider-dashboard.html" style="color: #2563eb; font-weight: bold;">Dashboard</a>
-                    <a href="#" onclick="firebase.auth().signOut()">Logout</a>
-                `;
-            }
-        });
-        function go(type) { window.location.href = `nearby.html?type=${encodeURIComponent(type)}`; }
-    </script>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script>
+    // IMPORTANT: Move your Firebase config to a backend .env file for security
+    // DO NOT expose API keys in frontend code
+    // This is a placeholder - configure via backend
+    
+    function initializeFirebase() {
+      try {
+        if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+          // Load config from secure backend endpoint
+          fetch('/api/firebase-config')
+            .then(r => r.json())
+            .then(config => {
+              firebase.initializeApp(config);
+              setupAuthListener();
+            })
+            .catch(err => {
+              console.error('Firebase init error:', err);
+            });
+        }
+      } catch (err) {
+        console.error('Firebase initialization failed:', err);
+      }
+    }
+
+    function setupAuthListener() {
+      const auth = firebase.auth();
+      auth.onAuthStateChanged(user => {
+        const authLinks = document.getElementById('authLinks');
+        if (!authLinks) return;
+        
+        if (user) {
+          authLinks.innerHTML = `
+            <a href="provider-dashboard.html" style="color: #2563eb; font-weight: bold;">Dashboard</a>
+            <a href="#" onclick="handleLogout(event)">Logout</a>
+          `;
+        } else {
+          authLinks.innerHTML = `
+            <a href="login.html">Login</a>
+            <a href="provider-signup.html">Provider Signup</a>
+          `;
+        }
+      });
+    }
+
+    function goToCategory(type) {
+      if (!type) return;
+      localStorage.setItem('serviceType', type);
+      window.location.href = `nearby.html?type=${encodeURIComponent(type)}`;
+    }
+
+    function handleLogout(e) {
+      e.preventDefault();
+      const auth = firebase.auth();
+      auth.signOut().then(() => {
+        window.location.href = 'index.html';
+      }).catch(err => {
+        console.error('Logout error:', err);
+        alert('Error logging out');
+      });
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', initializeFirebase);
+  </script>
 </body>
 </html>
