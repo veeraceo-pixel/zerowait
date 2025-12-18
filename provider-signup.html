@@ -60,7 +60,8 @@ button {
 }
 
 button:disabled {
-  opacity: 0.7;
+  background: #9ca3af;
+  cursor: not-allowed;
 }
 
 .note {
@@ -81,7 +82,7 @@ button:disabled {
   <h2>Register Your Business</h2>
 
   <label>Business Name</label>
-  <input type="text" id="businessName" />
+  <input type="text" id="businessName">
 
   <label>Service Type</label>
   <select id="serviceType">
@@ -92,15 +93,17 @@ button:disabled {
   </select>
 
   <label>Average Service Time (minutes)</label>
-  <input type="number" id="avgTime" />
+  <input type="number" id="avgTime">
 
   <label>Email</label>
-  <input type="email" id="email" />
+  <input type="email" id="email">
 
   <label>Password</label>
-  <input type="password" id="password" />
+  <input type="password" id="password">
 
-  <button onclick="registerProvider()">Create Provider Account</button>
+  <button id="signupBtn" onclick="registerProvider()">
+    Create Provider Account
+  </button>
 
   <p class="note">
     After signup, you will manage your live queue from the dashboard.
@@ -114,30 +117,31 @@ button:disabled {
 
 <script>
 /* ================================
-   FIREBASE INIT
+   FIREBASE CONFIG
 ================================ */
-
 firebase.initializeApp({
   apiKey: "AIzaSyAJFGE5OFfn-OhDNJ_rWO5oi2d2CHl2fXE",
   authDomain: "zerowait-c21fc.firebaseapp.com",
-  projectId: "zerowait-c21fc"
+  projectId: "zerowait-c21fc",
+  storageBucket: "zerowait-c21fc.appspot.com",
+  messagingSenderId: "839269113134",
+  appId: "1:839269113134:web:0411874b0e248a2a102ebf"
 });
 
 const auth = firebase.auth();
 const db = firebase.firestore();
 
 /* ================================
-   PROVIDER REGISTRATION
+   REGISTER PROVIDER (FIXED)
 ================================ */
-
 function registerProvider() {
-  const btn = document.querySelector("button");
+  const btn = document.getElementById("signupBtn");
   btn.disabled = true;
   btn.innerText = "Creating account...";
 
-  const name = businessName.value.trim();
-  const type = serviceType.value;
-  const avgTime = avgTimeInput = document.getElementById("avgTime").value;
+  const name = document.getElementById("businessName").value.trim();
+  const type = document.getElementById("serviceType").value;
+  const avgTime = document.getElementById("avgTime").value;
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
 
@@ -159,6 +163,7 @@ function registerProvider() {
       });
     })
     .then(() => {
+      // ✅ SUCCESS SCREEN (GUARANTEED)
       document.body.innerHTML = `
         <div style="
           display:flex;
@@ -166,6 +171,7 @@ function registerProvider() {
           align-items:center;
           height:100vh;
           font-family:Arial;
+          background:#f5f7fb;
         ">
           <div style="
             background:white;
