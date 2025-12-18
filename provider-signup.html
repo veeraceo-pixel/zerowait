@@ -123,11 +123,12 @@ document.getElementById("signupBtn").onclick = async () => {
   btn.innerText = "Creating account...";
 
   try {
-    const name = businessName.value.trim();
-    const type = serviceType.value;
-    const avgTime = avgTimeInput = avgTime.value;
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
+const name = document.getElementById("businessName").value.trim();
+const type = document.getElementById("serviceType").value;
+const avgTime = document.getElementById("avgTime").value;
+const email = document.getElementById("email").value;
+const password = document.getElementById("password").value;
+
 
     if (!name || !type || !avgTime || !email || !password) {
       alert("Please fill all fields");
