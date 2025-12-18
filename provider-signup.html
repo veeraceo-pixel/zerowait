@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Provider Signup – ZeroWait</title>
+<title>Provider Dashboard – ZeroWait</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 <style>
@@ -13,8 +13,11 @@ body {
 }
 
 header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   padding: 15px 40px;
-  background: #fff;
+  background: white;
   border-bottom: 1px solid #ddd;
 }
 
@@ -24,50 +27,46 @@ header {
   color: #2563eb;
 }
 
-.container {
-  max-width: 500px;
-  margin: 40px auto;
-  background: white;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-}
-
-label {
-  display: block;
-  margin-top: 15px;
+.logout {
+  cursor: pointer;
+  color: #2563eb;
   font-weight: bold;
 }
 
-input, select {
-  width: 100%;
-  padding: 10px;
-  margin-top: 6px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
+.container {
+  max-width: 900px;
+  margin: 30px auto;
+  padding: 20px;
 }
 
-button {
-  margin-top: 25px;
-  width: 100%;
-  padding: 12px;
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.queue-item {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.btn {
+  padding: 10px 16px;
   background: #2563eb;
   color: white;
   border: none;
   border-radius: 8px;
-  font-size: 16px;
   cursor: pointer;
 }
 
-button:disabled {
-  background: #9ca3af;
-  cursor: not-allowed;
+.btn.secondary {
+  background: #e5edff;
+  color: #2563eb;
 }
 
-.note {
-  margin-top: 15px;
-  font-size: 13px;
-  color: #555;
+.btn.danger {
+  background: #ef4444;
 }
 </style>
 </head>
@@ -76,38 +75,29 @@ button:disabled {
 
 <header>
   <div class="logo">ZeroWait – Provider</div>
+  <div class="logout" onclick="logout()">Logout</div>
 </header>
 
 <div class="container">
-  <h2>Register Your Business</h2>
 
-  <label>Business Name</label>
-  <input type="text" id="businessName">
+  <div class="card">
+    <h2 id="businessName">Loading...</h2>
+    <p>
+      Service: <strong id="serviceType"></strong><br>
+      Avg Service Time: <strong id="avgTime"></strong> mins<br>
+      Status: <strong id="status"></strong>
+    </p>
+    <button class="btn secondary" onclick="toggleStatus()">Toggle Open / Close</button>
+  </div>
 
-  <label>Service Type</label>
-  <select id="serviceType">
-    <option value="">Select service</option>
-    <option value="salon">Salon</option>
-    <option value="restaurant">Restaurant</option>
-    <option value="clinic">Clinic</option>
-  </select>
+  <div class="card">
+    <h3>Live Queue</h3>
+    <div id="queueList">Loading queue...</div>
+    <br>
+    <button class="btn" onclick="addCustomer()">➕ Add Customer</button>
+    <button class="btn danger" onclick="serveNext()">✔ Serve Next</button>
+  </div>
 
-  <label>Average Service Time (minutes)</label>
-  <input type="number" id="avgTime">
-
-  <label>Email</label>
-  <input type="email" id="email">
-
-  <label>Password</label>
-  <input type="password" id="password">
-
-  <button id="signupBtn" onclick="registerProvider()">
-    Create Provider Account
-  </button>
-
-  <p class="note">
-    After signup, you will manage your live queue from the dashboard.
-  </p>
 </div>
 
 <!-- Firebase SDKs -->
@@ -117,84 +107,124 @@ button:disabled {
 
 <script>
 /* ================================
-   FIREBASE CONFIG
+   FIREBASE CONFIG (YOUR PROJECT)
 ================================ */
-firebase.initializeApp({
+const firebaseConfig = {
   apiKey: "AIzaSyAJFGE5OFfn-OhDNJ_rWO5oi2d2CHl2fXE",
   authDomain: "zerowait-c21fc.firebaseapp.com",
   projectId: "zerowait-c21fc",
-  storageBucket: "zerowait-c21fc.appspot.com",
+  storageBucket: "zerowait-c21fc.firebasestorage.app",
   messagingSenderId: "839269113134",
   appId: "1:839269113134:web:0411874b0e248a2a102ebf"
-});
+};
+
+firebase.initializeApp(firebaseConfig);
 
 const auth = firebase.auth();
 const db = firebase.firestore();
 
+let providerId = null;
+
 /* ================================
-   REGISTER PROVIDER (FIXED)
+   AUTH GUARD
 ================================ */
-function registerProvider() {
-  const btn = document.getElementById("signupBtn");
-  btn.disabled = true;
-  btn.innerText = "Creating account...";
-
-  const name = document.getElementById("businessName").value.trim();
-  const type = document.getElementById("serviceType").value;
-  const avgTime = document.getElementById("avgTime").value;
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-
-  if (!name || !type || !avgTime || !email || !password) {
-    alert("Please fill all fields");
-    btn.disabled = false;
-    btn.innerText = "Create Provider Account";
+auth.onAuthStateChanged(user => {
+  if (!user) {
+    window.location.href = "provider-signup.html";
     return;
   }
 
-  auth.createUserWithEmailAndPassword(email, password)
-    .then(cred => {
-      return db.collection("providers").doc(cred.user.uid).set({
-        name,
-        serviceType: type,
-        avgServiceTime: Number(avgTime),
-        isOpen: true,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-    })
-    .then(() => {
-      // ✅ SUCCESS SCREEN (GUARANTEED)
-      document.body.innerHTML = `
-        <div style="
-          display:flex;
-          justify-content:center;
-          align-items:center;
-          height:100vh;
-          font-family:Arial;
-          background:#f5f7fb;
-        ">
-          <div style="
-            background:white;
-            padding:40px;
-            border-radius:12px;
-            text-align:center;
-            box-shadow:0 10px 25px rgba(0,0,0,0.1)
-          ">
-            <h2>✅ Signup Successful</h2>
-            <p>Redirecting to dashboard...</p>
-          </div>
-        </div>
-      `;
+  providerId = user.uid;
+  loadProvider();
+  loadQueue();
+});
 
-      setTimeout(() => {
-        window.location.href = "provider-dashboard.html";
-      }, 1500);
-    })
-    .catch(err => {
-      alert(err.message);
-      btn.disabled = false;
-      btn.innerText = "Create Provider Account";
+/* ================================
+   LOAD PROVIDER DATA
+================================ */
+function loadProvider() {
+  db.collection("providers").doc(providerId).get()
+    .then(doc => {
+      if (!doc.exists) return;
+
+      const data = doc.data();
+      document.getElementById("businessName").innerText = data.name;
+      document.getElementById("serviceType").innerText = data.serviceType;
+      document.getElementById("avgTime").innerText = data.avgServiceTime;
+      document.getElementById("status").innerText = data.isOpen ? "Open" : "Closed";
     });
+}
+
+/* ================================
+   QUEUE FUNCTIONS
+================================ */
+function loadQueue() {
+  db.collection("queues").doc(providerId)
+    .onSnapshot(doc => {
+      const container = document.getElementById("queueList");
+      container.innerHTML = "";
+
+      if (!doc.exists || !doc.data().customers?.length) {
+        container.innerHTML = "<p>No customers in queue</p>";
+        return;
+      }
+
+      doc.data().customers.forEach((c, i) => {
+        container.innerHTML += `
+          <div class="queue-item">
+            ${i + 1}. ${c.name}
+          </div>
+        `;
+      });
+    });
+}
+
+function addCustomer() {
+  const name = prompt("Customer name?");
+  if (!name) return;
+
+  const ref = db.collection("queues").doc(providerId);
+
+  ref.set({
+    customers: firebase.firestore.FieldValue.arrayUnion({
+      name,
+      joinedAt: new Date()
+    })
+  }, { merge: true });
+}
+
+function serveNext() {
+  const ref = db.collection("queues").doc(providerId);
+
+  ref.get().then(doc => {
+    if (!doc.exists || !doc.data().customers.length) return;
+
+    const customers = doc.data().customers;
+    customers.shift();
+
+    ref.update({ customers });
+  });
+}
+
+/* ================================
+   STATUS TOGGLE
+================================ */
+function toggleStatus() {
+  const ref = db.collection("providers").doc(providerId);
+
+  ref.get().then(doc => {
+    if (!doc.exists) return;
+    ref.update({ isOpen: !doc.data().isOpen });
+  });
+}
+
+/* ================================
+   LOGOUT
+================================ */
+function logout() {
+  auth.signOut().then(() => {
+    window.location.href = "index.html";
+  });
 }
 </script>
 
