@@ -94,18 +94,18 @@ button:disabled {
   <label>Password</label>
   <input type="password" id="password" />
 
-  <button id="signupBtn" type="button">Create Provider Account</button>
+  <!-- INLINE HANDLER (NO CLOSURE BUGS) -->
+  <button type="button" onclick="registerProvider()" id="signupBtn">
+    Create Provider Account
+  </button>
 </div>
 
-<!-- Firebase SDKs -->
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-/* ======================
-   FIREBASE INIT
-====================== */
 firebase.initializeApp({
   apiKey: "AIzaSyAJFGE5OFfn-OhDNJ_rWO5oi2d2CHl2fXE",
   authDomain: "zerowait-c21fc.firebaseapp.com",
@@ -118,25 +118,23 @@ firebase.initializeApp({
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-/* ======================
-   SIGNUP HANDLER
-====================== */
-document.getElementById("signupBtn").addEventListener("click", async () => {
+async function registerProvider() {
   const btn = document.getElementById("signupBtn");
+  btn.disabled = true;
+  btn.innerText = "Creating account...";
 
   const name = document.getElementById("businessName").value.trim();
   const type = document.getElementById("serviceType").value;
-  const avgTime = document.getElementById("avgTime").value;
+  const avgTimeVal = document.getElementById("avgTime").value;
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value;
 
-  if (!name || !type || !avgTime || !email || !password) {
+  if (!name || !type || !avgTimeVal || !email || !password) {
     alert("Please fill all fields");
+    btn.disabled = false;
+    btn.innerText = "Create Provider Account";
     return;
   }
-
-  btn.disabled = true;
-  btn.innerText = "Creating account...";
 
   try {
     const cred = await auth.createUserWithEmailAndPassword(email, password);
@@ -144,14 +142,13 @@ document.getElementById("signupBtn").addEventListener("click", async () => {
     await db.collection("providers").doc(cred.user.uid).set({
       name: name,
       serviceType: type,
-      avgServiceTime: Number(avgTime),
+      avgServiceTime: Number(avgTimeVal),
       isOpen: true,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
 
     document.getElementById("formBox").innerHTML = `
       <h2>✅ Signup Successful</h2>
-      <p>Your provider account is ready.</p>
       <p>Redirecting to dashboard...</p>
     `;
 
@@ -164,7 +161,7 @@ document.getElementById("signupBtn").addEventListener("click", async () => {
     btn.disabled = false;
     btn.innerText = "Create Provider Account";
   }
-});
+}
 </script>
 
 </body>
