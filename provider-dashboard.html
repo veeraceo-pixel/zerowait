@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Provider Dashboard – ZeroWait</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f5f7fb;
+  margin: 0;
+}
+
+header {
+  padding: 15px 30px;
+  background: #2563eb;
+  color: white;
+  font-size: 20px;
+}
+
+.container {
+  padding: 30px;
+  max-width: 600px;
+  margin: auto;
+}
+
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+input {
+  width: 100%;
+  padding: 10px;
+  margin-top: 5px;
+}
+
+button {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.queue-item {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<header>ZeroWait – Provider Dashboard</header>
+
+<div class="container">
+
+  <div class="card">
+    <h3>Service Settings</h3>
+    <label>Average Service Time (minutes)</label>
+    <input type="number" id="avgTime" value="10">
+  </div>
+
+  <div class="card">
+    <h3>Queue</h3>
+    <button onclick="addCustomer()">➕ Add Customer</button>
+    <div id="queueList"></div>
+  </div>
+
+  <div class="card">
+    <h3>Estimated Waiting Time</h3>
+    <strong id="waitTime">0 mins</strong>
+  </div>
+
+</div>
+
+<script>
+let queue = JSON.parse(localStorage.getItem("queue")) || [];
+
+function saveQueue() {
+  localStorage.setItem("queue", JSON.stringify(queue));
+  updateUI();
+}
+
+function addCustomer() {
+  queue.push({ joined: Date.now() });
+  saveQueue();
+}
+
+function removeCustomer(index) {
+  queue.splice(index, 1);
+  saveQueue();
+}
+
+function updateUI() {
+  const avg = Number(document.getElementById("avgTime").value);
+  const list = document.getElementById("queueList");
+  list.innerHTML = "";
+
+  queue.forEach((_, i) => {
+    list.innerHTML += `
+      <div class="queue-item">
+        Customer ${i + 1}
+        <button onclick="removeCustomer(${i})">Done</button>
+      </div>
+    `;
+  });
+
+  document.getElementById("waitTime").innerText =
+    queue.length * avg + " mins";
+}
+
+document.getElementById("avgTime").addEventListener("input", updateUI);
+updateUI();
+</script>
+
+</body>
+</html>
