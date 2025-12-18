@@ -33,10 +33,6 @@ header {
   box-shadow: 0 10px 25px rgba(0,0,0,0.05);
 }
 
-h2 {
-  margin-bottom: 20px;
-}
-
 label {
   display: block;
   margin-top: 15px;
@@ -63,8 +59,8 @@ button {
   cursor: pointer;
 }
 
-button:hover {
-  background: #1d4ed8;
+button:disabled {
+  opacity: 0.7;
 }
 
 .note {
@@ -85,7 +81,7 @@ button:hover {
   <h2>Register Your Business</h2>
 
   <label>Business Name</label>
-  <input type="text" id="businessName" placeholder="e.g. Vintage Nail & Beauty" />
+  <input type="text" id="businessName" />
 
   <label>Service Type</label>
   <select id="serviceType">
@@ -96,13 +92,13 @@ button:hover {
   </select>
 
   <label>Average Service Time (minutes)</label>
-  <input type="number" id="avgTime" placeholder="e.g. 10" />
+  <input type="number" id="avgTime" />
 
   <label>Email</label>
-  <input type="email" id="email" placeholder="owner@email.com" />
+  <input type="email" id="email" />
 
   <label>Password</label>
-  <input type="password" id="password" placeholder="Minimum 6 characters" />
+  <input type="password" id="password" />
 
   <button onclick="registerProvider()">Create Provider Account</button>
 
@@ -118,21 +114,14 @@ button:hover {
 
 <script>
 /* ================================
-   FIREBASE CONFIG
-   (Replace with your own keys)
+   FIREBASE INIT
 ================================ */
 
-const firebaseConfig = {
+firebase.initializeApp({
   apiKey: "AIzaSyAJFGE5OFfn-OhDNJ_rWO5oi2d2CHl2fXE",
   authDomain: "zerowait-c21fc.firebaseapp.com",
-  projectId: "zerowait-c21fc",
-  storageBucket: "zerowait-c21fc.firebasestorage.app",
-  messagingSenderId: "839269113134",
-  appId: "1:839269113134:web:0411874b0e248a2a102ebf",
-  measurementId: "G-NL2ZRQ1RKV"
-};
-
-firebase.initializeApp(firebaseConfig);
+  projectId: "zerowait-c21fc"
+});
 
 const auth = firebase.auth();
 const db = firebase.firestore();
@@ -141,15 +130,14 @@ const db = firebase.firestore();
    PROVIDER REGISTRATION
 ================================ */
 
-<script>
 function registerProvider() {
   const btn = document.querySelector("button");
   btn.disabled = true;
   btn.innerText = "Creating account...";
 
-  const name = document.getElementById("businessName").value.trim();
-  const type = document.getElementById("serviceType").value;
-  const avgTime = document.getElementById("avgTime").value;
+  const name = businessName.value.trim();
+  const type = serviceType.value;
+  const avgTime = avgTimeInput = document.getElementById("avgTime").value;
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
 
@@ -160,24 +148,17 @@ function registerProvider() {
     return;
   }
 
-  console.log("Starting signup...");
-
   auth.createUserWithEmailAndPassword(email, password)
     .then(cred => {
-      console.log("Auth success", cred.user.uid);
-
       return db.collection("providers").doc(cred.user.uid).set({
         name,
         serviceType: type,
         avgServiceTime: Number(avgTime),
         isOpen: true,
-        createdAt: new Date()
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
     })
     .then(() => {
-      console.log("Firestore write success");
-
-      // SHOW SUCCESS CLEARLY
       document.body.innerHTML = `
         <div style="
           display:flex;
@@ -204,14 +185,11 @@ function registerProvider() {
       }, 1500);
     })
     .catch(err => {
-      console.error("Signup error:", err);
       alert(err.message);
       btn.disabled = false;
       btn.innerText = "Create Provider Account";
     });
 }
-</script>
-
 </script>
 
 </body>
