@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Join Queue – ZeroWait</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f5f7fb;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.card {
+  background: white;
+  padding: 30px;
+  border-radius: 14px;
+  width: 90%;
+  max-width: 380px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  text-align: center;
+}
+
+h2 {
+  margin-bottom: 20px;
+}
+
+input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+button:disabled {
+  background: #9ca3af;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+  <h2>Join Queue</h2>
+  <p id="status">Enter your name to join</p>
+
+  <input id="nameInput" placeholder="Your Name" />
+  <button id="joinBtn">Join Queue</button>
+</div>
+
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+/* ================= FIREBASE CONFIG ================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyAJFGE5OFfn-OhDNJ_rWO5oi2d2CHl2fXE",
+  authDomain: "zerowait-c21fc.firebaseapp.com",
+  projectId: "zerowait-c21fc",
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+/* ================= GET PROVIDER ID ================= */
+/*
+  URL FORMAT:
+  join-queue.html?provider=PROVIDER_UID
+*/
+const params = new URLSearchParams(window.location.search);
+const providerId = params.get("provider");
+
+if (!providerId) {
+  document.getElementById("status").innerText =
+    "Invalid queue link";
+  document.getElementById("joinBtn").disabled = true;
+}
+
+/* ================= JOIN QUEUE ================= */
+document.getElementById("joinBtn").onclick = async () => {
+  const name = document.getElementById("nameInput").value.trim();
+  if (!name) {
+    alert("Please enter your name");
+    return;
+  }
+
+  const btn = document.getElementById("joinBtn");
+  btn.disabled = true;
+  btn.innerText = "Joining...";
+
+  try {
+    const queueRef = db.collection("queues").doc(providerId);
+
+    await queueRef.update({
+      customers: firebase.firestore.FieldValue.arrayUnion({
+        name,
+        joinedAt: Date.now()
+      })
+    });
+
+    document.querySelector(".card").innerHTML = `
+      <h2>✅ Added to Queue</h2>
+      <p>Please wait, you will be called shortly.</p>
+    `;
+  } catch (err) {
+    alert("Queue not available");
+    btn.disabled = false;
+    btn.innerText = "Join Queue";
+  }
+};
+</script>
+
+</body>
+</html>
