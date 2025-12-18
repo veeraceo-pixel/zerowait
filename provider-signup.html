@@ -94,51 +94,55 @@ button:disabled {
   <label>Password</label>
   <input type="password" id="password" />
 
-  <button id="signupBtn">Create Provider Account</button>
+  <button id="signupBtn" type="button">Create Provider Account</button>
 </div>
 
-<!-- Firebase -->
+<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-const firebaseConfig = {
+/* ======================
+   FIREBASE INIT
+====================== */
+firebase.initializeApp({
   apiKey: "AIzaSyAJFGE5OFfn-OhDNJ_rWO5oi2d2CHl2fXE",
   authDomain: "zerowait-c21fc.firebaseapp.com",
   projectId: "zerowait-c21fc",
   storageBucket: "zerowait-c21fc.firebasestorage.app",
   messagingSenderId: "839269113134",
   appId: "1:839269113134:web:0411874b0e248a2a102ebf"
-};
-
-firebase.initializeApp(firebaseConfig);
+});
 
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-document.getElementById("signupBtn").onclick = async () => {
+/* ======================
+   SIGNUP HANDLER
+====================== */
+document.getElementById("signupBtn").addEventListener("click", async () => {
   const btn = document.getElementById("signupBtn");
+
+  const name = document.getElementById("businessName").value.trim();
+  const type = document.getElementById("serviceType").value;
+  const avgTime = document.getElementById("avgTime").value;
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+
+  if (!name || !type || !avgTime || !email || !password) {
+    alert("Please fill all fields");
+    return;
+  }
+
   btn.disabled = true;
   btn.innerText = "Creating account...";
 
   try {
-const name = document.getElementById("businessName").value.trim();
-const type = document.getElementById("serviceType").value;
-const avgTime = document.getElementById("avgTime").value;
-const email = document.getElementById("email").value;
-const password = document.getElementById("password").value;
-
-
-    if (!name || !type || !avgTime || !email || !password) {
-      alert("Please fill all fields");
-      throw new Error("Missing fields");
-    }
-
     const cred = await auth.createUserWithEmailAndPassword(email, password);
 
     await db.collection("providers").doc(cred.user.uid).set({
-      name,
+      name: name,
       serviceType: type,
       avgServiceTime: Number(avgTime),
       isOpen: true,
@@ -147,19 +151,20 @@ const password = document.getElementById("password").value;
 
     document.getElementById("formBox").innerHTML = `
       <h2>✅ Signup Successful</h2>
+      <p>Your provider account is ready.</p>
       <p>Redirecting to dashboard...</p>
     `;
 
     setTimeout(() => {
       window.location.href = "provider-dashboard.html";
-    }, 1200);
+    }, 1500);
 
   } catch (err) {
     alert(err.message);
     btn.disabled = false;
     btn.innerText = "Create Provider Account";
   }
-};
+});
 </script>
 
 </body>
