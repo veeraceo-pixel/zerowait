@@ -55,9 +55,21 @@
             try {
                 const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
                 const uid = userCredential.user.uid;
-                const providerDoc = await firebase.firestore().collection('providers').doc(uid).get();
-                window.location.href = providerDoc.exists ? 'provider-dashboard.html' : 'nearby.html';
-            } catch (err) { alert('Login failed: ' + err.message); }
+// Check if user is provider (optional - users can login without being a provider)
+                  try {
+                    const providerDoc = await firebase.firestore().collection('providers').doc(uid).get();
+                    if (providerDoc.exists) {
+                      window.location.href = 'provider-dashboard.html';
+                    } else {
+                      window.location.href = 'nearby.html';
+                    }
+                  } catch (dbError) {
+                    console.log('Provider check failed:', dbError.message);
+                    window.location.href = 'nearby.html';
+                  }
+                  } catch (authError) {
+                    alert('Login failed: ' + authError.message);
+                  }
         };
         document.getElementById('mobile-menu-toggle').addEventListener('click', function() {
             document.querySelector('.nav-links').classList.toggle('active');
