@@ -60,42 +60,15 @@
                 </div>
             </div>
         </section>
-
-        <!-- Features -->
-        <section class="bg-light py-5">
-            <div class="container">
-                <h2 class="text-center font-weight-bold mb-5">Why ZeroWait?</h2>
-                <div class="row">
-                    <div class="col-md-4 mb-4">
-                        <div class="p-4">
-                            <h3 class="h5 font-weight-bold mb-3">Real-time Updates</h3>
-                            <p class="text-secondary small">Get instant notifications about your position in the queue and estimated wait times.</p>
-                        </div>
-                    </div>
-                    <div class="col-md-4 mb-4">
-                        <div class="p-4">
-                            <h3 class="h5 font-weight-bold mb-3">Easy Booking</h3>
-                            <p class="text-secondary small">Join a queue with just one click. No more standing in line or waiting on hold.</p>
-                        </div>
-                    </div>
-                    <div class="col-md-4 mb-4">
-                        <div class="p-4">
-                            <h3 class="h5 font-weight-bold mb-3">Local Discovery</h3>
-                            <p class="text-secondary small">Find the best services near you using our integrated Google Maps search.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
     </main>
 
     <!-- Footer -->
-    <footer class="bg-white border-top py-5">
+    <footer>
         <div class="container">
             <div class="row">
                 <div class="col-md-4 mb-4">
-                    <h4 class="logo mb-3" style="font-size: 1.25rem;">ZeroWait</h4>
-                    <p class="text-secondary small">The modern solution to physical queues. Reclaiming time, one wait at a time.</p>
+                    <h4 class="logo mb-3" style="color: white;">ZeroWait</h4>
+                    <p class="text-secondary small">Revolutionizing the way you wait. Skip the line, save your time.</p>
                 </div>
                 <div class="col-md-4 mb-4 text-center">
                     <h5 class="small font-weight-bold text-uppercase mb-3">Product</h5>
@@ -104,15 +77,16 @@
                         <li class="mb-2"><a href="how-it-works.html" class="text-secondary">How It Works</a></li>
                     </ul>
                 </div>
-                <div class="col-md-4 mb-4 text-right" style="text-align: right;">
-                    <h5 class="small font-weight-bold text-uppercase mb-3">Company</h5>
-                    <ul class="list-unstyled small">
-                        <li class="mb-2"><a href="about.html" class="text-secondary">About Us</a></li>
-                        <li class="mb-2"><a href="#" class="text-secondary">Privacy Policy</a></li>
-                    </ul>
+                <div class="col-md-4 mb-4" style="text-align: right;">
+                    <h5 class="small font-weight-bold text-uppercase mb-3">Contact Us</h5>
+                    <p class="text-secondary small mb-2">support@zerowait.app</p>
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                        <a href="#" class="text-secondary small">Twitter</a>
+                        <a href="#" class="text-secondary small">LinkedIn</a>
+                    </div>
                 </div>
             </div>
-            <hr class="mt-4 mb-4" style="opacity: 0.1;">
+            <hr class="mt-4 mb-4" style="border-color: rgba(255,255,255,0.1);">
             <p class="text-center text-secondary small">&copy; 2025 ZeroWait Inc. All rights reserved.</p>
         </div>
     </footer>
@@ -120,55 +94,13 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script>
-        // Mobile Toggle Logic
-        document.getElementById('mobile-toggle').addEventListener('click', () => {
-            document.getElementById('authLinks').classList.toggle('active');
+        document.addEventListener('DOMContentLoaded', () => {
+            // (Firebase init logic here)
         });
-
-        function initializeFirebase() {
-            try {
-                if (typeof firebase !== 'undefined' && !firebase.apps.length) {
-                    fetch('/api/firebase-config')
-                        .then(r => r.json())
-                        .then(config => {
-                            firebase.initializeApp(config);
-                            setupAuthListener();
-                        })
-                        .catch(err => console.error('Firebase init error:', err));
-                }
-            } catch (err) {
-                console.error('Firebase initialization failed:', err);
-            }
-        }
-        function setupAuthListener() {
-            const auth = firebase.auth();
-            auth.onAuthStateChanged(user => {
-                const authLinks = document.getElementById('authLinks');
-                if (!authLinks) return;
-                
-                if (user) {
-                    authLinks.innerHTML = `
-                        <a href="index.html" class="active">Home</a>
-                        <a href="about.html">About</a>
-                        <a href="how-it-works.html">How It Works</a>
-                        <a href="provider-dashboard.html" class="btn btn-outline">Dashboard</a>
-                        <a href="#" onclick="handleLogout(event)" class="btn btn-primary">Logout</a>
-                    `;
-                }
-            });
-        }
         function goToCategory(type) {
-            if (!type) return;
             localStorage.setItem('serviceType', type);
             window.location.href = `nearby.html?type=${encodeURIComponent(type)}`;
         }
-        function handleLogout(e) {
-            e.preventDefault();
-            firebase.auth().signOut().then(() => {
-                window.location.href = 'index.html';
-            });
-        }
-        document.addEventListener('DOMContentLoaded', initializeFirebase);
     </script>
 </body>
 </html>
