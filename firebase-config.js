@@ -1,12 +1,13 @@
 // Firebase Configuration for ZeroWait
 // Replace the values below with your actual credentials from the Firebase Console
 const firebaseConfig = {
-    apiKey: "YOUR_FIREBASE_API_KEY",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyAJFGE5OFfn-OhDNJ_rWO5oi2d2CHl2fXE",
+  authDomain: "zerowait-c21fc.firebaseapp.com",
+  projectId: "zerowait-c21fc",
+  storageBucket: "zerowait-c21fc.firebasestorage.app",
+  messagingSenderId: "839269113134",
+  appId: "1:839269113134:web:0411874b0e248a2a102ebf",
+  measurementId: "G-NL2ZRQ1RKV"
 };
 
 // Initialize Firebase
