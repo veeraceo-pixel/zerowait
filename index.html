@@ -27,7 +27,7 @@
             <h1>Never wait again.</h1>
             <p>ZeroWait lets you join virtual queues from anywhere. Book instantly, track your position in real-time, and skip the physical lines at your favorite local spots.</p>
             <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-                <a href="nearby.html" class="btn btn-primary" style="padding: 1rem 2rem; font-size: 1rem;">Get Started Now</a>
+                <a href="#explore" class="btn btn-primary" style="padding: 1rem 2rem; font-size: 1rem;">Get Started Now</a>
                 <a href="how-it-works.html" class="btn btn-outline" style="padding: 1rem 2rem; font-size: 1rem;">See How It Works</a>
             </div>
         </section>
@@ -38,7 +38,7 @@
                     <h2 class="font-weight-extrabold h1 mb-3">Discover Services Near You</h2>
                     <p class="text-secondary">Join a virtual line for almost any service in seconds.</p>
                 </div>
-
+                
                 <div class="row">
                     <div class="col-md-4 mb-4">
                         <div class="card category-card" onclick="goToCategory('salon')">
@@ -164,7 +164,7 @@
             localStorage.setItem('serviceType', type);
             window.location.href = `nearby.html?type=${encodeURIComponent(type)}`;
         }
-        
+
         document.getElementById('mobile-menu-toggle').addEventListener('click', function() {
             document.querySelector('.nav-links').classList.toggle('active');
         });
