@@ -6,55 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
     <style>
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 300px 1fr;
-            gap: 2rem;
-            min-height: calc(100vh - 150px);
-        }
-        .stats-card {
-            padding: 1.5rem;
-            background: var(--bg-white);
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--border);
-            text-align: center;
-        }
-        .queue-list {
-            background: var(--bg-white);
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--border);
-            overflow: hidden;
-        }
-        .queue-header {
-            padding: 1.5rem;
-            border-bottom: 1px solid var(--border);
-            background: #fcfcfd;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .queue-item {
-            padding: 1.25rem 1.5rem;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: background 0.2s;
-        }
+        .dashboard-grid { display: grid; grid-template-columns: 300px 1fr; gap: 2rem; min-height: calc(100vh - 150px); }
+        .stats-card { padding: 1.5rem; background: var(--bg-white); border-radius: var(--radius-lg); border: 1px solid var(--border); text-align: center; }
+        .queue-list { background: var(--bg-white); border-radius: var(--radius-lg); border: 1px solid var(--border); overflow: hidden; }
+        .queue-header { padding: 1.5rem; border-bottom: 1px solid var(--border); background: #fcfcfd; display: flex; justify-content: space-between; align-items: center; }
+        .queue-item { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; transition: background 0.2s; }
         .queue-item:hover { background: #f9fafb; }
         .queue-item.serving { background: #f0f7ff; border-left: 4px solid var(--primary); }
-        .badge-serving {
-            background: #e0f2fe;
-            color: #0369a1;
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
+        .badge-serving { background: #e0f2fe; color: #0369a1; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
         .sidebar { display: flex; flex-direction: column; gap: 1rem; }
-        @media (max-width: 992px) {
-            .dashboard-grid { grid-template-columns: 1fr; }
-        }
+        @media (max-width: 992px) { .dashboard-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body class="bg-light" onload="init()">
@@ -67,7 +28,6 @@
             </div>
         </div>
     </nav>
-
     <main class="container py-5">
         <div class="dashboard-grid">
             <aside class="sidebar">
@@ -86,7 +46,6 @@
                     <button onclick="showQRCode()" class="btn btn-outline" style="width: 100%;">View QR Code</button>
                 </div>
             </aside>
-
             <section class="main-content">
                 <div class="queue-list shadow-sm">
                     <div class="queue-header">
@@ -102,8 +61,6 @@
             </section>
         </div>
     </main>
-
-    <!-- QR Modal -->
     <div id="qrModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;">
         <div class="card p-5 text-center" style="max-width: 400px; width: 90%;">
             <h3 class="h4 font-weight-bold mb-4">Store QR Code</h3>
@@ -112,7 +69,6 @@
             <button onclick="document.getElementById('qrModal').style.display='none'" class="btn btn-primary" style="width:100%">Close</button>
         </div>
     </div>
-
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -120,126 +76,64 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script>
         let db, currentProviderId;
-
         function init() {
             db = firebase.firestore();
             firebase.auth().onAuthStateChanged(user => {
-                if (!user) {
-                    window.location.href = 'login.html';
-                    return;
-                }
+                if (!user) { window.location.href = 'login.html'; return; }
                 currentProviderId = user.uid;
-                loadProviderData();
-                listenToQueue();
+                loadProviderData(); listenToQueue();
             });
         }
-
         async function loadProviderData() {
             const doc = await db.collection('providers').doc(currentProviderId).get();
             if (doc.exists) {
                 const data = doc.data();
                 document.getElementById('businessName').innerText = data.businessName;
                 document.getElementById('displayAvgWait').innerText = data.avgWait || 15;
-                
                 const statusBtn = document.getElementById('statusBtn');
-                if (data.isOpen === false) {
-                    statusBtn.innerText = 'Open Entry';
-                    statusBtn.className = 'btn btn-outline-success mb-2';
-                }
+                if (data.isOpen === false) { statusBtn.innerText = 'Open Entry'; statusBtn.className = 'btn btn-outline-success mb-2'; }
             }
         }
-
         function listenToQueue() {
-            db.collection('queues')
-                .where('providerId', '==', currentProviderId)
-                .where('status', 'in', ['waiting', 'serving'])
-                .orderBy('joinedAt', 'asc')
-                .onSnapshot(snapshot => {
-                    const itemsContainer = document.getElementById('queueItems');
-                    const countDisplay = document.getElementById('queueCount');
-                    
-                    const customers = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
-                    countDisplay.innerText = customers.filter(c => c.status === 'waiting').length;
-
-                    if (customers.length === 0) {
-                        itemsContainer.innerHTML = '<div class=\"text-center py-5 text-muted\"><p>No customers in line.</p></div>';
-                        return;
-                    }
-
-                    itemsContainer.innerHTML = customers.map((c, index) => `
-                        <div class=\"queue-item \${c.status === 'serving' ? 'serving' : ''}\">
-                            <div>
-                                <div class=\"font-weight-bold\">\${c.customerName}</div>
-                                <div class=\"small text-secondary\">\${c.customerPhone || 'No phone'}</div>
-                                \${c.status === 'serving' ? '<span class=\"badge-serving mt-1\">Being Served</span>' : ''}
-                            </div>
-                            <div class=\"actions\">
-                                \${c.status === 'waiting' ? 
-                                    \`<button onclick=\"serveCustomer('\${c.id}')\" class=\"btn btn-sm btn-primary\">Serve</button>\` : 
-                                    \`<button onclick=\"completeCustomer('\${c.id}')\" class=\"btn btn-sm btn-success\">Complete</button>\`
-                                }
-                            </div>
+            db.collection('queues').where('providerId', '==', currentProviderId).where('status', 'in', ['waiting', 'serving']).orderBy('joinedAt', 'asc').onSnapshot(snapshot => {
+                const itemsContainer = document.getElementById('queueItems');
+                const countDisplay = document.getElementById('queueCount');
+                const customers = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
+                countDisplay.innerText = customers.filter(c => c.status === 'waiting').length;
+                if (customers.length === 0) { itemsContainer.innerHTML = '<div class="text-center py-5 text-muted"><p>No customers in line.</p></div>'; return; }
+                itemsContainer.innerHTML = customers.map((c, index) => `
+                    <div class="queue-item ${c.status === 'serving' ? 'serving' : ''}">
+                        <div><div class="font-weight-bold">${c.customerName}</div><div class="small text-secondary">${c.customerPhone || 'No phone'}</div>
+                        ${c.status === 'serving' ? '<span class="badge-serving mt-1">Being Served</span>' : ''}</div>
+                        <div class="actions">
+                        ${c.status === 'waiting' ? `<button onclick="serveCustomer('${c.id}')" class="btn btn-sm btn-primary">Serve</button>` : `<button onclick="completeCustomer('${c.id}')" class="btn btn-sm btn-success">Complete</button>`}
                         </div>
-                    `).join('');
-                });
+                    </div>`).join('');
+            });
         }
-
         async function serveCustomer(id) {
-            // First, complete any currently serving customer
-            const serving = await db.collection('queues')
-                .where('providerId', '==', currentProviderId)
-                .where('status', '==', 'serving')
-                .get();
-            
+            const serving = await db.collection('queues').where('providerId', '==', currentProviderId).where('status', '==', 'serving').get();
             const batch = db.batch();
-            serving.forEach(doc => {
-                batch.update(doc.ref, { status: 'completed', completedAt: firebase.firestore.FieldValue.serverTimestamp() });
-            });
-
-            // Set new serving customer
-            batch.update(db.collection('queues').doc(id), { 
-                status: 'serving', 
-                servingStartTime: firebase.firestore.FieldValue.serverTimestamp() 
-            });
-            
+            serving.forEach(doc => { batch.update(doc.ref, { status: 'completed', completedAt: firebase.firestore.FieldValue.serverTimestamp() }); });
+            batch.update(db.collection('queues').doc(id), { status: 'serving', servingStartTime: firebase.firestore.FieldValue.serverTimestamp() });
             await batch.commit();
         }
-
-        async function completeCustomer(id) {
-            await db.collection('queues').doc(id).update({
-                status: 'completed',
-                completedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-        }
-
+        async function completeCustomer(id) { await db.collection('queues').doc(id).update({ status: 'completed', completedAt: firebase.firestore.FieldValue.serverTimestamp() }); }
         async function toggleStoreStatus() {
             const docRef = db.collection('providers').doc(currentProviderId);
             const doc = await docRef.get();
             const isOpen = doc.data().isOpen !== false;
-            await docRef.update({ isOpen: !isOpen });
-            loadProviderData();
+            await docRef.update({ isOpen: !isOpen }); loadProviderData();
         }
-
         function showQRCode() {
             const qrContainer = document.getElementById('qrcode');
             qrContainer.innerHTML = '';
-            const joinUrl = \`\${window.location.origin}/zerowait/nearby.html?join=\${currentProviderId}\`;
-            new QRCode(qrContainer, {
-                text: joinUrl,
-                width: 200,
-                height: 200
-            });
+            const baseUrl = window.location.origin + window.location.pathname.split('/').slice(0, -1).join('/');
+            const joinUrl = baseUrl + '/join-queue.html?provider=' + currentProviderId;
+            new QRCode(qrContainer, { text: joinUrl, width: 200, height: 200 });
             document.getElementById('qrModal').style.display = 'flex';
         }
-
-        function logout() {
-            firebase.auth().signOut().then(() => {
-                window.location.href = 'login.html';
-            }).catch(err => {
-                console.error('Logout error:', err);
-                window.location.href = 'login.html';
-            });
-        }
+        function logout() { firebase.auth().signOut().then(() => { window.location.href = 'login.html'; }); }
     </script>
 </body>
 </html>
