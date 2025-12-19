@@ -2,60 +2,74 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Join Queue - ZeroWait</title>
+    <title>Queue Status | ZeroWait</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
     <style>
-        .queue-container { min-height: calc(100vh - 70px); display: flex; align-items: center; justify-content: center; padding: 2rem; }
-        .queue-card { width: 100%; max-width: 500px; text-align: center; }
-        .status-badge { display: inline-block; padding: 0.5rem 1rem; border-radius: 9999px; font-weight: 600; font-size: 0.875rem; margin-bottom: 1.5rem; }
+        .queue-container { min-height: calc(100vh - 74px); display: flex; align-items: center; justify-content: center; padding: 2rem; background: radial-gradient(circle at center, #fff, #f8fafc); }
+        .queue-card { width: 100%; max-width: 500px; text-align: center; border: none; box-shadow: var(--shadow-xl); position: relative; overflow: hidden; }
+        .queue-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 6px; background: var(--primary); }
+        .status-badge { display: inline-block; padding: 0.5rem 1.25rem; border-radius: 9999px; font-weight: 700; font-size: 0.875rem; margin-bottom: 2rem; text-transform: uppercase; letter-spacing: 0.05em; }
         .status-waiting { background: #fff7ed; color: #9a3412; }
-        .status-serving { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
-        .time-display { font-size: 4rem; font-weight: 800; color: var(--primary); line-height: 1; margin: 1rem 0; }
-        .pos-display { font-size: 1.25rem; color: var(--text-secondary); margin-bottom: 2rem; }
+        .status-serving { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; box-shadow: 0 0 20px rgba(16, 185, 129, 0.1); }
+        .time-display { font-size: 5rem; font-weight: 800; color: var(--primary); line-height: 1; margin: 1.5rem 0; font-variant-numeric: tabular-nums; }
+        .pos-display { font-size: 1.5rem; color: var(--text-main); margin-bottom: 2.5rem; }
+        .pos-number { background: var(--primary-soft); color: var(--primary); padding: 0.25rem 0.75rem; border-radius: 0.75rem; font-weight: 800; }
+        .spinner { width: 40px; height: 40px; border: 3px solid var(--primary-soft); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem; }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="bg-light" onload="init()">
-    <nav class="navbar"><div class="container nav-content"><a href="index.html" class="logo">ZeroWait</a></div></nav>
-    <main class="queue-container">
-        <div id="status-msg" class="text-center">
-            <div class="spinner mb-3"></div>
-            <p id="loading-text">Checking queue status...</p>
+<body class="bg-light">
+    <nav class="navbar">
+        <div class="container nav-content">
+            <a href="index.html" class="logo">ZeroWait</a>
         </div>
-        <div id="queueContent" class="card queue-card p-5 shadow-lg" style="display:none;">
-            <div id="statusBadge" class="status-badge">In Queue</div>
-            <h1 id="providerName" class="h3 font-weight-bold mb-1">--</h1>
+    </nav>
+
+    <main class="queue-container">
+        <div id="status-msg" class="text-center animate-fade-in">
+            <div class="spinner"></div>
+            <p id="loading-text" class="text-secondary font-weight-bold">Synchronizing with live queue...</p>
+        </div>
+
+        <div id="queueContent" class="card queue-card p-5 animate-fade-in" style="display:none;">
+            <div id="statusBadge" class="status-badge status-waiting">In Queue</div>
+            <h1 id="providerName" class="h2 mb-1">--</h1>
             <p id="providerAddress" class="small text-secondary mb-4">--</p>
+            
             <div id="waitingInfo">
-                <p class="text-secondary font-weight-bold text-uppercase small">Estimated Waiting Time</p>
+                <p class="text-muted small uppercase font-weight-bold" style="letter-spacing: 0.1em;">Estimated wait time</p>
                 <div id="waitTime" class="time-display">0</div>
-                <p class="text-secondary">minutes</p>
-                <div class="pos-display mt-3">Position: <span id="posNumber" class="font-weight-bold">--</span></div>
+                <p class="text-secondary font-weight-bold mb-4">minutes</p>
+                <div class="pos-display">
+                    Your Position: <span id="posNumber" class="pos-number">--</span>
+                </div>
             </div>
-            <div id="servingInfo" style="display:none;">
-                <div class="h2 font-weight-bold text-success mb-2">It's Your Turn!</div>
-                <p>Please proceed to the entrance.</p>
+
+            <div id="servingInfo" style="display:none;" class="py-4">
+                <div class="h1 text-success mb-3">✓ It's your turn!</div>
+                <p class="text-secondary mb-4">A staff member is ready to serve you. Please proceed to the entrance immediately.</p>
             </div>
-            <button onclick="leaveQueue()" class="btn btn-outline-danger mt-4" style="width:100%">Leave Queue</button>
+
+            <button onclick="leaveQueue()" class="btn btn-outline-danger w-100">Leave Virtual Line</button>
         </div>
     </main>
+
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="firebase-config.js"></script>
     <script>
         let db, currentUserId, providerId;
-        async function init() {
+        function init() {
             db = firebase.firestore();
             firebase.auth().onAuthStateChanged(async user => {
                 if (!user) {
                     const params = new URLSearchParams(window.location.search);
                     if (params.has('provider')) localStorage.setItem('pendingJoin', params.get('provider'));
-                    window.location.href = 'login.html';
-                    return;
+                    window.location.href = 'login.html'; return;
                 }
-                currentUserId = user.uid;
-                checkAndJoin();
+                currentUserId = user.uid; checkAndJoin();
             });
         }
         async function checkAndJoin() {
@@ -70,15 +84,14 @@
                 const newE = await db.collection('queues').add({ customerId: currentUserId, customerName: name, providerId: targetId, status: 'waiting', joinedAt: firebase.firestore.FieldValue.serverTimestamp() });
                 providerId = targetId; startListener(newE.id);
             } else {
-                document.getElementById('status-msg').innerHTML = '<h2>No active queue</h2><a href=\"nearby.html\" class=\"btn btn-primary mt-3\">Find Services</a>';
+                document.getElementById('status-msg').innerHTML = '<h2 class="h3 mb-4">No active queue</h2><a href="nearby.html" class="btn btn-primary">Find Services</a>';
             }
         }
         function startListener(qid) {
             db.collection('providers').doc(providerId).get().then(doc => {
-                if (doc.exists) { document.getElementById('providerName').innerText = doc.data().businessName; document.getElementById('providerAddress').innerText = doc.data().address || ''; }
+                if (doc.exists) { document.getElementById('providerName').innerText = doc.data().businessName; document.getElementById('providerAddress').innerText = doc.data().location?.address || ''; }
             });
-            db.collection('queues').where('providerId', '==', providerId).where('status', 'in', ['waiting', 'serving']).orderBy('joinedAt', 'asc')
-            .onSnapshot(async snap => {
+            db.collection('queues').where('providerId', '==', providerId).where('status', 'in', ['waiting', 'serving']).orderBy('joinedAt', 'asc').onSnapshot(async snap => {
                 const docs = snap.docs.map(d => ({id: d.id, ...d.data()}));
                 const my = docs.find(d => d.id === qid);
                 if (!my) { window.location.reload(); return; }
@@ -87,7 +100,7 @@
                 if (my.status === 'serving') {
                     document.getElementById('waitingInfo').style.display = 'none';
                     document.getElementById('servingInfo').style.display = 'block';
-                    document.getElementById('statusBadge').innerText = 'Being Served';
+                    document.getElementById('statusBadge').innerText = 'Ready for service';
                     document.getElementById('statusBadge').className = 'status-badge status-serving';
                     return;
                 }
@@ -110,12 +123,13 @@
             });
         }
         async function leaveQueue() {
-            if (confirm('Leave this queue?')) {
+            if (confirm('Are you sure you want to leave the virtual line?')) {
                 const snap = await db.collection('queues').where('customerId', '==', currentUserId).where('status', 'in', ['waiting', 'serving']).get();
                 const batch = db.batch(); snap.forEach(d => batch.update(d.ref, {status: 'cancelled'}));
-                await batch.commit(); window.location.reload();
+                await batch.commit(); window.location.href = 'index.html';
             }
         }
+        window.onload = init;
     </script>
 </body>
 </html>
