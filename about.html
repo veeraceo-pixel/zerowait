@@ -1,63 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About Us - ZeroWait</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About Us - ZeroWait</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-light">
-    <!-- Navbar -->
-    <nav class="navbar">
-        <div class="container nav-content">
-            <a href="index.html" class="logo">ZeroWait</a>
-            <div class="nav-links">
-                <a href="nearby.html">Nearby</a>
-                <a href="about.html" class="active">About</a>
-                <a href="how-it-works.html">How It Works</a>
-                <a href="login.html" class="btn btn-outline">Login</a>
-            </div>
-        </div>
-    </nav>
+  <nav class="navbar">
+    <div class="container nav-content">
+      <a href="index.html" class="logo">ZeroWait</a>
+      <button id="mobile-menu-toggle">☰</button>
+      <div class="nav-links">
+        <a href="nearby.html">Nearby</a>
+        <a href="about.html" class="active">About</a>
+        <a href="how-it-works.html">How It Works</a>
+        <a href="login.html" class="btn btn-outline">Login</a>
+      </div>
+    </div>
+  </nav>
 
-    <!-- Page Header -->
-    <header class="page-header py-5">
-        <div class="container text-center">
-            <h1 class="display-4 font-weight-bold">Our Mission</h1>
-            <p class="text-secondary mb-0" style="max-width: 600px; margin: 1rem auto 0;">
-                Revolutionizing the way the world waits.
-            </p>
-        </div>
-    </header>
+  <header class="py-6 bg-white border-bottom">
+    <div class="container text-center">
+      <div class="badge text-primary bg-primary-light mb-3">Our Mission</div>
+      <h1 class="font-weight-extrabold h1 mb-3">Revolutionizing the way<br>the world waits.</h1>
+      <p class="text-secondary mx-auto" style="max-width: 600px;">
+        ZeroWait was born from a simple observation: life is too short to spend it in lines. We're building the technology to give that time back to you.
+      </p>
+    </div>
+  </header>
 
-    <main class="container py-5">
-        <div class="row align-items-center">
-            <div class="col-md-4 mb-4">
-                <div class="p-4 bg-white rounded-lg shadow-sm h-100">
-                    <h2 class="h4 font-weight-bold mb-3">The Problem</h2>
-                    <p class="text-secondary small">Physical queues are an outdated waste of human time. They cause stress, crowding, and lost revenue for businesses.</p>
-                </div>
-            </div>
-            <div class="col-md-4 mb-4">
-                <div class="p-4 bg-primary text-white rounded-lg shadow-md h-100">
-                    <h2 class="h4 font-weight-bold mb-3">Our Solution</h2>
-                    <p class="small opacity-90">We provide a digital bridge. By moving the line to the cloud, we allow people to wait wherever they are most comfortable.</p>
-                </div>
-            </div>
-            <div class="col-md-4 mb-4">
-                <div class="p-4 bg-white rounded-lg shadow-sm h-100">
-                    <h2 class="h4 font-weight-bold mb-3">The Vision</h2>
-                    <p class="text-secondary small">A world where "standing in line" is a thing of the past. Seamless, fair, and efficient for everyone.</p>
-                </div>
-            </div>
+  <main class="container py-6">
+    <div class="row">
+      <div class="col-md-4 mb-4">
+        <div class="card p-5 h-100 shadow-sm border-0">
+          <div class="h4 font-weight-bold mb-3 text-primary">The Problem</div>
+          <p class="text-secondary small">Physical queues are an outdated waste of human potential. They cause unnecessary stress, physical fatigue, and lost productivity for both customers and businesses.</p>
         </div>
-    </main>
+      </div>
+      <div class="col-md-4 mb-4">
+        <div class="card p-5 h-100 shadow-md border-primary" style="border-width: 2px;">
+          <div class="h4 font-weight-bold mb-3 text-primary">Our Solution</div>
+          <p class="text-secondary small">We provide a seamless digital bridge between providers and patrons. By moving the line to the cloud, we enable people to wait wherever they are most comfortable and productive.</p>
+        </div>
+      </div>
+      <div class="col-md-4 mb-4">
+        <div class="card p-5 h-100 shadow-sm border-0">
+          <div class="h4 font-weight-bold mb-3 text-primary">The Vision</div>
+          <p class="text-secondary small">We envision a world where "standing in line" is a historical curiosity. A future where service access is seamless, fair, and perfectly optimized for everyone's schedule.</p>
+        </div>
+      </div>
+    </div>
+  </main>
 
-    <!-- Footer -->
-    <footer class="bg-white border-top py-5">
-        <div class="container">
-            <p class="text-center text-secondary small">&copy; 2025 ZeroWait Inc. All rights reserved.</p>
-        </div>
-    </footer>
+  <footer class="bg-white border-top py-6 mt-6">
+    <div class="container">
+      <div class="text-center">
+        <a href="index.html" class="logo mb-4 d-inline-block">ZeroWait</a>
+        <p class="text-muted small">© 2025 ZeroWait Inc. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById('mobile-menu-toggle').addEventListener('click', function() {
+      document.querySelector('.nav-links').classList.toggle('active');
+    });
+  </script>
 </body>
 </html>
