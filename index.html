@@ -5,71 +5,84 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ZeroWait – Skip the Wait</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <!-- Navbar -->
     <header class="navbar">
-        <div class="container nav-content" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+        <div class="container nav-content">
             <a href="index.html" class="logo">ZeroWait</a>
-            <nav class="nav-links" id="authLinks" style="display: flex; align-items: center; gap: 1.5rem;">
+            <nav class="nav-links" id="authLinks">
                 <a href="index.html" class="active">Home</a>
                 <a href="about.html">About</a>
                 <a href="how-it-works.html">How It Works</a>
                 <a href="login.html" class="btn btn-outline">Login</a>
-                <a href="provider-signup.html" class="btn btn-primary" style="margin-left: 1rem;">For Businesses</a>
+                <a href="provider-signup.html" class="btn btn-primary">For Businesses</a>
             </nav>
+            <button id="mobile-toggle" style="display: none; background: none; border: none; font-size: 1.5rem; cursor: pointer;">☰</button>
         </div>
     </header>
 
     <main>
+        <!-- Hero -->
         <section class="hero container">
-            <h1 class="display-3 font-weight-bold">Never Wait Again</h1>
-            <p class="lead">Book instantly. Skip the queue. Save your time at your favorite local spots.</p>
-            <div class="hero-buttons">
-                <a href="#explore" class="btn btn-primary btn-lg">Get Started</a>
-                <a href="how-it-works.html" class="btn btn-outline btn-lg" style="margin-left: 1rem;">Learn More</a>
+            <h1 class="display-4 font-weight-bold">Never Wait Again</h1>
+            <p>Book instantly. Skip the queue. Save your time at your favorite local spots.</p>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <a href="#explore" class="btn btn-primary">Get Started</a>
+                <a href="how-it-works.html" class="btn btn-outline">Learn More</a>
             </div>
         </section>
 
+        <!-- Categories -->
         <section id="explore" class="container py-5">
-            <h2 class="section-title h2 text-center mb-5">What are you looking for?</h2>
-            <div class="service-grid">
-                <div class="category-card card" onclick="goToCategory('salon')">
-                    <div style="font-size: 3rem; margin-bottom: 1rem;">💇</div>
-                    <h3>Salons</h3>
-                    <p class="text-secondary">Haircuts, styling, and beauty treatments.</p>
+            <h2 class="text-center font-weight-bold mb-5">What are you looking for?</h2>
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <div class="card category-card h-100" onclick="goToCategory('salon')">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">💇</div>
+                        <h3 class="h5 font-weight-bold mb-2">Salons</h3>
+                        <p class="text-secondary small">Haircuts, styling, and beauty treatments.</p>
+                    </div>
                 </div>
-                <div class="category-card card" onclick="goToCategory('restaurant')">
-                    <div style="font-size: 3rem; margin-bottom: 1rem;">🍽️</div>
-                    <h3>Restaurants</h3>
-                    <p class="text-secondary">Table bookings and queue management.</p>
+                <div class="col-md-4 mb-4">
+                    <div class="card category-card h-100" onclick="goToCategory('restaurant')">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">🍽️</div>
+                        <h3 class="h5 font-weight-bold mb-2">Restaurants</h3>
+                        <p class="text-secondary small">Table bookings and queue management.</p>
+                    </div>
                 </div>
-                <div class="category-card card" onclick="goToCategory('clinic')">
-                    <div style="font-size: 3rem; margin-bottom: 1rem;">🏥</div>
-                    <h3>Clinics</h3>
-                    <p class="text-secondary">Medical appointments and checkups.</p>
+                <div class="col-md-4 mb-4">
+                    <div class="card category-card h-100" onclick="goToCategory('clinic')">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">🏥</div>
+                        <h3 class="h5 font-weight-bold mb-2">Clinics</h3>
+                        <p class="text-secondary small">Medical appointments and checkups.</p>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <section class="features bg-light py-5">
+        <!-- Features -->
+        <section class="bg-light py-5">
             <div class="container">
-                <h2 class="section-title h2 text-center mb-5">Why ZeroWait?</h2>
-                <div class="feature-grid">
-                    <div class="feature-item p-4">
-                        <h3 class="h4 mb-3">Real-time Updates</h3>
-                        <p class="text-secondary">Get instant notifications about your position in the queue and estimated wait times.</p>
+                <h2 class="text-center font-weight-bold mb-5">Why ZeroWait?</h2>
+                <div class="row">
+                    <div class="col-md-4 mb-4">
+                        <div class="p-4">
+                            <h3 class="h5 font-weight-bold mb-3">Real-time Updates</h3>
+                            <p class="text-secondary small">Get instant notifications about your position in the queue and estimated wait times.</p>
+                        </div>
                     </div>
-                    <div class="feature-item p-4">
-                        <h3 class="h4 mb-3">Easy Booking</h3>
-                        <p class="text-secondary">Join a queue with just one click. No more standing in line or waiting on hold.</p>
+                    <div class="col-md-4 mb-4">
+                        <div class="p-4">
+                            <h3 class="h5 font-weight-bold mb-3">Easy Booking</h3>
+                            <p class="text-secondary small">Join a queue with just one click. No more standing in line or waiting on hold.</p>
+                        </div>
                     </div>
-                    <div class="feature-item p-4">
-                        <h3 class="h4 mb-3">Local Discovery</h3>
-                        <p class="text-secondary">Find the best services near you using our integrated Google Maps search.</p>
+                    <div class="col-md-4 mb-4">
+                        <div class="p-4">
+                            <h3 class="h5 font-weight-bold mb-3">Local Discovery</h3>
+                            <p class="text-secondary small">Find the best services near you using our integrated Google Maps search.</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -77,43 +90,41 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-white border-top py-5" style="margin-top: 5rem; padding-bottom: 2rem;">
+    <footer class="bg-white border-top py-5">
         <div class="container">
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem;">
-                <div>
-                    <h4 class="h5 text-dark mb-3">ZeroWait</h4>
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <h4 class="logo mb-3" style="font-size: 1.25rem;">ZeroWait</h4>
                     <p class="text-secondary small">The modern solution to physical queues. Reclaiming time, one wait at a time.</p>
                 </div>
-                <div>
-                    <h5 class="small text-uppercase font-weight-bold text-dark mb-3">Product</h5>
-                    <ul class="list-unstyled small" style="list-style: none; padding: 0;">
-                        <li><a href="nearby.html" class="text-secondary" style="text-decoration: none;">Nearby</a></li>
-                        <li><a href="how-it-works.html" class="text-secondary" style="text-decoration: none;">How It Works</a></li>
+                <div class="col-md-4 mb-4 text-center">
+                    <h5 class="small font-weight-bold text-uppercase mb-3">Product</h5>
+                    <ul class="list-unstyled small">
+                        <li class="mb-2"><a href="nearby.html" class="text-secondary">Nearby Services</a></li>
+                        <li class="mb-2"><a href="how-it-works.html" class="text-secondary">How It Works</a></li>
                     </ul>
                 </div>
-                <div>
-                    <h5 class="small text-uppercase font-weight-bold text-dark mb-3">Company</h5>
-                    <ul class="list-unstyled small" style="list-style: none; padding: 0;">
-                        <li><a href="about.html" class="text-secondary" style="text-decoration: none;">About Us</a></li>
-                        <li><a href="#" class="text-secondary" style="text-decoration: none;">Privacy Policy</a></li>
+                <div class="col-md-4 mb-4 text-right" style="text-align: right;">
+                    <h5 class="small font-weight-bold text-uppercase mb-3">Company</h5>
+                    <ul class="list-unstyled small">
+                        <li class="mb-2"><a href="about.html" class="text-secondary">About Us</a></li>
+                        <li class="mb-2"><a href="#" class="text-secondary">Privacy Policy</a></li>
                     </ul>
-                </div>
-                <div>
-                    <h5 class="small text-uppercase font-weight-bold text-dark mb-3">Stay Updated</h5>
-                    <div style="display: flex;">
-                        <input type="email" placeholder="Email" style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 0.5rem 0 0 0.5rem; outline: none; flex-grow: 1;">
-                        <button style="background: #2563eb; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0 0.5rem 0.5rem 0; cursor: pointer;">Join</button>
-                    </div>
                 </div>
             </div>
-            <hr style="margin: 2rem 0; border: 0; border-top: 1px solid #eee;">
-            <p style="text-align: center; color: #6b7280; font-size: 0.875rem;">&copy; 2025 ZeroWait. All rights reserved.</p>
+            <hr class="mt-4 mb-4" style="opacity: 0.1;">
+            <p class="text-center text-secondary small">&copy; 2025 ZeroWait Inc. All rights reserved.</p>
         </div>
     </footer>
 
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script>
+        // Mobile Toggle Logic
+        document.getElementById('mobile-toggle').addEventListener('click', () => {
+            document.getElementById('authLinks').classList.toggle('active');
+        });
+
         function initializeFirebase() {
             try {
                 if (typeof firebase !== 'undefined' && !firebase.apps.length) {
@@ -141,7 +152,7 @@
                         <a href="about.html">About</a>
                         <a href="how-it-works.html">How It Works</a>
                         <a href="provider-dashboard.html" class="btn btn-outline">Dashboard</a>
-                        <a href="#" onclick="handleLogout(event)" class="btn btn-primary" style="margin-left: 1rem;">Logout</a>
+                        <a href="#" onclick="handleLogout(event)" class="btn btn-primary">Logout</a>
                     `;
                 }
             });
