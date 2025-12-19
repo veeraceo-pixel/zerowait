@@ -1,66 +1,94 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
+    <meta charset="UTF-8">
     <title>Join Queue - ZeroWait</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="style.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
     <style>
-        .auth-container {
-            min-height: calc(100vh - 70px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-        }
-        .auth-card {
-            width: 100%;
-            max-width: 400px;
-        }
+        .queue-container { min-height: calc(100vh - 70px); display: flex; align-items: center; justify-content: center; padding: 2rem; }
+        .queue-card { width: 100%; max-width: 500px; text-align: center; }
+        .status-badge { display: inline-block; padding: 0.5rem 1rem; border-radius: 9999px; font-weight: 600; font-size: 0.875rem; margin-bottom: 1.5rem; }
+        .status-waiting { background: #fff7ed; color: #9a3412; }
+        .status-serving { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+        .time-display { font-size: 4rem; font-weight: 800; color: var(--primary); line-height: 1; margin: 1rem 0; }
+        .pos-display { font-size: 1.25rem; color: var(--text-secondary); margin-bottom: 2rem; }
     </style>
 </head>
-<body class="bg-light">
-    <nav class="navbar">
-        <div class="container nav-content">
-            <a href="index.html" class="logo">ZeroWait</a>
-            <div class="nav-links">
-                <a href="nearby.html">Nearby</a>
-                <a href="about.html">About</a>
-                <a href="how-it-works.html">How It Works</a>
-                <a href="login.html" class="btn btn-outline">Login</a>
+<body class="bg-light" onload="init()">
+    <nav class="navbar"><div class="container nav-content"><a href="index.html" class="logo">ZeroWait</a></div></nav>
+    <main class="queue-container">
+        <div id="loading" class="text-center">Loading...</div>
+        <div id="queueContent" class="card queue-card p-5 shadow-lg" style="display:none;">
+            <div id="statusBadge" class="status-badge">In Queue</div>
+            <h1 id="providerName" class="h3 font-weight-bold">--</h1>
+            <div id="waitingInfo">
+                <div id="waitTime" class="time-display">0</div>
+                <p>minutes</p>
+                <div class="pos-display">Position: <span id="posNumber">--</span></div>
             </div>
-        </div>
-    </nav>
-
-    <main class="auth-container">
-        <div class="card auth-card p-4 shadow-sm">
-            <h2 class="h4 font-weight-bold mb-3">Join Virtual Queue</h2>
-            <p id="status" class="text-secondary small mb-4">Enter your name to join the line for <span id="provider-name" class="font-weight-bold">...</span></p>
-            
-            <div class="mb-4">
-                <label class="small font-weight-bold text-secondary mb-2 d-block">Your Name</label>
-                <input type="text" id="nameInput" placeholder="e.g. John Doe" class="btn btn-outline" style="width: 100%; text-align: left; background: white; cursor: text;" />
+            <div id="servingInfo" style="display:none;">
+                <h2 class="h2 text-success">Your Turn!</h2>
             </div>
-
-            <button id="joinBtn" class="btn btn-primary" style="width: 100%;">Join Line Now</button>
-            
-            <div id="queue-info" class="mt-4 p-3 rounded-lg bg-light" style="display: none;">
-                <p class="small text-secondary mb-1">Estimated wait time:</p>
-                <div class="h4 font-weight-bold text-primary">~15 mins</div>
-            </div>
+            <button onclick="leaveQueue()" class="btn btn-outline-danger mt-4">Leave Queue</button>
         </div>
     </main>
-
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
     <script>
-        // Logic preserved from original - handle joining queue
-        const params = new URLSearchParams(window.location.search);
-        const providerId = params.get('provider');
-        const providerName = decodeURIComponent(params.get('name') || 'Service');
-        document.getElementById('provider-name').innerText = providerName;
-
-        // (Firebase logic for joining queue)
+        let db, currentUserId, providerId;
+        function init() {
+            db = firebase.firestore();
+            firebase.auth().onAuthStateChanged(user => {
+                if (!user) { window.location.href = 'login.html'; return; }
+                currentUserId = user.uid;
+                findActiveQueue();
+            });
+        }
+        async function findActiveQueue() {
+            const snap = await db.collection('queues').where('customerId', '==', currentUserId).where('status', 'in', ['waiting', 'serving']).get();
+            if (snap.empty) { document.getElementById('loading').innerText = 'No active queue'; return; }
+            const q = snap.docs[0]; providerId = q.data().providerId;
+            startListener(q.id);
+        }
+        function startListener(qid) {
+            db.collection('queues').where('providerId', '==', providerId).where('status', 'in', ['waiting', 'serving']).orderBy('joinedAt', 'asc')
+            .onSnapshot(async snap => {
+                const docs = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                const my = docs.find(d => d.id === qid);
+                if (!my) { window.location.reload(); return; }
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('queueContent').style.display = 'block';
+                if (my.status === 'serving') {
+                    document.getElementById('waitingInfo').style.display = 'none';
+                    document.getElementById('servingInfo').style.display = 'block';
+                    return;
+                }
+                const pDoc = await db.collection('providers').doc(providerId).get();
+                const avg = pDoc.data().avgWait || 15;
+                const serving = docs.find(d => d.status === 'serving');
+                const waiting = docs.filter(d => d.status === 'waiting');
+                const pos = waiting.findIndex(d => d.id === qid);
+                document.getElementById('posNumber').innerText = pos + 1;
+                let wait = 0;
+                if (pos > 0) {
+                    let rem = avg;
+                    if (serving && serving.servingStartTime) {
+                        const elap = (Date.now() - serving.servingStartTime.toDate()) / 60000;
+                        rem = Math.max(0, avg - elap);
+                    }
+                    wait = Math.round(rem + (pos - 1) * avg);
+                }
+                document.getElementById('waitTime').innerText = wait;
+            });
+        }
+        async function leaveQueue() {
+            const snap = await db.collection('queues').where('customerId', '==', currentUserId).where('status', 'in', ['waiting', 'serving']).get();
+            const batch = db.batch(); snap.forEach(d => batch.update(d.ref, {status: 'cancelled'}));
+            await batch.commit(); window.location.reload();
+        }
     </script>
 </body>
 </html>
