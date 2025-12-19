@@ -13,6 +13,40 @@
             border: 1px solid var(--border);
             font-family: 'Inter', sans-serif;
         }
+        /* Success Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+        .success-modal {
+            background: white;
+            padding: 3rem;
+            border-radius: var(--radius-lg);
+            max-width: 450px;
+            width: 90%;
+            text-align: center;
+            box-shadow: var(--shadow-xl);
+        }
+        .success-icon {
+            width: 64px;
+            height: 64px;
+            background: #f0fdf4;
+            color: #166534;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin: 0 auto 1.5rem;
+        }
     </style>
 </head>
 <body class="bg-light">
@@ -93,6 +127,15 @@
         </div>
     </main>
 
+    <div id="successModal" class="modal-overlay">
+        <div class="success-modal">
+            <div class="success-icon">✓</div>
+            <h2 class="h3 font-weight-bold mb-2">Registration Successful!</h2>
+            <p class="text-secondary mb-4">Your business account has been created. You can now manage your queue and share your QR code.</p>
+            <button onclick="window.location.href='provider-dashboard.html'" class="btn btn-primary" style="width: 100%;">Go to Dashboard</button>
+        </div>
+    </div>
+
     <footer class="bg-white border-top py-6 mt-6">
         <div class="container text-center">
             <a href="index.html" class="logo mb-4 d-inline-block">ZeroWait</a>
@@ -100,43 +143,26 @@
         </div>
     </footer>
 
-    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    
-    <!-- Central Config -->
     <script src="firebase-config.js"></script>
-
     <script>
         let autocomplete;
-        
         function initAutocomplete() {
             const input = document.getElementById('addressLookup');
-            const options = {
-                fields: ["address_components", "geometry", "icon", "name", "place_id", "formatted_address"],
-                strictBounds: false,
-            };
+            const options = { fields: ["address_components", "geometry", "icon", "name", "place_id", "formatted_address"] };
             autocomplete = new google.maps.places.Autocomplete(input, options);
-            
             autocomplete.addListener("place_changed", () => {
                 const place = autocomplete.getPlace();
-                if (!place.geometry || !place.geometry.location) {
-                    alert("No details available for input: '" + place.name + "'");
-                    return;
-                }
-                
+                if (!place.geometry) return;
                 document.getElementById('placeId').value = place.place_id;
                 document.getElementById('lat').value = place.geometry.location.lat();
                 document.getElementById('lng').value = place.geometry.location.lng();
                 document.getElementById('formattedAddress').value = place.formatted_address;
-                
-                if (!document.getElementById('businessName').value) {
-                    document.getElementById('businessName').value = place.name;
-                }
+                if (!document.getElementById('businessName').value) document.getElementById('businessName').value = place.name;
             });
         }
-
         document.getElementById('providerSignupForm').onsubmit = async (e) => {
             e.preventDefault();
             const email = document.getElementById('email').value;
@@ -144,36 +170,20 @@
             const businessName = document.getElementById('businessName').value;
             const type = document.getElementById('serviceType').value;
             const avgWait = document.getElementById('avgWait').value;
-            
             const locationData = {
                 placeId: document.getElementById('placeId').value,
                 lat: parseFloat(document.getElementById('lat').value),
                 lng: parseFloat(document.getElementById('lng').value),
                 address: document.getElementById('formattedAddress').value
             };
-
-            if (!locationData.placeId) {
-                alert("Please select your business location from the Google Maps search results.");
-                return;
-            }
-
+            if (!locationData.placeId) { alert("Please select location from search results."); return; }
             try {
                 const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
-                const uid = userCredential.user.uid;
-                
-                await firebase.firestore().collection('providers').doc(uid).set({
-                    businessName,
-                    type,
-                    avgWait: parseInt(avgWait),
-                    email,
-                    location: locationData,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                await firebase.firestore().collection('providers').doc(userCredential.user.uid).set({
+                    businessName, type, avgWait: parseInt(avgWait), email, location: locationData, createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                
-                window.location.href = 'provider-dashboard.html';
-            } catch (err) {
-                alert('Signup failed: ' + err.message);
-            }
+                document.getElementById('successModal').style.display = 'flex';
+            } catch (err) { alert('Signup failed: ' + err.message); }
         };
     </script>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAG-Qv4aH4xE2VFAMImB_xwG4J8TmehUMQ&libraries=places&callback=initAutocomplete" async defer></script>
