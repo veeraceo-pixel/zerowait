@@ -1,148 +1,163 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>ZeroWait – Skip the Wait</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeroWait – Skip the Wait</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <header class="navbar">
-    <a href="index.html" class="logo">ZeroWait</a>
-    <nav class="nav-links" id="authLinks">
-      <a href="index.html">Home</a>
-      <a href="about.html">About</a>
-      <a href="how-it-works.html">How It Works</a>
-      <a href="login.html">Login</a>
-      <a href="provider-signup.html" class="btn btn-primary" style="margin-left: 1rem;">For Businesses</a>
-    </nav>
-  </header>
+    <!-- Navbar -->
+    <header class="navbar">
+        <div class="container nav-content" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <a href="index.html" class="logo">ZeroWait</a>
+            <nav class="nav-links" id="authLinks" style="display: flex; align-items: center; gap: 1.5rem;">
+                <a href="index.html" class="active">Home</a>
+                <a href="about.html">About</a>
+                <a href="how-it-works.html">How It Works</a>
+                <a href="login.html" class="btn btn-outline">Login</a>
+                <a href="provider-signup.html" class="btn btn-primary" style="margin-left: 1rem;">For Businesses</a>
+            </nav>
+        </div>
+    </header>
 
-  <main>
-    <section class="hero">
-      <h1>Never Wait Again</h1>
-      <p>Book instantly. Skip the queue. Save your time at your favorite local spots.</p>
-      <div class="hero-buttons">
-        <a href="#explore" class="btn btn-primary">Get Started</a>
-        <a href="how-it-works.html" class="btn btn-outline" style="margin-left: 1rem;">Learn More</a>
-      </div>
-    </section>
+    <main>
+        <section class="hero container">
+            <h1 class="display-3 font-weight-bold">Never Wait Again</h1>
+            <p class="lead">Book instantly. Skip the queue. Save your time at your favorite local spots.</p>
+            <div class="hero-buttons">
+                <a href="#explore" class="btn btn-primary btn-lg">Get Started</a>
+                <a href="how-it-works.html" class="btn btn-outline btn-lg" style="margin-left: 1rem;">Learn More</a>
+            </div>
+        </section>
 
-    <section id="explore" style="padding-bottom: 5rem;">
-      <h2 class="section-title">What are you looking for?</h2>
-      <div class="service-grid">
-        <div class="category-card" onclick="goToCategory('salon')">
-          <div style="font-size: 3rem; margin-bottom: 1rem;">💇</div>
-          <h3>Salons</h3>
-          <p>Haircuts, styling, and beauty treatments.</p>
-        </div>
-        <div class="category-card" onclick="goToCategory('restaurant')">
-          <div style="font-size: 3rem; margin-bottom: 1rem;">🍽️</div>
-          <h3>Restaurants</h3>
-          <p>Table bookings and queue management.</p>
-        </div>
-        <div class="category-card" onclick="goToCategory('clinic')">
-          <div style="font-size: 3rem; margin-bottom: 1rem;">🏥</div>
-          <h3>Clinics</h3>
-          <p>Medical appointments and checkups.</p>
-        </div>
-      </div>
-    </section>
+        <section id="explore" class="container py-5">
+            <h2 class="section-title h2 text-center mb-5">What are you looking for?</h2>
+            <div class="service-grid">
+                <div class="category-card card" onclick="goToCategory('salon')">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">💇</div>
+                    <h3>Salons</h3>
+                    <p class="text-secondary">Haircuts, styling, and beauty treatments.</p>
+                </div>
+                <div class="category-card card" onclick="goToCategory('restaurant')">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">🍽️</div>
+                    <h3>Restaurants</h3>
+                    <p class="text-secondary">Table bookings and queue management.</p>
+                </div>
+                <div class="category-card card" onclick="goToCategory('clinic')">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">🏥</div>
+                    <h3>Clinics</h3>
+                    <p class="text-secondary">Medical appointments and checkups.</p>
+                </div>
+            </div>
+        </section>
 
-    <section class="features">
-      <h2 class="section-title">Why ZeroWait?</h2>
-      <div class="feature-grid">
-        <div class="feature">
-          <h3>Real-time Updates</h3>
-          <p>Get instant notifications about your position in the queue and estimated wait times.</p>
-        </div>
-        <div class="feature">
-          <h3>Easy Booking</h3>
-          <p>Join a queue with just one click. No more standing in line or waiting on hold.</p>
-        </div>
-        <div class="feature">
-          <h3>Local Discovery</h3>
-          <p>Find the best services near you using our integrated Google Maps search.</p>
-        </div>
-      </div>
-    </section>
-  </main>
+        <section class="features bg-light py-5">
+            <div class="container">
+                <h2 class="section-title h2 text-center mb-5">Why ZeroWait?</h2>
+                <div class="feature-grid">
+                    <div class="feature-item p-4">
+                        <h3 class="h4 mb-3">Real-time Updates</h3>
+                        <p class="text-secondary">Get instant notifications about your position in the queue and estimated wait times.</p>
+                    </div>
+                    <div class="feature-item p-4">
+                        <h3 class="h4 mb-3">Easy Booking</h3>
+                        <p class="text-secondary">Join a queue with just one click. No more standing in line or waiting on hold.</p>
+                    </div>
+                    <div class="feature-item p-4">
+                        <h3 class="h4 mb-3">Local Discovery</h3>
+                        <p class="text-secondary">Find the best services near you using our integrated Google Maps search.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
 
-  <footer>
-    <div class="footer-content">
-      <div class="footer-section">
-        <h4 style="color: white; font-weight: bold;">ZeroWait</h4>
-        <p style="color: #94a3b8; margin-top: 1rem;">Revolutionizing the way you wait. Skip the line, save your time.</p>
-      </div>
-      <div class="footer-section">
-        <h4>Product</h4>
-        <ul>
-          <li><a href="nearby.html">Nearby Services</a></li>
-          <li><a href="how-it-works.html">How it Works</a></li>
-        </ul>
-      </div>
-      <div class="footer-section">
-        <h4>Company</h4>
-        <ul>
-          <li><a href="about.html">About Us</a></li>
-          <li><a href="#">Contact</a></li>
-        </ul>
-      </div>
-    </div>
-    <div style="text-align: center; margin-top: 3rem; color: #64748b; font-size: 0.875rem;">
-      &copy; 2025 ZeroWait Inc. All rights reserved.
-    </div>
-  </footer>
+    <!-- Footer -->
+    <footer class="bg-white border-top py-5" style="margin-top: 5rem; padding-bottom: 2rem;">
+        <div class="container">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem;">
+                <div>
+                    <h4 class="h5 text-dark mb-3">ZeroWait</h4>
+                    <p class="text-secondary small">The modern solution to physical queues. Reclaiming time, one wait at a time.</p>
+                </div>
+                <div>
+                    <h5 class="small text-uppercase font-weight-bold text-dark mb-3">Product</h5>
+                    <ul class="list-unstyled small" style="list-style: none; padding: 0;">
+                        <li><a href="nearby.html" class="text-secondary" style="text-decoration: none;">Nearby</a></li>
+                        <li><a href="how-it-works.html" class="text-secondary" style="text-decoration: none;">How It Works</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h5 class="small text-uppercase font-weight-bold text-dark mb-3">Company</h5>
+                    <ul class="list-unstyled small" style="list-style: none; padding: 0;">
+                        <li><a href="about.html" class="text-secondary" style="text-decoration: none;">About Us</a></li>
+                        <li><a href="#" class="text-secondary" style="text-decoration: none;">Privacy Policy</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h5 class="small text-uppercase font-weight-bold text-dark mb-3">Stay Updated</h5>
+                    <div style="display: flex;">
+                        <input type="email" placeholder="Email" style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 0.5rem 0 0 0.5rem; outline: none; flex-grow: 1;">
+                        <button style="background: #2563eb; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0 0.5rem 0.5rem 0; cursor: pointer;">Join</button>
+                    </div>
+                </div>
+            </div>
+            <hr style="margin: 2rem 0; border: 0; border-top: 1px solid #eee;">
+            <p style="text-align: center; color: #6b7280; font-size: 0.875rem;">&copy; 2025 ZeroWait. All rights reserved.</p>
+        </div>
+    </footer>
 
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script>
-    function initializeFirebase() {
-      try {
-        if (typeof firebase !== 'undefined' && !firebase.apps.length) {
-          fetch('/api/firebase-config')
-            .then(r => r.json())
-            .then(config => {
-              firebase.initializeApp(config);
-              setupAuthListener();
-            })
-            .catch(err => console.error('Firebase init error:', err));
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script>
+        function initializeFirebase() {
+            try {
+                if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+                    fetch('/api/firebase-config')
+                        .then(r => r.json())
+                        .then(config => {
+                            firebase.initializeApp(config);
+                            setupAuthListener();
+                        })
+                        .catch(err => console.error('Firebase init error:', err));
+                }
+            } catch (err) {
+                console.error('Firebase initialization failed:', err);
+            }
         }
-      } catch (err) {
-        console.error('Firebase initialization failed:', err);
-      }
-    }
-
-    function setupAuthListener() {
-      const auth = firebase.auth();
-      auth.onAuthStateChanged(user => {
-        const authLinks = document.getElementById('authLinks');
-        if (!authLinks) return;
-        
-        if (user) {
-          authLinks.innerHTML = `
-            <a href="index.html">Home</a>
-            <a href="provider-dashboard.html">Dashboard</a>
-            <a href="#" onclick="handleLogout(event)">Logout</a>
-          `;
+        function setupAuthListener() {
+            const auth = firebase.auth();
+            auth.onAuthStateChanged(user => {
+                const authLinks = document.getElementById('authLinks');
+                if (!authLinks) return;
+                
+                if (user) {
+                    authLinks.innerHTML = `
+                        <a href="index.html" class="active">Home</a>
+                        <a href="about.html">About</a>
+                        <a href="how-it-works.html">How It Works</a>
+                        <a href="provider-dashboard.html" class="btn btn-outline">Dashboard</a>
+                        <a href="#" onclick="handleLogout(event)" class="btn btn-primary" style="margin-left: 1rem;">Logout</a>
+                    `;
+                }
+            });
         }
-      });
-    }
-
-    function goToCategory(type) {
-      if (!type) return;
-      localStorage.setItem('serviceType', type);
-      window.location.href = `nearby.html?type=${encodeURIComponent(type)}`;
-    }
-
-    function handleLogout(e) {
-      e.preventDefault();
-      firebase.auth().signOut().then(() => {
-        window.location.href = 'index.html';
-      });
-    }
-
-    document.addEventListener('DOMContentLoaded', initializeFirebase);
-  </script>
+        function goToCategory(type) {
+            if (!type) return;
+            localStorage.setItem('serviceType', type);
+            window.location.href = `nearby.html?type=${encodeURIComponent(type)}`;
+        }
+        function handleLogout(e) {
+            e.preventDefault();
+            firebase.auth().signOut().then(() => {
+                window.location.href = 'index.html';
+            });
+        }
+        document.addEventListener('DOMContentLoaded', initializeFirebase);
+    </script>
 </body>
 </html>
