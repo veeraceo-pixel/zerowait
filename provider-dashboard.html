@@ -1,207 +1,248 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Provider Dashboard - ZeroWait</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="style.css">
-  <style>
-    .dashboard-grid {
-      display: grid;
-      grid-template-columns: 300px 1fr;
-      gap: 2rem;
-      min-height: calc(100vh - 150px);
-    }
-    .stats-card {
-      padding: 1.5rem;
-      background: var(--bg-white);
-      border-radius: var(--radius-lg);
-      border: 1px solid var(--border);
-      text-align: center;
-    }
-    .queue-list {
-      background: var(--bg-white);
-      border-radius: var(--radius-lg);
-      border: 1px solid var(--border);
-      overflow: hidden;
-    }
-    .queue-header {
-      padding: 1.5rem;
-      border-bottom: 1px solid var(--border);
-      background: #fcfcfd;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .queue-item {
-      padding: 1.25rem 1.5rem;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      transition: background 0.2s;
-    }
-    .queue-item:hover { background: #f8fafc; }
-    .queue-item:last-child { border-bottom: none; }
-    
-    .status-badge {
-      padding: 0.25rem 0.75rem;
-      border-radius: 9999px;
-      font-size: 0.75rem;
-      font-weight: 700;
-    }
-    .status-waiting { background: #fef3c7; color: #92400e; }
-    
-    .sidebar {
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
-    }
-    
-    @media (max-width: 992px) {
-      .dashboard-grid { grid-template-columns: 1fr; }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Provider Dashboard - ZeroWait</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+            min-height: calc(100vh - 150px);
+        }
+        .stats-card {
+            padding: 1.5rem;
+            background: var(--bg-white);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+        .queue-list {
+            background: var(--bg-white);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+        .queue-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            background: #fcfcfd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .queue-item {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+        .queue-item:hover { background: #f8fafc; }
+        .queue-item:last-child { border-bottom: none; }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        .status-waiting { background: #fef3c7; color: #92400e; }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 992px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+        }
+    </style>
 </head>
 <body class="bg-light">
-  <nav class="navbar">
-    <div class="container nav-content">
-      <div class="d-flex align-items-center">
-        <a href="index.html" class="logo mr-4">ZeroWait</a>
-        <span class="badge bg-primary-light text-primary ml-3">Business Portal</span>
-      </div>
-      <div class="nav-links">
-        <span id="businessName" class="font-weight-bold small mr-3">Loading...</span>
-        <button onclick="logout()" class="btn btn-outline" style="padding: 0.5rem 1rem;">Logout</button>
-      </div>
-    </div>
-  </nav>
-
-  <main class="container py-5">
-    <div class="dashboard-grid">
-      <aside class="sidebar">
-        <div class="stats-card shadow-sm">
-          <div class="text-secondary small font-weight-bold text-uppercase mb-1">In Queue</div>
-          <div id="queueCount" class="h1 font-weight-extrabold text-primary mb-0">0</div>
-        </div>
-        <div class="stats-card shadow-sm">
-          <div class="text-secondary small font-weight-bold text-uppercase mb-1">Avg. Wait</div>
-          <div id="displayAvgWait" class="h2 font-weight-bold mb-0">--</div>
-          <div class="small text-muted">minutes</div>
-        </div>
-        <div class="card p-4 shadow-sm">
-          <h3 class="h6 font-weight-bold mb-3">Quick Actions</h3>
-          <button onclick="toggleStoreStatus()" id="statusBtn" class="btn btn-primary mb-2" style="width: 100%;">Close Entry</button>
-          <button onclick="showQRCode()" class="btn btn-outline" style="width: 100%;">View QR Code</button>
-        </div>
-      </aside>
-
-      <section class="main-content">
-        <div class="queue-list shadow-sm">
-          <div class="queue-header">
-            <h2 class="h5 font-weight-bold mb-0">Active Queue</h2>
-            <div class="small text-secondary">Real-time updates</div>
-          </div>
-          <div id="queueItems">
-            <div class="text-center py-5 text-muted">
-              <p>No customers in line.</p>
+    <nav class="navbar">
+        <div class="container nav-content">
+            <div class="d-flex align-items-center">
+                <a href="index.html" class="logo mr-4">ZeroWait</a>
+                <span class="badge bg-primary-light text-primary ml-3">Business Portal</span>
             </div>
-          </div>
+            <div class="nav-links">
+                <span id="businessName" class="font-weight-bold small mr-3">Loading...</span>
+                <button onclick="logout()" class="btn btn-outline" style="padding: 0.5rem 1rem;">Logout</button>
+            </div>
         </div>
-      </section>
+    </nav>
+
+    <main class="container py-5">
+        <div class="dashboard-grid">
+            <aside class="sidebar">
+                <div class="stats-card shadow-sm">
+                    <div class="text-secondary small font-weight-bold text-uppercase mb-1">In Queue</div>
+                    <div id="queueCount" class="h1 font-weight-extrabold text-primary mb-0">0</div>
+                </div>
+                <div class="stats-card shadow-sm">
+                    <div class="text-secondary small font-weight-bold text-uppercase mb-1">Avg. Wait</div>
+                    <div id="displayAvgWait" class="h2 font-weight-bold mb-0">--</div>
+                    <div class="small text-muted">minutes</div>
+                </div>
+                <div class="card p-4 shadow-sm">
+                    <h3 class="h6 font-weight-bold mb-3">Quick Actions</h3>
+                    <button onclick="toggleStoreStatus()" id="statusBtn" class="btn btn-primary mb-2" style="width: 100%;">Close Entry</button>
+                    <button onclick="showQRCode()" class="btn btn-outline" style="width: 100%;">View QR Code</button>
+                </div>
+            </aside>
+
+            <section class="main-content">
+                <div class="queue-list shadow-sm">
+                    <div class="queue-header">
+                        <h2 class="h5 font-weight-bold mb-0">Active Queue</h2>
+                        <div class="small text-secondary">Real-time updates</div>
+                    </div>
+                    <div id="queueItems">
+                        <div class="text-center py-5 text-muted">
+                            <p>No customers in line.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- QR Modal -->
+    <div id="qrModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;">
+        <div class="card p-5 text-center" style="max-width: 400px; width: 90%;">
+            <h3 class="h4 font-weight-bold mb-4">Store QR Code</h3>
+            <div id="qrcode" class="mb-4" style="background:#fff; padding: 10px; display:flex; align-items:center; justify-content:center; border-radius:1rem; border: 1px solid #ddd;">
+                <!-- QR Code will be generated here -->
+            </div>
+            <p class="small text-secondary mb-4">Print this and display it at your entrance for customers to scan.</p>
+            <button onclick="document.getElementById('qrModal').style.display='none'" class="btn btn-primary" style="width:100%">Close</button>
+        </div>
     </div>
-  </main>
 
-  <!-- QR Modal (Placeholder logic) -->
-  <div id="qrModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;">
-    <div class="card p-5 text-center" style="max-width: 400px; width: 90%;">
-      <h3 class="h4 font-weight-bold mb-4">Store QR Code</h3>
-      <div id="qrcode" class="mb-4" style="background:#eee; height:200px; display:flex; align-items:center; justify-content:center; border-radius:1rem;">
-        [QR Code Generator]
-      </div>
-      <p class="small text-secondary mb-4">Print this and display it at your entrance for customers to scan.</p>
-      <button onclick="document.getElementById('qrModal').style.display='none'" class="btn btn-primary" style="width:100%">Close</button>
-    </div>
-  </div>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    
+    <!-- Central Config -->
+    <script src="firebase-config.js"></script>
 
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script>
-    let db, currentProviderId;
+    <!-- QR Code Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
-    async function init() {
-      const config = await fetch('/api/firebase-config').then(r => r.json());
-      firebase.initializeApp(config);
-      db = firebase.firestore();
-
-      firebase.auth().onAuthStateChanged(user => {
-        if (!user) {
-          window.location.href = 'login.html';
-          return;
+    <script>
+        let db, currentProviderId;
+        
+        function init() {
+            // firebase is already initialized by firebase-config.js
+            db = firebase.firestore();
+            firebase.auth().onAuthStateChanged(user => {
+                if (!user) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+                currentProviderId = user.uid;
+                loadProviderData();
+                listenToQueue();
+            });
         }
-        currentProviderId = user.uid;
-        loadProviderData();
-        listenToQueue();
-      });
-    }
 
-    async function loadProviderData() {
-      const doc = await db.collection('providers').doc(currentProviderId).get();
-      if (doc.exists) {
-        const data = doc.data();
-        document.getElementById('businessName').innerText = data.businessName;
-        document.getElementById('displayAvgWait').innerText = data.avgWait || 15;
-      }
-    }
+        async function loadProviderData() {
+            const doc = await db.collection('providers').doc(currentProviderId).get();
+            if (doc.exists) {
+                const data = doc.data();
+                document.getElementById('businessName').innerText = data.businessName;
+                document.getElementById('displayAvgWait').innerText = data.avgWait || 15;
+            }
+        }
 
-    function listenToQueue() {
-      db.collection('queues')
-        .where('providerId', '==', currentProviderId)
-        .where('status', '==', 'waiting')
-        .orderBy('joinedAt', 'asc')
-        .onSnapshot(snapshot => {
-          const container = document.getElementById('queueItems');
-          document.getElementById('queueCount').innerText = snapshot.size;
-          
-          if (snapshot.empty) {
-            container.innerHTML = '<div class="text-center py-5 text-muted"><p>No customers in line.</p></div>';
-            return;
-          }
+        function listenToQueue() {
+            db.collection('queues')
+                .where('providerId', '==', currentProviderId)
+                .where('status', '==', 'waiting')
+                .orderBy('joinedAt', 'asc')
+                .onSnapshot(snapshot => {
+                    const container = document.getElementById('queueItems');
+                    document.getElementById('queueCount').innerText = snapshot.size;
+                    
+                    if (snapshot.empty) {
+                        container.innerHTML = '<div class="text-center py-5 text-muted"><p>No customers in line.</p></div>';
+                        return;
+                    }
+                    container.innerHTML = '';
+                    snapshot.forEach(doc => {
+                        const customer = doc.data();
+                        const item = document.createElement('div');
+                        item.className = 'queue-item';
+                        item.innerHTML = `
+                            <div>
+                                <div class="font-weight-bold">${customer.customerName}</div>
+                                <div class="small text-secondary">${customer.phoneNumber || 'No phone'}</div>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <span class="status-badge status-waiting mr-3">WAITING</span>
+                                <button onclick="serveCustomer('${doc.id}')" class="btn btn-primary" style="padding: 0.4rem 1rem; font-size: 0.75rem;">Serve</button>
+                            </div>
+                        `;
+                        container.appendChild(item);
+                    });
+                });
+        }
 
-          container.innerHTML = '';
-          snapshot.forEach(doc => {
-            const customer = doc.data();
-            const item = document.createElement('div');
-            item.className = 'queue-item';
-            item.innerHTML = `
-              <div>
-                <div class="font-weight-bold">${customer.customerName}</div>
-                <div class="small text-secondary">${customer.phoneNumber || 'No phone'}</div>
-              </div>
-              <div class="d-flex align-items-center">
-                <span class="status-badge status-waiting mr-3">WAITING</span>
-                <button onclick="serveCustomer('${doc.id}')" class="btn btn-primary" style="padding: 0.4rem 1rem; font-size: 0.75rem;">Serve</button>
-              </div>
-            `;
-            container.appendChild(item);
-          });
-        });
-    }
+        async function serveCustomer(id) {
+            await db.collection('queues').doc(id).update({ 
+                status: 'served', 
+                servedAt: firebase.firestore.FieldValue.serverTimestamp() 
+            });
+        }
 
-    async function serveCustomer(id) {
-      await db.collection('queues').doc(id).update({ status: 'served', servedAt: firebase.firestore.FieldValue.serverTimestamp() });
-    }
+        function logout() {
+            firebase.auth().signOut().then(() => {
+                window.location.href = 'index.html';
+            }).catch(err => {
+                console.error("Logout error", err);
+                alert("Logout failed: " + err.message);
+            });
+        }
 
-    function logout() {
-      firebase.auth().signOut().then(() => window.location.href = 'index.html');
-    }
+        function showQRCode() {
+            const modal = document.getElementById('qrModal');
+            const qrContainer = document.getElementById('qrcode');
+            qrContainer.innerHTML = ""; // Clear previous QR code
+            
+            modal.style.display = 'flex';
+            
+            // Build the URL for the join queue page
+            const joinUrl = window.location.origin + window.location.pathname.replace('provider-dashboard.html', 'join-queue.html') + '?provider=' + currentProviderId;
+            
+            new QRCode(qrContainer, {
+                text: joinUrl,
+                width: 200,
+                height: 200,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        }
 
-    function showQRCode() {
-      document.getElementById('qrModal').style.display = 'flex';
-    }
+        async function toggleStoreStatus() {
+            // Placeholder for business status toggle
+            const btn = document.getElementById('statusBtn');
+            if (btn.innerText === "Close Entry") {
+                btn.innerText = "Open Entry";
+                btn.className = "btn btn-outline mb-2";
+            } else {
+                btn.innerText = "Close Entry";
+                btn.className = "btn btn-primary mb-2";
+            }
+        }
 
-    document.addEventListener('DOMContentLoaded', init);
-  </script>
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
 </body>
 </html>
