@@ -1,118 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Account - ZeroWait</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Account - ZeroWait</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-light">
-    <nav class="navbar">
-        <div class="container nav-content">
-            <a href="index.html" class="logo">ZeroWait</a>
-            <div class="nav-links">
-                <a href="nearby.html">Nearby</a>
-                <a href="how-it-works.html">How it Works</a>
-                <a href="login.html" class="btn btn-outline">Login</a>
-            </div>
-        </div>
-    </nav>
-
-    <main class="auth-page">
-        <div class="auth-card">
-            <div class="auth-header">
-                <h2>Create Account</h2>
-                <p>Join ZeroWait and skip the queue</p>
-            </div>
-            
-            <div id="errorMsg" class="alert alert-error" style="display: none;"></div>
-            
-            <form id="signupForm" class="auth-form">
-                <div class="form-group">
-                    <label for="fullName">Full Name</label>
-                    <input type="text" id="fullName" placeholder="Enter your full name" required>
-                </div>
-                <div class="form-group">
-                    <label for="email">Email Address</label>
-                    <input type="email" id="email" placeholder="name@example.com" required>
-                </div>
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" placeholder="Min 6 characters" minlength="6" required>
-                </div>
-                <button type="submit" id="signupBtn" class="btn btn-primary btn-block">Create Account</button>
-            </form>
-
-            <div class="auth-footer">
-                <p>Already have an account? <a href="login.html">Sign in</a></p>
-                <div class="auth-divider"><span>or</span></div>
-                <p><a href="provider-signup.html" class="text-secondary">Register as a Service Provider</a></p>
-            </div>
-        </div>
-    </main>
-
-    <!-- Success Modal -->
-    <div id="successModal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-icon">✓</div>
-            <h3>Account Created!</h3>
-            <p>Welcome to ZeroWait. You're all set to join queues and save time.</p>
-            <button onclick="window.location.href='index.html'" class="btn btn-primary btn-block">Get Started</button>
-        </div>
+  <header class="navbar">
+    <div class="container nav-content">
+      <a href="index.html" class="logo">ZeroWait</a>
+      <button id="mobile-menu-toggle">☰</button>
+      <nav class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="login.html" class="btn btn-outline">Login</a>
+      </nav>
     </div>
+  </header>
 
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <script>
-        function initializeFirebase() {
-            fetch('/api/firebase-config')
-                .then(r => r.json())
-                .then(config => {
-                    firebase.initializeApp(config);
-                });
-        }
+  <main class="py-6">
+    <div class="container">
+      <div class="form-card">
+        <div class="text-center mb-5">
+          <h1 class="h3 font-weight-extrabold mb-2">Create Account</h1>
+          <p class="text-secondary small">Join ZeroWait to skip lines and save time.</p>
+        </div>
 
-        const signupForm = document.getElementById('signupForm');
-        const errorMsg = document.getElementById('errorMsg');
-        const signupBtn = document.getElementById('signupBtn');
-        const successModal = document.getElementById('successModal');
+        <form id="signupForm">
+          <div class="form-group">
+            <label class="form-label" for="fullName">Full Name</label>
+            <input type="text" id="fullName" class="form-control" required placeholder="John Doe">
+          </div>
 
-        signupForm.onsubmit = async (e) => {
-            e.preventDefault();
-            const fullName = document.getElementById('fullName').value;
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+          <div class="form-group">
+            <label class="form-label" for="email">Email Address</label>
+            <input type="email" id="email" class="form-control" required placeholder="name@email.com">
+          </div>
 
-            signupBtn.disabled = true;
-            signupBtn.textContent = 'Creating account...';
-            errorMsg.style.display = 'none';
+          <div class="form-group">
+            <label class="form-label" for="password">Password</label>
+            <input type="password" id="password" class="form-control" required placeholder="At least 8 characters">
+          </div>
 
-            try {
-                const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
-                await userCredential.user.updateProfile({ displayName: fullName });
-                
-                const db = firebase.firestore();
-                await db.collection('users').doc(userCredential.user.uid).set({
-                    fullName: fullName,
-                    email: email,
-                    role: 'customer',
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
+          <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.875rem;">Create My Account</button>
+        </form>
 
-                successModal.classList.add('active');
-            } catch (err) {
-                errorMsg.textContent = err.message;
-                errorMsg.style.display = 'block';
-                signupBtn.disabled = false;
-                signupBtn.textContent = 'Create Account';
-            }
-        };
+        <div class="mt-5 text-center">
+          <p class="text-secondary small">
+            Already have an account? <a href="login.html" class="text-primary font-weight-bold" style="text-decoration: none;">Log in</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </main>
 
-        document.addEventListener('DOMContentLoaded', initializeFirebase);
-    </script>
+  <!-- Success Modal -->
+  <div id="successModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;">
+    <div class="card p-5 text-center" style="max-width: 400px; width: 90%;">
+      <div style="font-size: 4rem; margin-bottom: 1rem;">✅</div>
+      <h3 class="h4 font-weight-bold mb-3">Signup Successful!</h3>
+      <p class="text-secondary mb-4">Your account has been created. You can now start joining virtual queues.</p>
+      <button onclick="window.location.href='index.html'" class="btn btn-primary" style="width:100%">Continue</button>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script>
+    async function initializeFirebase() {
+      const config = await fetch('/api/firebase-config').then(r => r.json());
+      firebase.initializeApp(config);
+    }
+
+    document.getElementById('signupForm').onsubmit = async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const fullName = document.getElementById('fullName').value;
+
+      try {
+        const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+        await firebase.firestore().collection('users').doc(userCredential.user.uid).set({
+          fullName,
+          email,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        document.getElementById('successModal').style.display = 'flex';
+      } catch (err) {
+        alert('Signup failed: ' + err.message);
+      }
+    };
+
+    document.getElementById('mobile-menu-toggle').addEventListener('click', function() {
+      document.querySelector('.nav-links').classList.toggle('active');
+    });
+
+    document.addEventListener('DOMContentLoaded', initializeFirebase);
+  </script>
 </body>
 </html>
