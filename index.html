@@ -10,7 +10,7 @@
     <header class="navbar">
         <div class="container nav-content">
             <a href="index.html" class="logo">ZeroWait</a>
-            <button id="mobile-menu-toggle" style="display: none;">☰</button>
+            <button id="mobile-menu-toggle" aria-label="Toggle Menu">☰</button>
             <nav class="nav-links">
                 <a href="index.html" class="active">Home</a>
                 <a href="about.html">About</a>
@@ -163,6 +163,9 @@
             localStorage.setItem('serviceType', type);
             window.location.href = `nearby.html?type=${encodeURIComponent(type)}`;
         }
+        document.getElementById('mobile-menu-toggle').addEventListener('click', function() {
+            document.querySelector('.nav-links').classList.toggle('active');
+        });
     </script>
 </body>
 </html>
