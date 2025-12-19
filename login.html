@@ -1,87 +1,88 @@
 <!DOCTYPE html>
 <html lang="en">
-<head> 
-  <meta charset="UTF-8">
-  <title>Login – ZeroWait</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="style.css">
+<head>
+    <meta charset="UTF-8">
+    <title>Login – ZeroWait</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-light">
-  <header class="navbar">
-    <div class="container nav-content">
-      <a href="index.html" class="logo">ZeroWait</a>
-      <button id="mobile-menu-toggle">☰</button>
-      <nav class="nav-links">
-        <a href="index.html">Home</a>
-        <a href="provider-signup.html">For Businesses</a>
-      </nav>
-    </div>
-  </header>
-
-  <main class="py-6">
-    <div class="container">
-      <div class="form-card">
-        <div class="text-center mb-5">
-          <h1 class="h3 font-weight-extrabold mb-2">Welcome Back</h1>
-          <p class="text-secondary small">Sign in to manage your provider dashboard.</p>
+    <header class="navbar">
+        <div class="container nav-content">
+            <a href="index.html" class="logo">ZeroWait</a>
+            <button id="mobile-menu-toggle">☰</button>
+            <nav class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="provider-signup.html">For Businesses</a>
+            </nav>
         </div>
+    </header>
 
-        <form id="loginForm">
-          <div class="form-group">
-            <label class="form-label" for="email">Email Address</label>
-            <input type="email" id="email" class="form-control" required placeholder="name@company.com">
-          </div>
-          
-          <div class="form-group">
-            <div class="d-flex justify-content-between align-items-center mb-1">
-              <label class="form-label mb-0" for="password">Password</label>
-              <a href="#" class="small text-primary font-weight-bold" style="text-decoration: none;">Forgot?</a>
+    <main class="py-6">
+        <div class="container">
+            <div class="form-card">
+                <div class="text-center mb-5">
+                    <h1 class="h3 font-weight-extrabold mb-2">Welcome Back</h1>
+                    <p class="text-secondary small">Sign in to manage your provider dashboard.</p>
+                </div>
+
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label class="form-label" for="email">Email Address</label>
+                        <input type="email" id="email" class="form-control" required placeholder="name@company.com">
+                    </div>
+
+                    <div class="form-group">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label mb-0" for="password">Password</label>
+                            <a href="#" class="small text-primary font-weight-bold" style="text-decoration: none;">Forgot?</a>
+                        </div>
+                        <input type="password" id="password" class="form-control" required placeholder="••••••••">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.875rem;">Log In to Dashboard</button>
+                </form>
+
+                <div class="mt-5 text-center">
+                    <p class="text-secondary small">
+                        New here? <a href="provider-signup.html" class="text-primary font-weight-bold" style="text-decoration: none;">Create a business account</a>
+                    </p>
+                </div>
             </div>
-            <input type="password" id="password" class="form-control" required placeholder="••••••••">
-          </div>
-
-          <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.875rem;">Log In to Dashboard</button>
-        </form>
-
-        <div class="mt-5 text-center">
-          <p class="text-secondary small">
-            New here? <a href="provider-signup.html" class="text-primary font-weight-bold" style="text-decoration: none;">Create a business account</a>
-          </p>
         </div>
-      </div>
-    </div>
-  </main>
+    </main>
 
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script>
-    function initializeFirebase() {
-      fetch('/api/firebase-config')
-        .then(r => r.json())
-        .then(config => {
-          firebase.initializeApp(config);
-        })
-        .catch(err => console.error("Firebase config failed", err));
-    }
+    <footer class="bg-white border-top py-6 mt-6">
+        <div class="container text-center">
+            <a href="index.html" class="logo mb-4 d-inline-block">ZeroWait</a>
+            <p class="text-muted small">© 2025 ZeroWait Inc. All rights reserved.</p>
+        </div>
+    </footer>
 
-    document.getElementById('loginForm').onsubmit = async (e) => {
-      e.preventDefault();
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      
-      try {
-        await firebase.auth().signInWithEmailAndPassword(email, password);
-        window.location.href = 'provider-dashboard.html';
-      } catch (err) {
-        alert('Login failed: ' + err.message);
-      }
-    };
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    
+    <!-- Central Config -->
+    <script src="firebase-config.js"></script>
 
-    document.getElementById('mobile-menu-toggle').addEventListener('click', function() {
-      document.querySelector('.nav-links').classList.toggle('active');
-    });
+    <script>
+        document.getElementById('loginForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
 
-    document.addEventListener('DOMContentLoaded', initializeFirebase);
-  </script>
+            try {
+                await firebase.auth().signInWithEmailAndPassword(email, password);
+                window.location.href = 'provider-dashboard.html';
+            } catch (err) {
+                alert('Login failed: ' + err.message);
+            }
+        };
+
+        document.getElementById('mobile-menu-toggle').addEventListener('click', function() {
+            document.querySelector('.nav-links').classList.toggle('active');
+        });
+    </script>
 </body>
 </html>
