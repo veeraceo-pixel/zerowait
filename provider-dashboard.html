@@ -116,7 +116,7 @@
     <div id="qrModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;">
         <div class="card p-5 text-center" style="max-width: 400px; width: 90%;">
             <h3 class="h4 font-weight-bold mb-4">Store QR Code</h3>
-            <div id="qrcode" class="mb-4" style="background:#fff; padding: 10px; display:flex; align-items:center; justify-content:center; border-radius:1rem; border: 1px solid #ddd;">
+            <div id="qrcode" class="mb-4" style="background:#fff; padding: 10px; display:flex; align-items:center; justify-content:center; border-radius:1rem; border: 1px solid #ddd; min-height: 200px;">
                 <!-- QR Code will be generated here -->
             </div>
             <p class="small text-secondary mb-4">Print this and display it at your entrance for customers to scan.</p>
@@ -139,7 +139,6 @@
         let db, currentProviderId;
         
         function init() {
-            // firebase is already initialized by firebase-config.js
             db = firebase.firestore();
             firebase.auth().onAuthStateChanged(user => {
                 if (!user) {
@@ -217,7 +216,6 @@
             
             modal.style.display = 'flex';
             
-            // Build the URL for the join queue page
             const joinUrl = window.location.origin + window.location.pathname.replace('provider-dashboard.html', 'join-queue.html') + '?provider=' + currentProviderId;
             
             new QRCode(qrContainer, {
@@ -231,7 +229,6 @@
         }
 
         async function toggleStoreStatus() {
-            // Placeholder for business status toggle
             const btn = document.getElementById('statusBtn');
             if (btn.innerText === "Close Entry") {
                 btn.innerText = "Open Entry";
