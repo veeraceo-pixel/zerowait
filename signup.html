@@ -1,175 +1,118 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Create Account – ZeroWait</title>
-  <style>
-    body { font-family: system-ui, -apple-system, sans-serif; background-color: #f3f4f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-    .card { background: white; padding: 2.5rem; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 400px; }
-    h2 { margin-bottom: 1.5rem; color: #1f2937; }
-    input { width: 100%; padding: 0.75rem; margin-bottom: 1rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 16px; box-sizing: border-box; }
-    input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
-    button { width: 100%; padding: 0.75rem; background-color: #2563eb; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 16px; transition: background 0.3s; }
-    button:hover { background-color: #1d4ed8; }
-    button:disabled { background: #9ca3af; cursor: not-allowed; }
-    .footer-text { text-align: center; margin-top: 1rem; font-size: 0.9rem; }
-    .footer-text a { color: #2563eb; text-decoration: none; }
-    .footer-text a:hover { text-decoration: underline; }
-    .error { color: #dc2626; font-size: 14px; margin-bottom: 15px; padding: 10px; background: #fee2e2; border-radius: 6px; display: none; }
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
-    .modal-overlay.active { display: flex; }
-    .modal-content { background: white; padding: 2rem; border-radius: 12px; text-align: center; max-width: 320px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
-    .modal-content h3 { margin-top: 0; color: #1f2937; }
-    .modal-content button { margin-top: 15px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account - ZeroWait</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body>
-  <div class="card">
-    <h2>Create Account</h2>
-    <div id="errorMsg" class="error"></div>
-    <form id="signupForm">
-      <input type="text" id="fullName" placeholder="Full Name" required>
-      <input type="email" id="email" placeholder="Email" required>
-      <input type="password" id="password" placeholder="Password (min 6 chars)" required>
-      <button type="submit" id="signupBtn">Sign Up</button>
-    </form>
-    <div class="footer-text">
-      Already have an account? <a href="login.html">Login</a>
+<body class="bg-light">
+    <nav class="navbar">
+        <div class="container nav-content">
+            <a href="index.html" class="logo">ZeroWait</a>
+            <div class="nav-links">
+                <a href="nearby.html">Nearby</a>
+                <a href="how-it-works.html">How it Works</a>
+                <a href="login.html" class="btn btn-outline">Login</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="auth-page">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h2>Create Account</h2>
+                <p>Join ZeroWait and skip the queue</p>
+            </div>
+            
+            <div id="errorMsg" class="alert alert-error" style="display: none;"></div>
+            
+            <form id="signupForm" class="auth-form">
+                <div class="form-group">
+                    <label for="fullName">Full Name</label>
+                    <input type="text" id="fullName" placeholder="Enter your full name" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" placeholder="name@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Min 6 characters" minlength="6" required>
+                </div>
+                <button type="submit" id="signupBtn" class="btn btn-primary btn-block">Create Account</button>
+            </form>
+
+            <div class="auth-footer">
+                <p>Already have an account? <a href="login.html">Sign in</a></p>
+                <div class="auth-divider"><span>or</span></div>
+                <p><a href="provider-signup.html" class="text-secondary">Register as a Service Provider</a></p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-icon">✓</div>
+            <h3>Account Created!</h3>
+            <p>Welcome to ZeroWait. You're all set to join queues and save time.</p>
+            <button onclick="window.location.href='index.html'" class="btn btn-primary btn-block">Get Started</button>
+        </div>
     </div>
-  </div>
 
-  <!-- SUCCESS MODAL -->
-  <div id="successModal" class="modal-overlay">
-    <div class="modal-content">
-      <h3>✅ Account Created</h3>
-      <p>Welcome to ZeroWait!</p>
-      <button onclick="window.location.href='login.html'">Go to Login</button>
-    </div>
-  </div>
-
-  <!-- FIREBASE SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script>
-    let auth, db;
-
-    function showError(message) {
-      const errorMsg = document.getElementById('errorMsg');
-      if (errorMsg) {
-        errorMsg.textContent = message;
-        errorMsg.style.display = 'block';
-      }
-    }
-
-    function hideError() {
-      const errorMsg = document.getElementById('errorMsg');
-      if (errorMsg) {
-        errorMsg.style.display = 'none';
-      }
-    }
-
-    function initializeFirebase() {
-      try {
-        if (typeof firebase !== 'undefined' && !firebase.apps.length) {
-          // Load config from secure backend endpoint
-          fetch('/api/firebase-config')
-            .then(r => {
-              if (!r.ok) throw new Error('Failed to load Firebase config');
-              return r.json();
-            })
-            .then(config => {
-              firebase.initializeApp(config);
-              auth = firebase.auth();
-              db = firebase.firestore();
-            })
-            .catch(err => {
-              console.error('Firebase init error:', err);
-              showError('Unable to initialize authentication. Please try again later.');
-            });
-        }
-      } catch (err) {
-        console.error('Firebase initialization failed:', err);
-        showError('System error. Please refresh and try again.');
-      }
-    }
-
-    // Handle signup form submission
-    document.getElementById('signupForm').addEventListener('submit', async e => {
-      e.preventDefault();
-      hideError();
-
-      if (!auth || !db) {
-        showError('Authentication service not ready. Please refresh the page.');
-        return;
-      }
-
-      const btn = document.getElementById('signupBtn');
-      if (!btn) return;
-      
-      btn.disabled = true;
-      btn.innerText = 'Creating account...';
-
-      try {
-        const nameInput = document.getElementById('fullName');
-        const emailInput = document.getElementById('email');
-        const passwordInput = document.getElementById('password');
-
-        if (!nameInput || !emailInput || !passwordInput) {
-          throw new Error('Form inputs not found');
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script>
+        function initializeFirebase() {
+            fetch('/api/firebase-config')
+                .then(r => r.json())
+                .then(config => {
+                    firebase.initializeApp(config);
+                });
         }
 
-        const name = nameInput.value.trim();
-        const email = emailInput.value.trim();
-        const password = passwordInput.value;
-
-        if (!name || !email || !password) {
-          throw new Error('Please fill in all fields');
-        }
-
-        if (password.length < 6) {
-          throw new Error('Password must be at least 6 characters');
-        }
-
-        // 1) Create Auth User
-        const cred = await auth.createUserWithEmailAndPassword(email, password);
-
-        // 2) Save User Profile
-        await db.collection('users').doc(cred.user.uid).set({
-          name,
-          email,
-          role: 'customer',
-          createdAt: new Date().toISOString()
-        });
-
-        // 3) Show Success Modal
+        const signupForm = document.getElementById('signupForm');
+        const errorMsg = document.getElementById('errorMsg');
+        const signupBtn = document.getElementById('signupBtn');
         const successModal = document.getElementById('successModal');
-        if (successModal) {
-          successModal.classList.add('active');
-        }
-      } catch (err) {
-        console.error('Signup error:', err);
-        
-        let errorMessage = 'Signup failed';
-        if (err.code === 'auth/email-already-in-use') {
-          errorMessage = 'Email already in use. Please login or use a different email.';
-        } else if (err.code === 'auth/invalid-email') {
-          errorMessage = 'Invalid email address.';
-        } else if (err.code === 'auth/weak-password') {
-          errorMessage = 'Password is too weak. Please use a stronger password.';
-        } else if (err.message) {
-          errorMessage = err.message;
-        }
-        
-        showError(errorMessage);
-        btn.disabled = false;
-        btn.innerText = 'Sign Up';
-      }
-    });
 
-    // Initialize on page load
-    document.addEventListener('DOMContentLoaded', initializeFirebase);
-  </script>
+        signupForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const fullName = document.getElementById('fullName').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            signupBtn.disabled = true;
+            signupBtn.textContent = 'Creating account...';
+            errorMsg.style.display = 'none';
+
+            try {
+                const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+                await userCredential.user.updateProfile({ displayName: fullName });
+                
+                const db = firebase.firestore();
+                await db.collection('users').doc(userCredential.user.uid).set({
+                    fullName: fullName,
+                    email: email,
+                    role: 'customer',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                successModal.classList.add('active');
+            } catch (err) {
+                errorMsg.textContent = err.message;
+                errorMsg.style.display = 'block';
+                signupBtn.disabled = false;
+                signupBtn.textContent = 'Create Account';
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', initializeFirebase);
+    </script>
 </body>
 </html>
