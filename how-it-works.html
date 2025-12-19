@@ -2,44 +2,78 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>How It Works – ZeroWait</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body { font-family: Arial, sans-serif; margin: 0; background: #f5f7fb; }
-        header {
-            padding: 20px 40px;
-            background: white;
-            border-bottom: 1px solid #ddd;
-        }
-        header a {
-            text-decoration: none;
-            color: #2563eb;
-            font-weight: 500;
-        }
-        main {
-            padding: 60px 40px;
-            max-width: 900px;
-            margin: 0 auto;
-        }
-        main h1 { color: #1f2937; }
-        main ol { color: #6b7280; line-height: 2; font-size: 16px; }
-        main li { margin-bottom: 15px; }
-    </style>
+    <title>How It Works - ZeroWait</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body>
-    <header>
-        <a href="index.html">← Back to Home</a>
+<body class="bg-light">
+    <nav class="navbar">
+        <div class="container nav-content">
+            <a href="index.html" class="logo">ZeroWait</a>
+            <div class="nav-links">
+                <a href="nearby.html">Nearby</a>
+                <a href="about.html">About</a>
+                <a href="login.html" class="btn btn-outline">Login</a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="page-header bg-white shadow-sm py-5">
+        <div class="container text-center">
+            <h1 class="display-4 font-weight-bold text-dark">Simple. Efficient. Fair.</h1>
+            <p class="lead text-secondary mx-auto" style="max-width: 700px;">Getting in line has never been easier. Follow these three steps to reclaim your day.</p>
+        </div>
     </header>
-    
-    <main>
-        <h1>How ZeroWait Works</h1>
-        <ol>
-            <li><strong>Select a Service:</strong> Choose from Salon, Restaurant, or Clinic</li>
-            <li><strong>View Nearby Places:</strong> See locations on the map near you</li>
-            <li><strong>Check Wait Time & Distance:</strong> Compare options easily</li>
-            <li><strong>Join the Queue Digitally:</strong> Reserve your spot online</li>
-            <li><strong>Arrive Just in Time:</strong> No need to wait in person</li>
-        </ol>
+
+    <main class="container py-5">
+        <div class="steps-grid">
+            <div class="step-card bg-white p-4 shadow-sm rounded-lg mb-4 d-flex align-items-start">
+                <div class="step-number bg-primary text-white rounded-circle mr-4" style="width: 40px; height: 40px; min-width: 40px; display: flex; align-items: center; justify-content: center; font-weight: bold;">1</div>
+                <div>
+                    <h3 class="h4 text-dark mb-2">Find a Service</h3>
+                    <p class="text-secondary">Browse our map or list of nearby service providers. Check real-time wait times and distance before you even leave home.</p>
+                </div>
+            </div>
+
+            <div class="step-card bg-white p-4 shadow-sm rounded-lg mb-4 d-flex align-items-start">
+                <div class="step-number bg-primary text-white rounded-circle mr-4" style="width: 40px; height: 40px; min-width: 40px; display: flex; align-items: center; justify-content: center; font-weight: bold;">2</div>
+                <div>
+                    <h3 class="h4 text-dark mb-2">Join the Digital Queue</h3>
+                    <p class="text-secondary">Tap "Join Queue" and enter your details. You'll receive a virtual ticket and an estimated service time. No physical presence required.</p>
+                </div>
+            </div>
+
+            <div class="step-card bg-white p-4 shadow-sm rounded-lg mb-4 d-flex align-items-start">
+                <div class="step-number bg-primary text-white rounded-circle mr-4" style="width: 40px; height: 40px; min-width: 40px; display: flex; align-items: center; justify-content: center; font-weight: bold;">3</div>
+                <div>
+                    <h3 class="h4 text-dark mb-2">Arrive Just in Time</h3>
+                    <p class="text-secondary">Track your progress in real-time. We'll send you a notification when you're 10 minutes away from being served. Walk in and skip the wait!</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="cta-section text-center mt-5 p-5 bg-primary text-white rounded-lg shadow-lg">
+            <h2 class="h2 mb-3">Ready to skip your first line?</h2>
+            <p class="lead mb-4">Join thousands of users who are already saving time with ZeroWait.</p>
+            <div class="d-flex justify-content-center gap-3">
+                <a href="signup.html" class="btn btn-light btn-lg text-primary font-weight-bold">Sign Up Free</a>
+                <a href="nearby.html" class="btn btn-outline-light btn-lg">Browse Nearby</a>
+            </div>
+        </div>
     </main>
+
+    <footer class="main-footer py-5 mt-5 bg-dark text-white">
+        <div class="container text-center">
+            <p class="mb-2">© 2025 ZeroWait. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="about.html" class="text-light mx-2">About</a>
+                <a href="how-it-works.html" class="text-light mx-2">How it Works</a>
+                <a href="nearby.html" class="text-light mx-2">Nearby Services</a>
+            </div>
+        </div>
+    </footer>
 </body>
 </html>
