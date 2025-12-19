@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZeroWait – Never Wait Again</title>
+    <title>ZeroWait | Professional Virtual Queue Management</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header class="navbar">
         <div class="container nav-content">
             <a href="index.html" class="logo">ZeroWait</a>
-            <button id="mobile-menu-toggle">☰</button>
+            <button id="mobile-menu-toggle" style="display: none;">☰</button>
             <nav class="nav-links">
                 <a href="index.html" class="active">Home</a>
                 <a href="about.html">About</a>
@@ -22,43 +22,45 @@
     </header>
 
     <main>
-        <section class="hero container">
-            <div class="badge text-primary bg-primary-light mb-3">#1 Virtual Queue Platform</div>
-            <h1>Never wait again.</h1>
-            <p>ZeroWait lets you join virtual queues from anywhere. Book instantly, track your position in real-time, and skip the physical lines at your favorite local spots.</p>
-            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-                <a href="#explore" class="btn btn-primary" style="padding: 1rem 2rem; font-size: 1rem;">Get Started Now</a>
-                <a href="how-it-works.html" class="btn btn-outline" style="padding: 1rem 2rem; font-size: 1rem;">See How It Works</a>
+        <section class="hero animate-fade-in">
+            <div class="container">
+                <div class="badge bg-primary-light mb-4">The Future of Waiting</div>
+                <h1 class="h1 mb-4">Reclaim your time.<br>Join lines from home.</h1>
+                <p>ZeroWait is the professional's choice for virtual queue management. Join lines at local salons, restaurants, and clinics with a single tap.</p>
+                <div class="d-flex gap-3 justify-content-center">
+                    <a href="#explore" class="btn btn-primary" style="padding: 1.25rem 2.5rem; font-size: 1rem;">Start Exploring</a>
+                    <a href="how-it-works.html" class="btn btn-outline" style="padding: 1.25rem 2.5rem; font-size: 1rem;">How it works</a>
+                </div>
             </div>
         </section>
 
         <section id="explore" class="py-6 bg-white">
             <div class="container">
                 <div class="text-center mb-5">
-                    <h2 class="font-weight-extrabold h1 mb-3">Discover Services Near You</h2>
-                    <p class="text-secondary">Join a virtual line for almost any service in seconds.</p>
+                    <h2 class="h2 mb-3">Premium Services</h2>
+                    <p class="text-secondary">Selected categories for your convenience.</p>
                 </div>
                 
                 <div class="row">
                     <div class="col-md-4 mb-4">
                         <div class="card category-card" onclick="goToCategory('salon')">
-                            <span class="category-icon">💇</span>
-                            <h3 class="h4 font-weight-bold mb-2">Salons & Spas</h3>
-                            <p class="text-secondary small">Haircuts, styling, and beauty treatments without the waiting room.</p>
+                            <span class="category-icon">💆</span>
+                            <h3 class="h4 mb-2">Salons & Spas</h3>
+                            <p class="text-secondary small">Join the queue for your next haircut or treatment without waiting in-store.</p>
                         </div>
                     </div>
                     <div class="col-md-4 mb-4">
                         <div class="card category-card" onclick="goToCategory('restaurant')">
                             <span class="category-icon">🍽️</span>
-                            <h3 class="h4 font-weight-bold mb-2">Dining & Cafes</h3>
-                            <p class="text-secondary small">Table bookings and queue management for the best local eats.</p>
+                            <h3 class="h4 mb-2">Restaurants</h3>
+                            <p class="text-secondary small">Real-time table tracking and queue management for fine dining and cafes.</p>
                         </div>
                     </div>
                     <div class="col-md-4 mb-4">
                         <div class="card category-card" onclick="goToCategory('clinic')">
-                            <span class="category-icon">🏥</span>
-                            <h3 class="h4 font-weight-bold mb-2">Health Clinics</h3>
-                            <p class="text-secondary small">Medical appointments and checkups. Join the line from home.</p>
+                            <span class="category-icon">⚕️</span>
+                            <h3 class="h4 mb-2">Health Clinics</h3>
+                            <p class="text-secondary small">Avoid waiting rooms. Check in from home for your medical appointments.</p>
                         </div>
                     </div>
                 </div>
@@ -67,18 +69,18 @@
 
         <section class="py-6">
             <div class="container">
-                <div class="row text-center">
-                    <div class="col-md-4 mb-4">
-                        <div class="h1 font-weight-extrabold text-primary mb-1">500k+</div>
-                        <p class="text-secondary small font-weight-bold uppercase" style="letter-spacing: 0.1em;">Hours Saved</p>
+                <div class="stats-grid text-center">
+                    <div class="card p-4">
+                        <div class="h2 text-primary mb-1">500k+</div>
+                        <p class="text-secondary small font-weight-bold">Hours Reclaimed</p>
                     </div>
-                    <div class="col-md-4 mb-4">
-                        <div class="h1 font-weight-extrabold text-primary mb-1">2,000+</div>
-                        <p class="text-secondary small font-weight-bold uppercase" style="letter-spacing: 0.1em;">Partner Businesses</p>
+                    <div class="card p-4">
+                        <div class="h2 text-primary mb-1">2.5k+</div>
+                        <p class="text-secondary small font-weight-bold">Business Partners</p>
                     </div>
-                    <div class="col-md-4 mb-4">
-                        <div class="h1 font-weight-extrabold text-primary mb-1">4.9/5</div>
-                        <p class="text-secondary small font-weight-bold uppercase" style="letter-spacing: 0.1em;">User Rating</p>
+                    <div class="card p-4">
+                        <div class="h2 text-primary mb-1">4.9/5</div>
+                        <p class="text-secondary small font-weight-bold">User Satisfaction</p>
                     </div>
                 </div>
             </div>
@@ -88,37 +90,37 @@
             <div class="container">
                 <div class="row align-items-center">
                     <div class="col-md-6 mb-5">
-                        <h2 class="h1 font-weight-extrabold mb-4">Reclaim your day.</h2>
-                        <p class="text-secondary mb-4" style="font-size: 1.1rem;">Why spend 45 minutes in a waiting room when you could be finishing a project, grabing a coffee, or spending time with family?</p>
+                        <h2 class="h2 mb-4">A better way to wait.</h2>
+                        <p class="text-secondary mb-4" style="font-size: 1.1rem;">Our advanced tracking system provides second-by-second updates on your position, so you never miss your turn.</p>
                         <ul class="list-unstyled">
-                            <li class="mb-3 d-flex align-items-center">
-                                <span class="text-primary mr-3" style="font-size: 1.5rem;">✓</span>
-                                <span>Real-time position tracking</span>
+                            <li class="mb-3 d-flex align-items-center gap-3">
+                                <span class="text-primary h4 mb-0">✓</span>
+                                <span class="font-weight-bold">Predictive Wait Times</span>
                             </li>
-                            <li class="mb-3 d-flex align-items-center">
-                                <span class="text-primary mr-3" style="font-size: 1.5rem;">✓</span>
-                                <span>Instant SMS notifications</span>
+                            <li class="mb-3 d-flex align-items-center gap-3">
+                                <span class="text-primary h4 mb-0">✓</span>
+                                <span class="font-weight-bold">Instant SMS & Push Notifications</span>
                             </li>
-                            <li class="mb-3 d-flex align-items-center">
-                                <span class="text-primary mr-3" style="font-size: 1.5rem;">✓</span>
-                                <span>One-tap queue entry</span>
+                            <li class="mb-3 d-flex align-items-center gap-3">
+                                <span class="text-primary h4 mb-0">✓</span>
+                                <span class="font-weight-bold">One-Tap Queue Entry</span>
                             </li>
                         </ul>
                     </div>
                     <div class="col-md-6">
-                        <div class="rounded-xl shadow-lg bg-light p-4" style="border: 1px solid var(--border);">
+                        <div class="card p-4 shadow-xl" style="background: linear-gradient(135deg, #fff 0%, #f8fafc 100%); border: 1px solid var(--primary-light);">
                             <div class="d-flex justify-content-between align-items-center mb-4">
-                                <strong class="h5 mb-0">Live Queue: Blue Door Cafe</strong>
-                                <span class="badge bg-primary-light text-primary">Next Up: You</span>
+                                <strong class="h5 mb-0">Active Queue Status</strong>
+                                <span class="badge bg-primary-light">Next Up</span>
                             </div>
                             <div class="text-center py-5">
-                                <div class="h1 font-weight-extrabold text-primary mb-1">#1</div>
-                                <p class="text-secondary small">Your Position</p>
-                                <div class="mt-4">
-                                    <div class="progress-bar-bg" style="height: 8px; background: var(--border); border-radius: 4px; overflow: hidden;">
-                                        <div style="width: 90%; height: 100%; background: var(--primary);"></div>
+                                <div class="h1 text-primary mb-1">#1</div>
+                                <p class="text-secondary small uppercase font-weight-bold" style="letter-spacing: 0.1em;">Your Current Position</p>
+                                <div class="mt-5">
+                                    <div style="height: 12px; background: #e2e8f0; border-radius: 6px; overflow: hidden;">
+                                        <div style="width: 95%; height: 100%; background: var(--primary);"></div>
                                     </div>
-                                    <p class="text-secondary tiny mt-2">Estimated wait: 2 mins</p>
+                                    <p class="text-secondary small mt-3 font-weight-bold">Estimated wait: <span class="text-primary">2 minutes</span></p>
                                 </div>
                             </div>
                         </div>
@@ -133,23 +135,20 @@
             <div class="row">
                 <div class="col-md-4 mb-5">
                     <a href="index.html" class="logo mb-4 d-block">ZeroWait</a>
-                    <p class="text-secondary small" style="max-width: 300px;">Revolutionizing the way the world waits. Join the mission to eliminate physical queues forever.</p>
+                    <p class="text-secondary small" style="max-width: 300px;">The professional virtual queue management platform. Built for businesses, loved by customers.</p>
                 </div>
-                <div class="col-md-4 mb-5 text-center">
-                    <h5 class="small font-weight-bold text-uppercase mb-4" style="color: white; letter-spacing: 0.1em;">Product</h5>
-                    <ul class="list-unstyled">
-                        <li class="mb-3"><a href="nearby.html">Nearby Services</a></li>
-                        <li class="mb-3"><a href="how-it-works.html">How It Works</a></li>
-                        <li class="mb-3"><a href="provider-signup.html">For Businesses</a></li>
-                    </ul>
-                </div>
-                <div class="col-md-4 mb-5 text-right">
-                    <h5 class="small font-weight-bold text-uppercase mb-4" style="color: white; letter-spacing: 0.1em;">Contact</h5>
-                    <p class="text-secondary small mb-4">support@zerowait.app</p>
-                    <div style="display: flex; gap: 1.5rem; justify-content: flex-end;">
-                        <a href="#" class="small">Twitter</a>
-                        <a href="#" class="small">LinkedIn</a>
-                        <a href="#" class="small">Instagram</a>
+                <div class="col-md-8 d-flex justify-content-between">
+                    <div>
+                        <h5 class="small font-weight-bold text-uppercase mb-4" style="color: white; letter-spacing: 0.1em;">Product</h5>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><a href="nearby.html">Find Services</a></li>
+                            <li class="mb-2"><a href="how-it-works.html">Features</a></li>
+                            <li class="mb-2"><a href="provider-signup.html">Partners</a></li>
+                        </ul>
+                    </div>
+                    <div class="text-right">
+                        <h5 class="small font-weight-bold text-uppercase mb-4" style="color: white; letter-spacing: 0.1em;">Support</h5>
+                        <p class="text-secondary small mb-4">hello@zerowait.app</p>
                     </div>
                 </div>
             </div>
@@ -164,10 +163,6 @@
             localStorage.setItem('serviceType', type);
             window.location.href = `nearby.html?type=${encodeURIComponent(type)}`;
         }
-
-        document.getElementById('mobile-menu-toggle').addEventListener('click', function() {
-            document.querySelector('.nav-links').classList.toggle('active');
-        });
     </script>
 </body>
 </html>
