@@ -2,57 +2,23 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Nearby Services - ZeroWait</title>
+    <title>Find Nearby Services | ZeroWait</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
     <style>
-        .split-view {
-            display: flex;
-            height: calc(100vh - 74px);
+        .split-view { display: flex; height: calc(100vh - 74px); }
+        #map { flex: 1; min-height: 300px; background: #e5e7eb; }
+        .list-panel { width: 450px; background: var(--bg-white); border-left: 1px solid var(--border); overflow-y: auto; padding: 2rem; display: flex; flex-direction: column; }
+        .place-card { padding: 1.5rem; margin-bottom: 1.25rem; border: 1px solid var(--border); border-radius: var(--radius-lg); transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; background: white; }
+        .place-card:hover { border-color: var(--primary); box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+        .rating-badge { background: #fffbeb; color: #92400e; padding: 0.25rem 0.5rem; border-radius: 0.5rem; font-size: 0.75rem; font-weight: 700; }
+        @media (max-width: 992px) {
+            .split-view { flex-direction: column; height: auto; }
+            .list-panel { width: 100%; border-left: none; border-top: 1px solid var(--border); padding: 1.5rem; }
+            #map { height: 350px; flex: none; width: 100%; }
         }
-        #map { flex: 1; min-height: 300px; }
-        .list-panel {
-            width: 450px;
-            background: var(--bg-white);
-            border-left: 1px solid var(--border);
-            overflow-y: auto;
-            padding: 2rem;
-            display: flex;
-            flex-direction: column;
-        }
-        .place-card {
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            transition: all 0.2s;
-            cursor: pointer;
-        }
-        .place-card:hover {
-            border-color: var(--primary);
-            box-shadow: var(--shadow-md);
-            transform: translateY(-2px);
-        }
-        @media (max-width: 768px) {
-            .split-view { 
-                flex-direction: column; 
-                height: auto; 
-                overflow: visible;
-            }
-            .list-panel { 
-                width: 100%; 
-                border-left: none; 
-                border-top: 1px solid var(--border); 
-                height: auto;
-                min-height: 400px;
-                padding: 1.5rem;
-            }
-            #map { 
-                height: 350px; 
-                flex: none; 
-                width: 100%;
-            }
-        }
+        .loading-skeleton { height: 150px; background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%); background-size: 200% 100%; animation: loading 1.5s infinite; border-radius: var(--radius-lg); margin-bottom: 1rem; }
+        @keyframes loading { from { background-position: 200% 0; } to { background-position: -200% 0; } }
     </style>
 </head>
 <body>
@@ -61,7 +27,6 @@
             <a href="index.html" class="logo">ZeroWait</a>
             <div class="nav-links">
                 <a href="index.html">Home</a>
-                <a href="about.html">About</a>
                 <a href="login.html" class="btn btn-outline">Login</a>
             </div>
         </div>
@@ -71,145 +36,90 @@
         <div id="map"></div>
         <div class="list-panel">
             <header class="mb-4">
-                <h2 id="title" class="font-weight-extrabold h3 mb-2">Nearby Services</h2>
+                <div id="categoryBadge" class="badge bg-primary-light mb-2">Service</div>
+                <h2 id="title" class="h3 font-weight-extrabold mb-1">Nearby Services</h2>
                 <p class="text-secondary small">Select a location to join their virtual queue.</p>
             </header>
             <div id="results">
-                <div class="text-center py-5">
-                    <div class="text-muted mb-2">Finding best spots for you...</div>
-                </div>
+                <div class="loading-skeleton"></div>
+                <div class="loading-skeleton"></div>
+                <div class="loading-skeleton"></div>
             </div>
         </div>
     </div>
 
-    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    
-    <!-- Central Config -->
     <script src="firebase-config.js"></script>
-
     <script>
         const params = new URLSearchParams(window.location.search);
         let serviceType = params.get("type") || localStorage.getItem("serviceType") || 'salon';
         localStorage.setItem("serviceType", serviceType);
-
-        // Refined categories to meet user requirements
         const SERVICE_MAP = { 
-            salon: { type: "hair_care", keyword: "salon -wellness -clinic" }, 
-            restaurant: { type: "restaurant", keyword: "dining -hotel" }, 
-            clinic: { type: "hospital", keyword: "clinic wellness" } 
+            salon: { type: "hair_care", keyword: "salon -wellness -clinic", label: "Salons & Spas" }, 
+            restaurant: { type: "restaurant", keyword: "dining -hotel", label: "Restaurants" }, 
+            clinic: { type: "hospital", keyword: "clinic wellness", label: "Health Clinics" } 
         };
-        
-        const TITLE_MAP = { salon: "Nearby Salons", restaurant: "Nearby Restaurants", clinic: "Nearby Clinics" };
-        document.getElementById("title").innerText = TITLE_MAP[serviceType] || "Nearby Services";
+        const config = SERVICE_MAP[serviceType] || SERVICE_MAP.salon;
+        document.getElementById("title").innerText = config.label;
+        document.getElementById("categoryBadge").innerText = serviceType.toUpperCase();
 
         let map, placesService, userLocation;
-        let markers = [];
-
         function getUserLocation(cb) {
             if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    pos => {
-                        userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                        cb();
-                    },
-                    () => { 
-                        alert("Location access denied. Using default center (NYC).");
-                        userLocation = { lat: 40.7128, lng: -74.0060 };
-                        cb();
-                    }
-                );
-            } else {
-                userLocation = { lat: 40.7128, lng: -74.0060 };
-                cb();
-            }
+                navigator.geolocation.getCurrentPosition(pos => {
+                    userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                    cb();
+                }, () => { 
+                    userLocation = { lat: 40.7128, lng: -74.0060 }; cb();
+                });
+            } else { userLocation = { lat: 40.7128, lng: -74.0060 }; cb(); }
         }
-
         function initMap() {
             getUserLocation(() => {
                 map = new google.maps.Map(document.getElementById("map"), {
-                    center: userLocation,
-                    zoom: 14,
-                    disableDefaultUI: true,
-                    zoomControl: true,
-                    styles: [
-                        { "featureType": "poi", "stylers": [{ "visibility": "off" }] },
-                        { "featureType": "transit", "stylers": [{ "visibility": "off" }] }
-                    ]
+                    center: userLocation, zoom: 14, disableDefaultUI: true, zoomControl: true,
+                    styles: [{ "featureType": "poi", "stylers": [{ "visibility": "off" }] }]
                 });
-
-                new google.maps.Marker({
-                    map,
-                    position: userLocation,
-                    icon: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png",
-                    title: "Your Location"
-                });
-
+                new google.maps.Marker({ map, position: userLocation, icon: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png" });
                 placesService = new google.maps.places.PlacesService(map);
                 searchNearby();
             });
         }
-
         function searchNearby() {
-            const config = SERVICE_MAP[serviceType] || SERVICE_MAP.salon;
-            placesService.nearbySearch({
-                location: userLocation,
-                radius: 5000,
-                type: config.type,
-                keyword: config.keyword
-            }, renderResults);
+            placesService.nearbySearch({ location: userLocation, radius: 5000, type: config.type, keyword: config.keyword }, renderResults);
         }
-
         function renderResults(results, status) {
             const container = document.getElementById("results");
             container.innerHTML = "";
-
             if (status !== google.maps.places.PlacesServiceStatus.OK || !results.length) {
                 container.innerHTML = '<div class="text-center py-5"><p class="text-secondary">No services found in this area.</p></div>';
                 return;
             }
-
             results.slice(0, 15).forEach((place, index) => {
-                const marker = new google.maps.Marker({
-                    map,
-                    position: place.geometry.location,
-                    title: place.name,
-                    label: (index + 1).toString()
-                });
-                markers.push(marker);
-
-                // Calculate distance using Google Maps Geometry library
-                const distanceInMeters = google.maps.geometry.spherical.computeDistanceBetween(
-                    new google.maps.LatLng(userLocation.lat, userLocation.lng),
-                    place.geometry.location
-                );
-                const distanceInKm = (distanceInMeters / 1000).toFixed(1);
-
+                new google.maps.Marker({ map, position: place.geometry.location, label: (index + 1).toString() });
+                const distance = (google.maps.geometry.spherical.computeDistanceBetween(new google.maps.LatLng(userLocation.lat, userLocation.lng), place.geometry.location) / 1000).toFixed(1);
                 const card = document.createElement('div');
-                card.className = 'place-card shadow-sm bg-white';
+                card.className = 'place-card shadow-sm animate-fade-in';
                 card.innerHTML = `
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <strong class="h5 mb-0">${place.name}</strong>
-                        <span class="badge ${place.opening_hours?.open_now ? 'bg-primary-light text-primary' : 'bg-light text-muted'}">
-                            ${place.opening_hours?.open_now ? 'Open' : 'Closed'}
-                        </span>
+                        <span class="rating-badge">★ ${place.rating || "New"}</span>
                     </div>
                     <div class="small text-secondary mb-3">
-                        <span class="text-primary font-weight-bold">★ ${place.rating || "New"}</span>
-                        <span class="mx-2">•</span>
-                        <span class="font-weight-bold text-dark">${distanceInKm} km away</span>
-                        <br>• ${place.vicinity}
+                        <span class="font-weight-bold text-dark">${distance} km away</span>
+                        <p class="mt-1">• ${place.vicinity}</p>
                     </div>
-                    <button class="btn btn-primary" style="width: 100%" onclick="goToQueue('${place.place_id}', '${encodeURIComponent(place.name)}')">Join Queue</button>
-                `;
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-primary flex-1" onclick="goToQueue('${place.place_id}', '${encodeURIComponent(place.name)}')">Join Queue</button>
+                        <span class="badge ${place.opening_hours?.open_now ? 'bg-primary-light text-primary' : 'bg-light text-muted'} d-flex align-items-center">
+                            ${place.opening_hours?.open_now ? 'Open' : 'Closed'}
+                        </span>
+                    </div>`;
                 container.appendChild(card);
             });
         }
-
-        function goToQueue(id, name) {
-            window.location.href = `join-queue.html?provider=${id}&name=${name}`;
-        }
+        function goToQueue(id, name) { window.location.href = `join-queue.html?provider=${id}&name=${name}`; }
     </script>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAG-Qv4aH4xE2VFAMImB_xwG4J8TmehUMQ&libraries=places,geometry&callback=initMap" async defer></script>
 </body>
