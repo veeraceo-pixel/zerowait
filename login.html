@@ -10,6 +10,7 @@
   <header class="navbar">
     <div class="container nav-content">
       <a href="index.html" class="logo">ZeroWait</a>
+      <button id="mobile-menu-toggle">☰</button>
       <nav class="nav-links">
         <a href="index.html">Home</a>
         <a href="provider-signup.html">For Businesses</a>
@@ -75,6 +76,10 @@
         alert('Login failed: ' + err.message);
       }
     };
+
+    document.getElementById('mobile-menu-toggle').addEventListener('click', function() {
+      document.querySelector('.nav-links').classList.toggle('active');
+    });
 
     document.addEventListener('DOMContentLoaded', initializeFirebase);
   </script>
