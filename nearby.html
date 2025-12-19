@@ -96,6 +96,7 @@
 
         const SERVICE_MAP = { salon: "beauty_salon", restaurant: "restaurant", clinic: "hospital" };
         const TITLE_MAP = { salon: "Nearby Salons", restaurant: "Nearby Restaurants", clinic: "Nearby Clinics" };
+        
         document.getElementById("title").innerText = TITLE_MAP[serviceType] || "Nearby Services";
 
         let map, placesService, userLocation;
@@ -171,6 +172,13 @@
                 });
                 markers.push(marker);
 
+                // Calculate distance
+                const distanceInMeters = google.maps.geometry.spherical.computeDistanceBetween(
+                    new google.maps.LatLng(userLocation.lat, userLocation.lng),
+                    place.geometry.location
+                );
+                const distanceInKm = (distanceInMeters / 1000).toFixed(1);
+
                 const card = document.createElement('div');
                 card.className = 'place-card shadow-sm bg-white';
                 card.innerHTML = `
@@ -182,6 +190,8 @@
                     </div>
                     <div class="small text-secondary mb-3">
                         <span class="text-primary font-weight-bold">★ ${place.rating || "New"}</span>
+                        <span class="mx-2">•</span>
+                        <span>${distanceInKm} km away</span>
                         <br>• ${place.vicinity}
                     </div>
                     <button class="btn btn-primary" style="width: 100%" onclick="goToQueue('${place.place_id}', '${encodeURIComponent(place.name)}')">Join Queue</button>
@@ -194,6 +204,6 @@
             window.location.href = `join-queue.html?provider=${id}&name=${name}`;
         }
     </script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAG-Qv4aH4xE2VFAMImB_xwG4J8TmehUMQ&libraries=places&callback=initMap" async defer></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAG-Qv4aH4xE2VFAMImB_xwG4J8TmehUMQ&libraries=places,geometry&callback=initMap" async defer></script>
 </body>
 </html>
