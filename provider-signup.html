@@ -1,96 +1,127 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Business Registration - ZeroWait</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Business Registration - ZeroWait</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-light">
-    <nav class="navbar">
-        <div class="container nav-content">
-            <a href="index.html" class="logo">ZeroWait</a>
-            <div class="nav-links">
-                <a href="index.html">Home</a>
-                <a href="login.html" class="btn btn-outline">Login</a>
-            </div>
+  <header class="navbar">
+    <div class="container nav-content">
+      <a href="index.html" class="logo">ZeroWait</a>
+      <nav class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="login.html" class="btn btn-outline">Login</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="py-6">
+    <div class="container">
+      <div class="form-card" style="max-width: 600px;">
+        <div class="text-center mb-5">
+          <div class="badge text-primary bg-primary-light mb-3">Partner with us</div>
+          <h1 class="h2 font-weight-extrabold mb-2">Register Your Business</h1>
+          <p class="text-secondary small">Join thousands of businesses eliminating physical lines.</p>
         </div>
-    </nav>
 
-    <main class="py-5">
-        <div class="container" style="max-width: 600px;">
-            <div class="card p-4 shadow-sm">
-                <h2 class="h4 font-weight-bold mb-3">Register Your Business</h2>
-                <p class="text-secondary small mb-4">Enroll your business to start managing your virtual queue today.</p>
-
-                <form id="providerSignupForm">
-                    <div class="form-group">
-                        <label class="form-label">Search on Google Maps (Optional)</label>
-                        <input type="text" id="mapSearch" class="form-control" placeholder="Search your business name or address..." />
-                        <p class="small text-secondary mt-2">Linking your Google Maps profile helps users find you and estimate travel time.</p>
-                    </div>
-
-                    <hr class="mb-4" style="opacity: 0.1;">
-
-                    <div class="row">
-                        <div class="col-md-4 mb-3" style="flex: 0 0 100%; max-width: 100%;">
-                            <label class="form-label">Business Name</label>
-                            <input type="text" id="businessName" class="form-control" placeholder="Business name" required />
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Business Address</label>
-                        <input type="text" id="address" class="form-control" placeholder="Street address, City, State" required />
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Business Email</label>
-                        <input type="email" id="email" class="form-control" placeholder="name@business.com" required />
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Password</label>
-                        <input type="password" id="password" class="form-control" placeholder="Min 6 characters" minlength="6" required />
-                    </div>
-
-                    <button type="submit" id="signupBtn" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Create Business Account</button>
-                </form>
-
-                <p class="mt-4 text-center small text-secondary">
-                    Already have an account? <a href="login.html" style="color: var(--primary); font-weight: 600; text-decoration: none;">Log In</a>
-                </p>
+        <form id="providerSignupForm">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label class="form-label" for="businessName">Business Name</label>
+                <input type="text" id="businessName" class="form-control" required placeholder="e.g. Blue Door Cafe">
+              </div>
             </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label class="form-label" for="serviceType">Service Type</label>
+                <select id="serviceType" class="form-control" required>
+                  <option value="salon">Salon & Spa</option>
+                  <option value="restaurant">Restaurant / Cafe</option>
+                  <option value="clinic">Health Clinic</option>
+                  <option value="other">Other Service</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="email">Work Email</label>
+            <input type="email" id="email" class="form-control" required placeholder="owner@business.com">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="password">Create Password</label>
+            <input type="password" id="password" class="form-control" required placeholder="At least 8 characters">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="avgWait">Typical Wait Time (Minutes)</label>
+            <input type="number" id="avgWait" class="form-control" required placeholder="Average minutes per customer">
+          </div>
+
+          <button type="submit" class="btn btn-primary mt-3" style="width: 100%; padding: 1rem;">Create Business Account</button>
+        </form>
+
+        <div class="mt-5 pt-4 border-top text-center">
+          <p class="text-secondary small">
+            Already have a business account? <a href="login.html" class="text-primary font-weight-bold" style="text-decoration: none;">Log in here</a>
+          </p>
         </div>
-    </main>
+      </div>
+    </div>
+  </main>
 
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAG-Qv4aH4xE2VFAMImB_xwG4J8TmehUMQ&libraries=places"></script>
-    <script>
-        // Google Places Autocomplete
-        function initAutocomplete() {
-            const input = document.getElementById('mapSearch');
-            const autocomplete = new google.maps.places.Autocomplete(input);
-            
-            autocomplete.addListener('place_changed', () => {
-                const place = autocomplete.getPlace();
-                if (!place.geometry) return;
-                
-                document.getElementById('businessName').value = place.name || "";
-                document.getElementById('address').value = place.formatted_address || "";
-                // Store place_id for better integration
-                window.selectedPlaceId = place.place_id;
-            });
-        }
-        window.onload = initAutocomplete;
+  <footer class="bg-white border-top py-6 mt-6">
+    <div class="container">
+      <div class="text-center">
+        <a href="index.html" class="logo mb-4 d-inline-block">ZeroWait</a>
+        <p class="text-muted small">© 2025 ZeroWait Inc. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
 
-        // Firebase Logic
-        document.getElementById('providerSignupForm').onsubmit = async (e) => {
-            e.preventDefault();
-            // (Auth and Firestore logic preserved and enhanced with selectedPlaceId)
-        };
-    </script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script>
+    function initializeFirebase() {
+      fetch('/api/firebase-config')
+        .then(r => r.json())
+        .then(config => {
+          firebase.initializeApp(config);
+        });
+    }
+
+    document.getElementById('providerSignupForm').onsubmit = async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const businessName = document.getElementById('businessName').value;
+      const type = document.getElementById('serviceType').value;
+      const avgWait = document.getElementById('avgWait').value;
+
+      try {
+        const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+        const uid = userCredential.user.uid;
+        
+        await firebase.firestore().collection('providers').doc(uid).set({
+          businessName,
+          type,
+          avgWait: parseInt(avgWait),
+          email,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        window.location.href = 'provider-dashboard.html';
+      } catch (err) {
+        alert('Signup failed: ' + err.message);
+      }
+    };
+
+    document.addEventListener('DOMContentLoaded', initializeFirebase);
+  </script>
 </body>
 </html>
