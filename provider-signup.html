@@ -1,127 +1,189 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Business Registration - ZeroWait</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Registration - ZeroWait</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .pac-container {
+            z-index: 10000 !important;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border);
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
 </head>
 <body class="bg-light">
-  <header class="navbar">
-    <div class="container nav-content">
-      <a href="index.html" class="logo">ZeroWait</a>
-      <nav class="nav-links">
-        <a href="index.html">Home</a>
-        <a href="login.html" class="btn btn-outline">Login</a>
-      </nav>
-    </div>
-  </header>
-
-  <main class="py-6">
-    <div class="container">
-      <div class="form-card" style="max-width: 600px;">
-        <div class="text-center mb-5">
-          <div class="badge text-primary bg-primary-light mb-3">Partner with us</div>
-          <h1 class="h2 font-weight-extrabold mb-2">Register Your Business</h1>
-          <p class="text-secondary small">Join thousands of businesses eliminating physical lines.</p>
+    <header class="navbar">
+        <div class="container nav-content">
+            <a href="index.html" class="logo">ZeroWait</a>
+            <nav class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="login.html" class="btn btn-outline">Login</a>
+            </nav>
         </div>
+    </header>
 
-        <form id="providerSignupForm">
-          <div class="row">
-            <div class="col-md-6">
-              <div class="form-group">
-                <label class="form-label" for="businessName">Business Name</label>
-                <input type="text" id="businessName" class="form-control" required placeholder="e.g. Blue Door Cafe">
-              </div>
+    <main class="py-6">
+        <div class="container">
+            <div class="form-card" style="max-width: 600px;">
+                <div class="text-center mb-5">
+                    <div class="badge text-primary bg-primary-light mb-3">Partner with us</div>
+                    <h1 class="h2 font-weight-extrabold mb-2">Register Your Business</h1>
+                    <p class="text-secondary small">Join thousands of businesses eliminating physical lines.</p>
+                </div>
+
+                <form id="providerSignupForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label" for="businessName">Business Name</label>
+                                <input type="text" id="businessName" class="form-control" required placeholder="e.g. Blue Door Cafe">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label" for="serviceType">Service Type</label>
+                                <select id="serviceType" class="form-control" required>
+                                    <option value="salon">Salon & Spa</option>
+                                    <option value="restaurant">Restaurant / Cafe</option>
+                                    <option value="clinic">Health Clinic</option>
+                                    <option value="other">Other Service</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="addressLookup">Business Address (Google Maps Search)</label>
+                        <input type="text" id="addressLookup" class="form-control" required placeholder="Search your business location...">
+                        <input type="hidden" id="placeId">
+                        <input type="hidden" id="lat">
+                        <input type="hidden" id="lng">
+                        <input type="hidden" id="formattedAddress">
+                        <p class="text-muted tiny mt-1">Start typing to find your business on the map.</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="email">Work Email</label>
+                        <input type="email" id="email" class="form-control" required placeholder="owner@business.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="password">Create Password</label>
+                        <input type="password" id="password" class="form-control" required placeholder="At least 8 characters">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="avgWait">Typical Wait Time (Minutes)</label>
+                        <input type="number" id="avgWait" class="form-control" required placeholder="Average minutes per customer">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary mt-3" style="width: 100%; padding: 1rem;">Create Business Account</button>
+                </form>
+
+                <div class="mt-5 pt-4 border-top text-center">
+                    <p class="text-secondary small">
+                        Already have a business account? <a href="login.html" class="text-primary font-weight-bold" style="text-decoration: none;">Log in here</a>
+                    </p>
+                </div>
             </div>
-            <div class="col-md-6">
-              <div class="form-group">
-                <label class="form-label" for="serviceType">Service Type</label>
-                <select id="serviceType" class="form-control" required>
-                  <option value="salon">Salon & Spa</option>
-                  <option value="restaurant">Restaurant / Cafe</option>
-                  <option value="clinic">Health Clinic</option>
-                  <option value="other">Other Service</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="email">Work Email</label>
-            <input type="email" id="email" class="form-control" required placeholder="owner@business.com">
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="password">Create Password</label>
-            <input type="password" id="password" class="form-control" required placeholder="At least 8 characters">
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="avgWait">Typical Wait Time (Minutes)</label>
-            <input type="number" id="avgWait" class="form-control" required placeholder="Average minutes per customer">
-          </div>
-
-          <button type="submit" class="btn btn-primary mt-3" style="width: 100%; padding: 1rem;">Create Business Account</button>
-        </form>
-
-        <div class="mt-5 pt-4 border-top text-center">
-          <p class="text-secondary small">
-            Already have a business account? <a href="login.html" class="text-primary font-weight-bold" style="text-decoration: none;">Log in here</a>
-          </p>
         </div>
-      </div>
-    </div>
-  </main>
+    </main>
 
-  <footer class="bg-white border-top py-6 mt-6">
-    <div class="container">
-      <div class="text-center">
-        <a href="index.html" class="logo mb-4 d-inline-block">ZeroWait</a>
-        <p class="text-muted small">© 2025 ZeroWait Inc. All rights reserved.</p>
-      </div>
-    </div>
-  </footer>
+    <footer class="bg-white border-top py-6 mt-6">
+        <div class="container text-center">
+            <a href="index.html" class="logo mb-4 d-inline-block">ZeroWait</a>
+            <p class="text-muted small">© 2025 ZeroWait Inc. All rights reserved.</p>
+        </div>
+    </footer>
 
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script>
-    function initializeFirebase() {
-      fetch('/api/firebase-config')
-        .then(r => r.json())
-        .then(config => {
-          firebase.initializeApp(config);
-        });
-    }
-
-    document.getElementById('providerSignupForm').onsubmit = async (e) => {
-      e.preventDefault();
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      const businessName = document.getElementById('businessName').value;
-      const type = document.getElementById('serviceType').value;
-      const avgWait = document.getElementById('avgWait').value;
-
-      try {
-        const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
-        const uid = userCredential.user.uid;
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script>
+        let autocomplete;
         
-        await firebase.firestore().collection('providers').doc(uid).set({
-          businessName,
-          type,
-          avgWait: parseInt(avgWait),
-          email,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        function initAutocomplete() {
+            const input = document.getElementById('addressLookup');
+            const options = {
+                fields: ["address_components", "geometry", "icon", "name", "place_id", "formatted_address"],
+                strictBounds: false,
+            };
+            autocomplete = new google.maps.places.Autocomplete(input, options);
+            
+            autocomplete.addListener("place_changed", () => {
+                const place = autocomplete.getPlace();
+                if (!place.geometry || !place.geometry.location) {
+                    alert("No details available for input: '" + place.name + "'");
+                    return;
+                }
+                
+                document.getElementById('placeId').value = place.place_id;
+                document.getElementById('lat').value = place.geometry.location.lat();
+                document.getElementById('lng').value = place.geometry.location.lng();
+                document.getElementById('formattedAddress').value = place.formatted_address;
+                
+                if (!document.getElementById('businessName').value) {
+                    document.getElementById('businessName').value = place.name;
+                }
+            });
+        }
+
+        function initializeFirebase() {
+            fetch('/api/firebase-config')
+                .then(r => r.json())
+                .then(config => {
+                    firebase.initializeApp(config);
+                })
+                .catch(err => console.error("Firebase init error:", err));
+        }
+
+        document.getElementById('providerSignupForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const businessName = document.getElementById('businessName').value;
+            const type = document.getElementById('serviceType').value;
+            const avgWait = document.getElementById('avgWait').value;
+            
+            const locationData = {
+                placeId: document.getElementById('placeId').value,
+                lat: parseFloat(document.getElementById('lat').value),
+                lng: parseFloat(document.getElementById('lng').value),
+                address: document.getElementById('formattedAddress').value
+            };
+
+            if (!locationData.placeId) {
+                alert("Please select your business location from the Google Maps search results.");
+                return;
+            }
+
+            try {
+                const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+                const uid = userCredential.user.uid;
+                
+                await firebase.firestore().collection('providers').doc(uid).set({
+                    businessName,
+                    type,
+                    avgWait: parseInt(avgWait),
+                    email,
+                    location: locationData,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                window.location.href = 'provider-dashboard.html';
+            } catch (err) {
+                alert('Signup failed: ' + err.message);
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeFirebase();
         });
-
-        window.location.href = 'provider-dashboard.html';
-      } catch (err) {
-        alert('Signup failed: ' + err.message);
-      }
-    };
-
-    document.addEventListener('DOMContentLoaded', initializeFirebase);
-  </script>
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAG-Qv4aH4xE2VFAMImB_xwG4J8TmehUMQ&libraries=places&callback=initAutocomplete" async defer></script>
 </body>
 </html>
