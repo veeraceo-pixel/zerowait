@@ -94,9 +94,14 @@
         let serviceType = params.get("type") || localStorage.getItem("serviceType") || 'salon';
         localStorage.setItem("serviceType", serviceType);
 
-        const SERVICE_MAP = { salon: "beauty_salon", restaurant: "restaurant", clinic: "hospital" };
-        const TITLE_MAP = { salon: "Nearby Salons", restaurant: "Nearby Restaurants", clinic: "Nearby Clinics" };
+        // Refined categories to meet user requirements
+        const SERVICE_MAP = { 
+            salon: { type: "hair_care", keyword: "salon -wellness -clinic" }, 
+            restaurant: { type: "restaurant", keyword: "dining -hotel" }, 
+            clinic: { type: "hospital", keyword: "clinic wellness" } 
+        };
         
+        const TITLE_MAP = { salon: "Nearby Salons", restaurant: "Nearby Restaurants", clinic: "Nearby Clinics" };
         document.getElementById("title").innerText = TITLE_MAP[serviceType] || "Nearby Services";
 
         let map, placesService, userLocation;
@@ -110,8 +115,8 @@
                         cb();
                     },
                     () => { 
-                        alert("Location access denied. Using default center.");
-                        userLocation = { lat: 40.7128, lng: -74.0060 }; // Default NYC
+                        alert("Location access denied. Using default center (NYC).");
+                        userLocation = { lat: 40.7128, lng: -74.0060 };
                         cb();
                     }
                 );
@@ -147,10 +152,12 @@
         }
 
         function searchNearby() {
+            const config = SERVICE_MAP[serviceType] || SERVICE_MAP.salon;
             placesService.nearbySearch({
                 location: userLocation,
                 radius: 5000,
-                type: SERVICE_MAP[serviceType] || 'beauty_salon'
+                type: config.type,
+                keyword: config.keyword
             }, renderResults);
         }
 
@@ -172,7 +179,7 @@
                 });
                 markers.push(marker);
 
-                // Calculate distance
+                // Calculate distance using Google Maps Geometry library
                 const distanceInMeters = google.maps.geometry.spherical.computeDistanceBetween(
                     new google.maps.LatLng(userLocation.lat, userLocation.lng),
                     place.geometry.location
@@ -191,7 +198,7 @@
                     <div class="small text-secondary mb-3">
                         <span class="text-primary font-weight-bold">★ ${place.rating || "New"}</span>
                         <span class="mx-2">•</span>
-                        <span>${distanceInKm} km away</span>
+                        <span class="font-weight-bold text-dark">${distanceInKm} km away</span>
                         <br>• ${place.vicinity}
                     </div>
                     <button class="btn btn-primary" style="width: 100%" onclick="goToQueue('${place.place_id}', '${encodeURIComponent(place.name)}')">Join Queue</button>
