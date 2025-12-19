@@ -18,19 +18,25 @@
 <body class="bg-light" onload="init()">
     <nav class="navbar"><div class="container nav-content"><a href="index.html" class="logo">ZeroWait</a></div></nav>
     <main class="queue-container">
-        <div id="loading" class="text-center">Loading...</div>
+        <div id="status-msg" class="text-center">
+            <div class="spinner mb-3"></div>
+            <p id="loading-text">Checking queue status...</p>
+        </div>
         <div id="queueContent" class="card queue-card p-5 shadow-lg" style="display:none;">
             <div id="statusBadge" class="status-badge">In Queue</div>
-            <h1 id="providerName" class="h3 font-weight-bold">--</h1>
+            <h1 id="providerName" class="h3 font-weight-bold mb-1">--</h1>
+            <p id="providerAddress" class="small text-secondary mb-4">--</p>
             <div id="waitingInfo">
+                <p class="text-secondary font-weight-bold text-uppercase small">Estimated Waiting Time</p>
                 <div id="waitTime" class="time-display">0</div>
-                <p>minutes</p>
-                <div class="pos-display">Position: <span id="posNumber">--</span></div>
+                <p class="text-secondary">minutes</p>
+                <div class="pos-display mt-3">Position: <span id="posNumber" class="font-weight-bold">--</span></div>
             </div>
             <div id="servingInfo" style="display:none;">
-                <h2 class="h2 text-success">Your Turn!</h2>
+                <div class="h2 font-weight-bold text-success mb-2">It's Your Turn!</div>
+                <p>Please proceed to the entrance.</p>
             </div>
-            <button onclick="leaveQueue()" class="btn btn-outline-danger mt-4">Leave Queue</button>
+            <button onclick="leaveQueue()" class="btn btn-outline-danger mt-4" style="width:100%">Leave Queue</button>
         </div>
     </main>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -39,31 +45,50 @@
     <script src="firebase-config.js"></script>
     <script>
         let db, currentUserId, providerId;
-        function init() {
+        async function init() {
             db = firebase.firestore();
-            firebase.auth().onAuthStateChanged(user => {
-                if (!user) { window.location.href = 'login.html'; return; }
+            firebase.auth().onAuthStateChanged(async user => {
+                if (!user) {
+                    const params = new URLSearchParams(window.location.search);
+                    if (params.has('provider')) localStorage.setItem('pendingJoin', params.get('provider'));
+                    window.location.href = 'login.html';
+                    return;
+                }
                 currentUserId = user.uid;
-                findActiveQueue();
+                checkAndJoin();
             });
         }
-        async function findActiveQueue() {
+        async function checkAndJoin() {
+            const params = new URLSearchParams(window.location.search);
+            const targetId = params.get('provider') || localStorage.getItem('pendingJoin');
+            localStorage.removeItem('pendingJoin');
             const snap = await db.collection('queues').where('customerId', '==', currentUserId).where('status', 'in', ['waiting', 'serving']).get();
-            if (snap.empty) { document.getElementById('loading').innerText = 'No active queue'; return; }
-            const q = snap.docs[0]; providerId = q.data().providerId;
-            startListener(q.id);
+            if (!snap.empty) { providerId = snap.docs[0].data().providerId; startListener(snap.docs[0].id); return; }
+            if (targetId) {
+                const userDoc = await db.collection('users').doc(currentUserId).get();
+                const name = (userDoc.exists ? userDoc.data().name : 'Customer') || 'Customer';
+                const newE = await db.collection('queues').add({ customerId: currentUserId, customerName: name, providerId: targetId, status: 'waiting', joinedAt: firebase.firestore.FieldValue.serverTimestamp() });
+                providerId = targetId; startListener(newE.id);
+            } else {
+                document.getElementById('status-msg').innerHTML = '<h2>No active queue</h2><a href=\"nearby.html\" class=\"btn btn-primary mt-3\">Find Services</a>';
+            }
         }
         function startListener(qid) {
+            db.collection('providers').doc(providerId).get().then(doc => {
+                if (doc.exists) { document.getElementById('providerName').innerText = doc.data().businessName; document.getElementById('providerAddress').innerText = doc.data().address || ''; }
+            });
             db.collection('queues').where('providerId', '==', providerId).where('status', 'in', ['waiting', 'serving']).orderBy('joinedAt', 'asc')
             .onSnapshot(async snap => {
                 const docs = snap.docs.map(d => ({id: d.id, ...d.data()}));
                 const my = docs.find(d => d.id === qid);
                 if (!my) { window.location.reload(); return; }
-                document.getElementById('loading').style.display = 'none';
+                document.getElementById('status-msg').style.display = 'none';
                 document.getElementById('queueContent').style.display = 'block';
                 if (my.status === 'serving') {
                     document.getElementById('waitingInfo').style.display = 'none';
                     document.getElementById('servingInfo').style.display = 'block';
+                    document.getElementById('statusBadge').innerText = 'Being Served';
+                    document.getElementById('statusBadge').className = 'status-badge status-serving';
                     return;
                 }
                 const pDoc = await db.collection('providers').doc(providerId).get();
@@ -85,9 +110,11 @@
             });
         }
         async function leaveQueue() {
-            const snap = await db.collection('queues').where('customerId', '==', currentUserId).where('status', 'in', ['waiting', 'serving']).get();
-            const batch = db.batch(); snap.forEach(d => batch.update(d.ref, {status: 'cancelled'}));
-            await batch.commit(); window.location.reload();
+            if (confirm('Leave this queue?')) {
+                const snap = await db.collection('queues').where('customerId', '==', currentUserId).where('status', 'in', ['waiting', 'serving']).get();
+                const batch = db.batch(); snap.forEach(d => batch.update(d.ref, {status: 'cancelled'}));
+                await batch.commit(); window.location.reload();
+            }
         }
     </script>
 </body>
