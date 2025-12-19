@@ -1,182 +1,199 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Nearby Services - ZeroWait</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="style.css">
-  <style>
-    .split-view {
-      display: flex;
-      height: calc(100vh - 74px);
-    }
-    #map { flex: 1; }
-    .list-panel {
-      width: 450px;
-      background: var(--bg-white);
-      border-left: 1px solid var(--border);
-      overflow-y: auto;
-      padding: 2.5rem;
-      display: flex;
-      flex-direction: column;
-    }
-    .place-card {
-      padding: 1.5rem;
-      margin-bottom: 1rem;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      transition: all 0.2s;
-      cursor: pointer;
-    }
-    .place-card:hover {
-      border-color: var(--primary);
-      box-shadow: var(--shadow-md);
-      transform: translateY(-2px);
-    }
-    .place-card.active {
-      border-color: var(--primary);
-      background: var(--primary-light);
-    }
-    @media (max-width: 768px) {
-      .split-view { flex-direction: column; height: auto; }
-      .list-panel { width: 100%; border-left: none; border-top: 1px solid var(--border); }
-      #map { height: 400px; flex: none; }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Nearby Services - ZeroWait</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .split-view {
+            display: flex;
+            height: calc(100vh - 74px);
+        }
+        #map { flex: 1; min-height: 300px; }
+        .list-panel {
+            width: 450px;
+            background: var(--bg-white);
+            border-left: 1px solid var(--border);
+            overflow-y: auto;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+        }
+        .place-card {
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .place-card:hover {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+        @media (max-width: 768px) {
+            .split-view { 
+                flex-direction: column; 
+                height: auto; 
+                overflow: visible;
+            }
+            .list-panel { 
+                width: 100%; 
+                border-left: none; 
+                border-top: 1px solid var(--border); 
+                height: auto;
+                min-height: 400px;
+                padding: 1.5rem;
+            }
+            #map { 
+                height: 350px; 
+                flex: none; 
+                width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
-  <nav class="navbar">
-    <div class="container nav-content">
-      <a href="index.html" class="logo">ZeroWait</a>
-      <div class="nav-links">
-        <a href="nearby.html" class="active">Nearby</a>
-        <a href="about.html">About</a>
-        <a href="how-it-works.html">How It Works</a>
-        <a href="login.html" class="btn btn-outline">Login</a>
-      </div>
-    </div>
-  </nav>
-
-  <div class="split-view">
-    <div id="map"></div>
-    <div class="list-panel">
-      <header class="mb-4">
-        <h2 id="title" class="font-weight-extrabold h3 mb-2">Nearby Services</h2>
-        <p class="text-secondary small">Select a location to join their virtual queue.</p>
-      </header>
-      <div id="results">
-        <div class="text-center py-5">
-          <div class="text-muted mb-2">Finding best spots for you...</div>
+    <nav class="navbar">
+        <div class="container nav-content">
+            <a href="index.html" class="logo">ZeroWait</a>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="about.html">About</a>
+                <a href="login.html" class="btn btn-outline">Login</a>
+            </div>
         </div>
-      </div>
+    </nav>
+
+    <div class="split-view">
+        <div id="map"></div>
+        <div class="list-panel">
+            <header class="mb-4">
+                <h2 id="title" class="font-weight-extrabold h3 mb-2">Nearby Services</h2>
+                <p class="text-secondary small">Select a location to join their virtual queue.</p>
+            </header>
+            <div id="results">
+                <div class="text-center py-5">
+                    <div class="text-muted mb-2">Finding best spots for you...</div>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script>
-    const params = new URLSearchParams(window.location.search);
-    let serviceType = params.get("type") || localStorage.getItem("serviceType") || 'salon';
-    localStorage.setItem("serviceType", serviceType);
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     
-    const SERVICE_MAP = { salon: "beauty_salon", restaurant: "restaurant", clinic: "hospital" };
-    const TITLE_MAP = { salon: "Nearby Salons", restaurant: "Nearby Restaurants", clinic: "Nearby Clinics" };
-    document.getElementById("title").innerText = TITLE_MAP[serviceType] || "Nearby Services";
+    <!-- Central Config -->
+    <script src="firebase-config.js"></script>
 
-    let map, placesService, userLocation;
-    let markers = [];
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        let serviceType = params.get("type") || localStorage.getItem("serviceType") || 'salon';
+        localStorage.setItem("serviceType", serviceType);
 
-    function getUserLocation(cb) {
-      navigator.geolocation.getCurrentPosition(
-        pos => {
-          userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-          localStorage.setItem("userLocation", JSON.stringify(userLocation));
-          cb();
-        },
-        () => { alert("Please allow location access to find nearby services."); },
-        { enableHighAccuracy: true }
-      );
-    }
+        const SERVICE_MAP = { salon: "beauty_salon", restaurant: "restaurant", clinic: "hospital" };
+        const TITLE_MAP = { salon: "Nearby Salons", restaurant: "Nearby Restaurants", clinic: "Nearby Clinics" };
+        document.getElementById("title").innerText = TITLE_MAP[serviceType] || "Nearby Services";
 
-    function initMap() {
-      getUserLocation(() => {
-        map = new google.maps.Map(document.getElementById("map"), {
-          center: userLocation,
-          zoom: 14,
-          disableDefaultUI: true,
-          zoomControl: true,
-          styles: [
-            { "featureType": "poi", "stylers": [{ "visibility": "off" }] },
-            { "featureType": "transit", "stylers": [{ "visibility": "off" }] }
-          ]
-        });
+        let map, placesService, userLocation;
+        let markers = [];
 
-        new google.maps.Marker({
-          map,
-          position: userLocation,
-          icon: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png",
-          title: "Your Location"
-        });
-
-        if (serviceType === "clinic") {
-          document.getElementById("results").innerHTML = '<div class="card p-4" style="background: #fff7ed; border-color: #ffedd5; color: #9a3412;"><div class="font-weight-bold mb-1">Coming Soon</div><div class="small">Healthcare provider integration is currently in beta. Check back shortly!</div></div>';
-          return;
+        function getUserLocation(cb) {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    pos => {
+                        userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                        cb();
+                    },
+                    () => { 
+                        alert("Location access denied. Using default center.");
+                        userLocation = { lat: 40.7128, lng: -74.0060 }; // Default NYC
+                        cb();
+                    }
+                );
+            } else {
+                userLocation = { lat: 40.7128, lng: -74.0060 };
+                cb();
+            }
         }
 
-        placesService = new google.maps.places.PlacesService(map);
-        searchNearby();
-      });
-    }
+        function initMap() {
+            getUserLocation(() => {
+                map = new google.maps.Map(document.getElementById("map"), {
+                    center: userLocation,
+                    zoom: 14,
+                    disableDefaultUI: true,
+                    zoomControl: true,
+                    styles: [
+                        { "featureType": "poi", "stylers": [{ "visibility": "off" }] },
+                        { "featureType": "transit", "stylers": [{ "visibility": "off" }] }
+                    ]
+                });
 
-    function searchNearby() {
-      placesService.nearbySearch({
-        location: userLocation,
-        radius: 4000,
-        type: SERVICE_MAP[serviceType]
-      }, renderResults);
-    }
+                new google.maps.Marker({
+                    map,
+                    position: userLocation,
+                    icon: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+                    title: "Your Location"
+                });
 
-    function renderResults(results, status) {
-      const container = document.getElementById("results");
-      container.innerHTML = "";
-      
-      if (status !== google.maps.places.PlacesServiceStatus.OK || !results.length) {
-        container.innerHTML = '<div class="text-center py-5"><p class="text-secondary">No services found in this area.</p></div>';
-        return;
-      }
+                placesService = new google.maps.places.PlacesService(map);
+                searchNearby();
+            });
+        }
 
-      results.slice(0, 10).forEach((place, index) => {
-        const marker = new google.maps.Marker({ 
-          map, 
-          position: place.geometry.location, 
-          title: place.name,
-          label: (index + 1).toString()
-        });
-        markers.push(marker);
+        function searchNearby() {
+            placesService.nearbySearch({
+                location: userLocation,
+                radius: 5000,
+                type: SERVICE_MAP[serviceType] || 'beauty_salon'
+            }, renderResults);
+        }
 
-        const card = document.createElement('div');
-        card.className = 'place-card shadow-sm bg-white';
-        card.innerHTML = `
-          <div class="d-flex justify-content-between align-items-start mb-2">
-            <strong class="h5 mb-0">${place.name}</strong>
-            <span class="badge ${place.opening_hours?.open_now ? 'bg-primary-light text-primary' : 'bg-light text-muted'}">
-              ${place.opening_hours?.open_now ? 'Open' : 'Closed'}
-            </span>
-          </div>
-          <div class="small text-secondary mb-3">
-            <span class="text-primary font-weight-bold">★ ${place.rating || "New"}</span> 
-            • ${place.vicinity}
-          </div>
-          <button class="btn btn-primary" style="width: 100%" onclick="goToQueue('${place.place_id}', '${encodeURIComponent(place.name)}')">Join Queue</button>
-        `;
-        container.appendChild(card);
-      });
-    }
+        function renderResults(results, status) {
+            const container = document.getElementById("results");
+            container.innerHTML = "";
 
-    function goToQueue(id, name) {
-      window.location.href = `join-queue.html?provider=${id}&name=${name}`;
-    }
-  </script>
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAG-Qv4aH4xE2VFAMImB_xwG4J8TmehUMQ&libraries=places&callback=initMap" async defer></script>
+            if (status !== google.maps.places.PlacesServiceStatus.OK || !results.length) {
+                container.innerHTML = '<div class="text-center py-5"><p class="text-secondary">No services found in this area.</p></div>';
+                return;
+            }
+
+            results.slice(0, 15).forEach((place, index) => {
+                const marker = new google.maps.Marker({
+                    map,
+                    position: place.geometry.location,
+                    title: place.name,
+                    label: (index + 1).toString()
+                });
+                markers.push(marker);
+
+                const card = document.createElement('div');
+                card.className = 'place-card shadow-sm bg-white';
+                card.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <strong class="h5 mb-0">${place.name}</strong>
+                        <span class="badge ${place.opening_hours?.open_now ? 'bg-primary-light text-primary' : 'bg-light text-muted'}">
+                            ${place.opening_hours?.open_now ? 'Open' : 'Closed'}
+                        </span>
+                    </div>
+                    <div class="small text-secondary mb-3">
+                        <span class="text-primary font-weight-bold">★ ${place.rating || "New"}</span>
+                        <br>• ${place.vicinity}
+                    </div>
+                    <button class="btn btn-primary" style="width: 100%" onclick="goToQueue('${place.place_id}', '${encodeURIComponent(place.name)}')">Join Queue</button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function goToQueue(id, name) {
+            window.location.href = `join-queue.html?provider=${id}&name=${name}`;
+        }
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAG-Qv4aH4xE2VFAMImB_xwG4J8TmehUMQ&libraries=places&callback=initMap" async defer></script>
 </body>
 </html>
