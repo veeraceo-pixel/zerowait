@@ -1,168 +1,140 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>Provider Signup – ZeroWait</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-<style>
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #f5f7fb;
-}
-
-header {
-  padding: 15px 40px;
-  background: #fff;
-  border-bottom: 1px solid #ddd;
-}
-
-.logo {
-  font-size: 22px;
-  font-weight: bold;
-  color: #2563eb;
-}
-
-.container {
-  max-width: 500px;
-  margin: 40px auto;
-  background: white;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-}
-
-label {
-  display: block;
-  margin-top: 15px;
-  font-weight: bold;
-}
-
-input, select {
-  width: 100%;
-  padding: 10px;
-  margin-top: 6px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-}
-
-button {
-  margin-top: 25px;
-  width: 100%;
-  padding: 12px;
-  background: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-button:disabled {
-  background: #9ca3af;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Provider Registration - ZeroWait</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
+<body class="bg-light">
+    <nav class="navbar">
+        <div class="container nav-content">
+            <a href="index.html" class="logo">ZeroWait</a>
+            <div class="nav-links">
+                <a href="nearby.html">Nearby</a>
+                <a href="how-it-works.html">How it Works</a>
+                <a href="login.html" class="btn btn-outline">Login</a>
+            </div>
+        </div>
+    </nav>
 
-<body>
+    <main class="auth-page">
+        <div class="auth-card" style="max-width: 500px;">
+            <div class="auth-header">
+                <h2>Provider Registration</h2>
+                <p>Register your business and start managing queues</p>
+            </div>
+            
+            <div id="errorMsg" class="alert alert-error" style="display: none;"></div>
+            
+            <form id="providerSignupForm" class="auth-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="fullName">Owner Name</label>
+                        <input type="text" id="fullName" placeholder="Full name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="businessName">Business Name</label>
+                        <input type="text" id="businessName" placeholder="Business name" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="email">Business Email</label>
+                    <input type="email" id="email" placeholder="name@business.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="businessType">Business Type</label>
+                    <select id="businessType" class="form-control" required>
+                        <option value="">Select type</option>
+                        <option value="clinic">Medical Clinic</option>
+                        <option value="restaurant">Restaurant</option>
+                        <option value="barber">Barbershop/Salon</option>
+                        <option value="government">Government Office</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Min 6 characters" minlength="6" required>
+                </div>
+                <button type="submit" id="signupBtn" class="btn btn-primary btn-block">Register Business</button>
+            </form>
 
-<header>
-  <div class="logo">ZeroWait – Provider</div>
-</header>
+            <div class="auth-footer">
+                <p>Already have a provider account? <a href="login.html">Sign in</a></p>
+                <div class="auth-divider"><span>or</span></div>
+                <p><a href="signup.html" class="text-secondary">Sign up as a Customer</a></p>
+            </div>
+        </div>
+    </main>
 
-<div class="container" id="formBox">
-  <h2>Register Your Business</h2>
+    <!-- Success Modal -->
+    <div id="successModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-icon">✓</div>
+            <h3>Registration Pending</h3>
+            <p>Your business profile has been created. Our team will review your application and activate your dashboard shortly.</p>
+            <button onclick="window.location.href='index.html'" class="btn btn-primary btn-block">Back to Home</button>
+        </div>
+    </div>
 
-  <label>Business Name</label>
-  <input id="businessName" />
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script>
+        function initializeFirebase() {
+            fetch('/api/firebase-config')
+                .then(r => r.json())
+                .then(config => {
+                    firebase.initializeApp(config);
+                });
+        }
 
-  <label>Service Type</label>
-  <select id="serviceType">
-    <option value="">Select</option>
-    <option value="salon">Salon</option>
-    <option value="restaurant">Restaurant</option>
-    <option value="clinic">Clinic</option>
-  </select>
+        const signupForm = document.getElementById('providerSignupForm');
+        const errorMsg = document.getElementById('errorMsg');
+        const signupBtn = document.getElementById('signupBtn');
+        const successModal = document.getElementById('successModal');
 
-  <label>Average Service Time (minutes)</label>
-  <input type="number" id="avgTime" />
+        signupForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const fullName = document.getElementById('fullName').value;
+            const businessName = document.getElementById('businessName').value;
+            const businessType = document.getElementById('businessType').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
 
-  <label>Email</label>
-  <input type="email" id="email" />
+            signupBtn.disabled = true;
+            signupBtn.textContent = 'Registering...';
+            errorMsg.style.display = 'none';
 
-  <label>Password</label>
-  <input type="password" id="password" />
+            try {
+                const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+                await userCredential.user.updateProfile({ displayName: fullName });
+                
+                const db = firebase.firestore();
+                await db.collection('users').doc(userCredential.user.uid).set({
+                    fullName: fullName,
+                    businessName: businessName,
+                    businessType: businessType,
+                    email: email,
+                    role: 'provider',
+                    status: 'pending_review',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
 
-  <!-- INLINE HANDLER (NO CLOSURE BUGS) -->
-  <button type="button" onclick="registerProvider()" id="signupBtn">
-    Create Provider Account
-  </button>
-</div>
+                successModal.classList.add('active');
+            } catch (err) {
+                errorMsg.textContent = err.message;
+                errorMsg.style.display = 'block';
+                signupBtn.disabled = false;
+                signupBtn.textContent = 'Register Business';
+            }
+        };
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
-<script>
-firebase.initializeApp({
-  apiKey: "AIzaSyAJFGE5OFfn-OhDNJ_rWO5oi2d2CHl2fXE",
-  authDomain: "zerowait-c21fc.firebaseapp.com",
-  projectId: "zerowait-c21fc",
-  storageBucket: "zerowait-c21fc.firebasestorage.app",
-  messagingSenderId: "839269113134",
-  appId: "1:839269113134:web:0411874b0e248a2a102ebf"
-});
-
-const auth = firebase.auth();
-const db = firebase.firestore();
-
-async function registerProvider() {
-  const btn = document.getElementById("signupBtn");
-  btn.disabled = true;
-  btn.innerText = "Creating account...";
-
-  const name = document.getElementById("businessName").value.trim();
-  const type = document.getElementById("serviceType").value;
-  const avgTimeVal = document.getElementById("avgTime").value;
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
-
-  if (!name || !type || !avgTimeVal || !email || !password) {
-    alert("Please fill all fields");
-    btn.disabled = false;
-    btn.innerText = "Create Provider Account";
-    return;
-  }
-
-  try {
-    const cred = await auth.createUserWithEmailAndPassword(email, password);
-
-    await db.collection("providers").doc(cred.user.uid).set({
-      name: name,
-      serviceType: type,
-      avgServiceTime: Number(avgTimeVal),
-      isOpen: true,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-
-    document.getElementById("formBox").innerHTML = `
-      <h2>✅ Signup Successful</h2>
-      <p>Redirecting to dashboard...</p>
-    `;
-
-    setTimeout(() => {
-      window.location.href = "provider-dashboard.html";
-    }, 1500);
-
-  } catch (err) {
-    alert(err.message);
-    btn.disabled = false;
-    btn.innerText = "Create Provider Account";
-  }
-}
-</script>
-
+        document.addEventListener('DOMContentLoaded', initializeFirebase);
+    </script>
 </body>
 </html>
