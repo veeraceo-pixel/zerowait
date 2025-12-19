@@ -1,53 +1,82 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <title>Login - ZeroWait</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <title>Login – ZeroWait</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-light">
-    <nav class="navbar">
-        <div class="container nav-content">
-            <a href="index.html" class="logo">ZeroWait</a>
-            <div class="nav-links">
-                <a href="nearby.html">Nearby</a>
-                <a href="about.html">About</a>
-                <a href="how-it-works.html">How It Works</a>
-                <a href="login.html" class="active">Login</a>
+  <header class="navbar">
+    <div class="container nav-content">
+      <a href="index.html" class="logo">ZeroWait</a>
+      <nav class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="provider-signup.html">For Businesses</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="py-6">
+    <div class="container">
+      <div class="form-card">
+        <div class="text-center mb-5">
+          <h1 class="h3 font-weight-extrabold mb-2">Welcome Back</h1>
+          <p class="text-secondary small">Sign in to manage your provider dashboard.</p>
+        </div>
+
+        <form id="loginForm">
+          <div class="form-group">
+            <label class="form-label" for="email">Email Address</label>
+            <input type="email" id="email" class="form-control" required placeholder="name@company.com">
+          </div>
+          
+          <div class="form-group">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <label class="form-label mb-0" for="password">Password</label>
+              <a href="#" class="small text-primary font-weight-bold" style="text-decoration: none;">Forgot?</a>
             </div>
-        </div>
-    </nav>
+            <input type="password" id="password" class="form-control" required placeholder="••••••••">
+          </div>
 
-    <main style="min-height: calc(100vh - 70px); display: flex; align-items: center; justify-content: center; padding: 2rem;">
-        <div class="card p-4 shadow-sm" style="width: 100%; max-width: 400px;">
-            <h2 class="h4 font-weight-bold mb-3">Welcome Back</h2>
-            <p class="text-secondary small mb-4">Log in to manage your queue or profile.</p>
-            
-            <div id="errorMsg" style="color: #dc2626; font-size: 0.875rem; margin-bottom: 1rem; display: none;"></div>
-            
-            <form id="loginForm">
-                <div class="mb-3">
-                    <label class="small font-weight-bold text-secondary mb-2 d-block">Email Address</label>
-                    <input type="email" id="email" class="btn btn-outline" style="width: 100%; text-align: left; background: white; cursor: text;" placeholder="you@example.com" required />
-                </div>
-                <div class="mb-4">
-                    <label class="small font-weight-bold text-secondary mb-2 d-block">Password</label>
-                    <input type="password" id="password" class="btn btn-outline" style="width: 100%; text-align: left; background: white; cursor: text;" placeholder="••••••••" required />
-                </div>
-                <button type="submit" id="loginBtn" class="btn btn-primary" style="width: 100%;">Sign In</button>
-            </form>
-            
-            <p class="mt-4 text-center small text-secondary">
-                Don't have an account? <a href="signup.html" style="color: var(--primary); font-weight: 600; text-decoration: none;">Sign Up</a>
-            </p>
-        </div>
-    </main>
+          <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.875rem;">Log In to Dashboard</button>
+        </form>
 
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script>
-        // Auth logic preserved
-    </script>
+        <div class="mt-5 text-center">
+          <p class="text-secondary small">
+            New here? <a href="provider-signup.html" class="text-primary font-weight-bold" style="text-decoration: none;">Create a business account</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script>
+    function initializeFirebase() {
+      fetch('/api/firebase-config')
+        .then(r => r.json())
+        .then(config => {
+          firebase.initializeApp(config);
+        })
+        .catch(err => console.error("Firebase config failed", err));
+    }
+
+    document.getElementById('loginForm').onsubmit = async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      
+      try {
+        await firebase.auth().signInWithEmailAndPassword(email, password);
+        window.location.href = 'provider-dashboard.html';
+      } catch (err) {
+        alert('Login failed: ' + err.message);
+      }
+    };
+
+    document.addEventListener('DOMContentLoaded', initializeFirebase);
+  </script>
 </body>
 </html>
