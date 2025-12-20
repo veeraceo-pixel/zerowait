@@ -9,172 +9,125 @@
 
 <body class="bg-light">
 
-  <!-- HEADER -->
-  <header class="navbar">
-    <div class="container nav-content">
-      <a href="index.html" class="logo">ZeroWait</a>
+<header class="navbar">
+  <div class="container nav-content">
+    <a href="index.html" class="logo">ZeroWait</a>
 
-      <button
-        id="mobile-menu-toggle"
-        aria-label="Toggle Menu"
-        style="display: none; background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer;">
-        ☰
-      </button>
+    <button id="mobile-menu-toggle"
+      aria-label="Toggle Menu"
+      style="display:none;background:none;border:none;color:white;font-size:1.5rem;">
+      ☰
+    </button>
 
-      <nav class="nav-links">
-        <a href="index.html">Home</a>
-        <a href="about.html">About</a>
-        <a href="how-it-works.html">How It Works</a>
-        <a href="provider-signup.html" class="btn btn-primary">For Businesses</a>
-      </nav>
-    </div>
-  </header>
+    <nav class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <a href="how-it-works.html">How It Works</a>
+      <a href="provider-signup.html" class="btn btn-primary">For Businesses</a>
+    </nav>
+  </div>
+</header>
 
-  <!-- MAIN -->
-  <main class="py-6">
-    <div class="container">
-      <div class="form-card animate-fade-in">
+<main class="py-6">
+  <div class="container">
+    <div class="form-card animate-fade-in">
 
-        <div class="text-center mb-5">
-          <h1 class="h3 font-weight-extrabold mb-2">Welcome Back</h1>
-          <p class="text-secondary small font-weight-bold">
-            Access your ZeroWait account
-          </p>
-        </div>
-
-        <form id="loginForm">
-          <div class="form-group">
-            <label class="form-label" for="email">Email Address</label>
-            <input
-              type="email"
-              id="email"
-              class="form-control"
-              required
-              placeholder="name@company.com">
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              class="form-control"
-              required
-              placeholder="••••••••">
-          </div>
-
-          <button type="submit" class="btn btn-primary w-100 py-3 mt-2">
-            Sign In
-          </button>
-        </form>
-
-        <div class="mt-5 pt-4 border-top text-center">
-          <p class="text-secondary small">
-            New to ZeroWait?
-            <a href="signup.html" class="text-primary font-weight-bold">
-              Create account
-            </a>
-          </p>
-        </div>
-
-      </div>
-    </div>
-  </main>
-
-  <!-- FOOTER -->
-  <footer>
-    <div class="container">
-      <div class="row">
-
-        <div class="col-md-4 mb-4">
-          <h4 class="logo mb-3" style="color: white;">ZeroWait</h4>
-          <p class="text-secondary small">
-            Revolutionizing the way you wait. Skip the line, save your time.
-          </p>
-        </div>
-
-        <div class="col-md-4 mb-4 text-center">
-          <h5 class="small font-weight-bold text-uppercase mb-3">Product</h5>
-          <ul class="list-unstyled small">
-            <li class="mb-2">
-              <a href="nearby.html" class="text-secondary">Nearby Services</a>
-            </li>
-            <li class="mb-2">
-              <a href="how-it-works.html" class="text-secondary">How It Works</a>
-            </li>
-          </ul>
-        </div>
-
-        <div class="col-md-4 mb-4" style="text-align: right;">
-          <h5 class="small font-weight-bold text-uppercase mb-3">Contact Us</h5>
-          <p class="text-secondary small mb-2">support@zerowait.app</p>
-          <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-            <a href="#" class="text-secondary small">Twitter</a>
-            <a href="#" class="text-secondary small">LinkedIn</a>
-          </div>
-        </div>
-
+      <div class="text-center mb-5">
+        <h1 class="h3 font-weight-extrabold mb-2">Welcome Back</h1>
+        <p class="text-secondary small font-weight-bold">
+          Access your ZeroWait account
+        </p>
       </div>
 
-      <hr class="mt-4 mb-4" style="border-color: rgba(255,255,255,0.1);">
+      <form id="loginForm">
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" id="email" class="form-control" required>
+        </div>
 
-      <p class="text-center text-secondary small">
-        © 2025 ZeroWait Inc. All rights reserved.
-      </p>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" id="password" class="form-control" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 py-3 mt-2">
+          Sign In
+        </button>
+      </form>
+
+      <div class="mt-5 pt-4 border-top text-center">
+        <p class="text-secondary small">
+          New to ZeroWait?
+          <a href="signup.html" class="text-primary font-weight-bold">
+            Create account
+          </a>
+        </p>
+      </div>
+
     </div>
-  </footer>
+  </div>
+</main>
 
-  <!-- FIREBASE -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="firebase-config.js"></script>
+<footer>
+  <div class="container">
+    <p class="text-center text-secondary small">
+      © 2025 ZeroWait Inc. All rights reserved.
+    </p>
+  </div>
+</footer>
 
-  <!-- SCRIPT -->
-  <script>
-    /* Mobile menu */
-    const mobileToggle = document.getElementById('mobile-menu-toggle');
-    const navLinks = document.querySelector('.nav-links');
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
 
-    if (mobileToggle) {
-      mobileToggle.addEventListener('click', () => {
-        navLinks.classList.toggle('active');
-      });
+<script>
+/* Mobile menu */
+const mobileToggle = document.getElementById('mobile-menu-toggle');
+const navLinks = document.querySelector('.nav-links');
+if (mobileToggle) {
+  mobileToggle.onclick = () => navLinks.classList.toggle('active');
+}
+
+/* LOGIN (OFFLINE SAFE) */
+document.getElementById('loginForm').onsubmit = async (e) => {
+  e.preventDefault();
+
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+
+  let user;
+
+  /* 1️⃣ AUTH FIRST — MUST NOT FAIL */
+  try {
+    const cred = await firebase.auth()
+      .signInWithEmailAndPassword(email, password);
+    user = cred.user;
+  } catch (authErr) {
+    alert('Login failed: ' + authErr.message);
+    return;
+  }
+
+  /* 2️⃣ ROLE CHECK — MUST NOT BLOCK LOGIN */
+  try {
+    const snap = await firebase.firestore()
+      .collection('providers')
+      .doc(user.uid)
+      .get();
+
+    if (snap.exists) {
+      window.location.replace('provider-dashboard.html');
+      return;
     }
+  } catch (err) {
+    console.warn('Firestore unavailable, continuing as customer');
+  }
 
-    /* Login logic */
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-
-      try {
-        const { user } = await firebase
-          .auth()
-          .signInWithEmailAndPassword(email, password);
-
-        const uid = user.uid;
-
-        const providerSnap = await firebase
-          .firestore()
-          .collection('providers')
-          .doc(uid)
-          .get();
-
-        if (providerSnap.exists) {
-          window.location.replace('provider-dashboard.html');
-          return;
-        }
-
-        // Default: customer
-        window.location.replace('nearby.html');
-
-      } catch (err) {
-        alert('Login failed: ' + err.message);
-      }
-    });
-  </script>
+  /* 3️⃣ DEFAULT FALLBACK */
+  window.location.replace('nearby.html');
+};
+</script>
 
 </body>
 </html>
