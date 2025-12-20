@@ -245,15 +245,19 @@ document.getElementById('providerSignupForm').onsubmit = async (e) => {
       .doc(cred.user.uid)
       .set(providerData);
 
+    // Show success modal and redirect after successful signup
+    document.getElementById('successModal').style.display = 'flex';
+    setTimeout(() => {
+      window.location.replace('provider-dashboard.html');
+    }, 1500);
 
   } catch (err) {
     alert(err.message);
   }
 };
-    document.getElementById('successModal').style.display = 'flex';
-    setTimeout(() => { window.location.replace('provider-dashboard.html'); }, 1500);
 </script>
 
+<!-- GOOGLE MAPS JS (unchanged) -->
 <script
   src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAG-Qv4aH4xE2VFAMImB_xwG4J8TmehUMQ&libraries=places&callback=initAutocomplete"
   async defer>
