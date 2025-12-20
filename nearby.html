@@ -11,7 +11,11 @@
         .list-panel { width: 450px; background: var(--bg-white); border-left: 1px solid var(--border); overflow-y: auto; padding: 2rem; display: flex; flex-direction: column; }
         .place-card { padding: 1.5rem; margin-bottom: 1.25rem; border: 1px solid var(--border); border-radius: var(--radius-lg); transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; background: white; }
         .place-card:hover { border-color: var(--primary); box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+        .place-card.disabled { opacity: 0.6; cursor: not-allowed; }
         .rating-badge { background: #fffbeb; color: #92400e; padding: 0.25rem 0.5rem; border-radius: 0.5rem; font-size: 0.75rem; font-weight: 700; }
+        .provider-status { padding: 0.5rem 0.75rem; border-radius: 0.5rem; font-size: 0.75rem; font-weight: 700; margin-top: 0.5rem; display: inline-block; }
+        .provider-registered { background: #d1fae5; color: #065f46; }
+        .provider-not-registered { background: #fef3c7; color: #78350f; }
         @media (max-width: 992px) {
             .split-view { flex-direction: column; height: auto; }
             .list-panel { width: 100%; border-left: none; border-top: 1px solid var(--border); padding: 1.5rem; }
@@ -31,7 +35,6 @@
             </div>
         </div>
     </nav>
-
     <div class="split-view">
         <div id="map"></div>
         <div class="list-panel">
@@ -55,16 +58,19 @@
         const params = new URLSearchParams(window.location.search);
         let serviceType = params.get("type") || localStorage.getItem("serviceType") || 'salon';
         localStorage.setItem("serviceType", serviceType);
+        
         const SERVICE_MAP = { 
             salon: { type: "hair_care", keyword: "salon -wellness -clinic", label: "Salons & Spas" }, 
             restaurant: { type: "restaurant", keyword: "dining -hotel", label: "Restaurants" }, 
             clinic: { type: "hospital", keyword: "clinic wellness", label: "Health Clinics" } 
         };
+        
         const config = SERVICE_MAP[serviceType] || SERVICE_MAP.salon;
         document.getElementById("title").innerText = config.label;
         document.getElementById("categoryBadge").innerText = serviceType.toUpperCase();
-
+        
         let map, placesService, userLocation;
+        
         function getUserLocation(cb) {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(pos => {
@@ -73,8 +79,11 @@
                 }, () => { 
                     userLocation = { lat: 40.7128, lng: -74.0060 }; cb();
                 });
-            } else { userLocation = { lat: 40.7128, lng: -74.0060 }; cb(); }
+            } else { 
+                userLocation = { lat: 40.7128, lng: -74.0060 }; cb(); 
+            }
         }
+        
         function initMap() {
             getUserLocation(() => {
                 map = new google.maps.Map(document.getElementById("map"), {
@@ -86,21 +95,41 @@
                 searchNearby();
             });
         }
+        
         function searchNearby() {
             placesService.nearbySearch({ location: userLocation, radius: 5000, type: config.type, keyword: config.keyword }, renderResults);
         }
+        
+        // Check if provider is registered with ZeroWait
+        async function checkProviderRegistration(placeId) {
+            try {
+                const snapshot = await firebase.firestore()
+                    .collection('providers')
+                    .where('googlePlaceId', '==', placeId)
+                    .limit(1)
+                    .get();
+                return !snapshot.empty;
+            } catch (err) {
+                console.log('Provider check failed:', err);
+                return false;
+            }
+        }
+        
         function renderResults(results, status) {
             const container = document.getElementById("results");
             container.innerHTML = "";
+            
             if (status !== google.maps.places.PlacesServiceStatus.OK || !results.length) {
                 container.innerHTML = '<div class="text-center py-5"><p class="text-secondary">No services found in this area.</p></div>';
                 return;
             }
+            
             results.slice(0, 15).forEach((place, index) => {
                 new google.maps.Marker({ map, position: place.geometry.location, label: (index + 1).toString() });
                 const distance = (google.maps.geometry.spherical.computeDistanceBetween(new google.maps.LatLng(userLocation.lat, userLocation.lng), place.geometry.location) / 1000).toFixed(1);
                 const card = document.createElement('div');
                 card.className = 'place-card shadow-sm animate-fade-in';
+                card.id = `place-card-${index}`;
                 card.innerHTML = `
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <strong class="h5 mb-0">${place.name}</strong>
@@ -109,17 +138,43 @@
                     <div class="small text-secondary mb-3">
                         <span class="font-weight-bold text-dark">${distance} km away</span>
                         <p class="mt-1">• ${place.vicinity}</p>
+                        <span id="provider-status-${index}" class="provider-status">Checking...</span>
                     </div>
                     <div class="d-flex gap-2">
-                        <button class="btn btn-primary flex-1" onclick="goToQueue('${place.place_id}', '${encodeURIComponent(place.name)}')">Join Queue</button>
+                        <button class="btn btn-primary flex-1" id="btn-${index}" onclick="goToQueue('${place.place_id}', '${encodeURIComponent(place.name)}')">Join Queue</button>
                         <span class="badge ${place.opening_hours?.open_now ? 'bg-primary-light text-primary' : 'bg-light text-muted'} d-flex align-items-center">
                             ${place.opening_hours?.open_now ? 'Open' : 'Closed'}
                         </span>
                     </div>`;
                 container.appendChild(card);
+                
+                // Check if provider is registered
+                checkProviderRegistration(place.place_id).then(isRegistered => {
+                    const statusBadge = document.getElementById(`provider-status-${index}`);
+                    const joinBtn = document.getElementById(`btn-${index}`);
+                    const placeCard = document.getElementById(`place-card-${index}`);
+                    
+                    if (isRegistered) {
+                        statusBadge.textContent = '✓ Registered - Accurate Waiting Time';
+                        statusBadge.className = 'provider-status provider-registered';
+                        joinBtn.disabled = false;
+                        placeCard.classList.remove('disabled');
+                    } else {
+                        statusBadge.textContent = 'ℹ Not Registered - Service Not Available';
+                        statusBadge.className = 'provider-status provider-not-registered';
+                        joinBtn.disabled = true;
+                        joinBtn.style.opacity = '0.5';
+                        joinBtn.style.cursor = 'not-allowed';
+                        placeCard.classList.add('disabled');
+                    }
+                });
             });
         }
-        function goToQueue(id, name) { window.location.href = `join-queue.html?provider=${id}&name=${name}`; }
+        
+        function goToQueue(id, name) {
+            if (!id) return;
+            window.location.href = `join-queue.html?provider=${id}&name=${name}`;
+        }
     </script>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAG-Qv4aH4xE2VFAMImB_xwG4J8TmehUMQ&libraries=places,geometry&callback=initMap" async defer></script>
 </body>
