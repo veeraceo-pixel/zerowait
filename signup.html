@@ -65,7 +65,7 @@
             const phone = document.getElementById('phone').value;
             try {
                 const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
-                await firebase.firestore().collection('users').doc(userCredential.user.uid).set({ name, email, phone, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+                await firebase.firestore().collection('users').doc(userCredential.user.uid).set({ name, email, phone, role: 'customer', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
                 alert('Account created successfully!'); window.location.href = 'nearby.html';
             } catch (err) { alert('Signup failed: ' + err.message); }
         };
