@@ -1,1 +1,266 @@
-<!DOCTYPE html><html lang="en"><head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Business Registration - ZeroWait</title> <link rel="stylesheet" href="style.css"> <style> .pac-container { z-index: 10000 !important; border-radius: var(--radius-md); box-shadow: var(--shadow-lg); border: 1px solid var(--border); font-family: 'Inter', sans-serif; } .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 2000; align-items: center; justify-content: center; } .success-modal { background: white; padding: 3rem; border-radius: var(--radius-lg); max-width: 450px; width: 90%; text-align: center; box-shadow: var(--shadow-xl); } .success-icon { width: 64px; height: 64px; background: #f0fdf4; color: #166534; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 1.5rem; } </style></head><body class="bg-light"> <header class="navbar"> <div class="container nav-content"> <a href="index.html" class="logo">ZeroWait</a> <nav class="nav-links"> <a href="index.html">Home</a> <a href="login.html" class="btn btn-outline">Login</a> </nav> </div> </header> <main class="py-6"> <div class="container"> <div class="form-card" style="max-width: 600px;"> <div class="text-center mb-5"> <div class="badge text-primary bg-primary-light mb-3">Partner with us</div> <h1 class="h2 font-weight-extrabold mb-2">Register Your Business</h1> <p class="text-secondary small">Join thousands of businesses eliminating physical lines.</p> </div> <form id="providerSignupForm"> <div class="row"> <div class="col-md-6"> <div class="form-group"> <label class="form-label" for="businessName">Business Name</label> <input type="text" id="businessName" class="form-control" required placeholder="e.g. Blue Door Cafe"> </div> </div> <div class="col-md-6"> <div class="form-group"> <label class="form-label" for="serviceType">Service Type</label> <select id="serviceType" class="form-control" required> <option value="salon">Salon & Spa</option> <option value="restaurant">Restaurant / Cafe</option> <option value="clinic">Health Clinic</option> <option value="other">Other Service</option> </select> </div> </div> </div> <div class="form-group"> <label class="form-label" for="addressLookup">Business Address (Google Maps Search)</label> <input type="text" id="addressLookup" class="form-control" required placeholder="Search your business location..."> <input type="hidden" id="placeId"> <input type="hidden" id="lat"> <input type="hidden" id="lng"> <input type="hidden" id="formattedAddress"> <p class="text-muted tiny mt-1">Start typing to find your business on the map.</p> </div> <div class="form-group"> <label class="form-label" for="email">Work Email</label> <input type="email" id="email" class="form-control" required placeholder="owner@business.com"> </div> <div class="form-group"> <label class="form-label" for="password">Create Password</label> <input type="password" id="password" class="form-control" required placeholder="At least 8 characters"> </div> <div class="form-group"> <label class="form-label" for="avgWait">Typical Wait Time (Minutes)</label> <input type="number" id="avgWait" class="form-control" required placeholder="Average minutes per customer"> </div> <button type="submit" class="btn btn-primary mt-3" style="width: 100%; padding: 1rem;">Create Business Account</button> </form> <div class="mt-5 pt-4 border-top text-center"> <p class="text-secondary small"> Already have a business account? <a href="login.html" class="text-primary font-weight-bold" style="text-decoration: none;">Log in here</a> </p> </div> </div> </div> </main> <div id="successModal" class="modal-overlay"> <div class="success-modal"> <div class="success-icon">✓</div> <h2 class="h3 font-weight-bold mb-2">Registration Successful!</h2> <p class="text-secondary mb-4">Your business account has been created. You can now manage your queue and share your QR code.</p> <button onclick="window.location.href='provider-dashboard.html'" class="btn btn-primary" style="width: 100%;">Go to Dashboard</button> </div> </div> <footer class="bg-white border-top py-6 mt-6"> <div class="container text-center"> <a href="index.html" class="logo mb-4 d-inline-block">ZeroWait</a> <p class="text-muted small">© 2025 ZeroWait Inc. All rights reserved.</p> </div> </footer> <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script> <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script> <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script> <script src="firebase-config.js"></script> <script> firebase.auth().onAuthStateChanged(async user => { if (user) { const db = firebase.firestore(); const doc = await db.collection('providers').doc(user.uid).get(); if (doc.exists) { window.location.href = 'provider-dashboard.html'; } } }); let autocomplete; function initAutocomplete() { const input = document.getElementById('addressLookup'); const options = { fields: ["address_components", "geometry", "icon", "name", "place_id", "formatted_address"] }; autocomplete = new google.maps.places.Autocomplete(input, options); autocomplete.addListener("place_changed", () => { const place = autocomplete.getPlace(); if (!place.geometry) return; document.getElementById('placeId').value = place.place_id; document.getElementById('lat').value = place.geometry.location.lat(); document.getElementById('lng').value = place.geometry.location.lng(); document.getElementById('formattedAddress').value = place.formatted_address; if (!document.getElementById('businessName').value) document.getElementById('businessName').value = place.name; }); } document.getElementById('providerSignupForm').onsubmit = async (e) => { e.preventDefault(); const email = document.getElementById('email').value; const password = document.getElementById('password').value; const businessName = document.getElementById('businessName').value; const type = document.getElementById('serviceType').value; const avgWait = document.getElementById('avgWait').value; const locationData = { placeId: document.getElementById('placeId').value, lat: parseFloat(document.getElementById('lat').value), lng: parseFloat(document.getElementById('lng').value), address: document.getElementById('formattedAddress').value }; if (!locationData.placeId) { alert("Please select location from search results."); return; } try { const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password); console.log('User created:', userCredential.user.uid); const providerRef = firebase.firestore().collection('providers').doc(userCredential.user.uid); await providerRef.set({ businessName: businessName, type: type, avgWait: parseInt(avgWait), email: email, location: locationData, isOpen: true, createdAt: firebase.firestore.FieldValue.serverTimestamp() }); console.log('Provider document created successfully'); document.getElementById('successModal').style.display = 'flex'; setTimeout(() => { window.location.href = 'provider-dashboard.html'; }, 2000); } catch (err) { console.error('Signup error:', err); alert('Signup failed: ' + err.message); } }; </script> <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAG-Qv4aH4xE2VFAMImB_xwG4J8TmehUMQ&libraries=places&callback=initAutocomplete" async defer></script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Business Registration - ZeroWait</title>
+
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    .pac-container {
+      z-index: 10000 !important;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--border);
+      font-family: 'Inter', sans-serif;
+    }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .success-modal {
+      background: white;
+      padding: 3rem;
+      border-radius: var(--radius-lg);
+      max-width: 450px;
+      width: 90%;
+      text-align: center;
+      box-shadow: var(--shadow-xl);
+    }
+
+    .success-icon {
+      width: 64px;
+      height: 64px;
+      background: #f0fdf4;
+      color: #166534;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      margin: 0 auto 1.5rem;
+    }
+  </style>
+</head>
+
+<body class="bg-light">
+
+<header class="navbar">
+  <div class="container nav-content">
+    <a href="index.html" class="logo">ZeroWait</a>
+    <nav class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="login.html" class="btn btn-outline">Login</a>
+    </nav>
+  </div>
+</header>
+
+<main class="py-6">
+  <div class="container">
+    <div class="form-card" style="max-width: 600px;">
+
+      <div class="text-center mb-5">
+        <div class="badge text-primary bg-primary-light mb-3">Partner with us</div>
+        <h1 class="h2 font-weight-extrabold mb-2">Register Your Business</h1>
+        <p class="text-secondary small">
+          Join thousands of businesses eliminating physical lines.
+        </p>
+      </div>
+
+      <form id="providerSignupForm">
+
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-label">Business Name</label>
+              <input type="text" id="businessName" class="form-control" required>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-label">Service Type</label>
+              <select id="serviceType" class="form-control" required>
+                <option value="salon">Salon & Spa</option>
+                <option value="restaurant">Restaurant / Cafe</option>
+                <option value="clinic">Health Clinic</option>
+                <option value="other">Other Service</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Business Address</label>
+          <input type="text" id="addressLookup" class="form-control" required>
+          <input type="hidden" id="placeId">
+          <input type="hidden" id="lat">
+          <input type="hidden" id="lng">
+          <input type="hidden" id="formattedAddress">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Work Email</label>
+          <input type="email" id="email" class="form-control" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" id="password" class="form-control" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Typical Wait Time (Minutes)</label>
+          <input type="number" id="avgWait" class="form-control" required>
+        </div>
+
+        <button class="btn btn-primary mt-3 w-100" type="submit">
+          Create Business Account
+        </button>
+
+      </form>
+
+      <div class="mt-5 pt-4 border-top text-center">
+        <p class="text-secondary small">
+          Already have a business account?
+          <a href="login.html" class="text-primary font-weight-bold">
+            Log in here
+          </a>
+        </p>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<!-- SUCCESS MODAL -->
+<div id="successModal" class="modal-overlay">
+  <div class="success-modal">
+    <div class="success-icon">✓</div>
+    <h2 class="h3 font-weight-bold mb-2">Registration Successful!</h2>
+    <p class="text-secondary mb-4">
+      Your business account has been created.
+    </p>
+    <button onclick="window.location.href='provider-dashboard.html'"
+            class="btn btn-primary w-100">
+      Go to Dashboard
+    </button>
+  </div>
+</div>
+
+<footer class="bg-white border-top py-6 mt-6">
+  <div class="container text-center">
+    <a href="index.html" class="logo mb-4 d-inline-block">ZeroWait</a>
+    <p class="text-muted small">© 2025 ZeroWait Inc. All rights reserved.</p>
+  </div>
+</footer>
+
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+
+<script>
+/* Prevent logged-in providers from seeing signup page */
+firebase.auth().onAuthStateChanged(async (user) => {
+  if (!user) return;
+
+  const snap = await firebase.firestore()
+    .collection('providers')
+    .doc(user.uid)
+    .get();
+
+  if (snap.exists) {
+    window.location.replace('provider-dashboard.html');
+  }
+});
+
+/* Google Places */
+let autocomplete;
+function initAutocomplete() {
+  const input = document.getElementById('addressLookup');
+  autocomplete = new google.maps.places.Autocomplete(input);
+
+  autocomplete.addListener("place_changed", () => {
+    const place = autocomplete.getPlace();
+    if (!place.geometry) return;
+
+    document.getElementById('placeId').value = place.place_id;
+    document.getElementById('lat').value = place.geometry.location.lat();
+    document.getElementById('lng').value = place.geometry.location.lng();
+    document.getElementById('formattedAddress').value = place.formatted_address;
+
+    if (!document.getElementById('businessName').value) {
+      document.getElementById('businessName').value = place.name;
+    }
+  });
+}
+
+/* Signup */
+document.getElementById('providerSignupForm').onsubmit = async (e) => {
+  e.preventDefault();
+
+  const email = emailInput.value = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+
+  const providerData = {
+    businessName: document.getElementById('businessName').value,
+    type: document.getElementById('serviceType').value,
+    avgWait: parseInt(document.getElementById('avgWait').value),
+    email,
+    role: 'provider',
+    isOpen: true,
+    location: {
+      placeId: document.getElementById('placeId').value,
+      lat: parseFloat(document.getElementById('lat').value),
+      lng: parseFloat(document.getElementById('lng').value),
+      address: document.getElementById('formattedAddress').value
+    },
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  if (!providerData.location.placeId) {
+    alert('Please select address from search results');
+    return;
+  }
+
+  try {
+    const cred = await firebase.auth()
+      .createUserWithEmailAndPassword(email, password);
+
+    await firebase.firestore()
+      .collection('providers')
+      .doc(cred.user.uid)
+      .set(providerData);
+
+    document.getElementById('successModal').style.display = 'flex';
+
+    setTimeout(() => {
+      window.location.replace('provider-dashboard.html');
+    }, 1500);
+
+  } catch (err) {
+    alert(err.message);
+  }
+};
+</script>
+
+<script
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAG-Qv4aH4xE2VFAMImB_xwG4J8TmehUMQ&libraries=places&callback=initAutocomplete"
+  async defer>
+</script>
+
+</body>
+</html>
