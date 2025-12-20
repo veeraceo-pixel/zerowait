@@ -27,7 +27,17 @@
     </nav>
 
     <main class="queue-container">
-        <div id="status-msg" class="text-center animate-fade-in">
+                <div id="nameForm" class="card queue-card p-5 animate-fade-in" style="max-width: 400px; margin: 2rem auto;">
+            <h2 class="h3 mb-4">Join the Queue</h2>
+            <form onsubmit="joinQueueWithName(event)" style="display: flex; flex-direction: column; gap: 1rem;">
+                <div>
+                    <label for="customerName" class="form-label font-weight-bold mb-2" style="display: block;">Enter your name:</label>
+                    <input type="text" id="customerName" class="form-control" placeholder="Your name" required style="padding: 0.75rem; border: 1px solid #ddd; border-radius: 0.5rem; font-size: 1rem;">
+                </div>
+                <button type="submit" class="btn btn-primary" style="padding: 0.75rem 1.5rem; width: 100%;">Join Queue</button>
+            </form>
+        </div>
+        <div id="status-msg" class="text-center animate-fade-in" style="display:none;">
             <div class="spinner"></div>
             <p id="loading-text" class="text-secondary font-weight-bold">Synchronizing with live queue...</p>
         </div>
@@ -130,6 +140,48 @@
             }
         }
         window.onload = init;
+        
+        async function joinQueueWithName(event) {
+            event.preventDefault();
+            const name = document.getElementById('customerName').value.trim();
+            if (!name) { alert('Please enter your name'); return; }
+            
+            // Hide name form and show loading
+            document.getElementById('nameForm').style.display = 'none';
+            document.getElementById('status-msg').style.display = 'block';
+            
+            // Check for existing queue entry
+            const snap = await db.collection('queues').where('customerId', '==', currentUserId).where('status', 'in', ['waiting', 'serving']).get();
+            if (!snap.empty) { providerId = snap.docs[0].data().providerId; startListener(snap.docs[0].id); return; }
+            
+            // Get provider ID from URL
+            const params = new URLSearchParams(window.location.search);
+            const targetId = params.get('provider') || localStorage.getItem('pendingJoin');
+            localStorage.removeItem('pendingJoin');
+            
+            if (targetId) {
+                try {
+                    // Add customer to queue with their name
+                    const newEntry = await db.collection('queues').add({
+                        customerId: currentUserId,
+                        customerName: name,
+                        providerId: targetId,
+                        status: 'waiting',
+                        joinedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    providerId = targetId;
+                    startListener(newEntry.id);
+                } catch (error) {
+                    console.error('Error joining queue:', error);
+                    alert('Error joining queue. Please try again.');
+                    document.getElementById('nameForm').style.display = 'block';
+                    document.getElementById('status-msg').style.display = 'none';
+                }
+            } else {
+                alert('No service provider found.');
+                window.location.href = 'index.html';
+            }
+        }
     </script>
 </body>
 </html>
