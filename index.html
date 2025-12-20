@@ -6,44 +6,37 @@
     <title>ZeroWait – Skip the Wait</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* Header Styling */
         .navbar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); padding: 1rem 0; }
         .navbar .logo { font-weight: 700; font-size: 1.5rem; color: white; }
         .navbar .nav-links a { color: white; font-weight: 500; }
         .navbar .nav-links .btn-outline { color: white !important; border: 2px solid white !important; }
         .navbar .nav-links .btn-outline:hover { background: rgba(255,255,255,0.1) !important; }
         .navbar .nav-links .btn-primary { background: #2563eb; color: white; border: none; }
+        .navbar .nav-links .btn-danger { background: #dc2626; color: white; border: none; }
+        .navbar .nav-links .btn-danger:hover { background: #b91c1c; }
         
-        /* Hero Section - Properly Centered */
         .hero { text-align: center; padding: 4rem 2rem; background: linear-gradient(180deg, rgba(102, 126, 234, 0.1) 0%, transparent 100%); border-radius: 10px; margin: 2rem auto; max-width: 800px; }
         .hero h1 { color: #333; margin-bottom: 1rem; font-size: 3rem; }
         .hero p { color: #666; font-size: 1.2rem; margin-bottom: 2rem; }
         
-        /* Queue Status Banner */
         #queueStatusBanner { background: #fef3c7; border-left: 4px solid #fbbf24; padding: 1.5rem; margin: 1rem auto 2rem; max-width: 1200px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
         #queueStatusBanner p { margin: 0; color: #78350f; }
         #queueStatusBanner p:first-child { font-weight: bold; font-size: 1rem; }
         #queueStatusBanner .wait-time { color: #92400e; margin-top: 0.5rem; }
         
-        /* Category Cards - Center images */
         .category-card { text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem 1.5rem; border-radius: 10px; border: none; background: white; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); transition: all 0.3s ease; }
         .category-card:hover { box-shadow: 0 8px 20px rgba(102, 126, 234, 0.15); transform: translateY(-5px); }
         .category-card div:first-child { display: flex; align-items: center; justify-content: center; width: 100%; }
         
-        /* Footer Styling */
         footer { background: linear-gradient(135deg, #333 0%, #222 100%); color: #fff; padding: 3rem 0 1rem; border-top: 3px solid #667eea; }
         footer .logo { font-size: 1.5rem; font-weight: 700; color: #667eea; }
         footer p, footer a { color: #aaa; font-size: 0.95rem; }
         footer a:hover { color: #667eea; text-decoration: none; }
         footer hr { border-color: rgba(255, 255, 255, 0.1); }
         
-        /* Container and spacing */
         .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
-        
-        /* Section heading styling */
         h2 { color: #333; font-weight: 700; margin-bottom: 2rem; }
         
-        /* Mobile Responsive */
         @media (max-width: 768px) {
             .hero { padding: 2rem 1rem; margin: 1rem auto; max-width: 100%; }
             .hero h1 { font-size: 2rem; }
@@ -54,7 +47,6 @@
     </style>
 </head>
 <body>
-    <!-- Navbar -->
     <header class="navbar">
         <div class="container nav-content">
             <a href="index.html" class="logo">ZeroWait</a>
@@ -62,7 +54,7 @@
                 <a href="index.html" class="active">Home</a>
                 <a href="about.html">About</a>
                 <a href="how-it-works.html">How It Works</a>
-                <a href="login.html" class="btn btn-outline">Login</a>
+                <a id="loginLogoutBtn" href="login.html" class="btn btn-outline">Login</a>
                 <a href="provider-signup.html" class="btn btn-primary">For Businesses</a>
             </nav>
             <button id="mobile-toggle" style="display: none; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: white;">☰</button>
@@ -70,7 +62,6 @@
     </header>
 
     <main>
-        <!-- Queue Status Banner (Hidden by default) -->
         <div id="queueStatusBanner" style="display: none;">
             <div>
                 <p>You're in Queue! 📍</p>
@@ -79,12 +70,10 @@
             <button onclick="leaveQueue()" class="btn btn-outline-danger">Leave Queue</button>
         </div>
 
-        <!-- User Welcome Banner (Hidden by default) -->
         <div id="userWelcomeBanner" style="display:none; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1rem; text-align: center; margin-bottom: 1rem;">
             <p style="margin: 0; font-size: 1.1rem;">Welcome back, <strong id="userName">User</strong>! 👋</p>
         </div>
 
-        <!-- Hero -->
         <section class="hero container">
             <h1 class="display-4 font-weight-bold">Never Wait Again</h1>
             <p>Book instantly. Skip the queue. Save your time at your favorite local spots.</p>
@@ -94,7 +83,6 @@
             </div>
         </section>
 
-        <!-- Categories -->
         <section id="explore" class="container py-5">
             <h2 class="text-center font-weight-bold mb-5">What are you looking for?</h2>
             <div class="row">
@@ -123,7 +111,6 @@
         </section>
     </main>
 
-    <!-- Footer -->
     <footer>
         <div class="container">
             <div class="row">
@@ -157,9 +144,9 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="firebase-config.js"></script>
     <script>
-        // Mobile menu toggle
         const mobileToggle = document.getElementById('mobile-toggle');
         const navLinks = document.querySelector('.nav-links');
+        const loginLogoutBtn = document.getElementById('loginLogoutBtn');
         
         if (mobileToggle) {
             mobileToggle.addEventListener('click', function() {
@@ -167,16 +154,33 @@
             });
         }
 
-        // Check if user is logged in and show welcome message
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
                 document.getElementById('userWelcomeBanner').style.display = 'block';
-                document.getElementById('userName').textContent = user.displayName || user.email.split('@')[0];
+                const displayName = user.displayName || user.email.split('@')[0];
+                document.getElementById('userName').textContent = displayName;
+                
+                loginLogoutBtn.textContent = 'Logout';
+                loginLogoutBtn.className = 'btn btn-danger';
+                loginLogoutBtn.href = '#';
+                loginLogoutBtn.onclick = (e) => {
+                    e.preventDefault();
+                    firebase.auth().signOut().then(() => {
+                        window.location.href = 'index.html';
+                    });
+                };
+            } else {
+                document.getElementById('userWelcomeBanner').style.display = 'none';
+                document.getElementById('queueStatusBanner').style.display = 'none';
+                
+                loginLogoutBtn.textContent = 'Login';
+                loginLogoutBtn.className = 'btn btn-outline';
+                loginLogoutBtn.href = 'login.html';
+                loginLogoutBtn.onclick = null;
             }
             checkQueueStatus(user);
         });
 
-        // Check queue status
         function checkQueueStatus(user) {
             if (!user) return;
             
@@ -196,7 +200,7 @@
         function displayQueueStatus(queueData) {
             document.getElementById('queueStatusBanner').style.display = 'flex';
             const position = queueData.position || 0;
-            const estimatedWait = Math.max(0, position * 15); // Assume 15 min per person
+            const estimatedWait = Math.max(0, position * 15);
             document.getElementById('waitTimeMinutes').textContent = estimatedWait;
         }
 
