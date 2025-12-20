@@ -1,1 +1,146 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Business Dashboard | ZeroWait</title><meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="stylesheet" href="style.css"><style>.dashboard-grid{display:grid;grid-template-columns:320px 1fr;gap:2.5rem;min-height:calc(100vh - 150px)}.stats-card{padding:2rem;background:var(--bg-white);border-radius:var(--radius-lg);border:1px solid var(--border);text-align:left;position:relative;overflow:hidden}.stats-card .value{font-size:3rem;font-weight:800;color:var(--primary);line-height:1;margin:0.5rem 0}.stats-card .label{font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-secondary)}.queue-list{background:var(--bg-white);border-radius:var(--radius-lg);border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow-sm)}.queue-header{padding:1.5rem 2rem;border-bottom:1px solid var(--border);background:#fcfcfd;display:flex;justify-content:space-between;align-items:center}.queue-item{padding:1.5rem 2rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;transition:all 0.2s}.queue-item:last-child{border-bottom:none}.queue-item:hover{background:#f9fafb}.queue-item.serving{background:var(--primary-soft);border-left:4px solid var(--primary)}.badge-serving{background:#dcfce7;color:#166534;padding:0.25rem 0.75rem;border-radius:9999px;font-size:0.75rem;font-weight:700}.wait-time{font-size:0.9rem;color:var(--text-secondary);font-weight:600}.wait-time-high{color:#dc2626}.sidebar-section{display:flex;flex-direction:column;gap:1.5rem}@media (max-width:1024px){.dashboard-grid{grid-template-columns:1fr}}</style></head><body class="bg-light"><header class="navbar"><div class="container nav-content"><a href="index.html" class="logo">ZeroWait</a><button id="mobile-menu-toggle" aria-label="Toggle Menu" style="display:none;background:none;border:none;color:white;font-size:1.5rem;cursor:pointer;">☰</button><nav class="nav-links"><span id="businessName" class="font-weight-bold"></span><button onclick="logout()" class="btn btn-primary">Logout</button></nav></div></header><main class="container py-5"><div id="dashboardContent" style="display:none;"><div class="dashboard-grid"><aside class="sidebar-section"><div class="stats-card"><div class="label">Customers Waiting</div><div id="queueCount" class="value">0</div><div class="small text-muted font-weight-bold">Live updates</div></div><div class="stats-card"><div class="label">Avg. Wait Time</div><div id="displayAvgWait" class="value">--</div><div class="small text-muted font-weight-bold">Minutes</div></div><div class="card p-4"><h3 class="h6 mb-3 uppercase font-weight-bold" style="letter-spacing:0.05em;">Store Controls</h3><button onclick="toggleStoreStatus()" id="statusBtn" class="btn btn-primary mb-3 w-100">Close Entry</button><button onclick="showQRCode()" class="btn btn-outline w-100">Display QR Code</button></div></aside><section class="main-content"><div class="queue-list"><div class="queue-header"><h2 class="h5 mb-0">Active Queue</h2><div class="badge bg-primary-light">Synchronized</div></div><div id="queueItems"><div class="text-center py-6 text-muted"><p class="font-weight-bold">The queue is currently empty.</p></div></div></div></section></div></div></main><div id="qrModal" class="modal-overlay" style="display:none;"><div class="success-modal" style="max-width:450px;"><h3 class="h4 mb-4">Your Store QR Code</h3><div id="qrcode" class="mb-4" style="background:#fff;padding:1.5rem;display:flex;align-items:center;justify-content:center;border-radius:1rem;border:1px solid var(--border);min-height:250px;"></div><p class="small text-secondary mb-5">Customers can scan this to join your virtual line instantly.</p><button onclick="document.getElementById('qrModal').style.display='none'" class="btn btn-primary w-100">Close Window</button></div></div><script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script><script src="firebase-config.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script>let db,currentProviderId;function init(){db=firebase.firestore();firebase.auth().onAuthStateChanged(user=>{if(!user){window.location.href='login.html';return;}currentProviderId=user.uid;checkAndCreateProvider();});} async function checkAndCreateProvider(){try{const doc=await db.collection('providers').doc(currentProviderId).get();if(doc.exists){document.getElementById('dashboardContent').style.display='block';loadProviderData();listenToQueue();}else{const userEmail=firebase.auth().currentUser.email;await db.collection('providers').doc(currentProviderId).set({businessName:'My Business',type:'other',avgWait:15,email:userEmail,location:{address:'Location not set',lat:0,lng:0,placeId:''},isOpen:true,createdAt:firebase.firestore.FieldValue.serverTimestamp()});document.getElementById('dashboardContent').style.display='block';loadProviderData();listenToQueue();}}catch(error){console.error('Error checking provider:',error);}}async function loadProviderData(){try{const doc=await db.collection('providers').doc(currentProviderId).get();if(doc.exists){const data=doc.data();document.getElementById('businessName').innerText=data.businessName||'My Business';document.getElementById('displayAvgWait').innerText=data.avgWait||15;const statusBtn=document.getElementById('statusBtn');if(data.isOpen===false){statusBtn.innerText='Open Entry';statusBtn.className='btn btn-outline-success mb-3 w-100';}}}catch(error){console.error('Error loading provider data:',error);}}function getWaitTimeColor(waitMinutes){if(waitMinutes<15)return'text-success';if(waitMinutes<30)return'text-warning';return'wait-time-high';}function calculateWaitTime(customerIndex,avgWaitPerCustomer=5){return customerIndex*avgWaitPerCustomer;}function listenToQueue(){try{db.collection('queues').where('providerId','==',currentProviderId).where('status','in',['waiting','serving']).orderBy('joinedAt','asc').onSnapshot(snapshot=>{const itemsContainer=document.getElementById('queueItems');const countDisplay=document.getElementById('queueCount');const customers=snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));countDisplay.innerText=customers.filter(c=>c.status==='waiting').length;if(customers.length===0){itemsContainer.innerHTML='<div class="text-center py-6 text-muted"><p class="font-weight-bold">The queue is currently empty.</p></div>';return;}itemsContainer.innerHTML=customers.map((c,index)=>{const waitMinutes=calculateWaitTime(index);const waitTimeColor=getWaitTimeColor(waitMinutes);return `<div class="queue-item ${c.status==='serving'?'serving':''} animate-fade-in"><div><div class="font-weight-bold h5 mb-1">${c.customerName}</div><div class="small text-secondary">${c.customerPhone||'No contact provided'}</div>${c.status==='serving'?'<span class="badge-serving d-inline-block mt-2">Currently Serving</span>':''}<div class="wait-time ${waitTimeColor} mt-2">Wait time: ~${waitMinutes} min</div></div><div class="d-flex gap-2">${c.status==='waiting'?`<button onclick="serveCustomer('${c.id}')" class="btn btn-sm btn-primary">Serve</button>`:`<button onclick="completeCustomer('${c.id}')" class="btn btn-sm btn-success text-white">Complete</button>`}</div></div>`;}).join('');},error=>{console.error('Error listening to queue:',error);});}catch(error){console.error('Error setting up queue listener:',error);}}async function serveCustomer(id){try{const serving=await db.collection('queues').where('providerId','==',currentProviderId).where('status','==','serving').get();const batch=db.batch();serving.forEach(doc=>{batch.update(doc.ref,{status:'completed',completedAt:firebase.firestore.FieldValue.serverTimestamp()});});batch.update(db.collection('queues').doc(id),{status:'serving',servingStartTime:firebase.firestore.FieldValue.serverTimestamp()});await batch.commit();}catch(error){console.error('Error serving customer:',error);}}async function completeCustomer(id){try{await db.collection('queues').doc(id).update({status:'completed',completedAt:firebase.firestore.FieldValue.serverTimestamp()});}catch(error){console.error('Error completing customer:',error);}}async function toggleStoreStatus(){try{const docRef=db.collection('providers').doc(currentProviderId);const doc=await docRef.get();const isOpen=doc.data().isOpen!==false;await docRef.update({isOpen:!isOpen});loadProviderData();}catch(error){console.error('Error toggling store status:',error);}}function showQRCode(){const qrContainer=document.getElementById('qrcode');qrContainer.innerHTML='';const baseUrl=window.location.origin+window.location.pathname.split('/').slice(0,-1).join('/');const joinUrl=baseUrl+'/join-queue.html?provider='+currentProviderId;try{new QRCode(qrContainer,{text:joinUrl,width:250,height:250});document.getElementById('qrModal').style.display='flex';}catch(error){console.error('Error generating QR code:',error);alert('Error generating QR code. Please try again.');}}function logout(){firebase.auth().signOut().then(()=>{window.location.href='login.html';}).catch(error=>{console.error('Error logging out:',error);});}window.addEventListener('DOMContentLoaded',init);</script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Dashboard | ZeroWait</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        #dashboardContent { display: block !important; }
+        .qr-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .qr-modal.active { display: flex; }
+        .qr-modal-content { background: white; padding: 2rem; border-radius: 8px; text-align: center; }
+    </style>
+</head>
+<body class="bg-light">
+    <header class="navbar">
+        <div class="container nav-content">
+            <a href="index.html" class="logo">ZeroWait</a>
+            <nav class="nav-links">
+                <span id="businessName" class="font-weight-bold">My Business</span>
+                <button onclick="logout()" class="btn btn-primary">Logout</button>
+            </nav>
+        </div>
+    </header>
+    <main class="container py-5">
+        <div id="dashboardContent" style="display: block;">
+            <h1>Welcome to Your Business Dashboard</h1>
+            <div class="dashboard-grid">
+                <div class="sidebar-section">
+                    <div class="card">
+                        <h3>Queue Status</h3>
+                        <p id="queueStatus">Loading...</p>
+                    </div>
+                </div>
+                <div class="main-content">
+                    <div class="stats-card">
+                        <div class="value" id="queueCount">0</div>
+                        <div class="label">Customers in Queue</div>
+                    </div>
+                    <div class="queue-list" id="queueList">
+                        <div class="queue-header">
+                            <h2 class="h5 mb-0">Active Queue</h2>
+                            <button id="toggleStoreStatus" class="btn btn-primary btn-sm">Status Controls</button>
+                        </div>
+                        <div id="queueItems" class="queue-items">No customers in queue</div>
+                    </div>
+                    <button id="displayQRBtn" class="btn btn-primary" style="margin-top: 2rem; width: 100%;">Display QR Code</button>
+                </div>
+            </div>
+        </div>
+        <div id="qrModal" class="qr-modal">
+            <div class="qr-modal-content">
+                <h2>QR Code for Customers</h2>
+                <div id="qrCode" style="width: 300px; height: 300px; margin: 2rem auto; background: #f0f0f0; display: flex; align-items: center; justify-content: center;">
+                    <p>QR Code will load here</p>
+                </div>
+                <p>Customers can scan this QR code to join your queue</p>
+                <button onclick="closeQRModal()" class="btn btn-secondary">Close</button>
+            </div>
+        </div>
+    </main>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script>
+        // Initialize dashboard
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        
+        let currentUserID = null;
+        let currentProviderID = null;
+        
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            currentUserID = user.uid;
+            document.getElementById('businessName').textContent = user.email;
+            
+            // Get provider data
+            try {
+                const providerDoc = await db.collection('providers').doc(user.uid).get();
+                if (providerDoc.exists) {
+                    currentProviderID = user.uid;
+                    const data = providerDoc.data();
+                    document.getElementById('businessName').textContent = data.businessName || user.email;
+                    loadQueueData();
+                } else {
+                    // Auto-create provider record
+                    await db.collection('providers').doc(user.uid).set({
+                        businessName: 'My Business',
+                        email: user.email,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        isOpen: false,
+                        queue: []
+                    });
+                    currentProviderID = user.uid;
+                    loadQueueData();
+                }
+            } catch (error) {
+                console.error('Error loading provider data:', error);
+            }
+        });
+        
+        function loadQueueData() {
+            if (!currentProviderID) return;
+            
+            db.collection('providers').doc(currentProviderID).onSnapshot((doc) => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    const queue = data.queue || [];
+                    
+                    document.getElementById('queueCount').textContent = queue.length;
+                    document.getElementById('queueStatus').textContent = data.isOpen ? 'Open' : 'Closed';
+                    
+                    const queueHTML = queue.length > 0 
+                        ? queue.map((item, i) => `<div class="queue-item" style="padding: 1rem; border-bottom: 1px solid #e5e7eb;"><span>${i + 1}. ${item.name || 'Customer ' + (i + 1)}</span><span class="small">Wait: ${item.waitTime || 10} min</span></div>`).join('')
+                        : '<div style="padding: 1rem; text-align: center; color: #999;">No customers in queue</div>';
+                    
+                    document.getElementById('queueItems').innerHTML = queueHTML;
+                }
+            });
+        }
+        
+        function logout() {
+            auth.signOut().then(() => {
+                window.location.href = 'index.html';
+            });
+        }
+        
+        document.getElementById('displayQRBtn').addEventListener('click', () => {
+            document.getElementById('qrModal').classList.add('active');
+            // In production, generate a real QR code here
+            const qrcodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${currentProviderID}`;
+            document.getElementById('qrCode').innerHTML = `<img src="${qrcodeUrl}" alt="QR Code" style="width: 300px; height: 300px;">`;
+        });
+        
+        function closeQRModal() {
+            document.getElementById('qrModal').classList.remove('active');
+        }
+    </script>
+</body>
+</html>
