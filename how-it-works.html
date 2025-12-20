@@ -14,7 +14,7 @@
         <a href="nearby.html">Nearby</a>
         <a href="about.html">About</a>
         <a href="how-it-works.html" class="active">How It Works</a>
-        <a href="login.html" class="btn btn-outline">Login</a>
+        <a id="loginLogoutBtn" href="login.html" class="btn btn-outline">Login</a>
       </div>
     </div>
   </nav>
@@ -135,5 +135,29 @@
       </div>
     </div>
   </footer>
+  <script>
+  document.getElementById('mobile-menu-toggle').addEventListener('click', function() {
+    document.querySelector('.nav-links').classList.toggle('active');
+  });
+  const loginLogoutBtn = document.getElementById('loginLogoutBtn');
+  firebase.auth().onAuthStateChanged((user) => {
+    if (user) {
+      loginLogoutBtn.textContent = 'Logout';
+      loginLogoutBtn.className = 'btn btn-primary';
+      loginLogoutBtn.href = '#';
+      loginLogoutBtn.onclick = (e) => {
+        e.preventDefault();
+        firebase.auth().signOut().then(() => {
+          window.location.href = 'index.html';
+        });
+      };
+    } else {
+      loginLogoutBtn.textContent = 'Login';
+      loginLogoutBtn.className = 'btn btn-outline';
+      loginLogoutBtn.href = 'login.html';
+      loginLogoutBtn.onclick = null;
+    }
+  });
+</script>
 </body>
 </html>
