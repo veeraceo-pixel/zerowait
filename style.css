@@ -400,4 +400,6 @@ body {
 .text-white {
   color: var(--white);
 }
+
+.d-inline-block { display: inline-block; }
 .pt-4 { padding-top: 1.5rem; }
