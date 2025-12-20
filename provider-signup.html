@@ -245,16 +245,13 @@ document.getElementById('providerSignupForm').onsubmit = async (e) => {
       .doc(cred.user.uid)
       .set(providerData);
 
-    document.getElementById('successModal').style.display = 'flex';
-
-    setTimeout(() => {
-      window.location.replace('provider-dashboard.html');
-    }, 1500);
 
   } catch (err) {
     alert(err.message);
   }
 };
+    document.getElementById('successModal').style.display = 'flex';
+    setTimeout(() => { window.location.replace('provider-dashboard.html'); }, 1500);
 </script>
 
 <script
