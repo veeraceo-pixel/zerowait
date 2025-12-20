@@ -79,23 +79,7 @@
                     if (params.has('provider')) localStorage.setItem('pendingJoin', params.get('provider'));
                     window.location.href = 'login.html'; return;
                 }
-                currentUserId = user.uid; checkAndJoin();
             });
-        }
-        async function checkAndJoin() {
-            const params = new URLSearchParams(window.location.search);
-            const targetId = params.get('provider') || localStorage.getItem('pendingJoin');
-            localStorage.removeItem('pendingJoin');
-            const snap = await db.collection('queues').where('customerId', '==', currentUserId).where('status', 'in', ['waiting', 'serving']).get();
-            if (!snap.empty) { providerId = snap.docs[0].data().providerId; startListener(snap.docs[0].id); return; }
-            if (targetId) {
-                const userDoc = await db.collection('users').doc(currentUserId).get();
-                const name = (userDoc.exists ? userDoc.data().name : 'Customer') || 'Customer';
-                const newE = await db.collection('queues').add({ customerId: currentUserId, customerName: name, providerId: targetId, status: 'waiting', joinedAt: firebase.firestore.FieldValue.serverTimestamp() });
-                providerId = targetId; startListener(newE.id);
-            } else {
-                document.getElementById('status-msg').innerHTML = '<h2 class="h3 mb-4">No active queue</h2><a href="nearby.html" class="btn btn-primary">Find Services</a>';
-            }
         }
         function startListener(qid) {
             db.collection('providers').doc(providerId).get().then(doc => {
