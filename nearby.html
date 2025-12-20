@@ -123,6 +123,14 @@
                 container.innerHTML = '<div class="text-center py-5"><p class="text-secondary">No services found in this area.</p></div>';
                 return;
             }
+                
+    // Sort results by distance (ascending - closest first)
+    results.sort((a, b) => {
+      const distA = google.maps.geometry.spherical.computeDistanceBetween(new google.maps.LatLng(userLocation.lat, userLocation.lng), a.geometry.location);
+      const distB = google.maps.geometry.spherical.computeDistanceBetween(new google.maps.LatLng(userLocation.lat, userLocation.lng), b.geometry.location);
+      return distA - distB;
+    });
+    
             
             results.slice(0, 15).forEach((place, index) => {
                 new google.maps.Marker({ map, position: place.geometry.location, label: (index + 1).toString() });
