@@ -7,18 +7,19 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-light">
-  <nav class="navbar">
+  <header class="navbar">
     <div class="container nav-content">
       <a href="index.html" class="logo">ZeroWait</a>
-      <div class="nav-links">
+      <button id="mobile-menu-toggle" aria-label="Toggle Menu" style="display: none; background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer;">☰</button>
+      <nav class="nav-links">
         <a href="nearby.html">Nearby</a>
         <a href="about.html">About</a>
         <a href="how-it-works.html" class="active">How It Works</a>
         <a id="loginLogoutBtn" href="login.html" class="btn btn-outline">Login</a>
-      </div>
+        <a href="provider-signup.html" class="btn btn-primary">For Businesses</a>
+      </nav>
     </div>
-  </nav>
-
+  </header>
   <header class="py-6 bg-white border-bottom">
     <div class="container text-center">
       <div class="badge text-primary bg-primary-light mb-3">The ZeroWait Process</div>
@@ -28,7 +29,6 @@
       </p>
     </div>
   </header>
-
   <main class="container py-6">
     <section class="mb-5">
       <div class="row align-items-center mb-5">
@@ -37,7 +37,6 @@
           <p class="text-secondary">Your time is valuable. Don't waste it standing in physical lines.</p>
         </div>
       </div>
-      
       <div class="row">
         <div class="col-md-4 mb-4">
           <div class="card h-100 p-5 text-center">
@@ -62,7 +61,6 @@
         </div>
       </div>
     </section>
-
     <section class="py-6">
       <div class="row align-items-center mb-5">
         <div class="col-md-6">
@@ -70,7 +68,6 @@
           <p class="text-secondary">Streamline your operations and delight your customers with smart queue management.</p>
         </div>
       </div>
-      
       <div class="row">
         <div class="col-md-4 mb-4">
           <div class="card h-100 p-5 text-center">
@@ -95,7 +92,6 @@
         </div>
       </div>
     </section>
-
     <section class="py-6 mt-5">
       <div class="card bg-white p-6 rounded-xl text-center shadow-lg border-primary" style="border-width: 2px;">
         <h2 class="h1 font-weight-extrabold mb-4">Ready to reclaim your time?</h2>
@@ -107,8 +103,7 @@
       </div>
     </section>
   </main>
-
-  <footer class="bg-white border-top py-6 mt-6">
+  <footer>
     <div class="container">
       <div class="row">
         <div class="col-md-4 mb-5">
@@ -122,7 +117,7 @@
             <li class="mb-3"><a href="how-it-works.html" class="text-secondary">How It Works</a></li>
           </ul>
         </div>
-        <div class="col-md-4 mb-5 text-right">
+        <div class="col-md-4 mb-5" style="text-align: right;">
           <h5 class="small font-weight-bold text-uppercase mb-4">Company</h5>
           <ul class="list-unstyled">
             <li class="mb-3"><a href="about.html" class="text-secondary">About Us</a></li>
@@ -135,29 +130,39 @@
       </div>
     </div>
   </footer>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
   <script>
-  document.getElementById('mobile-menu-toggle').addEventListener('click', function() {
-    document.querySelector('.nav-links').classList.toggle('active');
-  });
-  const loginLogoutBtn = document.getElementById('loginLogoutBtn');
-  firebase.auth().onAuthStateChanged((user) => {
-    if (user) {
-      loginLogoutBtn.textContent = 'Logout';
-      loginLogoutBtn.className = 'btn btn-primary';
-      loginLogoutBtn.href = '#';
-      loginLogoutBtn.onclick = (e) => {
-        e.preventDefault();
-        firebase.auth().signOut().then(() => {
-          window.location.href = 'index.html';
-        });
-      };
-    } else {
-      loginLogoutBtn.textContent = 'Login';
-      loginLogoutBtn.className = 'btn btn-outline';
-      loginLogoutBtn.href = 'login.html';
-      loginLogoutBtn.onclick = null;
+    const mobileToggle = document.getElementById('mobile-menu-toggle');
+    const navLinks = document.querySelector('.nav-links');
+    
+    if (mobileToggle) {
+      mobileToggle.addEventListener('click', function() {
+        navLinks.classList.toggle('active');
+      });
     }
-  });
-</script>
+    
+    const loginLogoutBtn = document.getElementById('loginLogoutBtn');
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        loginLogoutBtn.textContent = 'Logout';
+        loginLogoutBtn.className = 'btn btn-primary';
+        loginLogoutBtn.href = '#';
+        loginLogoutBtn.onclick = (e) => {
+          e.preventDefault();
+          firebase.auth().signOut().then(() => {
+            window.location.href = 'index.html';
+          });
+        };
+      } else {
+        loginLogoutBtn.textContent = 'Login';
+        loginLogoutBtn.className = 'btn btn-outline';
+        loginLogoutBtn.href = 'login.html';
+        loginLogoutBtn.onclick = null;
+      }
+    });
+  </script>
 </body>
 </html>
