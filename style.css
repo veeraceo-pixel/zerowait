@@ -348,4 +348,56 @@ body {
 .py-3 { padding: 1rem 0; }
 .py-4 { padding: 1.5rem 0; }
 .border-top { border-top: 1px solid var(--border); }
+
+/* Modal and Button Styles for Dashboard */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 1rem;
+}
+
+.success-modal {
+  background: var(--bg-white);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--border);
+}
+
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+}
+
+.btn-success {
+  background: #10b981;
+  color: var(--white);
+}
+
+.btn-success:hover {
+  background: #059669;
+}
+
+.btn-outline-success {
+  border-color: #d1fae5;
+  color: #059669;
+  background: white;
+}
+
+.btn-outline-success:hover {
+  background: #f0fdf4;
+  border-color: #6ee7b7;
+}
+
+.text-white {
+  color: var(--white);
+}
 .pt-4 { padding-top: 1.5rem; }
