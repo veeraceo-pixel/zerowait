@@ -1,79 +1,112 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Login | ZeroWait</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <title>Login | ZeroWait</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-light">
-    <header class="navbar">
-        <div class="container nav-content">
-            <a href="index.html" class="logo">ZeroWait</a>
-            <button id="mobile-menu-toggle" aria-label="Toggle Menu">☰</button>
-            <nav class="nav-links">
-                <a href="index.html">Home</a>
-                <a href="provider-signup.html">For Businesses</a>
-            </nav>
+  <header class="navbar">
+    <div class="container nav-content">
+      <a href="index.html" class="logo">ZeroWait</a>
+      <button id="mobile-menu-toggle" aria-label="Toggle Menu" style="display: none; background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer;">☰</button>
+      <nav class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="how-it-works.html">How It Works</a>
+        <a href="provider-signup.html" class="btn btn-primary">For Businesses</a>
+      </nav>
+    </div>
+  </header>
+  <main class="py-6">
+    <div class="container">
+      <div class="form-card animate-fade-in">
+        <div class="text-center mb-5">
+          <h1 class="h3 font-weight-extrabold mb-2">Welcome Back</h1>
+          <p class="text-secondary small font-weight-bold">Access your ZeroWait account</p>
         </div>
-    </header>
-
-    <main class="py-6">
-        <div class="container">
-            <div class="form-card animate-fade-in">
-                <div class="text-center mb-5">
-                    <h1 class="h3 font-weight-extrabold mb-2">Welcome Back</h1>
-                    <p class="text-secondary small font-weight-bold">Access your ZeroWait account</p>
-                </div>
-                <form id="loginForm">
-                    <div class="form-group">
-                        <label class="form-label" for="email">Email Address</label>
-                        <input type="email" id="email" class="form-control" required placeholder="name@company.com">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="password">Password</label>
-                        <input type="password" id="password" class="form-control" required placeholder="••••••••">
-                    </div>
-                    <button type="submit" class="btn btn-primary w-100 py-3 mt-2">Sign In</button>
-                </form>
-                <div class="mt-5 pt-4 border-top text-center">
-                    <p class="text-secondary small">New to ZeroWait? <a href="signup.html" class="text-primary font-weight-bold">Create account</a></p>
-                </div>
-            </div>
+        <form id="loginForm">
+          <div class="form-group">
+            <label class="form-label" for="email">Email Address</label>
+            <input type="email" id="email" class="form-control" required placeholder="name@company.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="password">Password</label>
+            <input type="password" id="password" class="form-control" required placeholder="••••••••">
+          </div>
+          <button type="submit" class="btn btn-primary w-100 py-3 mt-2">Sign In</button>
+        </form>
+        <div class="mt-5 pt-4 border-top text-center">
+          <p class="text-secondary small">New to ZeroWait? <a href="signup.html" class="text-primary font-weight-bold">Create account</a></p>
         </div>
-    </main>
-
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <script src="firebase-config.js"></script>
-    <script>
-        document.getElementById('loginForm').onsubmit = async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            try {
-                const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
-                const uid = userCredential.user.uid;
-// Check if user is provider (optional - users can login without being a provider)
-                  try {
-                    const providerDoc = await firebase.firestore().collection('providers').doc(uid).get();
-                    if (providerDoc.exists) {
-                      window.location.href = 'provider-dashboard.html';
-                    } else {
-                      window.location.href = 'nearby.html';
-                    }
-                  } catch (dbError) {
-                    console.log('Provider check failed:', dbError.message);
-                    window.location.href = 'nearby.html';
-                  }
-                  } catch (authError) {
-                    alert('Login failed: ' + authError.message);
-                  }
-        };
-        document.getElementById('mobile-menu-toggle').addEventListener('click', function() {
-            document.querySelector('.nav-links').classList.toggle('active');
-        });
-    </script>
+      </div>
+    </div>
+  </main>
+  <footer>
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4 mb-4">
+          <h4 class="logo mb-3" style="color: white;">ZeroWait</h4>
+          <p class="text-secondary small">Revolutionizing the way you wait. Skip the line, save your time.</p>
+        </div>
+        <div class="col-md-4 mb-4 text-center">
+          <h5 class="small font-weight-bold text-uppercase mb-3">Product</h5>
+          <ul class="list-unstyled small">
+            <li class="mb-2"><a href="nearby.html" class="text-secondary">Nearby Services</a></li>
+            <li class="mb-2"><a href="how-it-works.html" class="text-secondary">How It Works</a></li>
+          </ul>
+        </div>
+        <div class="col-md-4 mb-4" style="text-align: right;">
+          <h5 class="small font-weight-bold text-uppercase mb-3">Contact Us</h5>
+          <p class="text-secondary small mb-2">support@zerowait.app</p>
+          <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+            <a href="#" class="text-secondary small">Twitter</a>
+            <a href="#" class="text-secondary small">LinkedIn</a>
+          </div>
+        </div>
+      </div>
+      <hr class="mt-4 mb-4" style="border-color: rgba(255,255,255,0.1);">
+      <p class="text-center text-secondary small">© 2025 ZeroWait Inc. All rights reserved.</p>
+    </div>
+  </footer>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script>
+    const mobileToggle = document.getElementById('mobile-menu-toggle');
+    const navLinks = document.querySelector('.nav-links');
+    
+    if (mobileToggle) {
+      mobileToggle.addEventListener('click', function() {
+        navLinks.classList.toggle('active');
+      });
+    }
+    
+    document.getElementById('loginForm').onsubmit = async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      try {
+        const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
+        const uid = userCredential.user.uid;
+        // Check if user is provider (optional - users can login without being a provider)
+        try {
+          const providerDoc = await firebase.firestore().collection('providers').doc(uid).get();
+          if (providerDoc.exists) {
+            window.location.href = 'provider-dashboard.html';
+          } else {
+            window.location.href = 'nearby.html';
+          }
+        } catch (dbError) {
+          console.log('Provider check failed:', dbError.message);
+          window.location.href = 'nearby.html';
+        }
+      } catch (authError) {
+        alert('Login failed: ' + authError.message);
+      }
+    };
+  </script>
 </body>
 </html>
