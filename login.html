@@ -108,24 +108,39 @@ document.getElementById('loginForm').onsubmit = async (e) => {
     alert('Login failed: ' + authErr.message);
     return;
   }
-
-  /* 2️⃣ ROLE CHECK — MUST NOT BLOCK LOGIN */
-  try {
-    const snap = await firebase.firestore()
-      .collection('providers')
-      .doc(user.uid)
-      .get();
-
-    if (snap.exists) {
-      window.location.replace('provider-dashboard.html');
-      return;
-    }
-  } catch (err) {
-    console.warn('Firestore unavailable, continuing as customer');
+   /* 2️⃣ ROLE CHECK — MUST NOT BLOCK LOGIN */
+ let userRole = 'customer'; // Default role
+ try {
+  const providerSnap = await firebase.firestore()
+   .collection('providers')
+   .doc(user.uid)
+   .get();
+  
+  if (providerSnap.exists) {
+   userRole = 'provider';
+  } else {
+   const userSnap = await firebase.firestore()
+    .collection('users')
+    .doc(user.uid)
+    .get();
+   
+   if (userSnap.exists) {
+    userRole = 'customer';
+   }
   }
-
-  /* 3️⃣ DEFAULT FALLBACK */
+ } catch (err) {
+  console.warn('Firestore unavailable, defaulting to customer');
+ }
+ 
+ /* 3️⃣ ROUTE BY ROLE */
+ if (userRole === 'provider') {
+  window.location.replace('provider-dashboard.html');
+ } else {
   window.location.replace('nearby.html');
+ }
+};
+
+
 };
 </script>
 
