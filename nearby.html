@@ -6,6 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
     <style>
+        /* Shared Styles */
+        .navbar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); padding: 1rem 0; }
+        .navbar .logo { font-weight: 700; font-size: 1.5rem; color: white; text-decoration: none; }
+        .navbar .nav-links a { color: white; font-weight: 500; text-decoration: none; margin-left: 1.5rem; }
+        .btn-outline { color: white !important; border: 2px solid white !important; padding: 0.5rem 1.25rem; border-radius: 0.5rem; text-decoration: none; }
+        .btn-primary { background: #2563eb; color: white; border: none; padding: 0.5rem 1.25rem; border-radius: 0.5rem; text-decoration: none; }
+
+        /* Page Specific */
         .split-view { display: flex; height: calc(100vh - 74px); }
         #map { flex: 1; min-height: 300px; background: #e5e7eb; }
         .list-panel { width: 450px; background: var(--bg-white); border-left: 1px solid var(--border); overflow-y: auto; padding: 2rem; display: flex; flex-direction: column; }
@@ -31,8 +39,6 @@
             <a href="index.html" class="logo">ZeroWait</a>
             <div class="nav-links">
                 <a href="index.html">Home</a>
-
-                <!-- Fixed auth UI elements -->
                 <span id="userGreeting" style="display:none; color: white; margin-right: 15px;">
                     Welcome, <strong id="userDisplayName"></strong>
                 </span>
@@ -58,28 +64,52 @@
         </div>
     </div>
 
+    <footer style="background: linear-gradient(135deg, #333 0%, #222 100%); color: #fff; padding: 3rem 0 1rem; border-top: 3px solid #667eea;">
+        <div class="container">
+            <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 2rem;">
+                <div style="flex: 1; min-width: 250px;">
+                    <h4 class="logo mb-3" style="color: white; font-size: 1.5rem; font-weight: 700;">ZeroWait</h4>
+                    <p style="color: #aaa; font-size: 0.95rem;">Revolutionizing the way you wait. Skip the line, save your time.</p>
+                </div>
+                <div style="flex: 1; min-width: 200px; text-align: center;">
+                    <h5 style="font-size: 0.875rem; font-weight: 700; text-uppercase; color: #fff; margin-bottom: 1rem;">Product</h5>
+                    <ul style="list-style: none; padding: 0; font-size: 0.95rem;">
+                        <li style="margin-bottom: 0.5rem;"><a href="nearby.html" style="color: #aaa; text-decoration: none;">Nearby Services</a></li>
+                        <li><a href="how-it-works.html" style="color: #aaa; text-decoration: none;">How It Works</a></li>
+                    </ul>
+                </div>
+                <div style="flex: 1; min-width: 250px; text-align: right;">
+                    <h5 style="font-size: 0.875rem; font-weight: 700; text-uppercase; color: #fff; margin-bottom: 1rem;">Contact Us</h5>
+                    <p style="color: #aaa; font-size: 0.95rem; margin-bottom: 0.5rem;">support@zerowait.app</p>
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                        <a href="#" style="color: #aaa; text-decoration: none; font-size: 0.95rem;">Twitter</a>
+                        <a href="#" style="color: #aaa; text-decoration: none; font-size: 0.95rem;">LinkedIn</a>
+                    </div>
+                </div>
+            </div>
+            <hr style="margin: 2rem 0; border: none; border-top: 1px solid rgba(255,255,255,0.1);">
+            <p style="text-align: center; color: #aaa; font-size: 0.95rem;">© 2025 ZeroWait Inc. All rights reserved.</p>
+        </div>
+    </footer>
+
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="firebase-config.js"></script>
-
     <script>
         // --- Service type setup ---
         const params = new URLSearchParams(window.location.search);
         let serviceType = params.get("type") || localStorage.getItem("serviceType") || 'salon';
         localStorage.setItem("serviceType", serviceType);
-
         const SERVICE_MAP = {
-            salon:      { type: "hair_care",  keyword: "salon -wellness -clinic", label: "Salons & Spas" },
-            restaurant: { type: "restaurant", keyword: "dining -hotel",           label: "Restaurants" },
-            clinic:     { type: "hospital",   keyword: "clinic wellness",         label: "Health Clinics" }
+            salon: { type: "hair_care", keyword: "salon -wellness -clinic", label: "Salons near by" },
+            restaurant: { type: "restaurant", keyword: "dining -hotel", label: "Restaurants near by" },
+            clinic: { type: "hospital", keyword: "clinic wellness", label: "Clinics near by" }
         };
-
         const config = SERVICE_MAP[serviceType] || SERVICE_MAP.salon;
         document.getElementById("title").innerText = config.label;
         document.getElementById("categoryBadge").innerText = serviceType.toUpperCase();
-
         let map, placesService, userLocation;
 
         // --- Auth UI handling (run once) ---
@@ -88,9 +118,7 @@
             const logoutBtn = document.getElementById('logoutBtn');
             const userGreeting = document.getElementById('userGreeting');
             const userDisplayName = document.getElementById('userDisplayName');
-
             if (!loginLink || !logoutBtn || !userGreeting || !userDisplayName) return;
-
             if (user) {
                 loginLink.style.display = 'none';
                 logoutBtn.style.display = 'block';
@@ -136,13 +164,11 @@
                     zoomControl: true,
                     styles: [{ "featureType": "poi", "stylers": [{ "visibility": "off" }] }]
                 });
-
                 new google.maps.Marker({
                     map,
                     position: userLocation,
                     icon: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png"
                 });
-
                 placesService = new google.maps.places.PlacesService(map);
                 searchNearby();
             });
@@ -179,13 +205,10 @@
         function renderResults(results, status) {
             const container = document.getElementById("results");
             container.innerHTML = "";
-
             if (status !== google.maps.places.PlacesServiceStatus.OK || !results.length) {
                 container.innerHTML = '<div class="text-center py-5"><p class="text-secondary">No services found in this area.</p></div>';
                 return;
             }
-
-            // Sort by distance using geometry library
             results.sort((a, b) => {
                 const distA = google.maps.geometry.spherical.computeDistanceBetween(
                     new google.maps.LatLng(userLocation.lat, userLocation.lng),
@@ -196,24 +219,13 @@
                     b.geometry.location
                 );
                 return distA - distB;
-            });[web:39]
-
+            });
             results.slice(0, 15).forEach((place, index) => {
-                // Marker
-                new google.maps.Marker({
-                    map,
-                    position: place.geometry.location,
-                    label: (index + 1).toString()
-                });
-
-                const distance = (
-                    google.maps.geometry.spherical.computeDistanceBetween(
-                        new google.maps.LatLng(userLocation.lat, userLocation.lng),
-                        place.geometry.location
-                    ) / 1000
-                ).toFixed(1);
-
-                // Card
+                new google.maps.Marker({ map, position: place.geometry.location, label: (index + 1).toString() });
+                const distance = (google.maps.geometry.spherical.computeDistanceBetween(
+                    new google.maps.LatLng(userLocation.lat, userLocation.lng),
+                    place.geometry.location
+                ) / 1000).toFixed(1);
                 const card = document.createElement('div');
                 card.className = 'place-card shadow-sm animate-fade-in';
                 card.id = `place-card-${index}`;
@@ -229,7 +241,7 @@
                     </div>
                     <div class="d-flex gap-2">
                         <button class="btn btn-primary flex-1" id="btn-${index}"
-                                onclick="goToQueue('${place.place_id}', '${encodeURIComponent(place.name)}')">
+                            onclick="goToQueue('${place.place_id}', '${encodeURIComponent(place.name)}')">
                             Join Queue
                         </button>
                         <span class="badge ${place.opening_hours?.open_now ? 'bg-primary-light text-primary' : 'bg-light text-muted'} d-flex align-items-center">
@@ -238,15 +250,11 @@
                     </div>
                 `;
                 container.appendChild(card);
-
-                // Check if provider is registered
                 checkProviderRegistration(place.place_id).then(isRegistered => {
                     const statusBadge = document.getElementById(`provider-status-${index}`);
                     const joinBtn = document.getElementById(`btn-${index}`);
                     const placeCard = document.getElementById(`place-card-${index}`);
-
                     if (!statusBadge || !joinBtn || !placeCard) return;
-
                     if (isRegistered) {
                         statusBadge.textContent = '✓ Registered - Accurate Waiting Time';
                         statusBadge.className = 'provider-status provider-registered';
@@ -255,7 +263,6 @@
                     } else {
                         statusBadge.textContent = 'ℹ Not Registered - Service Not Available';
                         statusBadge.className = 'provider-status provider-not-registered';
-
                         joinBtn.disabled = true;
                         joinBtn.style.opacity = '0.5';
                         joinBtn.style.cursor = 'not-allowed';
@@ -270,11 +277,10 @@
             window.location.href = `join-queue.html?provider=${id}&name=${name}`;
         }
     </script>
-
     <!-- Google Maps JS with places + geometry, callback to initMap -->
     <script
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAG-Qv4aH4xE2VFAMImB_xwG4J8TmehUMQ&libraries=places,geometry&callback=initMap"
-      async defer>
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAG-Qv4aH4xE2VFAMImB_xwG4J8TmehUMQ&libraries=places,geometry&callback=initMap"
+        async defer>
     </script>
 </body>
 </html>
