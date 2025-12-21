@@ -33,21 +33,14 @@
                 </div>
 
                 <form id="providerSignupForm">
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="form-group">
-                                <label class="form-label">Google Maps Location Link</label>
-                                <input type="url" id="mapsLink" class="form-control" placeholder="Paste your Google Maps location link here" required>
-                                <input type="hidden" id="businessName">
-                            </div>
-                        </div>
+                    <!-- Added Business Name Field -->
+                    <div class="form-group">
+                        <label class="form-label">Business Name</label>
+                        <input type="text" id="businessName" class="form-control" placeholder="Enter your business name" required>
                     </div>
-                                            <div class="form-group">
-                            <label class="form-label">Search Business on Google Maps</label>
-                            <input type="text" id="businessSearch" class="form-control" placeholder="Type your business name" required>
-                            <input type="hidden" id="mapsLink">
-                            <input type="hidden" id="businessName">
-                        </div>    <label class="form-label">Service Type</label>
+
+                    <div class="form-group">
+                        <label class="form-label">Service Type</label>
                         <select id="serviceType" class="form-control" required>
                             <option value="salon">Salon & Spa</option>
                             <option value="restaurant">Restaurant / Cafe</option>
@@ -56,7 +49,8 @@
                         </select>
                     </div>
 
-                    <div class="form-group mt-3">
+                    <!-- Business Address with Google Maps Lookup -->
+                    <div class="form-group">
                         <label class="form-label">Business Address (Search to confirm location)</label>
                         <input type="text" id="addressLookup" class="form-control" placeholder="Search your business address" required>
                         <input type="hidden" id="placeId">
@@ -65,53 +59,46 @@
                         <input type="hidden" id="formattedAddress">
                     </div>
 
-                    <div class="form-group mt-3">
+                    <div class="form-group">
                         <label class="form-label">Work Email</label>
                         <input type="email" id="email" class="form-control" required>
                     </div>
 
-                    <div class="form-group mt-3">
+                    <div class="form-group">
                         <label class="form-label">Password</label>
                         <input type="password" id="password" class="form-control" required>
                     </div>
 
-                    <div class="form-group mt-3">
+                    <div class="form-group">
                         <label class="form-label">Typical Wait Time (Minutes)</label>
                         <input type="number" id="avgWait" class="form-control" required>
                     </div>
 
-                    <button class="btn btn-primary mt-4 w-100" type="submit">Create Business Account</button>
+                    <button type="submit" class="btn btn-primary btn-block">Create Business Account</button>
                 </form>
 
-                <div class="mt-5 pt-4 border-top text-center">
+                <div class="text-center mt-4">
                     <p class="text-secondary small">Already have a business account? <a href="login.html" class="text-primary font-weight-bold">Log in here</a></p>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- SUCCESS MODAL -->
     <div id="successModal" class="modal-overlay">
         <div class="success-modal">
             <div class="success-icon">✓</div>
-            <h2 class="h3 font-weight-bold mb-2">Registration Successful!</h2>
+            <h2 class="h3 mb-2">Registration Successful!</h2>
             <p class="text-secondary mb-4">Your business account has been created.</p>
-            <button onclick="window.location.href='provider-dashboard.html'" class="btn btn-primary w-100">Go to Dashboard</button>
+            <button class="btn btn-primary btn-block" onclick="window.location.replace('provider-dashboard.html')">Go to Dashboard</button>
         </div>
     </div>
 
-    <footer class="bg-white border-top py-6 mt-6">
-        <div class="container text-center">
-            <a href="index.html" class="logo mb-4 d-inline-block">ZeroWait</a>
-            <p class="text-muted small">© 2025 ZeroWait Inc. All rights reserved.</p>
-        </div>
-    </footer>
-
-    <!-- FIREBASE -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <script src="firebase-config.js"></script>
+    <!-- Firebase & Google Maps Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="config.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places"></script>
 
     <script>
         firebase.auth().onAuthStateChanged(async (user) => {
@@ -133,19 +120,19 @@
                 document.getElementById('lat').value = place.geometry.location.lat();
                 document.getElementById('lng').value = place.geometry.location.lng();
                 document.getElementById('formattedAddress').value = place.formatted_address;
-                if (!document.getElementById('businessName').value) {
-                    document.getElementById('businessName').value = place.name;
-                }
             });
         }
+        
+        window.onload = initAutocomplete;
 
         document.getElementById('providerSignupForm').onsubmit = async (e) => {
             e.preventDefault();
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
+            const businessName = document.getElementById('businessName').value;
+
             const providerData = {
-                businessName: document.getElementById('businessName').value || "Business",
-                mapsLink: document.getElementById('mapsLink').value,
+                businessName: businessName,
                 type: document.getElementById('serviceType').value,
                 avgWait: parseInt(document.getElementById('avgWait').value),
                 email,
@@ -167,6 +154,7 @@
 
             try {
                 const cred = await firebase.auth().createUserWithEmailAndPassword(email, password);
+                // Explicitly saving to 'providers' collection for differentiation
                 await firebase.firestore().collection('providers').doc(cred.user.uid).set(providerData);
                 document.getElementById('successModal').style.display = 'flex';
                 setTimeout(() => {
@@ -177,6 +165,5 @@
             }
         };
     </script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAG-Qv4aH4xE2VFAMImB_xwG4J8TmehUMQ&libraries=places&callback=initAutocomplete" async defer></script>
 </body>
 </html>
