@@ -6,19 +6,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
 </head>
-
 <body class="bg-light">
-
 <header class="navbar">
   <div class="container nav-content">
     <a href="index.html" class="logo">ZeroWait</a>
-
-    <button id="mobile-menu-toggle"
-      aria-label="Toggle Menu"
-      style="display:none;background:none;border:none;color:white;font-size:1.5rem;">
-      ☰
-    </button>
-
     <nav class="nav-links">
       <a href="index.html">Home</a>
       <a href="about.html">About</a>
@@ -30,13 +21,10 @@
 
 <main class="py-6">
   <div class="container">
-    <div class="form-card animate-fade-in">
-
+    <div class="form-card animate-fade-in" style="max-width: 450px; margin: 0 auto;">
       <div class="text-center mb-5">
         <h1 class="h3 font-weight-extrabold mb-2">Welcome Back</h1>
-        <p class="text-secondary small font-weight-bold">
-          Access your ZeroWait account
-        </p>
+        <p class="text-secondary small">Enter your credentials to access your account.</p>
       </div>
 
       <form id="loginForm">
@@ -44,35 +32,24 @@
           <label class="form-label">Email Address</label>
           <input type="email" id="email" class="form-control" required>
         </div>
-
         <div class="form-group">
           <label class="form-label">Password</label>
           <input type="password" id="password" class="form-control" required>
         </div>
-
-        <button type="submit" class="btn btn-primary w-100 py-3 mt-2">
-          Sign In
-        </button>
+        <button type="submit" class="btn btn-primary w-100 mt-4">Login</button>
       </form>
 
-      <div class="mt-5 pt-4 border-top text-center">
-        <p class="text-secondary small">
-          New to ZeroWait?
-          <a href="signup.html" class="text-primary font-weight-bold">
-            Create account
-          </a>
-        </p>
+      <div class="mt-4 pt-4 border-top text-center">
+        <p class="text-secondary small">Don't have an account? <a href="signup.html" class="text-primary font-weight-bold">Sign up here</a></p>
       </div>
-
     </div>
   </div>
 </main>
 
-<footer>
-  <div class="container">
-    <p class="text-center text-secondary small">
-      © 2025 ZeroWait Inc. All rights reserved.
-    </p>
+<footer class="bg-white border-top py-6 mt-6">
+  <div class="container text-center">
+    <a href="index.html" class="logo mb-4 d-inline-block">ZeroWait</a>
+    <p class="text-muted small">© 2025 ZeroWait Inc. All rights reserved.</p>
   </div>
 </footer>
 
@@ -83,65 +60,45 @@
 <script src="firebase-config.js"></script>
 
 <script>
-/* Mobile menu */
-const mobileToggle = document.getElementById('mobile-menu-toggle');
-const navLinks = document.querySelector('.nav-links');
-if (mobileToggle) {
-  mobileToggle.onclick = () => navLinks.classList.toggle('active');
-}
+  document.getElementById('loginForm').onsubmit = async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
 
-/* LOGIN (OFFLINE SAFE) */
-document.getElementById('loginForm').onsubmit = async (e) => {
-  e.preventDefault();
+    try {
+      const cred = await firebase.auth().signInWithEmailAndPassword(email, password);
+      const user = cred.user;
 
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
+      // Check if the user is a provider
+      const providerSnap = await firebase.firestore()
+        .collection('providers')
+        .doc(user.uid)
+        .get();
 
-  let user;
+      if (providerSnap.exists) {
+        window.location.href = 'provider-dashboard.html';
+      } else {
+        window.location.href = 'index.html';
+      }
+    } catch (err) {
+      alert('Login failed: ' + err.message);
+    }
+  };
 
-  /* 1️⃣ AUTH FIRST — MUST NOT FAIL */
-  try {
-    const cred = await firebase.auth()
-      .signInWithEmailAndPassword(email, password);
-    user = cred.user;
-  } catch (authErr) {
-    alert('Login failed: ' + authErr.message);
-    return;
-  }
-   /* 2️⃣ ROLE CHECK — MUST NOT BLOCK LOGIN */
- let userRole = 'customer'; // Default role
- try {
-  const providerSnap = await firebase.firestore()
-   .collection('providers')
-   .doc(user.uid)
-   .get();
-  
-  if (providerSnap.exists) {
-   userRole = 'provider';
-  } else {
-   const userSnap = await firebase.firestore()
-    .collection('users')
-    .doc(user.uid)
-    .get();
-   
-   if (userSnap.exists) {
-    userRole = 'customer';
-   }
-  }
- } catch (err) {
-  console.warn('Firestore unavailable, defaulting to customer');
- }
- 
- /* 3️⃣ ROUTE BY ROLE */
- if (userRole === 'provider') {
-  window.location.replace('provider-dashboard.html');
- } else {
-  window.location.replace('nearby.html');
- }
-};
-
-
+  // If already logged in, redirect based on role
+  firebase.auth().onAuthStateChanged(async (user) => {
+    if (user) {
+      const providerSnap = await firebase.firestore()
+        .collection('providers')
+        .doc(user.uid)
+        .get();
+      if (providerSnap.exists) {
+        window.location.replace('provider-dashboard.html');
+      } else {
+        window.location.replace('index.html');
+      }
+    }
+  });
 </script>
-
 </body>
 </html>
