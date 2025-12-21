@@ -13,5 +13,6 @@ const firebaseConfig = {
 // Initialize Firebase
 if (typeof firebase !== 'undefined' && !firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
+    firebase.firestore().settings({ experimentalForceLongPolling: true });
     console.log("Firebase initialized successfully");
 }
