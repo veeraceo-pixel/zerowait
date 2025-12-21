@@ -42,9 +42,12 @@
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="form-group mt-3">
-                        <label class="form-label">Service Type</label>
+                                            <div class="form-group">
+                            <label class="form-label">Search Business on Google Maps</label>
+                            <input type="text" id="businessSearch" class="form-control" placeholder="Type your business name" required>
+                            <input type="hidden" id="mapsLink">
+                            <input type="hidden" id="businessName">
+                        </div>    <label class="form-label">Service Type</label>
                         <select id="serviceType" class="form-control" required>
                             <option value="salon">Salon & Spa</option>
                             <option value="restaurant">Restaurant / Cafe</option>
