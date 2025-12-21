@@ -7,219 +7,120 @@
     <link rel="stylesheet" href="style.css">
     <style>
         .navbar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); padding: 1rem 0; }
-        .navbar .logo { font-weight: 700; font-size: 1.5rem; color: white; }
-        .navbar .nav-links a { color: white; font-weight: 500; }
-        .navbar .nav-links .btn-outline { color: white !important; border: 2px solid white !important; }
-        .navbar .nav-links .btn-outline:hover { background: rgba(255,255,255,0.1) !important; }
-        .navbar .nav-links .btn-primary { background: #2563eb; color: white; border: none; }
-        .navbar .nav-links .btn-danger { background: #dc2626; color: white; border: none; }
-        .navbar .nav-links .btn-danger:hover { background: #b91c1c; }
-        
+        .navbar .logo { font-weight: 700; font-size: 1.5rem; color: white; text-decoration: none; }
+        .navbar .nav-links a { color: white; font-weight: 500; text-decoration: none; margin-left: 1.5rem; }
+        .btn-outline { color: white !important; border: 2px solid white !important; padding: 0.5rem 1.25rem; border-radius: 0.5rem; text-decoration: none; }
+        .btn-primary { background: #2563eb; color: white; border: none; padding: 0.5rem 1.25rem; border-radius: 0.5rem; text-decoration: none; }
         .hero { text-align: center; padding: 4rem 2rem; background: linear-gradient(180deg, rgba(102, 126, 234, 0.1) 0%, transparent 100%); border-radius: 10px; margin: 2rem auto; max-width: 800px; }
         .hero h1 { color: #333; margin-bottom: 1rem; font-size: 3rem; }
         .hero p { color: #666; font-size: 1.2rem; margin-bottom: 2rem; }
-        
-        #queueStatusBanner { background: #fef3c7; border-left: 4px solid #fbbf24; padding: 1.5rem; margin: 1rem auto 2rem; max-width: 1200px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
-        #queueStatusBanner p { margin: 0; color: #78350f; }
-        #queueStatusBanner p:first-child { font-weight: bold; font-size: 1rem; }
-        #queueStatusBanner .wait-time { color: #92400e; margin-top: 0.5rem; }
-        
-        .category-card { text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem 1.5rem; border-radius: 10px; border: none; background: white; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); transition: all 0.3s ease; }
+        .category-card { text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem 1.5rem; border-radius: 10px; border: none; background: white; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); transition: all 0.3s ease; text-decoration: none; color: inherit; }
         .category-card:hover { box-shadow: 0 8px 20px rgba(102, 126, 234, 0.15); transform: translateY(-5px); }
-        .category-card div:first-child { display: flex; align-items: center; justify-content: center; width: 100%; }
-        
-        footer { background: linear-gradient(135deg, #333 0%, #222 100%); color: #fff; padding: 3rem 0 1rem; border-top: 3px solid #667eea; }
-        footer .logo { font-size: 1.5rem; font-weight: 700; color: #667eea; }
-        footer p, footer a { color: #aaa; font-size: 0.95rem; }
-        footer a:hover { color: #667eea; text-decoration: none; }
-        footer hr { border-color: rgba(255, 255, 255, 0.1); }
-        
-        .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
-        h2 { color: #333; font-weight: 700; margin-bottom: 2rem; }
-        
-        @media (max-width: 768px) {
-            .hero { padding: 2rem 1rem; margin: 1rem auto; max-width: 100%; }
-            .hero h1 { font-size: 2rem; }
-            #queueStatusBanner { flex-direction: column; gap: 1rem; }
-            #queueStatusBanner > div:first-child { width: 100%; }
-            .btn-outline-danger { width: 100%; margin-top: 1rem; }
-        }
     </style>
 </head>
-<body>
-    <header class="navbar">
+<body class="bg-light">
+    <nav class="navbar">
         <div class="container nav-content">
             <a href="index.html" class="logo">ZeroWait</a>
-            <nav class="nav-links" id="authLinks">
-                <a href="index.html" class="active">Home</a>
-                <a href="about.html">About</a>
-                <a href="how-it-works.html">How It Works</a>
-      <a id="loginLogoutBtn" href="login.html" class="btn btn-primary">Login</a>                <a href="provider-signup.html" class="btn btn-primary">For Businesses</a>
-            </nav>
-            <button id="mobile-toggle" style="display: none; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: white;">☰</button>
-        </div>
-    </header>
-
-    <main>
-        <div id="queueStatusBanner" style="display: none;">
-            <div>
-                <p>You're in Queue! 📍</p>
-                <p class="wait-time">Estimated wait time: <span id="waitTimeMinutes">--</span> minutes</p>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <span id="userGreeting" style="display:none; color: white; margin-right: 15px;">
+                    Welcome, <strong id="userDisplayName"></strong>
+                </span>
+                <a href="login.html" id="loginLink" class="btn btn-primary">Login</a>
+                <button id="logoutBtn" class="btn btn-primary" style="display:none;" onclick="logoutUser()">Logout</button>
+                <a href="provider-signup.html" class="btn btn-outline" id="businessBtn">For Business</a>
             </div>
-            <button onclick="leaveQueue()" class="btn btn-outline-danger">Leave Queue</button>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div id="queueStatusBanner" style="display:none;">
+            <div>
+                <p>You are currently in a queue!</p>
+                <p id="activeQueueName" class="small"></p>
+            </div>
+            <a href="join-queue.html" class="btn btn-primary btn-sm">View Position</a>
         </div>
 
-        <div id="userWelcomeBanner" style="display:none; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1rem; text-align: center; margin-bottom: 1rem;">
-            <p style="margin: 0; font-size: 1.1rem;">Welcome back, <strong id="userName">User</strong>! 👋</p>
-        </div>
-
-        <section class="hero container">
-            <h1 class="display-4 font-weight-bold">Never Wait Again</h1>
-            <p>Book instantly. Skip the queue. Save your time at your favorite local spots.</p>
-            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-                <a href="#explore" class="btn btn-primary">Get Started</a>
-                <a href="how-it-works.html" class="btn btn-outline">Learn More</a>
+        <section class="hero animate-fade-in">
+            <div class="badge text-primary bg-primary-light mb-3">#1 Virtual Queue App</div>
+            <h1>Skip the line.<br>Save your time.</h1>
+            <p>Join virtual queues for your favorite local services from anywhere. No more physical waiting.</p>
+            <div class="d-flex justify-content-center gap-3">
+                <a href="#categories" class="btn btn-primary btn-lg">Join a Queue</a>
+                <a href="how-it-works.html" class="btn btn-outline btn-lg text-primary" style="border-color: #2563eb !important; color: #2563eb !important;">How it Works</a>
             </div>
         </section>
 
-        <section id="explore" class="container py-5">
-            <h2 class="text-center font-weight-bold mb-5">What are you looking for?</h2>
+        <section id="categories" class="py-5">
+            <h2 class="text-center mb-5 font-weight-extrabold">Select a Service</h2>
             <div class="row">
                 <div class="col-md-4 mb-4">
-                    <div class="card category-card h-100" onclick="goToCategory('salon')">
-                        <div style="font-size: 3rem; margin-bottom: 1rem;">💇</div>
-                        <h3 class="h5 font-weight-bold mb-2">Salons</h3>
-                        <p class="text-secondary small">Haircuts, styling, and beauty treatments.</p>
-                    </div>
+                    <a href="nearby.html?type=salon" class="category-card">
+                        <div class="h1 mb-3">💇‍♂️</div>
+                        <h3>Salons & Spa</h3>
+                        <p class="text-secondary small">Haircuts, massage, beauty</p>
+                    </a>
                 </div>
                 <div class="col-md-4 mb-4">
-                    <div class="card category-card h-100" onclick="goToCategory('restaurant')">
-                        <div style="font-size: 3rem; margin-bottom: 1rem;">🍽️</div>
-                        <h3 class="h5 font-weight-bold mb-2">Restaurants</h3>
-                        <p class="text-secondary small">Table bookings and queue management.</p>
-                    </div>
+                    <a href="nearby.html?type=restaurant" class="category-card">
+                        <div class="h1 mb-3">🍽️</div>
+                        <h3>Restaurants</h3>
+                        <p class="text-secondary small">Dining, cafes, bars</p>
+                    </a>
                 </div>
                 <div class="col-md-4 mb-4">
-                    <div class="card category-card h-100" onclick="goToCategory('clinic')">
-                        <div style="font-size: 3rem; margin-bottom: 1rem;">🏥</div>
-                        <h3 class="h5 font-weight-bold mb-2">Clinics</h3>
-                        <p class="text-secondary small">Medical appointments and checkups.</p>
-                    </div>
+                    <a href="nearby.html?type=clinic" class="category-card">
+                        <div class="h1 mb-3">🏥</div>
+                        <h3>Health Clinics</h3>
+                        <p class="text-secondary small">Doctors, dental, physio</p>
+                    </a>
                 </div>
             </div>
         </section>
     </main>
 
-    <footer>
+    <footer style="background: linear-gradient(135deg, #333 0%, #222 100%); color: #fff; padding: 3rem 0 1rem; border-top: 3px solid #667eea;">
         <div class="container">
-            <div class="row">
-                <div class="col-md-4 mb-4">
-                    <h4 class="logo mb-3" style="color: white;">ZeroWait</h4>
-                    <p class="text-secondary small">Revolutionizing the way you wait. Skip the line, save your time.</p>
-                </div>
-                <div class="col-md-4 mb-4 text-center">
-                    <h5 class="small font-weight-bold text-uppercase mb-3">Product</h5>
-                    <ul class="list-unstyled small">
-                        <li class="mb-2"><a href="nearby.html" class="text-secondary">Nearby Services</a></li>
-                        <li class="mb-2"><a href="how-it-works.html" class="text-secondary">How It Works</a></li>
-                    </ul>
-                </div>
-                <div class="col-md-4 mb-4" style="text-align: right;">
-                    <h5 class="small font-weight-bold text-uppercase mb-3">Contact Us</h5>
-                    <p class="text-secondary small mb-2">support@zerowait.app</p>
-                    <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-                        <a href="#" class="text-secondary small">Twitter</a>
-                        <a href="#" class="text-secondary small">LinkedIn</a>
-                    </div>
-                </div>
+            <div class="text-center mb-4">
+                <h4 class="logo mb-3" style="color: white; font-size: 1.5rem; font-weight: 700;">ZeroWait</h4>
+                <p style="color: #aaa; font-size: 0.95rem;">Revolutionizing the way you wait. Skip the line, save your time.</p>
             </div>
-            <hr class="mt-4 mb-4" style="border-color: rgba(255,255,255,0.1);">
-            <p class="text-center text-secondary small">© 2025 ZeroWait Inc. All rights reserved.</p>
+            <hr style="margin: 2rem 0; border: none; border-top: 1px solid rgba(255,255,255,0.1);">
+            <p style="text-align: center; color: #aaa; font-size: 0.95rem;">© 2025 ZeroWait Inc. All rights reserved.</p>
         </div>
     </footer>
 
+    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="firebase-config.js"></script>
     <script>
-        const mobileToggle = document.getElementById('mobile-toggle');
-        const navLinks = document.querySelector('.nav-links');
-        const loginLogoutBtn = document.getElementById('loginLogoutBtn');
-        
-        if (mobileToggle) {
-            mobileToggle.addEventListener('click', function() {
-                navLinks.classList.toggle('active');
-            });
-        }
-
-        firebase.auth().onAuthStateChanged((user) => {
+        firebase.auth().onAuthStateChanged(user => {
+            const loginLink = document.getElementById('loginLink');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const userGreeting = document.getElementById('userGreeting');
+            const userDisplayName = document.getElementById('userDisplayName');
+            const businessBtn = document.getElementById('businessBtn');
             if (user) {
-                document.getElementById('userWelcomeBanner').style.display = 'block';
-                const displayName = user.displayName || user.email.split('@')[0];
-                document.getElementById('userName').textContent = displayName;
-                
-                loginLogoutBtn.textContent = 'Logout';
-                loginLogoutBtn.className = 'btn btn-primary';
-                loginLogoutBtn.href = '#';
-                loginLogoutBtn.onclick = (e) => {
-                    e.preventDefault();
-                    firebase.auth().signOut().then(() => {
-                        window.location.href = 'index.html';
-                    });
-                };
+                loginLink.style.display = 'none';
+                logoutBtn.style.display = 'block';
+                userGreeting.style.display = 'block';
+                userDisplayName.textContent = user.displayName || user.email;
+                if(businessBtn) businessBtn.style.display = 'none';
             } else {
-                document.getElementById('userWelcomeBanner').style.display = 'none';
-                document.getElementById('queueStatusBanner').style.display = 'none';
-                
-                loginLogoutBtn.textContent = 'Login';
-                loginLogoutBtn.className = 'btn btn-outline';
-                loginLogoutBtn.href = 'login.html';
-                loginLogoutBtn.onclick = null;
+                loginLink.style.display = 'block';
+                logoutBtn.style.display = 'none';
+                userGreeting.style.display = 'none';
+                if(businessBtn) businessBtn.style.display = 'block';
             }
-            checkQueueStatus(user);
         });
-
-        function checkQueueStatus(user) {
-            if (!user) return;
-            
-            firebase.firestore().collection('queues')
-                .where('userId', '==', user.uid)
-                .where('status', '==', 'active')
-                .onSnapshot((snapshot) => {
-                    if (!snapshot.empty) {
-                        const queueData = snapshot.docs[0].data();
-                        displayQueueStatus(queueData);
-                    } else {
-                        document.getElementById('queueStatusBanner').style.display = 'none';
-                    }
-                });
-        }
-
-        function displayQueueStatus(queueData) {
-            document.getElementById('queueStatusBanner').style.display = 'flex';
-            const position = queueData.position || 0;
-            const estimatedWait = Math.max(0, position * 15);
-            document.getElementById('waitTimeMinutes').textContent = estimatedWait;
-        }
-
-        function leaveQueue() {
-            const user = firebase.auth().currentUser;
-            if (!user) return;
-            
-            firebase.firestore().collection('queues')
-                .where('userId', '==', user.uid)
-                .get()
-                .then(snapshot => {
-                    snapshot.docs.forEach(doc => doc.ref.delete());
-                    document.getElementById('queueStatusBanner').style.display = 'none';
-                })
-                .catch(err => console.error('Error leaving queue:', err));
-        }
-
-        function goToCategory(type) {
-            localStorage.setItem('serviceType', type);
-            window.location.href = `nearby.html?type=${encodeURIComponent(type)}`;
+        function logoutUser() {
+            firebase.auth().signOut().then(() => {
+                window.location.reload();
+            });
         }
     </script>
 </body>
