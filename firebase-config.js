@@ -1,8 +1,11 @@
 // Firebase Configuration for ZeroWait
-// Replace the values below with your actual credentials from the Firebase Console
+// IMPORTANT: Replace the values below with your actual credentials from the Firebase Console
+// Go to: https://console.firebase.google.com/ → Select your project → Project Settings → Web App
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAJFGE50Ffn-0hDNJ_rW05oi2d2CHl2fXE",
+  // CRITICAL: Replace with your actual API key from Firebase Console
+  // Without this, you'll get "auth/api-key-not-valid" error
+  apiKey: "YOUR_ACTUAL_API_KEY_FROM_FIREBASE_CONSOLE",
   authDomain: "zerowait-c21fc.firebaseapp.com",
   projectId: "zerowait-c21fc",
   storageBucket: "zerowait-c21fc.firebasestorage.app",
