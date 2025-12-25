@@ -81,8 +81,15 @@
         window.location.href = 'index.html';
       }
     } catch (err) {
-      alert('Login failed: ' + err.message);
+console.error('Login error:', err);
+    let errorMsg = err.message || 'Login failed. Please try again.';
+    
+    // Provide specific guidance for offline errors
+    if (err.code === 'network-error' || err.message.includes('offline')) {
+      errorMsg = 'Network error. Please check your internet connection and ensure Firebase is configured correctly.';
     }
+    
+    alert('Login failed: ' + errorMsg);    }
   };
 
   // If already logged in, redirect based on role
@@ -92,11 +99,15 @@
         .collection('providers')
         .doc(user.uid)
         .get();
-      if (providerSnap.exists) {
-        window.location.replace('provider-dashboard.html');
-      } else {
-        window.location.replace('index.html');
-      }
+          try {
+            if (providerSnap.exists) {
+              window.location.replace('provider-dashboard.html');
+            } else {
+              window.location.replace('index.html');
+            }
+                } catch (err) {
+      console.error('Auth state change error:', err);
+    }
     }
   });
 </script>
