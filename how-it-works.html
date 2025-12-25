@@ -1,113 +1,17 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>How It Works</title>
-
-  <link rel="stylesheet" href="style.css" />
-
-  <!-- FIXES + IMPROVEMENTS -->
-  <style>
-    /* --------------------
-       GLOBAL SPACING FIX
-    ---------------------*/
-    main section {
-      margin-bottom: 5rem;
-    }
-
-    @media (max-width: 768px) {
-      main section {
-        margin-bottom: 3.5rem;
-      }
-    }
-
-    /* --------------------
-       ICON SIZE FIX
-    ---------------------*/
-    .category-icon {
-      font-size: 3rem;
-      margin-bottom: 1.2rem;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    @media (max-width: 768px) {
-      .category-icon {
-        font-size: 2.5rem;
-      }
-    }
-
-    /* --------------------
-       CARD SPACING
-    ---------------------*/
-    .card {
-      border-radius: 14px;
-    }
-
-    .card p {
-      line-height: 1.6;
-    }
-
-    /* --------------------
-       FOOTER FIX (DOTS + ALIGNMENT)
-    ---------------------*/
-    footer {
-      background: linear-gradient(135deg, #0b1220, #111b30);
-      color: #cbd5e1;
-      padding: 4rem 0 2rem;
-    }
-
-    footer ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-
-    footer li {
-      margin-bottom: 0.75rem;
-    }
-
-    footer a {
-      color: #94a3b8;
-      text-decoration: none;
-    }
-
-    footer a:hover {
-      color: #ffffff;
-    }
-
-    footer h5 {
-      color: #ffffff;
-      letter-spacing: 0.05em;
-    }
-
-    footer .border-top {
-      border-color: rgba(255,255,255,0.15) !important;
-    }
-
-    @media (max-width: 768px) {
-      footer .col-md-4 {
-        text-align: center !important;
-      }
-    }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How It Works - </title>
+  <link rel="stylesheet" href="style.css">
 </head>
-
 <body class="bg-light">
-
-  <!-- NAVBAR -->
   <header class="navbar">
     <div class="container nav-content">
       <a href="index.html" class="logo"></a>
-
-      <button id="mobile-menu-toggle"
-        aria-label="Toggle Menu"
-        style="display:none;background:none;border:none;color:white;font-size:1.5rem;">
-        ☰
-      </button>
-
+      <button id="mobile-menu-toggle" aria-label="Toggle Menu" style="display: none; background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer;">☰</button>
       <nav class="nav-links">
         <a href="nearby.html">Nearby</a>
         <a href="about.html">About</a>
@@ -117,161 +21,151 @@
       </nav>
     </div>
   </header>
-
-  <!-- HERO -->
   <header class="py-6 bg-white border-bottom">
     <div class="container text-center">
-      <div class="badge text-primary bg-primary-light mb-3">The Process</div>
+      <div class="badge text-primary bg-primary-light mb-3">The  Process</div>
       <h1 class="font-weight-extrabold h1 mb-3">Wait less. Do more.</h1>
-      <p class="text-secondary mx-auto" style="max-width:600px;">
-        transforms your phone into a ticket for every local queue. Join from your couch,
-        track from the street, and arrive just in time.
+      <p class="text-secondary mx-auto" style="max-width: 600px;">
+         transforms your phone into a ticket for every local queue. Join from your couch, track from the street, and arrive just in time.
       </p>
     </div>
   </header>
-
-  <!-- MAIN -->
   <main class="container py-6">
-
-    <!-- CUSTOMERS -->
-    <section>
-      <div class="row mb-5">
+    <section class="mb-5">
+      <div class="row align-items-center mb-5">
         <div class="col-md-6">
-          <h2 class="h2 font-weight-extrabold mb-3">For Customers</h2>
-          <p class="text-secondary">
-            Your time is valuable. Don't waste it standing in physical lines.
-          </p>
+          <h2 class="font-weight-extrabold h2 mb-3">For Customers</h2>
+          <p class="text-secondary">Your time is valuable. Don't waste it standing in physical lines.</p>
         </div>
       </div>
-
       <div class="row">
         <div class="col-md-4 mb-4">
           <div class="card h-100 p-5 text-center">
             <div class="category-icon">🔍</div>
-            <h3 class="h4 mb-3">Discover</h3>
-            <p class="text-secondary small">
-              Find local businesses on our map or search nearby services.
-            </p>
+            <h3 class="h4 font-weight-bold mb-3">1. Discover</h3>
+            <p class="text-secondary small">Find local businesses on our interactive map or search for specific services near you.</p>
           </div>
         </div>
-
         <div class="col-md-4 mb-4">
           <div class="card h-100 p-5 text-center">
             <div class="category-icon">📱</div>
-            <h3 class="h4 mb-3">Join Queue</h3>
-            <p class="text-secondary small">
-              Join virtually and track your live position.
-            </p>
+            <h3 class="h4 font-weight-bold mb-3">2. Join Queue</h3>
+            <p class="text-secondary small">Select your service and join the virtual line. See your live position and estimated wait time.</p>
           </div>
         </div>
-
         <div class="col-md-4 mb-4">
           <div class="card h-100 p-5 text-center">
             <div class="category-icon">☕</div>
-            <h3 class="h4 mb-3">Arrive In Time</h3>
-            <p class="text-secondary small">
-              Get notified and walk in when it’s your turn.
-            </p>
+            <h3 class="h4 font-weight-bold mb-3">3. Arrive In Time</h3>
+            <p class="text-secondary small">Wait anywhere you like. We'll notify you when you're next in line so you can head over.</p>
           </div>
         </div>
       </div>
     </section>
-
-    <!-- BUSINESSES -->
-    <section>
-      <div class="row mb-5">
+    <section class="py-6">
+      <div class="row align-items-center mb-5">
         <div class="col-md-6">
-          <h2 class="h2 font-weight-extrabold mb-3">For Businesses</h2>
-          <p class="text-secondary">
-            Smart queue management that customers love.
-          </p>
+          <h2 class="font-weight-extrabold h2 mb-3">For Businesses</h2>
+          <p class="text-secondary">Streamline your operations and delight your customers with smart queue management.</p>
         </div>
       </div>
-
       <div class="row">
         <div class="col-md-4 mb-4">
           <div class="card h-100 p-5 text-center">
             <div class="category-icon">🏢</div>
-            <h3 class="h4 mb-3">Set Up Profile</h3>
-            <p class="text-secondary small">
-              Add services and typical wait times.
-            </p>
+            <h3 class="h4 font-weight-bold mb-3">1. Set Up Profile</h3>
+            <p class="text-secondary small">Register your business, add your services, and set typical wait times in minutes.</p>
           </div>
         </div>
-
         <div class="col-md-4 mb-4">
           <div class="card h-100 p-5 text-center">
             <div class="category-icon">📊</div>
-            <h3 class="h4 mb-3">Live Control</h3>
-            <p class="text-secondary small">
-              Manage queues in real time.
-            </p>
+            <h3 class="h4 font-weight-bold mb-3">2. Live Control</h3>
+            <p class="text-secondary small">Manage your queue from any device. See customer names, service types, and wait durations.</p>
           </div>
         </div>
-
         <div class="col-md-4 mb-4">
           <div class="card h-100 p-5 text-center">
             <div class="category-icon">📈</div>
-            <h3 class="h4 mb-3">Growth Insights</h3>
-            <p class="text-secondary small">
-              Optimize staffing and peak hours.
-            </p>
+            <h3 class="h4 font-weight-bold mb-3">3. Growth Insights</h3>
+            <p class="text-secondary small">Optimize your staffing and peak hours with detailed data on customer flow and wait patterns.</p>
           </div>
         </div>
       </div>
     </section>
-
-    <!-- CTA -->
-    <section>
-      <div class="card p-6 text-center shadow-lg border-primary" style="border-width:2px;">
-        <h2 class="h1 mb-4">Ready to reclaim your time?</h2>
-        <p class="text-secondary mb-5 mx-auto" style="max-width:700px;">
-          Free for customers. Powerful for businesses.
-        </p>
-
-        <div style="display:flex;gap:1.5rem;justify-content:center;flex-wrap:wrap;">
-          <a href="index.html#explore" class="btn btn-primary">Find a Service</a>
-          <a href="provider-signup.html" class="btn btn-outline">Register Business</a>
+    <section class="py-6 mt-5">
+      <div class="card bg-white p-6 rounded-xl text-center shadow-lg border-primary" style="border-width: 2px;">
+        <h2 class="h1 font-weight-extrabold mb-4">Ready to reclaim your time?</h2>
+        <p class="mb-5 text-secondary mx-auto" style="max-width: 800px; font-size: 1.1rem;">Join the virtual queue revolution today. It's free for customers and easy for businesses.</p>
+        <div style="display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap;">
+          <a href="index.html#explore" class="btn btn-primary" style="padding: 1rem 2rem;">Find a Service</a>
+          <a href="provider-signup.html" class="btn btn-outline" style="padding: 1rem 2rem;">Register Business</a>
         </div>
       </div>
     </section>
   </main>
-
-  <!-- FOOTER -->
   <footer>
     <div class="container">
       <div class="row">
-        <div class="col-md-4 mb-4">
-          <a href="index.html" class="logo d-block mb-3"></a>
-          <p class="small">
-            The world's leading virtual queue platform.
-          </p>
+        <div class="col-md-4 mb-5">
+          <a href="index.html" class="logo mb-4 d-block"></a>
+          <p class="text-secondary small">The world's leading virtual queue platform. Reclaiming time for everyone.</p>
         </div>
-
-        <div class="col-md-4 mb-4 text-center">
-          <h5 class="mb-3">Product</h5>
-          <ul>
-            <li><a href="nearby.html">Nearby Services</a></li>
-            <li><a href="how-it-works.html">How It Works</a></li>
-            <li><a href="contact.html">Contact Us</a></li>
+        <div class="col-md-4 mb-5 text-center">
+          <h5 class="small font-weight-bold text-uppercase mb-4">Product</h5>
+          <ul class="list-unstyled">
+            <li class="mb-3"><a href="nearby.html" class="text-secondary">Nearby Services</a></li>
+            <li class="mb-3"><a href="how-it-works.html" class="text-secondary">How It Works</a></li>
+                                        <li class="mb-3"><a href="contact.html" class="text-secondary">Contact Us</a></li>
           </ul>
         </div>
-
-        <div class="col-md-4 mb-4 text-right">
-          <h5 class="mb-3">Company</h5>
-          <ul>
-            <li><a href="about.html">About Us</a></li>
-            <li><a href="#">Privacy & Terms</a></li>
-            <li><a href="company-info.html">Company Information</a></li>
+        <div class="col-md-4 mb-5" style="text-align: right;">
+          <h5 class="small font-weight-bold text-uppercase mb-4">Company</h5>
+          <ul class="list-unstyled">
+            <li class="mb-3"><a href="about.html" class="text-secondary">About Us</a></li>
+            <li class="mb-3"><a href="#" class="text-secondary">Privacy & Terms</a></li>
+                                        <li class="mb-3"><a href="company-info.html" class="text-secondary">Company Information</a></li>
           </ul>
         </div>
       </div>
-
-      <div class="border-top pt-4 mt-4">
-        <p class="text-center small">© 2025 Inc. All rights reserved.</p>
+      <div class="border-top pt-4 mt-4" style="border-color: var(--border);">
+        <p class="text-center text-muted small">© 2025  Inc. All rights reserved.</p>
       </div>
     </div>
   </footer>
-
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script>
+    const mobileToggle = document.getElementById('mobile-menu-toggle');
+    const navLinks = document.querySelector('.nav-links');
+    
+    if (mobileToggle) {
+      mobileToggle.addEventListener('click', function() {
+        navLinks.classList.toggle('active');
+      });
+    }
+    
+    const loginLogoutBtn = document.getElementById('loginLogoutBtn');
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        loginLogoutBtn.textContent = 'Logout';
+        loginLogoutBtn.className = 'btn btn-primary';
+        loginLogoutBtn.href = '#';
+        loginLogoutBtn.onclick = (e) => {
+          e.preventDefault();
+          firebase.auth().signOut().then(() => {
+            window.location.href = 'index.html';
+          });
+        };
+      } else {
+        loginLogoutBtn.textContent = 'Login';
+        loginLogoutBtn.className = 'btn btn-outline';
+        loginLogoutBtn.href = 'login.html';
+        loginLogoutBtn.onclick = null;
+      }
+    });
+  </script>
 </body>
-</html>
+</html> this is my how it works html can you adjust the spaces between sections and increase the image sizes in the page and give me final fixed code for this
