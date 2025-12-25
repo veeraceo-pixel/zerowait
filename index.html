@@ -1,130 +1,270 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>skipQs – Skip the Wait</title>
-    <link rel="stylesheet" href="style.css">
-    <style>
-        .navbar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); padding: 1rem 0; }
-        .navbar .logo { font-weight: 700; font-size: 1.5rem; color: white; text-decoration: none; }
-        .navbar .nav-links a { color: white; font-weight: 500; text-decoration: none; margin-left: 1.5rem; }
-        .btn-outline { color: white !important; border: 2px solid white !important; padding: 0.5rem 1.25rem; border-radius: 0.5rem; text-decoration: none; }
-        .btn-primary { background: #2563eb; color: white; border: none; padding: 0.5rem 1.25rem; border-radius: 0.5rem; text-decoration: none; }
-        .hero { text-align: center; padding: 4rem 2rem; background: linear-gradient(180deg, rgba(102, 126, 234, 0.1) 0%, transparent 100%); border-radius: 10px; margin: 2rem auto; max-width: 800px; }
-        .hero h1 { color: #333; margin-bottom: 1rem; font-size: 3rem; }
-        .hero p { color: #666; font-size: 1.2rem; margin-bottom: 2rem; }
-        .category-card { text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem 1.5rem; border-radius: 10px; border: none; background: white; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); transition: all 0.3s ease; text-decoration: none; color: inherit; }
-        .category-card:hover { box-shadow: 0 8px 20px rgba(102, 126, 234, 0.15); transform: translateY(-5px); }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>skipQs - Virtual Queue Management</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Professional Navbar Styling */
+    .navbar {
+      background: #ffffff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      padding: 1rem 0;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .navbar .logo {
+      font-weight: 800;
+      font-size: 1.5rem;
+      color: #2563eb;
+      text-decoration: none;
+      letter-spacing: -0.5px;
+    }
+    .navbar .nav-links a {
+      color: #4b5563;
+      font-weight: 500;
+      text-decoration: none;
+      margin-left: 2rem;
+      transition: color 0.3s;
+      font-size: 0.95rem;
+    }
+    .navbar .nav-links a:hover {
+      color: #2563eb;
+    }
+    .btn-primary {
+      background: #2563eb;
+      color: white !important;
+      border: none;
+      padding: 0.65rem 1.5rem;
+      border-radius: 0.5rem;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.3s;
+    }
+    .btn-primary:hover {
+      background: #1d4ed8;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+    .btn-outline {
+      color: #2563eb !important;
+      border: 1.5px solid #2563eb !important;
+      background: transparent;
+      padding: 0.65rem 1.5rem;
+      border-radius: 0.5rem;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.3s;
+    }
+    .btn-outline:hover {
+      background: #f0f4ff;
+      border-color: #1d4ed8 !important;
+    }
+    /* Hero Section */
+    .hero {
+      text-align: center;
+      padding: 6rem 2rem;
+      background: linear-gradient(135deg, #f0f4ff 0%, #ffffff 100%);
+      border-radius: 12px;
+      margin: 3rem auto;
+      max-width: 900px;
+    }
+    .hero h1 {
+      color: #1a202c;
+      margin-bottom: 1.5rem;
+      font-size: 3.5rem;
+      font-weight: 800;
+      line-height: 1.2;
+      letter-spacing: -1px;
+    }
+    .hero p {
+      color: #64748b;
+      font-size: 1.25rem;
+      margin-bottom: 2.5rem;
+      line-height: 1.6;
+    }
+    .category-card {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2.5rem 2rem;
+      border-radius: 12px;
+      border: 1px solid #e5e7eb;
+      background: white;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      transition: all 0.3s ease;
+      text-decoration: none;
+      color: inherit;
+    }
+    .category-card:hover {
+      box-shadow: 0 12px 24px rgba(37, 99, 235, 0.12);
+      transform: translateY(-6px);
+      border-color: #2563eb;
+    }
+    .category-card h3 {
+      color: #1a202c;
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin: 1rem 0 0.5rem 0;
+    }
+    .category-card p {
+      color: #64748b;
+      font-size: 0.95rem;
+    }
+    /* Queue Banner */
+    #queueStatusBanner {
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      color: white;
+      padding: 1.5rem;
+      border-radius: 10px;
+      margin: 2rem 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    #queueStatusBanner p {
+      margin: 0;
+      font-weight: 500;
+    }
+  </style>
 </head>
 <body class="bg-light">
-    <nav class="navbar">
-        <div class="container nav-content">
-            <a href="index.html" class="logo">skipQs</a>
-            <div class="nav-links">
-                <a href="index.html">Home</a>
-                 <a href="about.html">About Us</a>
-                 <a href="how-it-works.html">How It Works</a>
-                 <a href="signup.html">Sign Up</a>
-                <span id="userGreeting" style="display:none; color: white; margin-right: 15px;">
-                    Welcome, <strong id="userDisplayName"></strong>
-                </span>
-                <a href="login.html" id="loginLink" class="btn btn-primary">Login</a>
-                <button id="logoutBtn" class="btn btn-primary" style="display:none;" onclick="logoutUser()">Logout</button>
-                <a href="provider-signup.html" class="btn btn-outline" id="businessBtn">For Business</a>
-            </div>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="container nav-content">
+      <a href="index.html" class="logo">skipQs</a>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="how-it-works.html">How It Works</a>
+        <a href="signup.html">Sign Up</a>
+        <span id="userGreeting" style="display:none; color: #2563eb; margin-right: 15px; font-weight: 500;">
+          Welcome, <strong id="userDisplayName"></strong>
+        </span>
+        <a href="login.html" id="loginLink" class="btn btn-primary">Login</a>
+        <button id="logoutBtn" class="btn btn-primary" style="display:none; border: none; cursor: pointer;" onclick="logoutUser()">Logout</button>
+        <a href="provider-signup.html" class="btn btn-outline" id="businessBtn">For Business</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="container">
+    <!-- Queue Status Banner -->
+    <div id="queueStatusBanner" style="display:none;">
+      <div>
+        <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">You're in a queue!</p>
+        <p id="activeQueueName" style="opacity: 0.9;"></p>
+      </div>
+      <a href="join-queue.html" class="btn btn-outline" style="border-color: white !important; color: white !important;">View Position</a>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero animate-fade-in">
+      <div class="badge text-primary bg-primary-light mb-3">Trusted by Thousands</div>
+      <h1>Skip the Line.<br>Save Your Time.</h1>
+      <p>Join virtual queues for your favorite local services. No more waiting. More time for what matters.</p>
+      <div class="d-flex justify-content-center gap-3">
+        <a href="#categories" class="btn btn-primary">Browse Services</a>
+        <a href="how-it-works.html" class="btn btn-outline">Learn More</a>
+      </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="categories" class="py-5">
+      <h2 class="text-center mb-5 font-weight-extrabold" style="color: #1a202c; font-size: 2.25rem;">Popular Services</h2>
+      <div class="row">
+        <div class="col-md-4 mb-4">
+          <a href="nearby.html?type=salon" class="category-card">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">💇‍♀️</div>
+            <h3>Salons & Spas</h3>
+            <p>Hair, nails & beauty services</p>
+          </a>
         </div>
-    </nav>
-
-    <main class="container">
-        <div id="queueStatusBanner" style="display:none;">
-            <div>
-                <p>You are currently in a queue!</p>
-                <p id="activeQueueName" class="small"></p>
-            </div>
-            <a href="join-queue.html" class="btn btn-primary btn-sm">View Position</a>
+        <div class="col-md-4 mb-4">
+          <a href="nearby.html?type=restaurant" class="category-card">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">🍽️</div>
+            <h3>Restaurants</h3>
+            <p>Dining & cafe experiences</p>
+          </a>
         </div>
-
-        <section class="hero animate-fade-in">
-            <div class="badge text-primary bg-primary-light mb-3">#1 Virtual Queue App</div>
-            <h1>Skip the line.<br>Save your time.</h1>
-            <p>Join virtual queues for your favorite local services from anywhere. No more physical waiting.</p>
-            <div class="d-flex justify-content-center gap-3">
-                <a href="#categories" class="btn btn-primary btn-lg">Join a Queue</a>
-                <a href="how-it-works.html" class="btn btn-outline btn-lg text-primary" style="border-color: #2563eb !important; color: #2563eb !important;">How it Works</a>
-            </div>
-        </section>
-
-        <section id="categories" class="py-5">
-            <h2 class="text-center mb-5 font-weight-extrabold">Select a Service</h2>
-            <div class="row">
-                <div class="col-md-4 mb-4">
-                    <a href="nearby.html?type=salon" class="category-card">
-                        <div class="h1 mb-3">💇‍♂️</div>
-                        <h3>Salons & Spa</h3>
-                        <p class="text-secondary small">Haircuts, massage, beauty</p>
-                    </a>
-                </div>
-                <div class="col-md-4 mb-4">
-                    <a href="nearby.html?type=restaurant" class="category-card">
-                        <div class="h1 mb-3">🍽️</div>
-                        <h3>Restaurants</h3>
-                        <p class="text-secondary small">Dining, cafes, bars</p>
-                    </a>
-                </div>
-                <div class="col-md-4 mb-4">
-                    <a href="nearby.html?type=clinic" class="category-card">
-                        <div class="h1 mb-3">🏥</div>
-                        <h3>Health Clinics</h3>
-                        <p class="text-secondary small">Doctors, dental, physio</p>
-                    </a>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <footer style="background: linear-gradient(135deg, #333 0%, #222 100%); color: #fff; padding: 3rem 0 1rem; border-top: 3px solid #667eea;">
-        <div class="container">
-            <div class="text-center mb-4">
-                <h4 class="logo mb-3" style="color: white; font-size: 1.5rem; font-weight: 700;">skipQs</h4>
-                <p style="color: #aaa; font-size: 0.95rem;">Revolutionizing the way you wait. Skip the line, save your time.</p>
-            </div>
-            <hr style="margin: 2rem 0; border: none; border-top: 1px solid rgba(255,255,255,0.1);">
-            <p style="text-align: center; color: #aaa; font-size: 0.95rem;">© 2025 skipQs Inc. All rights reserved.</p>
+        <div class="col-md-4 mb-4">
+          <a href="nearby.html?type=clinic" class="category-card">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">⚕️</div>
+            <h3>Health Services</h3>
+            <p>Medical & wellness care</p>
+          </a>
         </div>
-    </footer>
+      </div>
+    </section>
+  </main>
 
-    <!-- Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="firebase-config.js"></script>
-    <script>
-        firebase.auth().onAuthStateChanged(user => {
-            const loginLink = document.getElementById('loginLink');
-            const logoutBtn = document.getElementById('logoutBtn');
-            const userGreeting = document.getElementById('userGreeting');
-            const userDisplayName = document.getElementById('userDisplayName');
-            const businessBtn = document.getElementById('businessBtn');
-            if (user) {
-                loginLink.style.display = 'none';
-                logoutBtn.style.display = 'block';
-                userGreeting.style.display = 'block';
-                userDisplayName.textContent = user.displayName || user.email;
-                if(businessBtn) businessBtn.style.display = 'none';
-            } else {
-                loginLink.style.display = 'block';
-                logoutBtn.style.display = 'none';
-                userGreeting.style.display = 'none';
-                if(businessBtn) businessBtn.style.display = 'block';
-            }
-        });
-        function logoutUser() {
-            firebase.auth().signOut().then(() => {
-                window.location.reload();
-            });
-        }
-    </script>
+  <!-- Footer -->
+  <footer style="background: #ffffff; border-top: 1px solid #e5e7eb; color: #4b5563; padding: 4rem 0 2rem;">
+    <div class="container">
+      <div class="row" style="margin-bottom: 2rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 3rem;">
+        <div>
+          <h4 style="color: #2563eb; font-size: 1.3rem; font-weight: 800; margin-bottom: 1rem;">skipQs</h4>
+          <p style="color: #64748b; font-size: 0.95rem; line-height: 1.6;">Transforming how people wait. Save time, skip lines, live better.</p>
+        </div>
+        <div>
+          <h5 style="font-weight: 700; color: #1a202c; margin-bottom: 1rem; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px;">Product</h5>
+          <ul style="list-style: none; padding: 0;">
+            <li style="margin-bottom: 0.5rem;"><a href="nearby.html" style="color: #64748b; text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#2563eb'" onmouseout="this.style.color='#64748b'">Nearby Services</a></li>
+            <li style="margin-bottom: 0.5rem;"><a href="how-it-works.html" style="color: #64748b; text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#2563eb'" onmouseout="this.style.color='#64748b'">How It Works</a></li>
+            <li><a href="#" style="color: #64748b; text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#2563eb'" onmouseout="this.style.color='#64748b'">Contact Us</a></li>
+          </ul>
+        </div>
+        <div>
+          <h5 style="font-weight: 700; color: #1a202c; margin-bottom: 1rem; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px;">Company</h5>
+          <ul style="list-style: none; padding: 0;">
+            <li style="margin-bottom: 0.5rem;"><a href="about.html" style="color: #64748b; text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#2563eb'" onmouseout="this.style.color='#64748b'">About Us</a></li>
+            <li style="margin-bottom: 0.5rem;"><a href="#" style="color: #64748b; text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#2563eb'" onmouseout="this.style.color='#64748b'">Privacy Policy</a></li>
+            <li><a href="#" style="color: #64748b; text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#2563eb'" onmouseout="this.style.color='#64748b'">Terms of Service</a></li>
+          </ul>
+        </div>
+      </div>
+      <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 2rem 0;">
+      <p style="text-align: center; color: #94a3b8; font-size: 0.9rem;">© 2025 skipQs Inc. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- Firebase Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script>
+    firebase.auth().onAuthStateChanged(user => {
+      const loginLink = document.getElementById('loginLink');
+      const logoutBtn = document.getElementById('logoutBtn');
+      const userGreeting = document.getElementById('userGreeting');
+      const userDisplayName = document.getElementById('userDisplayName');
+      const businessBtn = document.getElementById('businessBtn');
+      
+      if (user) {
+        loginLink.style.display = 'none';
+        logoutBtn.style.display = 'block';
+        userGreeting.style.display = 'block';
+        userDisplayName.textContent = user.displayName || user.email;
+        if(businessBtn) businessBtn.style.display = 'none';
+      } else {
+        loginLink.style.display = 'block';
+        logoutBtn.style.display = 'none';
+        userGreeting.style.display = 'none';
+        if(businessBtn) businessBtn.style.display = 'block';
+      }
+    });
+    
+    function logoutUser() {
+      firebase.auth().signOut().then(() => {
+        window.location.reload();
+      });
+    }
+  </script>
 </body>
 </html>
