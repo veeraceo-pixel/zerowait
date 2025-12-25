@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Business Dashboard | ZeroWait</title>
+    <title>Business Dashboard | </title>
     <link rel="stylesheet" href="style.css">
     <style>
         #dashboardContent { display: block !important; }
@@ -15,7 +15,7 @@
 <body class="bg-light">
     <header class="navbar">
         <div class="container nav-content">
-            <a href="index.html" class="logo">ZeroWait</a>
+            <a href="index.html" class="logo"></a>
             <nav class="nav-links">
                 <span id="businessName" class="font-weight-bold">My Business</span>
                 <button onclick="logout()" class="btn btn-primary">Logout</button>
@@ -134,7 +134,7 @@
         document.getElementById('displayQRBtn').addEventListener('click', () => {
             document.getElementById('qrModal').classList.add('active');
             // In production, generate a real QR code here
-const joinUrl = window.location.origin + '/zerowait/join-queue.html?provider=' + currentProviderID; const qrcodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(joinUrl)}`;            document.getElementById('qrCode').innerHTML = `<img src="${qrcodeUrl}" alt="QR Code" style="width: 300px; height: 300px;">`;
+const joinUrl = window.location.origin + '//join-queue.html?provider=' + currentProviderID; const qrcodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(joinUrl)}`;            document.getElementById('qrCode').innerHTML = `<img src="${qrcodeUrl}" alt="QR Code" style="width: 300px; height: 300px;">`;
         });
         
         function closeQRModal() {
