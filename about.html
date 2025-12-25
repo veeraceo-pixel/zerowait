@@ -2,120 +2,290 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>About Us | </title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About skipQs - Our Story</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    /* Navbar */
+    .navbar {
+      background: #ffffff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      padding: 1rem 0;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .navbar .logo {
+      font-weight: 800;
+      font-size: 1.5rem;
+      color: #2563eb;
+      text-decoration: none;
+    }
+    .navbar .nav-links a {
+      color: #4b5563;
+      font-weight: 500;
+      text-decoration: none;
+      margin-left: 2rem;
+      transition: color 0.3s;
+    }
+    .navbar .nav-links a:hover,
+    .navbar .nav-links a.active {
+      color: #2563eb;
+    }
+    .btn-primary {
+      background: #2563eb;
+      color: white !important;
+      border: none;
+      padding: 0.65rem 1.5rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+    .btn-primary:hover {
+      background: #1d4ed8;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+    .btn-outline {
+      color: #2563eb !important;
+      border: 1.5px solid #2563eb !important;
+      background: transparent;
+      padding: 0.65rem 1.5rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+    .btn-outline:hover {
+      background: #f0f4ff;
+    }
+    /* Hero */
+    .hero-section {
+      background: linear-gradient(135deg, #f0f4ff 0%, #ffffff 100%);
+      padding: 5rem 2rem;
+      text-align: center;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .hero-section h1 {
+      color: #1a202c;
+      font-size: 3rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+      line-height: 1.2;
+    }
+    .hero-section p {
+      color: #64748b;
+      font-size: 1.1rem;
+      margin-bottom: 0;
+      line-height: 1.6;
+    }
+    /* Content Section */
+    .content-section {
+      padding: 4rem 2rem;
+    }
+    .content-section h2 {
+      color: #1a202c;
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: center;
+      margin-bottom: 4rem;
+    }
+    .content-grid:nth-child(even) {
+      direction: rtl;
+    }
+    .content-grid:nth-child(even) > * {
+      direction: ltr;
+    }
+    .content-text h3 {
+      color: #2563eb;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+    .content-text p {
+      color: #64748b;
+      font-size: 1rem;
+      line-height: 1.8;
+      margin-bottom: 1rem;
+    }
+    .content-visual {
+      background: linear-gradient(135deg, #f0f4ff 0%, #e0e7ff 100%);
+      padding: 2rem;
+      border-radius: 12px;
+      text-align: center;
+      font-size: 4rem;
+    }
+    /* Values Grid */
+    .values-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 2rem;
+      margin-top: 3rem;
+    }
+    .value-card {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 2rem;
+      text-align: center;
+      transition: all 0.3s;
+    }
+    .value-card:hover {
+      box-shadow: 0 12px 24px rgba(37, 99, 235, 0.12);
+      border-color: #2563eb;
+    }
+    .value-card .icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+    .value-card h4 {
+      color: #1a202c;
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .value-card p {
+      color: #64748b;
+      font-size: 0.95rem;
+    }
+    /* Footer */
+    footer {
+      background: #ffffff;
+      border-top: 1px solid #e5e7eb;
+      color: #4b5563;
+      padding: 4rem 0 2rem;
+    }
+    @media (max-width: 768px) {
+      .content-grid {
+        grid-template-columns: 1fr;
+      }
+      .content-grid:nth-child(even) {
+        direction: ltr;
+      }
+    }
+  </style>
 </head>
 <body class="bg-light">
-  <header class="navbar">
+  <!-- Navbar -->
+  <nav class="navbar">
     <div class="container nav-content">
-      <a href="index.html" class="logo"></a>
-      <button id="mobile-menu-toggle" aria-label="Toggle Menu" style="display: none; background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer;">☰</button>
-      <nav class="nav-links">
+      <a href="index.html" class="logo">skipQs</a>
+      <div class="nav-links">
         <a href="index.html">Home</a>
         <a href="about.html" class="active">About</a>
         <a href="how-it-works.html">How It Works</a>
-        <a id="loginLogoutBtn" href="login.html" class="btn btn-outline">Login</a>
-        <a href="provider-signup.html" class="btn btn-primary">For Businesses</a>
-      </nav>
+        <a href="signup.html">Sign Up</a>
+        <a href="login.html" id="loginLink" class="btn btn-primary">Login</a>
+        <a href="provider-signup.html" class="btn btn-outline" id="businessBtn">For Business</a>
+      </div>
     </div>
-  </header>
-  <main>
-    <section class="py-6 bg-white border-bottom">
-      <div class="container text-center animate-fade-in">
-        <div class="badge bg-primary-light mb-3">Our Mission</div>
-        <h1 class="h1 mb-4">Revolutionizing the way<br>the world waits.</h1>
-        <p class="text-secondary mx-auto" style="max-width: 700px; font-size: 1.25rem;"> was founded on a simple principle: time is your most valuable asset. We build technology that gives it back to you.</p>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero-section">
+    <div class="container">
+      <h1>About skipQs</h1>
+      <p>Transforming how the world waits. We're on a mission to eliminate wasted time and build better experiences for everyone.</p>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <main class="container">
+    <!-- Mission Section -->
+    <section class="content-section">
+      <h2>Our Mission</h2>
+      <div class="content-grid">
+        <div class="content-text">
+          <h3>Skip the Wait</h3>
+          <p>Physical lines are a relic of the past. In an age of instant communication, there's no reason to stand in a crowded room waiting for a service. skipQs bridges the gap between digital convenience and physical local services.</p>
+          <p>We believe your time is your most valuable asset. Our mission is to give it back to you.</p>
+        </div>
+        <div class="content-visual">⏰</div>
       </div>
     </section>
-    <section class="py-6">
-      <div class="container">
-        <div class="row align-items-center">
-          <div class="col-md-6 mb-5">
-            <h2 class="h2 mb-4">Why ?</h2>
-            <p class="text-secondary mb-4">Physical lines are a relic of the past. In an age of instant communication, there's no reason to stand in a crowded room waiting for a service.  bridges the gap between digital convenience and physical local services.</p>
-            <div class="card p-4 bg-primary text-white border-0">
-              <p class="font-weight-bold mb-0">"Our goal is to eliminate 1 billion hours of waiting time by 2030."</p>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="row">
-              <div class="col-md-6 mb-4">
-                <div class="card p-4 h-100">
-                  <h3 class="h5 mb-2">Efficient</h3>
-                  <p class="small text-secondary mb-0">Optimized algorithms for accurate wait time predictions.</p>
-                </div>
-              </div>
-              <div class="col-md-6 mb-4">
-                <div class="card p-4 h-100">
-                  <h3 class="h5 mb-2">Transparent</h3>
-                  <p class="small text-secondary mb-0">Full visibility into your position and estimated turn.</p>
-                </div>
-              </div>
-            </div>
-          </div>
+
+    <!-- Vision Section -->
+    <section class="content-section">
+      <div class="content-grid">
+        <div class="content-visual">🌍</div>
+        <div class="content-text">
+          <h3>Global Impact</h3>
+          <p>We're building technology that serves everyone - from busy professionals to families looking to reclaim their time.</p>
+          <p><strong>Our Goal:</strong> Eliminate 1 billion hours of wasted waiting time by 2030.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Values Section -->
+    <section class="content-section">
+      <h2>Our Core Values</h2>
+      <div class="values-grid">
+        <div class="value-card">
+          <div class="icon">⚡</div>
+          <h4>Speed</h4>
+          <p>Fast, responsive service that respects your time</p>
+        </div>
+        <div class="value-card">
+          <div class="icon">✨</div>
+          <h4>Simplicity</h4>
+          <p>Easy-to-use technology that works seamlessly</p>
+        </div>
+        <div class="value-card">
+          <div class="icon">🤝</div>
+          <h4>Trust</h4>
+          <p>Transparent, reliable service you can depend on</p>
+        </div>
+        <div class="value-card">
+          <div class="icon">🌟</div>
+          <h4>Excellence</h4>
+          <p>Commitment to delivering the best experience</p>
         </div>
       </div>
     </section>
   </main>
+
+  <!-- Footer -->
   <footer>
     <div class="container">
-      <div class="row">
-        <div class="col-md-4 mb-4">
-          <h4 class="logo mb-3" style="color: white;"></h4>
-          <p class="text-secondary small">Revolutionizing the way you wait. Skip the line, save your time.</p>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 3rem; margin-bottom: 2rem;">
+        <div>
+          <h4 style="color: #2563eb; font-size: 1.3rem; font-weight: 800; margin-bottom: 1rem;">skipQs</h4>
+          <p style="color: #64748b; font-size: 0.95rem;">Transforming how people wait. Save time, skip lines, live better.</p>
         </div>
-        <div class="col-md-4 mb-4 text-center">
-          <h5 class="small font-weight-bold text-uppercase mb-3">Product</h5>
-          <ul class="list-unstyled small">
-            <li class="mb-2"><a href="nearby.html" class="text-secondary">Nearby Services</a></li>
-            <li class="mb-2"><a href="how-it-works.html" class="text-secondary">How It Works</a></li>
+        <div>
+          <h5 style="font-weight: 700; color: #1a202c; margin-bottom: 1rem; text-transform: uppercase; font-size: 0.9rem;">Product</h5>
+          <ul style="list-style: none; padding: 0;">
+            <li style="margin-bottom: 0.5rem;"><a href="how-it-works.html" style="color: #64748b; text-decoration: none;">How It Works</a></li>
+            <li><a href="signup.html" style="color: #64748b; text-decoration: none;">Get Started</a></li>
           </ul>
         </div>
-        <div class="col-md-4 mb-4" style="text-align: right;">
-          <h5 class="small font-weight-bold text-uppercase mb-3">Contact Us</h5>
-          <p class="text-secondary small mb-2">support@.app</p>
-          <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-            <a href="#" class="text-secondary small">Twitter</a>
-            <a href="#" class="text-secondary small">LinkedIn</a>
-          </div>
+        <div>
+          <h5 style="font-weight: 700; color: #1a202c; margin-bottom: 1rem; text-transform: uppercase; font-size: 0.9rem;">Company</h5>
+          <ul style="list-style: none; padding: 0;">
+            <li style="margin-bottom: 0.5rem;"><a href="about.html" style="color: #64748b; text-decoration: none;">About Us</a></li>
+            <li><a href="#" style="color: #64748b; text-decoration: none;">Privacy Policy</a></li>
+          </ul>
         </div>
       </div>
-      <hr class="mt-4 mb-4" style="border-color: rgba(255,255,255,0.1);">
-      <p class="text-center text-secondary small">© 2025  Inc. All rights reserved.</p>
+      <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 2rem 0;">
+      <p style="text-align: center; color: #94a3b8; font-size: 0.9rem;">© 2025 skipQs Inc. All rights reserved.</p>
     </div>
   </footer>
+
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js"></script>
   <script>
-    const mobileToggle = document.getElementById('mobile-menu-toggle');
-    const navLinks = document.querySelector('.nav-links');
-    
-    if (mobileToggle) {
-      mobileToggle.addEventListener('click', function() {
-        navLinks.classList.toggle('active');
-      });
-    }
-    
-    const loginLogoutBtn = document.getElementById('loginLogoutBtn');
-    firebase.auth().onAuthStateChanged((user) => {
+    firebase.auth().onAuthStateChanged(user => {
+      const loginLink = document.getElementById('loginLink');
+      const businessBtn = document.getElementById('businessBtn');
       if (user) {
-        loginLogoutBtn.textContent = 'Logout';
-        loginLogoutBtn.className = 'btn btn-primary';
-        loginLogoutBtn.href = '#';
-        loginLogoutBtn.onclick = (e) => {
-          e.preventDefault();
-          firebase.auth().signOut().then(() => {
-            window.location.href = 'index.html';
-          });
-        };
-      } else {
-        loginLogoutBtn.textContent = 'Login';
-        loginLogoutBtn.className = 'btn btn-outline';
-        loginLogoutBtn.href = 'login.html';
-        loginLogoutBtn.onclick = null;
+        loginLink.style.display = 'none';
+        if(businessBtn) businessBtn.style.display = 'none';
       }
     });
   </script>
