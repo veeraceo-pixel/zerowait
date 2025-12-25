@@ -1,186 +1,149 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-    --primary: #2563eb;
-    --primary-dark: #1e40af;
-    --primary-light: #dbeafe;
-    --primary-soft: #eff6ff;
-    --accent: #f59e0b;
-    --nav-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    --footer-bg: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-    --bg-light: #f8fafc;
-    --bg-white: #ffffff;
-    --text-main: #1e293b;
-    --text-secondary: #64748b;
-    --text-muted: #94a3b8;
-    --white: #ffffff;
-    --border: #e2e8f0;
-    --radius-md: 0.5rem;
-    --radius-lg: 1rem;
+  --primary: #2563eb;
+  --primary-dark: #1e40af;
+  --nav-bg: linear-gradient(135deg, #667eea, #764ba2);
+  --footer-bg: linear-gradient(135deg, #0f172a, #1e293b);
+  --bg-light: #f8fafc;
+  --white: #ffffff;
+  --text-main: #1e293b;
+  --text-muted: #94a3b8;
+  --border: #e2e8f0;
 }
 
-/* ================= RESET ================= */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+/* ================= RESET (BULLET KILL SWITCH) ================= */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Kill ALL markers everywhere */
+ul, ol, li {
+  list-style: none !important;
+}
+
+::marker {
+  content: none !important;
 }
 
 body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    background: var(--bg-light);
-    color: var(--text-main);
-    line-height: 1.6;
+  font-family: 'Inter', sans-serif;
+  background: var(--bg-light);
+  color: var(--text-main);
+  line-height: 1.6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 /* ================= LAYOUT ================= */
 .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
 }
 
-/* Bootstrap-like grid (YOU NEED THIS) */
+main {
+  flex: 1;
+}
+
+/* ================= GRID ================= */
 .row {
-    display: flex;
-    flex-wrap: wrap;
-    margin-left: -1rem;
-    margin-right: -1rem;
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 -1rem;
 }
 
 .col-md-4 {
-    flex: 0 0 33.333%;
-    padding: 0 1rem;
-}
-
-/* ================= TYPOGRAPHY ================= */
-.text-center { text-align: center; }
-.text-right { text-align: right; }
-.text-secondary { color: var(--text-secondary); }
-.text-muted { color: var(--text-muted); }
-.small { font-size: 0.875rem; }
-.font-weight-bold { font-weight: 700; }
-.font-weight-extrabold { font-weight: 800; }
-
-.h1 { font-size: 3rem; margin-bottom: 1rem; }
-.h2 { font-size: 2.25rem; margin-bottom: 1rem; }
-.h4 { font-size: 1.5rem; margin-bottom: 1rem; }
-
-/* ================= SPACING ================= */
-.mb-3 { margin-bottom: 1rem; }
-.mb-4 { margin-bottom: 1.5rem; }
-.mb-5 { margin-bottom: 3rem; }
-.py-6 { padding: 5rem 0; }
-
-/* ================= BUTTONS ================= */
-.btn {
-    padding: 0.75rem 1.5rem;
-    border-radius: var(--radius-md);
-    font-weight: 600;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.btn-primary {
-    background: var(--primary);
-    color: white;
-}
-
-.btn-outline {
-    border: 1px solid var(--border);
-    color: var(--text-main);
-    background: white;
+  flex: 0 0 33.333%;
+  padding: 0 1rem;
 }
 
 /* ================= NAVBAR ================= */
 .navbar {
-    background: var(--nav-bg);
-    padding: 1rem 0;
+  background: var(--nav-bg);
+  padding: 1rem 0;
 }
 
 .nav-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: white;
+  text-decoration: none;
 }
 
 .nav-links {
-    display: flex;
-    gap: 2rem;
+  display: flex;
+  gap: 2rem;
 }
 
 .nav-links a {
-    color: white;
-    text-decoration: none;
-    font-weight: 600;
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
 }
 
 /* ================= CARDS ================= */
 .card {
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 3rem;
-    text-align: center;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 3rem;
+  text-align: center;
 }
 
-/* ================= FOOTER (FIXED) ================= */
+/* ================= FOOTER ================= */
 footer {
-    background: var(--footer-bg);
-    padding: 4rem 0 2rem;
-    margin-top: 6rem;
-    color: var(--text-muted);
-}
-
-/* Remove bullet dots COMPLETELY */
-footer ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-footer li {
-    margin-bottom: 1rem;
-}
-
-footer a {
-    color: var(--text-muted);
-    text-decoration: none;
-}
-
-footer a:hover {
-    color: white;
+  background: var(--footer-bg);
+  color: var(--text-muted);
+  padding: 4rem 0 2rem;
 }
 
 footer h5 {
-    color: white;
-    margin-bottom: 1.5rem;
-    letter-spacing: 0.08em;
+  color: white;
+  margin-bottom: 1.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+footer a {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+footer a:hover {
+  color: white;
+}
+
+footer li {
+  margin-bottom: 1rem;
 }
 
 footer .border-top {
-    border-top: 1px solid rgba(255,255,255,0.1);
-    margin-top: 2rem;
-    padding-top: 1.5rem;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  margin-top: 2rem;
+  padding-top: 1.5rem;
 }
 
 /* ================= MOBILE ================= */
 @media (max-width: 768px) {
-    .col-md-4 {
-        flex: 0 0 100%;
-        text-align: center !important;
-        margin-bottom: 2rem;
-    }
+  .col-md-4 {
+    flex: 0 0 100%;
+    text-align: center;
+    margin-bottom: 2rem;
+  }
 
-    .nav-links {
-        display: none;
-        flex-direction: column;
-    }
-
-    footer {
-        text-align: center;
-    }
+  footer {
+    text-align: center;
+  }
 }
-
