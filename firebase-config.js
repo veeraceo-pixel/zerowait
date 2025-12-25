@@ -1,7 +1,8 @@
 // Firebase Configuration for ZeroWait
 // Replace the values below with your actual credentials from the Firebase Console
+
 const firebaseConfig = {
-  apiKey: "AIzaSyAJFGE5OFfn-OhDNJ_rWO5oi2d2CHl2fXE",
+  apiKey: "AIzaSyAJFGE50Ffn-0hDNJ_rW05oi2d2CHl2fXE",
   authDomain: "zerowait-c21fc.firebaseapp.com",
   projectId: "zerowait-c21fc",
   storageBucket: "zerowait-c21fc.firebasestorage.app",
@@ -10,9 +11,17 @@ const firebaseConfig = {
   measurementId: "G-NL2ZRQ1RKV"
 };
 
-// Initialize Firebase
+// Initialize Firebase using compat SDK (to match login.html)
 if (typeof firebase !== 'undefined' && !firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-    firebase.firestore().settings({ experimentalForceLongPolling: true });
-    console.log("Firebase initialized successfully");
+  firebase.initializeApp(firebaseConfig);
+  // Enable offline persistence
+  firebase.firestore().settings({ cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED });
+  firebase.firestore().enablePersistence().catch((err) => {
+    if (err.code === 'failed-precondition') {
+      console.warn('Multiple tabs open, persistence can only be enabled in one tab at a time.');
+    } else if (err.code === 'unimplemented') {
+      console.warn('Persistence not supported in this browser.');
+    }
+  });
+  console.log("Firebase initialized successfully");
 }
