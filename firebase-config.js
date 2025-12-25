@@ -3,9 +3,7 @@
 // Go to: https://console.firebase.google.com/ → Select your project → Project Settings → Web App
 
 const firebaseConfig = {
-  // CRITICAL: Replace with your actual API key from Firebase Console
-  // Without this, you'll get "auth/api-key-not-valid" error
-  apiKey: "YOUR_ACTUAL_API_KEY_FROM_FIREBASE_CONSOLE",
+  apiKey: "AIzaSyAJFGE5OFfn-OhDNJ_rWO5oi2d2CHl2fXE",
   authDomain: "zerowait-c21fc.firebaseapp.com",
   projectId: "zerowait-c21fc",
   storageBucket: "zerowait-c21fc.firebasestorage.app",
