@@ -1,7 +1,3 @@
-// Firebase Configuration for ZeroWait
-// IMPORTANT: Replace the values below with your actual credentials from the Firebase Console
-// Go to: https://console.firebase.google.com/ → Select your project → Project Settings → Web App
-
 const firebaseConfig = {
   apiKey: "AIzaSyAJFGE5OFfn-OhDNJ_rWO5oi2d2CHl2fXE",
   authDomain: "zerowait-c21fc.firebaseapp.com",
@@ -12,17 +8,17 @@ const firebaseConfig = {
   measurementId: "G-NL2ZRQ1RKV"
 };
 
-// Initialize Firebase using compat SDK (to match login.html)
-if (typeof firebase !== 'undefined' && !firebase.apps.length) {
-  firebase.initializeApp(firebaseConfig);
-  // Enable offline persistence
-  firebase.firestore().settings({ cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED });
-  firebase.firestore().enablePersistence().catch((err) => {
-    if (err.code === 'failed-precondition') {
-      console.warn('Multiple tabs open, persistence can only be enabled in one tab at a time.');
-    } else if (err.code === 'unimplemented') {
-      console.warn('Persistence not supported in this browser.');
-    }
-  });
-  console.log("Firebase initialized successfully");
+// Initialize Firebase only if it hasn't been initialized yet
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+    console.log("Firebase initialized successfully");
+    
+    // Attempt Firestore persistence separately so it doesn't crash the Auth flow
+    firebase.firestore().enablePersistence({ synchronizeTabs: true }).catch((err) => {
+        console.warn("Firestore persistence could not be enabled:", err.code);
+    });
 }
+
+// Export these for use in your other scripts
+const auth = firebase.auth();
+const db = firebase.firestore();
