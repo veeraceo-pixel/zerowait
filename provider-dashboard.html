@@ -8,74 +8,57 @@
     <style>
         :root { --primary: #2563eb; --primary-hover: #1d4ed8; --bg-light: #f8fafc; --border: #e2e8f0; --text-main: #1e293b; }
         body { font-family: 'Inter', sans-serif; background: var(--bg-light); color: var(--text-main); margin: 0; }
-        
-        /* Header & Layout */
         header { background: white; border-bottom: 1px solid var(--border); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
         .container { max-width: 1000px; margin: 2rem auto; padding: 0 1rem; }
-        
-        /* Dashboard Cards */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
         .card { background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); text-align: center; border: 1px solid var(--border); }
         .stat-value { font-size: 3rem; font-weight: 800; color: var(--primary); margin: 0.5rem 0; }
-        
-        /* Buttons */
         .btn { padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; border: none; transition: 0.2s; font-size: 0.95rem; }
         .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: var(--primary-hover); }
-        .btn-outline { background: transparent; border: 1px solid var(--border); color: #64748b; }
-        .btn-outline:hover { background: #f1f5f9; }
-
-        /* Status Badges */
-        .status-badge { display: inline-block; padding: 0.5rem 1.5rem; border-radius: 9999px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem; }
+        .btn-outline { background: white; border: 1px solid var(--border); color: #64748b; }
+        .status-badge { display: inline-block; padding: 0.5rem 1.5rem; border-radius: 9999px; font-weight: 700; margin-bottom: 1rem; }
         .status-open { background: #dcfce7; color: #166534; }
         .status-closed { background: #fee2e2; color: #991b1b; }
-
-        /* QR Modal */
-        .qr-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); display: none; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(4px); }
+        .qr-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); display: none; align-items: center; justify-content: center; z-index: 9999; }
         .qr-overlay.active { display: flex; }
-        .qr-card { background: white; padding: 2.5rem; border-radius: 1.5rem; text-align: center; max-width: 400px; width: 90%; }
-        #qrcode-canvas { margin: 1.5rem auto; border: 10px solid white; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+        .qr-card { background: white; padding: 2rem; border-radius: 1rem; text-align: center; }
     </style>
 </head>
 <body>
 
     <header>
-        <h2 id="businessName" style="margin:0; font-weight: 800; font-size: 1.25rem;">Loading Business...</h2>
-        <button onclick="handleLogout()" class="btn btn-outline">Logout</button>
+        <h2 id="businessName">Loading Business...</h2>
+        <button id="logoutBtn" class="btn btn-outline">Logout</button>
     </header>
 
     <main class="container">
         <div class="stats-grid">
             <div class="card">
                 <div class="stat-value" id="queueCount">0</div>
-                <div style="color: #64748b; font-weight: 600;">People in Queue</div>
+                <div style="color: #64748b;">People in Queue</div>
             </div>
-            
             <div class="card">
-                <div id="statusBadge" class="status-badge status-closed">Closed</div>
-                <br>
-                <button onclick="toggleBusinessStatus()" class="btn btn-outline" id="statusBtn">Switch Status</button>
+                <div id="statusBadge" class="status-badge status-closed">Closed</div><br>
+                <button id="switchBtn" class="btn btn-outline">Switch Status</button>
             </div>
         </div>
 
         <div class="card" style="text-align: left;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                <h3 style="margin:0;">Active Queue</h3>
-                <button onclick="showQR()" class="btn btn-primary">Show Check-in QR</button>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Active Queue</h3>
+                <button id="qrBtn" class="btn btn-primary">Show Check-in QR</button>
             </div>
-            
-            <div id="queueItems" style="color: #94a3b8; text-align: center; padding: 2rem 0;">
+            <div id="queueItems" style="margin-top: 1rem; text-align: center; color: #94a3b8;">
                 No customers in line yet.
             </div>
         </div>
     </main>
 
-    <div id="qrOverlay" class="qr-overlay" onclick="closeQR()">
-        <div class="qr-card" onclick="event.stopPropagation()">
-            <h2 style="margin:0;">Scan to Join</h2>
-            <p style="color: #64748b;">Customers can scan this to join your queue</p>
-            <div id="qrcode-canvas"></div>
-            <button onclick="closeQR()" class="btn btn-outline" style="width: 100%;">Close</button>
+    <div id="qrOverlay" class="qr-overlay">
+        <div class="qr-card">
+            <h3>Customer Check-in</h3>
+            <div id="qrcode-box" style="margin: 1rem auto;"></div>
+            <button onclick="document.getElementById('qrOverlay').classList.remove('active')" class="btn btn-outline">Close</button>
         </div>
     </div>
 
@@ -83,103 +66,62 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="firebase-config.js"></script>
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/easyqrcodejs@4.4.10/dist/easy.qrcode.min.js"></script>
 
     <script>
-        const db = firebase.firestore();
-        let providerId = null;
-        let qrGenerator = null;
+        // 1. LOGOUT (Assigned immediately)
+        document.getElementById('logoutBtn').onclick = () => {
+            firebase.auth().signOut().then(() => window.location.href = 'index.html');
+        };
 
-        // 1. Auth & Data Loading
+        // 2. QR CODE (Assigned immediately)
+        document.getElementById('qrBtn').onclick = () => {
+            const user = firebase.auth().currentUser;
+            if (!user) return alert("Not logged in");
+            
+            const box = document.getElementById('qrcode-box');
+            box.innerHTML = ""; // Clear old
+            
+            const joinUrl = `https://veeraceo-pixel.github.io/zerowait/join-queue.html?id=${user.uid}`;
+            
+            new QRCode(box, {
+                text: joinUrl,
+                width: 200,
+                height: 200
+            });
+            document.getElementById('qrOverlay').classList.add('active');
+        };
+
+        // 3. DATA & STATUS
         firebase.auth().onAuthStateChanged(user => {
             if (!user) {
                 window.location.href = 'login.html';
-            } else {
-                providerId = user.uid;
-                loadDashboardData();
+                return;
             }
-        });
 
-        function loadDashboardData() {
-            db.collection('providers').doc(providerId).onSnapshot(doc => {
+            const docRef = firebase.firestore().collection('providers').doc(user.uid);
+
+            // Listen for data
+            docRef.onSnapshot(doc => {
                 if (doc.exists) {
                     const data = doc.data();
-                    
-                    // Update Business Name
                     document.getElementById('businessName').innerText = data.businessName || "My Business";
                     
-                    // Update Status
                     const badge = document.getElementById('statusBadge');
-                    const isOpen = data.isOpen || false;
-                    badge.innerText = isOpen ? "Open" : "Closed";
-                    badge.className = isOpen ? "status-badge status-open" : "status-badge status-closed";
-
-                    // Update Queue Count
-                    const queue = data.queue || [];
-                    document.getElementById('queueCount').innerText = queue.length;
-
-                    // Update Queue List
-                    const listContainer = document.getElementById('queueItems');
-                    if (queue.length === 0) {
-                        listContainer.innerHTML = 'No customers in line yet.';
-                        listContainer.style.textAlign = 'center';
-                    } else {
-                        listContainer.style.textAlign = 'left';
-                        listContainer.innerHTML = queue.map((person, i) => `
-                            <div style="padding: 1rem; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between;">
-                                <span><strong>${i+1}.</strong> ${person.name}</span>
-                                <span style="color: #64748b;">${person.phone || ''}</span>
-                            </div>
-                        `).join('');
-                    }
+                    badge.innerText = data.isOpen ? "Open" : "Closed";
+                    badge.className = `status-badge ${data.isOpen ? 'status-open' : 'status-closed'}`;
+                    
+                    document.getElementById('queueCount').innerText = (data.queue || []).length;
                 }
             });
-        }
 
-        // 2. Toggle Status Logic
-        async function toggleBusinessStatus() {
-            const docRef = db.collection('providers').doc(providerId);
-            const doc = await docRef.get();
-            const currentStatus = doc.data().isOpen || false;
-            await docRef.update({ isOpen: !currentStatus });
-        }
-
-        // 3. QR Code Logic
-        function showQR() {
-            const overlay = document.getElementById('qrOverlay');
-            const canvas = document.getElementById('qrcode-canvas');
-            
-            // Clear old QR
-            canvas.innerHTML = "";
-            
-            // Generate link for customers (Adjust this URL to your actual GitHub URL)
-            const joinLink = `https://veeraceo-pixel.github.io/zerowait/join-queue.html?id=${providerId}`;
-            
-            new QRCode(canvas, {
-                text: joinLink,
-                width: 250,
-                height: 250,
-                colorDark : "#000000",
-                colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.H
-            });
-
-            overlay.classList.add('active');
-        }
-
-        function closeQR() {
-            document.getElementById('qrOverlay').classList.remove('active');
-        }
-
-        // 4. Logout Logic
-        function handleLogout() {
-            firebase.auth().signOut().then(() => {
-                window.location.href = 'index.html';
-            }).catch(err => {
-                alert("Logout failed: " + err.message);
-            });
-        }
+            // Switch Status Button
+            document.getElementById('switchBtn').onclick = async () => {
+                const doc = await docRef.get();
+                const current = doc.data().isOpen || false;
+                await docRef.update({ isOpen: !current });
+            };
+        });
     </script>
 </body>
 </html>
