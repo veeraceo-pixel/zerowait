@@ -9,43 +9,49 @@
     <style>
         :root { --primary: #2563eb; --primary-hover: #1d4ed8; --bg-light: #f8fafc; --text-main: #1e293b; --text-muted: #64748b; --border: #e2e8f0; }
         body { font-family: 'Inter', sans-serif; background-color: var(--bg-light); color: var(--text-main); margin: 0; line-height: 1.5; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-        .form-card { background: white; padding: 2.5rem; border-radius: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 450px; }
+        .form-card { background: white; padding: 2.5rem; border-radius: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 450px; }
         .header-section { text-align: center; margin-bottom: 2rem; }
         .form-group { margin-bottom: 1.25rem; }
         .form-label { display: block; font-weight: 600; font-size: 0.875rem; margin-bottom: 0.5rem; }
-        .form-control { width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; box-sizing: border-box; font-size: 1rem; }
+        .form-control { width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; box-sizing: border-box; font-size: 1rem; transition: all 0.2s; }
+        .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
         .btn-submit { width: 100%; padding: 1rem; background: var(--primary); color: white; border: none; border-radius: 0.5rem; font-weight: 700; cursor: pointer; margin-top: 1rem; transition: 0.2s; }
         .btn-submit:hover { background: var(--primary-hover); }
-        #successModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); align-items: center; justify-content: center; z-index: 100; }
-        .modal-content { background: white; padding: 2rem; border-radius: 1rem; text-align: center; }
+        .btn-submit:disabled { opacity: 0.7; cursor: not-allowed; }
+
+        /* Success Modal Overlay */
+        #successModal { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(4px); }
+        .modal-content { background: white; padding: 3rem; border-radius: 1.5rem; text-align: center; width: 90%; max-width: 400px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+        .success-icon { width: 64px; height: 64px; background: #dcfce7; color: #166534; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 1.5rem; }
     </style>
 </head>
 <body>
 
     <div class="form-card">
         <div class="header-section">
-            <h1 style="margin:0; font-size: 1.75rem;">Register Business</h1>
-            <p style="color: var(--text-muted);">Join skipQs to manage your lines.</p>
+            <h1 style="margin:0; font-size: 1.75rem; letter-spacing: -0.025em;">Register Business</h1>
+            <p style="color: var(--text-muted); font-size: 0.95rem;">Join skipQs to eliminate physical lines.</p>
         </div>
 
         <form id="providerSignupForm">
             <div class="form-group">
                 <label class="form-label">Business Name</label>
-                <input type="text" id="businessName" class="form-control" placeholder="e.g. Honey2" required>
+                <input type="text" id="businessName" class="form-control" placeholder="e.g. Honey2 Salon" required>
             </div>
 
             <div class="form-group">
                 <label class="form-label">Service Type</label>
                 <select id="serviceType" class="form-control" required>
                     <option value="salon">Salon & Spa</option>
-                    <option value="restaurant">Restaurant</option>
-                    <option value="clinic">Clinic</option>
+                    <option value="restaurant">Restaurant / Cafe</option>
+                    <option value="clinic">Health Clinic</option>
+                    <option value="other">Other Service</option>
                 </select>
             </div>
 
             <div class="form-group">
                 <label class="form-label">Business Address</label>
-                <input type="text" id="address" class="form-control" placeholder="Type your full address" required>
+                <input type="text" id="address" class="form-control" placeholder="Enter your business address" required>
             </div>
 
             <div class="form-group">
@@ -59,8 +65,8 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label">Typical Wait (Mins)</label>
-                <input type="number" id="avgWait" class="form-control" value="15" required>
+                <label class="form-label">Typical Wait Time (Mins)</label>
+                <input type="number" id="avgWait" class="form-control" value="15" required min="1">
             </div>
 
             <button type="submit" id="submitBtn" class="btn-submit">Create Business Account</button>
@@ -69,9 +75,10 @@
 
     <div id="successModal">
         <div class="modal-content">
-            <h2>Success!</h2>
-            <p>Your business has been registered.</p>
-            <button class="btn-submit" onclick="window.location.replace('provider-dashboard.html')">Go to Dashboard</button>
+            <div class="success-icon">✓</div>
+            <h2 style="margin: 0 0 0.5rem 0;">Signup Successful!</h2>
+            <p style="color: var(--text-muted); margin-bottom: 2rem;">Your business account has been created and you can now log in.</p>
+            <button class="btn-submit" onclick="window.location.replace('login.html')">Go to Login</button>
         </div>
     </div>
 
@@ -87,14 +94,15 @@
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
 
+            // Prevent double submission
             submitBtn.disabled = true;
             submitBtn.innerText = "Registering...";
 
             try {
-                // 1. Create Auth Account
+                // 1. Create the Authentication Account
                 const cred = await firebase.auth().createUserWithEmailAndPassword(email, password);
                 
-                // 2. Create Firestore Entry
+                // 2. Save the business data to Firestore
                 await firebase.firestore().collection('providers').doc(cred.user.uid).set({
                     businessName: document.getElementById('businessName').value,
                     type: document.getElementById('serviceType').value,
@@ -109,10 +117,14 @@
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
+                // 3. SUCCESS! Show the modal
                 document.getElementById('successModal').style.display = 'flex';
+
             } catch (err) {
+                // If there's an error, reset the button so user can try again
                 submitBtn.disabled = false;
                 submitBtn.innerText = "Create Business Account";
+                console.error("Signup failed:", err);
                 alert("Error: " + err.message);
             }
         };
