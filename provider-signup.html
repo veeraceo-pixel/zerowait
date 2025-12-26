@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Business Registration - </title>
+    <title>Business Registration | skipQs</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        .pac-container { z-index: 10000 !important; border-radius: var(--radius-md); box-shadow: var(--shadow-lg); border: 1px solid var(--border); font-family: 'Inter', sans-serif; }
+        .pac-container { z-index: 10000 !important; border-radius: 8px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border: 1px solid #e5e7eb; font-family: 'Inter', sans-serif; }
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; }
-        .success-modal { background: white; padding: 3rem; border-radius: var(--radius-lg); max-width: 450px; width: 90%; text-align: center; box-shadow: var(--shadow-xl); }
+        .success-modal { background: white; padding: 3rem; border-radius: 12px; max-width: 450px; width: 90%; text-align: center; box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); }
         .success-icon { width: 64px; height: 64px; background: #f0fdf4; color: #166534; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 1.5rem; }
     </style>
 </head>
 <body class="bg-light">
     <header class="navbar">
         <div class="container nav-content">
-            <a href="index.html" class="logo"></a>
+            <a href="index.html" class="logo">skipQs</a>
             <nav class="nav-links">
                 <a href="index.html">Home</a>
                 <a href="login.html" class="btn btn-primary">Login</a>
@@ -33,7 +33,6 @@
                 </div>
 
                 <form id="providerSignupForm">
-                    <!-- Added Business Name Field -->
                     <div class="form-group">
                         <label class="form-label">Business Name</label>
                         <input type="text" id="businessName" class="form-control" placeholder="Enter your business name" required>
@@ -49,7 +48,6 @@
                         </select>
                     </div>
 
-                    <!-- Business Address with Google Maps Lookup -->
                     <div class="form-group">
                         <label class="form-label">Business Address (Search to confirm location)</label>
                         <input type="text" id="addressLookup" class="form-control" placeholder="Search your business address" required>
@@ -66,15 +64,15 @@
 
                     <div class="form-group">
                         <label class="form-label">Password</label>
-                        <input type="password" id="password" class="form-control" required>
+                        <input type="password" id="password" class="form-control" required minlength="6">
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Typical Wait Time (Minutes)</label>
-                        <input type="number" id="avgWait" class="form-control" required>
+                        <input type="number" id="avgWait" class="form-control" required min="1">
                     </div>
 
-                    <button type="submit" class="btn btn-primary btn-block">Create Business Account</button>
+                    <button type="submit" id="submitBtn" class="btn btn-primary btn-block">Create Business Account</button>
                 </form>
 
                 <div class="text-center mt-4">
@@ -93,53 +91,58 @@
         </div>
     </div>
 
-    <!-- Firebase & Google Maps Scripts -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="firebase-config"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    
+    <script src="firebase-config.js"></script>
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAJFGE5OFfn-OhDNJ_rWO5oi2d2CHl2fXE&libraries=places"></script>
 
     <script>
-        firebase.auth().onAuthStateChanged(async (user) => {
-            if (!user) return;
-            const snap = await firebase.firestore().collection('providers').doc(user.uid).get();
-            if (snap.exists) {
-                window.location.replace('provider-dashboard.html');
-            }
-        });
-
+        // Google Maps Autocomplete Logic
         let autocomplete;
         function initAutocomplete() {
             const input = document.getElementById('addressLookup');
             autocomplete = new google.maps.places.Autocomplete(input);
             autocomplete.addListener("place_changed", () => {
                 const place = autocomplete.getPlace();
-                if (!place.geometry) return;
+                if (!place.geometry) {
+                    alert("Please select an address from the dropdown suggestions.");
+                    return;
+                }
                 document.getElementById('placeId').value = place.place_id;
                 document.getElementById('lat').value = place.geometry.location.lat();
                 document.getElementById('lng').value = place.geometry.location.lng();
                 document.getElementById('formattedAddress').value = place.formatted_address;
             });
         }
-        
         window.onload = initAutocomplete;
 
+        // Signup Logic
         document.getElementById('providerSignupForm').onsubmit = async (e) => {
             e.preventDefault();
+            const submitBtn = document.getElementById('submitBtn');
+            
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const businessName = document.getElementById('businessName').value;
+            const placeId = document.getElementById('placeId').value;
+
+            // Validation: Ensure address was actually selected
+            if (!placeId) {
+                alert('Please search and select an address from the Google suggestions.');
+                return;
+            }
 
             const providerData = {
-                businessName: businessName,
+                businessName: document.getElementById('businessName').value,
                 type: document.getElementById('serviceType').value,
                 avgWait: parseInt(document.getElementById('avgWait').value),
-                email,
+                email: email,
                 role: 'provider',
                 isOpen: true,
                 location: {
-                    placeId: document.getElementById('placeId').value,
+                    placeId: placeId,
                     lat: parseFloat(document.getElementById('lat').value),
                     lng: parseFloat(document.getElementById('lng').value),
                     address: document.getElementById('formattedAddress').value
@@ -147,21 +150,24 @@
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             };
 
-            if (!providerData.location.placeId) {
-                alert('Please search and select your business address to confirm location.');
-                return;
-            }
-
             try {
+                submitBtn.disabled = true;
+                submitBtn.innerText = 'Processing...';
+
+                // 1. Create Auth User
                 const cred = await firebase.auth().createUserWithEmailAndPassword(email, password);
-                // Explicitly saving to 'providers' collection for differentiation
+                
+                // 2. Create entry in 'providers' collection
                 await firebase.firestore().collection('providers').doc(cred.user.uid).set(providerData);
+                
+                // 3. Show Success
                 document.getElementById('successModal').style.display = 'flex';
-                setTimeout(() => {
-                    window.location.replace('provider-dashboard.html');
-                }, 1500);
+                
             } catch (err) {
-                alert(err.message);
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'Create Business Account';
+                console.error("Signup failed:", err);
+                alert("Signup Error: " + err.message);
             }
         };
     </script>
