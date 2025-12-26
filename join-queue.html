@@ -1,96 +1,123 @@
-<script>
-    let db, currentUserId, providerId;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Join Queue | skipQs</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+        .card { background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 90%; max-width: 400px; text-align: center; }
+        input { width: 100%; padding: 0.8rem; margin: 1rem 0; border: 1px solid #e2e8f0; border-radius: 0.5rem; box-sizing: border-box; }
+        .btn { width: 100%; padding: 1rem; background: #2563eb; color: white; border: none; border-radius: 0.5rem; font-weight: 700; cursor: pointer; }
+        .hidden { display: none; }
+        .time-display { font-size: 4rem; font-weight: 800; color: #2563eb; margin: 1rem 0; }
+    </style>
+</head>
+<body>
 
-    async function init() {
-        console.log("Initializing...");
-        db = firebase.firestore();
-        
-        firebase.auth().onAuthStateChanged(async user => {
-            if (!user) {
-                console.log("No user, saving ID and redirecting...");
-                const params = new URLSearchParams(window.location.search);
-                const id = params.get('id');
-                if (id) localStorage.setItem('pendingJoin', id);
-                window.location.href = 'login.html';
-                return;
-            }
+    <div class="card">
+        <div id="joinSection">
+            <h2 id="bizName">Join Queue</h2>
+            <p style="color: #64748b;">Enter your name to join the line.</p>
+            <input type="text" id="custName" placeholder="Your Name" required>
+            <button onclick="joinQueue()" id="joinBtn" class="btn">Join Now</button>
+        </div>
 
-            currentUserId = user.uid;
+        <div id="statusSection" class="hidden">
+            <div style="background: #dcfce7; color: #166534; padding: 0.5rem; border-radius: 2rem; font-size: 0.8rem; font-weight: bold;">YOU ARE IN LINE</div>
+            <div class="time-display" id="waitTimeDisplay">--</div>
+            <p>Minutes Estimated Wait</p>
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 1.5rem 0;">
+            <p>Your Position: <span id="posNumber" style="font-weight: 800; color: #2563eb;">--</span></p>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+
+    <script>
+        const db = firebase.firestore();
+        let providerId = "";
+        let currentUid = "";
+
+        // 1. Setup on Page Load
+        window.onload = () => {
             const params = new URLSearchParams(window.location.search);
-            providerId = params.get('id') || localStorage.getItem('pendingJoin');
-
+            providerId = params.get('id');
+            
             if (!providerId) {
-                document.getElementById('loading-text').innerText = "Error: No Business ID found in URL.";
+                alert("QR Code Error: No Business ID found.");
                 return;
             }
 
-            // SAFETY TIMEOUT: If DB is slow, show the form anyway after 4 seconds
-            setTimeout(() => {
-                if (document.getElementById('nameForm').style.display === 'none' && 
-                    document.getElementById('queueContent').style.display === 'none') {
-                    console.log("Safety timeout triggered.");
-                    showJoinForm();
+            firebase.auth().onAuthStateChanged(user => {
+                if (!user) {
+                    localStorage.setItem('pendingJoin', providerId);
+                    window.location.href = 'login.html';
+                } else {
+                    currentUid = user.uid;
                 }
-            }, 4000);
-
-            checkStatus();
-        });
-    }
-
-    async function checkStatus() {
-        try {
-            // Check if this specific user is ALREADY in a queue
-            const snap = await db.collection('queues')
-                .where('customerId', '==', currentUserId)
-                .where('status', 'in', ['waiting', 'serving'])
-                .get();
-
-            if (!snap.empty) {
-                // If they are already in ANY queue, show that status
-                const entry = snap.docs[0];
-                providerId = entry.data().providerId;
-                startListener(entry.id);
-            } else {
-                showJoinForm();
-            }
-        } catch (err) {
-            console.error("Firebase Error:", err);
-            showJoinForm(); // Show form even if query fails (e.g., missing index)
-        }
-    }
-
-    function showJoinForm() {
-        document.getElementById('status-msg').style.display = 'none';
-        document.getElementById('nameForm').style.display = 'block';
-    }
-
-    async function joinQueueWithName(event) {
-        event.preventDefault();
-        const name = document.getElementById('customerName').value.trim();
-        if(!name) return;
-
-        const btn = event.target.querySelector('button');
-        btn.disabled = true;
-        btn.innerText = "Joining...";
-
-        try {
-            const newEntry = await db.collection('queues').add({
-                customerId: currentUserId,
-                customerName: name,
-                providerId: providerId,
-                status: 'waiting',
-                joinedAt: firebase.firestore.FieldValue.serverTimestamp()
             });
-            
-            localStorage.removeItem('pendingJoin');
-            startListener(newEntry.id);
-        } catch (error) {
-            alert("Join failed: " + error.message);
-            btn.disabled = false;
-            btn.innerText = "Join Queue";
-        }
-    }
+        };
 
-    // ... Keep your startListener and leaveQueue functions ...
-    window.onload = init;
-</script>
+        // 2. Join Action
+        async function joinQueue() {
+            const name = document.getElementById('custName').value;
+            if (!name) return alert("Please enter your name");
+
+            const btn = document.getElementById('joinBtn');
+            btn.disabled = true;
+            btn.innerText = "Processing...";
+
+            try {
+                // Add to 'queues' collection
+                const docRef = await db.collection('queues').add({
+                    customerId: currentUid,
+                    customerName: name,
+                    providerId: providerId,
+                    status: 'waiting',
+                    joinedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                startLiveUpdates(docRef.id);
+            } catch (err) {
+                alert("Error: " + err.message);
+                btn.disabled = false;
+                btn.innerText = "Join Now";
+            }
+        }
+
+        // 3. Live Status Updates
+        function startLiveUpdates(queueId) {
+            document.getElementById('joinSection').classList.add('hidden');
+            document.getElementById('statusSection').classList.remove('hidden');
+
+            // Listen to the specific queue list for this provider
+            db.collection('queues')
+                .where('providerId', '==', providerId)
+                .where('status', 'in', ['waiting', 'serving'])
+                .orderBy('joinedAt', 'asc')
+                .onSnapshot(snap => {
+                    const docs = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                    const myEntry = docs.find(d => d.id === queueId);
+                    
+                    if (!myEntry) {
+                        alert("You have been removed from the queue.");
+                        window.location.reload();
+                        return;
+                    }
+
+                    // Calculate Position (only count those with 'waiting' status)
+                    const waitingOnly = docs.filter(d => d.status === 'waiting');
+                    const myPos = waitingOnly.findIndex(d => d.id === queueId) + 1;
+
+                    document.getElementById('posNumber').innerText = myPos;
+                    document.getElementById('waitTimeDisplay').innerText = myPos * 15; // Assuming 15 mins per person
+                });
+        }
+    </script>
+</body>
+</html>
