@@ -28,7 +28,7 @@
 <body>
 
     <header>
-        <h2 id="businessName">Connecting...</h2>
+        <h2 id="businessName">Loading...</h2>
         <button id="logoutBtn" class="btn btn-outline">Logout</button>
     </header>
 
@@ -50,16 +50,15 @@
                 <button id="qrBtn" class="btn btn-primary">Show QR Code</button>
             </div>
             <div id="queueItems">
-                <p style="color: #94a3b8; padding: 2rem; text-align:center;">Syncing queue...</p>
+                <p style="text-align:center; color:#94a3b8; padding: 2rem;">No customers yet.</p>
             </div>
         </div>
     </main>
 
     <div id="qrOverlay" class="qr-overlay">
         <div class="qr-card">
-            <h3>Customer Check-in QR</h3>
+            <h3>Check-in QR Code</h3>
             <div id="qrcode-box" style="margin: 1.5rem auto;"></div>
-            <br>
             <button onclick="document.getElementById('qrOverlay').classList.remove('active')" class="btn btn-outline">Close</button>
         </div>
     </div>
@@ -73,33 +72,40 @@
     <script>
         const db = firebase.firestore();
 
+        // LOGOUT
         document.getElementById('logoutBtn').onclick = () => {
-            firebase.auth().signOut().then(() => window.location.href = 'login.html');
+            firebase.auth().signOut().then(() => window.location.href = 'index.html');
         };
 
         firebase.auth().onAuthStateChanged(user => {
-            if (!user) { window.location.href = 'login.html'; return; }
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
 
             const docRef = db.collection('providers').doc(user.uid);
 
-            // 1. Get Business Name & Status
+            // 1. GET BUSINESS DATA (NAME & STATUS)
             docRef.onSnapshot(doc => {
                 if (doc.exists) {
                     const data = doc.data();
                     document.getElementById('businessName').innerText = data.businessName || "My Business";
+                    
                     const badge = document.getElementById('statusBadge');
                     badge.innerText = data.isOpen ? "Open" : "Closed";
                     badge.className = `status-badge ${data.isOpen ? 'status-open' : 'status-closed'}`;
                 }
             });
 
-            // 2. Status Switch
+            // 2. SWITCH STATUS
             document.getElementById('switchBtn').onclick = async () => {
                 const doc = await docRef.get();
-                await docRef.update({ isOpen: !doc.data().isOpen });
+                if (doc.exists) {
+                    await docRef.update({ isOpen: !doc.data().isOpen });
+                }
             };
 
-            // 3. QR Generation
+            // 3. QR CODE
             document.getElementById('qrBtn').onclick = () => {
                 const box = document.getElementById('qrcode-box');
                 box.innerHTML = "";
@@ -108,7 +114,7 @@
                 document.getElementById('qrOverlay').classList.add('active');
             };
 
-            // 4. Queue Listener (Manual sorting to avoid Index errors)
+            // 4. LIVE QUEUE LIST
             db.collection('queues')
                 .where('providerId', '==', user.uid)
                 .where('status', '==', 'waiting')
@@ -121,24 +127,21 @@
                         return;
                     }
 
-                    // Sort by time in the browser
-                    const sorted = snap.docs.sort((a,b) => a.data().joinedAt - b.data().joinedAt);
-                    
                     list.innerHTML = "";
-                    sorted.forEach(doc => {
+                    snap.forEach(doc => {
                         const person = doc.data();
                         const div = document.createElement('div');
                         div.className = 'queue-item';
                         div.innerHTML = `
                             <div><b>${person.customerName}</b></div>
-                            <button onclick="serve('${doc.id}')" class="btn btn-outline" style="color:#2563eb; border-color:#2563eb;">Serve Next</button>
+                            <button onclick="serveCustomer('${doc.id}')" class="btn btn-outline" style="color:#2563eb; border-color:#2563eb;">Serve</button>
                         `;
                         list.appendChild(div);
                     });
                 });
         });
 
-        async function serve(id) {
+        async function serveCustomer(id) {
             await db.collection('queues').doc(id).update({ status: 'served' });
         }
     </script>
