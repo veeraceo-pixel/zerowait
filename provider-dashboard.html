@@ -4,66 +4,78 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Business Dashboard | skipQs</title>
-    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #2563eb; --bg-light: #f8fafc; --border: #e2e8f0; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg-light); margin: 0; }
-        .dashboard-container { max-width: 1000px; margin: 2rem auto; padding: 0 1rem; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
-        .stat-card { background: white; padding: 1.5rem; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); text-align: center; }
-        .stat-value { font-size: 2.5rem; font-weight: 800; color: var(--primary); }
-        .queue-box { background: white; border-radius: 1rem; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        .queue-header { padding: 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .queue-item { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; }
+        :root { --primary: #2563eb; --primary-hover: #1d4ed8; --bg-light: #f8fafc; --border: #e2e8f0; --text-main: #1e293b; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-light); color: var(--text-main); margin: 0; }
         
-        /* QR Modal */
-        .qr-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(4px); }
-        .qr-modal.active { display: flex; }
-        .qr-modal-content { background: white; padding: 2rem; border-radius: 1.5rem; text-align: center; max-width: 400px; width: 90%; }
-        #qrImage { width: 250px; height: 250px; margin: 1.5rem auto; border: 1px solid #eee; }
+        /* Header & Layout */
+        header { background: white; border-bottom: 1px solid var(--border); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+        .container { max-width: 1000px; margin: 2rem auto; padding: 0 1rem; }
         
-        .status-badge { padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 600; }
+        /* Dashboard Cards */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .card { background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); text-align: center; border: 1px solid var(--border); }
+        .stat-value { font-size: 3rem; font-weight: 800; color: var(--primary); margin: 0.5rem 0; }
+        
+        /* Buttons */
+        .btn { padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; border: none; transition: 0.2s; font-size: 0.95rem; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: #64748b; }
+        .btn-outline:hover { background: #f1f5f9; }
+
+        /* Status Badges */
+        .status-badge { display: inline-block; padding: 0.5rem 1.5rem; border-radius: 9999px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem; }
         .status-open { background: #dcfce7; color: #166534; }
         .status-closed { background: #fee2e2; color: #991b1b; }
+
+        /* QR Modal */
+        .qr-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); display: none; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(4px); }
+        .qr-overlay.active { display: flex; }
+        .qr-card { background: white; padding: 2.5rem; border-radius: 1.5rem; text-align: center; max-width: 400px; width: 90%; }
+        #qrcode-canvas { margin: 1.5rem auto; border: 10px solid white; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
-    <header style="background: white; border-bottom: 1px solid var(--border); padding: 1rem 0;">
-        <div class="dashboard-container" style="display: flex; justify-content: space-between; align-items: center; margin: 0 auto;">
-            <h2 id="displayBusinessName">Loading Business...</h2>
-            <button onclick="logout()" class="btn-submit" style="width: auto; padding: 0.5rem 1rem; margin: 0;">Logout</button>
-        </div>
+
+    <header>
+        <h2 id="businessName" style="margin:0; font-weight: 800; font-size: 1.25rem;">Loading Business...</h2>
+        <button onclick="handleLogout()" class="btn btn-outline">Logout</button>
     </header>
 
-    <main class="dashboard-container">
+    <main class="container">
         <div class="stats-grid">
-            <div class="stat-card">
+            <div class="card">
                 <div class="stat-value" id="queueCount">0</div>
-                <div style="color: #64748b;">People Waiting</div>
+                <div style="color: #64748b; font-weight: 600;">People in Queue</div>
             </div>
-            <div class="stat-card">
+            
+            <div class="card">
                 <div id="statusBadge" class="status-badge status-closed">Closed</div>
-                <button id="toggleStatusBtn" class="btn-submit" style="font-size: 0.8rem; padding: 0.4rem; margin-top: 0.5rem;">Switch Status</button>
+                <br>
+                <button onclick="toggleBusinessStatus()" class="btn btn-outline" id="statusBtn">Switch Status</button>
             </div>
         </div>
 
-        <div class="queue-box">
-            <div class="queue-header">
-                <h3 style="margin:0;">Current Queue</h3>
-                <button id="displayQRBtn" class="btn-submit" style="width: auto; margin:0; font-size: 0.9rem;">Show QR Code</button>
+        <div class="card" style="text-align: left;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h3 style="margin:0;">Active Queue</h3>
+                <button onclick="showQR()" class="btn btn-primary">Show Check-in QR</button>
             </div>
-            <div id="queueItems">
-                <div style="padding: 2rem; text-align: center; color: #94a3b8;">No customers in line yet.</div>
+            
+            <div id="queueItems" style="color: #94a3b8; text-align: center; padding: 2rem 0;">
+                No customers in line yet.
             </div>
         </div>
     </main>
 
-    <div id="qrModal" class="qr-modal">
-        <div class="qr-modal-content">
-            <h3>Customer Check-in</h3>
-            <p style="font-size: 0.9rem; color: #64748b;">Customers scan this to join the line</p>
-            <div id="qrImage"></div>
-            <button onclick="closeQRModal()" class="btn-submit" style="background: #64748b;">Close</button>
+    <div id="qrOverlay" class="qr-overlay" onclick="closeQR()">
+        <div class="qr-card" onclick="event.stopPropagation()">
+            <h2 style="margin:0;">Scan to Join</h2>
+            <p style="color: #64748b;">Customers can scan this to join your queue</p>
+            <div id="qrcode-canvas"></div>
+            <button onclick="closeQR()" class="btn btn-outline" style="width: 100%;">Close</button>
         </div>
     </div>
 
@@ -71,43 +83,53 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="firebase-config.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <script>
         const db = firebase.firestore();
-        let currentProviderId = null;
+        let providerId = null;
+        let qrGenerator = null;
 
+        // 1. Auth & Data Loading
         firebase.auth().onAuthStateChanged(user => {
-            if (!user) { window.location.href = 'login.html'; }
-            else {
-                currentProviderId = user.uid;
-                initDashboard();
+            if (!user) {
+                window.location.href = 'login.html';
+            } else {
+                providerId = user.uid;
+                loadDashboardData();
             }
         });
 
-        function initDashboard() {
-            // Real-time listener for business data
-            db.collection('providers').doc(currentProviderId).onSnapshot(doc => {
+        function loadDashboardData() {
+            db.collection('providers').doc(providerId).onSnapshot(doc => {
                 if (doc.exists) {
                     const data = doc.data();
-                    document.getElementById('displayBusinessName').innerText = data.businessName;
+                    
+                    // Update Business Name
+                    document.getElementById('businessName').innerText = data.businessName || "My Business";
                     
                     // Update Status
                     const badge = document.getElementById('statusBadge');
-                    badge.innerText = data.isOpen ? "Open" : "Closed";
-                    badge.className = data.isOpen ? "status-badge status-open" : "status-badge status-closed";
+                    const isOpen = data.isOpen || false;
+                    badge.innerText = isOpen ? "Open" : "Closed";
+                    badge.className = isOpen ? "status-badge status-open" : "status-badge status-closed";
 
-                    // Update Queue
+                    // Update Queue Count
                     const queue = data.queue || [];
                     document.getElementById('queueCount').innerText = queue.length;
-                    
-                    const container = document.getElementById('queueItems');
+
+                    // Update Queue List
+                    const listContainer = document.getElementById('queueItems');
                     if (queue.length === 0) {
-                        container.innerHTML = '<div style="padding: 2rem; text-align: center; color: #94a3b8;">No customers in line yet.</div>';
+                        listContainer.innerHTML = 'No customers in line yet.';
+                        listContainer.style.textAlign = 'center';
                     } else {
-                        container.innerHTML = queue.map((person, index) => `
-                            <div class="queue-item">
-                                <strong>${index + 1}. ${person.name}</strong>
-                                <span style="color: var(--primary); font-weight: bold;">${person.phone || ''}</span>
+                        listContainer.style.textAlign = 'left';
+                        listContainer.innerHTML = queue.map((person, i) => `
+                            <div style="padding: 1rem; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between;">
+                                <span><strong>${i+1}.</strong> ${person.name}</span>
+                                <span style="color: #64748b;">${person.phone || ''}</span>
                             </div>
                         `).join('');
                     }
@@ -115,28 +137,49 @@
             });
         }
 
-        // Toggle Open/Closed
-        document.getElementById('toggleStatusBtn').onclick = async () => {
-            const docRef = db.collection('providers').doc(currentProviderId);
+        // 2. Toggle Status Logic
+        async function toggleBusinessStatus() {
+            const docRef = db.collection('providers').doc(providerId);
             const doc = await docRef.get();
-            await docRef.update({ isOpen: !doc.data().isOpen });
-        };
+            const currentStatus = doc.data().isOpen || false;
+            await docRef.update({ isOpen: !currentStatus });
+        }
 
-        // QR Code Generation
-        document.getElementById('displayQRBtn').onclick = () => {
-            const modal = document.getElementById('qrModal');
-            const qrContainer = document.getElementById('qrImage');
+        // 3. QR Code Logic
+        function showQR() {
+            const overlay = document.getElementById('qrOverlay');
+            const canvas = document.getElementById('qrcode-canvas');
             
-            // This URL is what the customer scans
-            const joinUrl = `https://veeraceo-pixel.github.io/zerowait/join-queue.html?id=${currentProviderId}`;
-            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(joinUrl)}`;
+            // Clear old QR
+            canvas.innerHTML = "";
             
-            qrContainer.innerHTML = `<img src="${qrUrl}" style="width:100%">`;
-            modal.classList.add('active');
-        };
+            // Generate link for customers (Adjust this URL to your actual GitHub URL)
+            const joinLink = `https://veeraceo-pixel.github.io/zerowait/join-queue.html?id=${providerId}`;
+            
+            new QRCode(canvas, {
+                text: joinLink,
+                width: 250,
+                height: 250,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
 
-        function closeQRModal() { document.getElementById('qrModal').classList.remove('active'); }
-        function logout() { firebase.auth().signOut().then(() => window.location.href = 'index.html'); }
+            overlay.classList.add('active');
+        }
+
+        function closeQR() {
+            document.getElementById('qrOverlay').classList.remove('active');
+        }
+
+        // 4. Logout Logic
+        function handleLogout() {
+            firebase.auth().signOut().then(() => {
+                window.location.href = 'index.html';
+            }).catch(err => {
+                alert("Logout failed: " + err.message);
+            });
+        }
     </script>
 </body>
 </html>
