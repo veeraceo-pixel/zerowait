@@ -3,39 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Join Queue | skipQs</title>
+    <title>Join the Line | skipQs</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root { --primary: #2563eb; --bg: #f8fafc; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; }
         .card { background: white; padding: 2.5rem; border-radius: 1.5rem; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 400px; text-align: center; }
-        .wait-preview { background: #eff6ff; padding: 1rem; border-radius: 1rem; margin-bottom: 1.5rem; }
-        .stat { font-size: 1.5rem; font-weight: 800; color: var(--primary); }
+        .wait-preview { background: #eff6ff; padding: 1rem; border-radius: 1rem; margin-bottom: 1.5rem; display: flex; justify-content: space-around; }
+        .stat { display: block; font-size: 1.2rem; font-weight: 800; color: var(--primary); }
+        .label { font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 600; }
         input { width: 100%; padding: 0.8rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 1rem; box-sizing: border-box; margin-top: 1rem; }
-        .btn { width: 100%; padding: 1rem; background: var(--primary); color: white; border: none; border-radius: 0.5rem; font-weight: 700; cursor: pointer; margin-top: 1rem; }
+        .btn { width: 100%; padding: 1rem; background: var(--primary); color: white; border: none; border-radius: 0.5rem; font-weight: 700; cursor: pointer; margin-top: 1rem; transition: 0.2s; }
+        .btn:disabled { background: #94a3b8; }
         .hidden { display: none; }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <h1 id="bizName">Loading Business...</h1>
+        <h2 id="bizName" style="margin-top:0;">Loading...</h2>
         
-        <div id="infoSection">
+        <div id="joinSection">
             <div class="wait-preview">
-                <div>People Ahead: <span class="stat" id="aheadCount">0</span></div>
-                <div>Estimated Wait: <span class="stat" id="estWait">0</span> mins</div>
+                <div><span class="label">People Ahead</span><span class="stat" id="aheadCount">0</span></div>
+                <div><span class="label">Wait Time</span><span class="stat" id="estWait">0</span><span class="label">mins</span></div>
             </div>
             
-            <input type="text" id="custName" placeholder="Enter your name">
-            <button onclick="joinQueue()" id="joinBtn" class="btn">Join the Line</button>
+            <p style="color: #64748b; font-size: 0.9rem;">Enter your name to secure your spot.</p>
+            <input type="text" id="custName" placeholder="Your Full Name" required>
+            <button onclick="handleCustomerJoin()" id="joinBtn" class="btn">Join Queue Now</button>
         </div>
 
         <div id="statusSection" class="hidden">
-            <div style="color: #166534; font-weight: bold; margin-bottom: 1rem;">✓ You are in line!</div>
-            <div style="font-size: 3rem; font-weight: 800; color: var(--primary);" id="liveWait">--</div>
-            <p>Minutes to go</p>
-            <p>Position: <span id="livePos" style="font-weight: 800;">--</span></p>
+            <div style="background: #dcfce7; color: #166534; padding: 0.5rem; border-radius: 2rem; font-size: 0.8rem; font-weight: bold; margin-bottom: 1.5rem;">YOU ARE IN QUEUE</div>
+            <div style="font-size: 4rem; font-weight: 800; color: var(--primary); line-height: 1;" id="liveWait">--</div>
+            <p style="font-weight: 600; color: #64748b;">Minutes Estimated Wait</p>
+            <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 1.5rem 0;">
+            <p>Your Position: <span id="livePos" style="font-weight: 800; color: var(--primary);">--</span></p>
+            <p style="font-size: 0.8rem; color: #94a3b8;">Keep this page open to track your turn.</p>
         </div>
     </div>
 
@@ -46,63 +51,84 @@
 
     <script>
         const db = firebase.firestore();
-        let providerId = new URLSearchParams(window.location.search).get('id');
-        let currentUid = "";
+        // Get Provider ID from URL (?id=...)
+        const urlParams = new URLSearchParams(window.location.search);
+        const providerId = urlParams.get('id');
 
-        // 1. Initial Load: Get Business Info & Current Queue Size
-        window.onload = async () => {
-            if (!providerId) return alert("Invalid QR Link");
+        window.onload = () => {
+            if (!providerId) {
+                document.getElementById('bizName').innerText = "Invalid QR Code";
+                return;
+            }
+            loadBusinessDetails();
+            listenToQueuePreview();
+        };
 
-            // Fetch Business Name
+        // 1. Get the Business Name
+        function loadBusinessDetails() {
             db.collection('providers').doc(providerId).get().then(doc => {
-                if (doc.exists) document.getElementById('bizName').innerText = doc.data().businessName;
-            });
+                if (doc.exists) {
+                    document.getElementById('bizName').innerText = doc.data().businessName;
+                } else {
+                    document.getElementById('bizName').innerText = "Business Not Found";
+                }
+            }).catch(err => console.error("Error loading business:", err));
+        }
 
-            // Monitor Queue Size for Preview
+        // 2. Show wait info BEFORE joining
+        function listenToQueuePreview() {
             db.collection('queues')
                 .where('providerId', '==', providerId)
                 .where('status', '==', 'waiting')
                 .onSnapshot(snap => {
                     const count = snap.size;
                     document.getElementById('aheadCount').innerText = count;
-                    document.getElementById('estWait').innerText = count * 15; // 15 mins per person
+                    document.getElementById('estWait').innerText = count * 10; // 10 mins per person
                 });
+        }
 
-            firebase.auth().onAuthStateChanged(user => {
-                if (!user) {
-                    localStorage.setItem('pendingJoin', providerId);
-                    window.location.href = 'login.html';
-                } else {
-                    currentUid = user.uid;
-                }
-            });
-        };
-
-        // 2. Join Action
-        async function joinQueue() {
-            const name = document.getElementById('custName').value;
+        // 3. Handle Joining (This creates the "Customer Entry")
+        async function handleCustomerJoin() {
+            const name = document.getElementById('custName').value.trim();
             if (!name) return alert("Please enter your name");
 
-            document.getElementById('joinBtn').innerText = "Joining...";
+            const btn = document.getElementById('joinBtn');
+            btn.disabled = true;
+            btn.innerText = "Joining...";
+
+            // Check if user is logged in, if not, sign them in anonymously
+            let user = firebase.auth().currentUser;
+            if (!user) {
+                try {
+                    const cred = await firebase.auth().signInAnonymously();
+                    user = cred.user;
+                } catch (err) {
+                    alert("Sign-in failed. Please try again.");
+                    btn.disabled = false;
+                    return;
+                }
+            }
 
             try {
-                const docRef = await db.collection('queues').add({
-                    customerId: currentUid,
+                // Create a NEW entry in the 'queues' collection
+                const newQueueDoc = await db.collection('queues').add({
+                    customerId: user.uid,
                     customerName: name,
                     providerId: providerId,
                     status: 'waiting',
                     joinedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                
-                showLiveStatus(docRef.id);
+
+                startLiveTracking(newQueueDoc.id);
             } catch (err) {
-                alert("Error: " + err.message);
+                alert("Database Error: " + err.message);
+                btn.disabled = false;
             }
         }
 
-        // 3. Live Screen
-        function showLiveStatus(myId) {
-            document.getElementById('infoSection').classList.add('hidden');
+        // 4. Live tracking AFTER they join
+        function startLiveTracking(myQueueId) {
+            document.getElementById('joinSection').classList.add('hidden');
             document.getElementById('statusSection').classList.remove('hidden');
 
             db.collection('queues')
@@ -111,12 +137,16 @@
                 .orderBy('joinedAt', 'asc')
                 .onSnapshot(snap => {
                     const docs = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                    const myIndex = docs.findIndex(d => d.id === myId);
+                    const myIndex = docs.findIndex(d => d.id === myQueueId);
                     
                     if (myIndex !== -1) {
                         const pos = myIndex + 1;
                         document.getElementById('livePos').innerText = pos;
-                        document.getElementById('liveWait').innerText = pos * 15;
+                        document.getElementById('liveWait').innerText = pos * 10;
+                    } else {
+                        // If they aren't in the list, they were served or removed
+                        alert("It's your turn or you've been removed!");
+                        window.location.reload();
                     }
                 });
         }
