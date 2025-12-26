@@ -27,46 +27,42 @@
         });
     };
 
-    async function joinQueue() {
-        const nameInput = document.getElementById('custName');
-        const name = nameInput.value.trim();
-        
-        if (!name) {
-            alert("Please enter your name");
-            return;
-        }
-
-        const btn = document.getElementById('joinBtn');
-        btn.disabled = true;
-        btn.innerText = "Connecting...";
-
-        try {
-            console.log("Attempting to write to Firestore...");
-            
-            // Create the data object
-            const queueData = {
-                customerId: currentUid,
-                customerName: name,
-                providerId: providerId,
-                status: 'waiting',
-                joinedAt: firebase.firestore.FieldValue.serverTimestamp()
-            };
-
-            // Write to the 'queues' collection
-            const docRef = await db.collection('queues').add(queueData);
-            
-            console.log("Successfully joined! ID:", docRef.id);
-            startLiveUpdates(docRef.id);
-
-        } catch (err) {
-            console.error("FULL ERROR DETAILS:", err);
-            btn.disabled = false;
-            btn.innerText = "Join Now";
-            
-            // This alert will tell us if it's a 'Permission Denied' error
-            alert("Firebase Error: " + err.message);
-        }
+   async function joinQueue() {
+    const nameInput = document.getElementById('custName');
+    const name = nameInput.value.trim();
+    
+    if (!name) {
+        alert("Please enter your name");
+        return;
     }
+
+    const btn = document.getElementById('joinBtn');
+    btn.disabled = true;
+    btn.innerText = "Joining...";
+
+    try {
+        console.log("Saving to database...");
+        // Add the customer to the 'queues' collection
+        const docRef = await db.collection('queues').add({
+            customerId: currentUid,
+            customerName: name,
+            providerId: providerId,
+            status: 'waiting',
+            joinedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        console.log("Success! Document ID:", docRef.id);
+        
+        // MANUALLY trigger the screen switch
+        startLiveUpdates(docRef.id);
+
+    } catch (err) {
+        console.error("Join Error:", err);
+        alert("Error joining queue: " + err.message);
+        btn.disabled = false;
+        btn.innerText = "Join Now";
+    }
+}
 
     function startLiveUpdates(queueId) {
         document.getElementById('joinSection').classList.add('hidden');
