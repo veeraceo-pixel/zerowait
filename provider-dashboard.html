@@ -22,13 +22,13 @@
         .qr-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); display: none; align-items: center; justify-content: center; z-index: 9999; }
         .qr-overlay.active { display: flex; }
         .qr-card { background: white; padding: 2rem; border-radius: 1rem; text-align: center; }
-        .queue-item { display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid var(--border); }
+        .queue-item { display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid var(--border); text-align: left; }
     </style>
 </head>
 <body>
 
     <header>
-        <h2 id="businessName">Loading Business...</h2>
+        <h2 id="businessName">Connecting...</h2>
         <button id="logoutBtn" class="btn btn-outline">Logout</button>
     </header>
 
@@ -44,21 +44,22 @@
             </div>
         </div>
 
-        <div class="card" style="text-align: left;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h3>Active Queue</h3>
-                <button id="qrBtn" class="btn btn-primary">Show Check-in QR</button>
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="margin:0;">Active Queue</h3>
+                <button id="qrBtn" class="btn btn-primary">Show QR Code</button>
             </div>
-            <div id="queueItems" style="margin-top: 1rem;">
-                <p style="text-align:center; color:#94a3b8;">No customers in line yet.</p>
+            <div id="queueItems">
+                <p style="color: #94a3b8; padding: 2rem; text-align:center;">Syncing queue...</p>
             </div>
         </div>
     </main>
 
     <div id="qrOverlay" class="qr-overlay">
         <div class="qr-card">
-            <h3>Check-in QR Code</h3>
+            <h3>Customer Check-in QR</h3>
             <div id="qrcode-box" style="margin: 1.5rem auto;"></div>
+            <br>
             <button onclick="document.getElementById('qrOverlay').classList.remove('active')" class="btn btn-outline">Close</button>
         </div>
     </div>
@@ -79,8 +80,9 @@
         firebase.auth().onAuthStateChanged(user => {
             if (!user) { window.location.href = 'login.html'; return; }
 
-            // 1. Load Business Data
             const docRef = db.collection('providers').doc(user.uid);
+
+            // 1. Get Business Name & Status
             docRef.onSnapshot(doc => {
                 if (doc.exists) {
                     const data = doc.data();
@@ -106,30 +108,34 @@
                 document.getElementById('qrOverlay').classList.add('active');
             };
 
-            // 4. Queue List Listener
+            // 4. Queue Listener (Manual sorting to avoid Index errors)
             db.collection('queues')
                 .where('providerId', '==', user.uid)
                 .where('status', '==', 'waiting')
-                .orderBy('joinedAt', 'asc')
                 .onSnapshot(snap => {
                     document.getElementById('queueCount').innerText = snap.size;
                     const list = document.getElementById('queueItems');
+                    
                     if (snap.empty) {
-                        list.innerHTML = '<p style="text-align:center; color:#94a3b8;">No customers in line.</p>';
+                        list.innerHTML = '<p style="text-align:center; color:#94a3b8; padding: 2rem;">No customers yet.</p>';
                         return;
                     }
+
+                    // Sort by time in the browser
+                    const sorted = snap.docs.sort((a,b) => a.data().joinedAt - b.data().joinedAt);
+                    
                     list.innerHTML = "";
-                    snap.forEach(doc => {
+                    sorted.forEach(doc => {
                         const person = doc.data();
                         const div = document.createElement('div');
                         div.className = 'queue-item';
                         div.innerHTML = `
-                            <span><b>${person.customerName}</b></span>
-                            <button onclick="serve('${doc.id}')" class="btn btn-outline" style="color:#2563eb;">Serve Next</button>
+                            <div><b>${person.customerName}</b></div>
+                            <button onclick="serve('${doc.id}')" class="btn btn-outline" style="color:#2563eb; border-color:#2563eb;">Serve Next</button>
                         `;
                         list.appendChild(div);
                     });
-                }, err => console.log("If you see an index error here, click the link in console to fix it."));
+                });
         });
 
         async function serve(id) {
