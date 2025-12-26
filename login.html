@@ -58,56 +58,62 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
-
 <script>
-  document.getElementById('loginForm').onsubmit = async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-
+  // Helper function to handle redirects based on user role
+  async function redirectUser(user) {
     try {
-      const cred = await firebase.auth().signInWithEmailAndPassword(email, password);
-      const user = cred.user;
-
-      // Check if the user is a provider
       const providerSnap = await firebase.firestore()
         .collection('providers')
         .doc(user.uid)
         .get();
 
       if (providerSnap.exists) {
-        window.location.href = 'provider-dashboard.html';
+        window.location.replace('provider-dashboard.html');
       } else {
-        window.location.href = 'index.html';
+        window.location.replace('index.html');
       }
     } catch (err) {
-console.error('Login error:', err);
-    let errorMsg = err.message || 'Login failed. Please try again.';
-    
-    // Provide specific guidance for offline errors
-    if (err.code === 'network-error' || err.message.includes('offline')) {
-      errorMsg = 'Network error. Please check your internet connection and ensure Firebase is configured correctly.';
+      console.error('Role check failed:', err);
+      // If Firestore fails but Auth succeeded, default to home
+      window.location.replace('index.html');
     }
-    
-    alert('Login failed: ' + errorMsg);    }
+  }
+
+  // 1. Handle Login Form Submission
+  document.getElementById('loginForm').onsubmit = async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const submitBtn = e.target.querySelector('button');
+
+    // Disable button to prevent multiple clicks
+    submitBtn.disabled = true;
+    submitBtn.innerText = 'Logging in...';
+
+    try {
+      const cred = await firebase.auth().signInWithEmailAndPassword(email, password);
+      await redirectUser(cred.user);
+    } catch (err) {
+      submitBtn.disabled = false;
+      submitBtn.innerText = 'Login';
+      
+      console.error('Full Firebase Error:', err);
+      
+      // DIAGNOSTIC ALERT: This reveals the real reason for the 11% error rate
+      alert(`Firebase Error!\nCode: ${err.code}\nMessage: ${err.message}`);
+      
+      // Logic for specific fixes
+      if (err.code === 'auth/operation-not-allowed') {
+        console.error('Check if Email/Password is enabled in Firebase Console.');
+      }
+    }
   };
 
-  // If already logged in, redirect based on role
-  firebase.auth().onAuthStateChanged(async (user) => {
+  // 2. Auth State Listener (Automatic Login)
+  firebase.auth().onAuthStateChanged((user) => {
     if (user) {
-      const providerSnap = await firebase.firestore()
-        .collection('providers')
-        .doc(user.uid)
-        .get();
-          try {
-            if (providerSnap.exists) {
-              window.location.replace('provider-dashboard.html');
-            } else {
-              window.location.replace('index.html');
-            }
-                } catch (err) {
-      console.error('Auth state change error:', err);
-    }
+      console.log("Session detected, redirecting...");
+      redirectUser(user);
     }
   });
 </script>
