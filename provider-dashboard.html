@@ -23,12 +23,15 @@
         .qr-overlay.active { display: flex; }
         .qr-card { background: white; padding: 2rem; border-radius: 1rem; text-align: center; }
         .queue-item { display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid var(--border); text-align: left; }
+        #debugLog { background: #333; color: #0f0; padding: 10px; font-family: monospace; font-size: 12px; margin: 10px; border-radius: 5px; max-height: 100px; overflow-y: auto; }
     </style>
 </head>
 <body>
 
+    <div id="debugLog">System Booting...</div>
+
     <header>
-        <h2 id="businessName">Loading...</h2>
+        <h2 id="businessName">Connecting to Store...</h2>
         <button id="logoutBtn" class="btn btn-outline">Logout</button>
     </header>
 
@@ -50,7 +53,7 @@
                 <button id="qrBtn" class="btn btn-primary">Show QR Code</button>
             </div>
             <div id="queueItems">
-                <p style="text-align:center; color:#94a3b8; padding: 2rem;">No customers yet.</p>
+                <p style="text-align:center; color:#94a3b8; padding: 2rem;">Loading customer list...</p>
             </div>
         </div>
     </main>
@@ -70,60 +73,71 @@
     <script src="https://cdn.jsdelivr.net/npm/easyqrcodejs@4.4.10/dist/easy.qrcode.min.js"></script>
 
     <script>
+        const logger = (msg) => { document.getElementById('debugLog').innerHTML += "<br>> " + msg; };
         const db = firebase.firestore();
 
-        // LOGOUT
+        // 1. EMERGENCY LOGOUT (Works instantly)
         document.getElementById('logoutBtn').onclick = () => {
             firebase.auth().signOut().then(() => window.location.href = 'index.html');
         };
 
+        // 2. AUTH CHECK
         firebase.auth().onAuthStateChanged(user => {
             if (!user) {
+                logger("No User Found. Redirecting to login...");
                 window.location.href = 'login.html';
                 return;
             }
+            logger("User Authenticated: " + user.uid);
+            loadDashboard(user);
+        });
 
+        function loadDashboard(user) {
             const docRef = db.collection('providers').doc(user.uid);
 
-            // 1. GET BUSINESS DATA (NAME & STATUS)
+            // 3. FETCH NAME & STATUS
             docRef.onSnapshot(doc => {
                 if (doc.exists) {
                     const data = doc.data();
                     document.getElementById('businessName').innerText = data.businessName || "My Business";
+                    logger("Business Name Loaded: " + data.businessName);
                     
                     const badge = document.getElementById('statusBadge');
                     badge.innerText = data.isOpen ? "Open" : "Closed";
                     badge.className = `status-badge ${data.isOpen ? 'status-open' : 'status-closed'}`;
+                } else {
+                    logger("ERROR: No document found in 'providers' with ID: " + user.uid);
+                    document.getElementById('businessName').innerText = "Business Not Found";
                 }
-            });
+            }, err => logger("Snapshot Error (Name): " + err.message));
 
-            // 2. SWITCH STATUS
+            // 4. BUTTONS (Moved inside loadDashboard)
             document.getElementById('switchBtn').onclick = async () => {
-                const doc = await docRef.get();
-                if (doc.exists) {
-                    await docRef.update({ isOpen: !doc.data().isOpen });
-                }
+                const snap = await docRef.get();
+                await docRef.update({ isOpen: !snap.data().isOpen });
+                logger("Status Switched");
             };
 
-            // 3. QR CODE
             document.getElementById('qrBtn').onclick = () => {
                 const box = document.getElementById('qrcode-box');
                 box.innerHTML = "";
                 const url = `https://veeraceo-pixel.github.io/zerowait/join-queue.html?id=${user.uid}`;
                 new QRCode(box, { text: url, width: 200, height: 200 });
                 document.getElementById('qrOverlay').classList.add('active');
+                logger("QR Generated for UID: " + user.uid);
             };
 
-            // 4. LIVE QUEUE LIST
+            // 5. QUEUE LIST (Simple query)
             db.collection('queues')
                 .where('providerId', '==', user.uid)
                 .where('status', '==', 'waiting')
                 .onSnapshot(snap => {
+                    logger("Queue Updated. Count: " + snap.size);
                     document.getElementById('queueCount').innerText = snap.size;
                     const list = document.getElementById('queueItems');
                     
                     if (snap.empty) {
-                        list.innerHTML = '<p style="text-align:center; color:#94a3b8; padding: 2rem;">No customers yet.</p>';
+                        list.innerHTML = '<p style="text-align:center; color:#94a3b8; padding: 2rem;">Queue Empty</p>';
                         return;
                     }
 
@@ -134,15 +148,16 @@
                         div.className = 'queue-item';
                         div.innerHTML = `
                             <div><b>${person.customerName}</b></div>
-                            <button onclick="serveCustomer('${doc.id}')" class="btn btn-outline" style="color:#2563eb; border-color:#2563eb;">Serve</button>
+                            <button onclick="serveNow('${doc.id}')" class="btn btn-outline" style="color:#2563eb; border-color:#2563eb;">Next</button>
                         `;
                         list.appendChild(div);
                     });
-                });
-        });
+                }, err => logger("Queue Snapshot Error: " + err.message));
+        }
 
-        async function serveCustomer(id) {
+        async function serveNow(id) {
             await db.collection('queues').doc(id).update({ status: 'served' });
+            logger("Served Customer: " + id);
         }
     </script>
 </body>
