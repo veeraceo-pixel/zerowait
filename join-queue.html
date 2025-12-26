@@ -2,53 +2,57 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Queue Status | </title>
+    <title>Queue Status | skipQs</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
     <style>
         .queue-container { min-height: calc(100vh - 74px); display: flex; align-items: center; justify-content: center; padding: 2rem; background: radial-gradient(circle at center, #fff, #f8fafc); }
-        .queue-card { width: 100%; max-width: 500px; text-align: center; border: none; box-shadow: var(--shadow-xl); position: relative; overflow: hidden; }
-        .queue-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 6px; background: var(--primary); }
+        .queue-card { width: 100%; max-width: 500px; text-align: center; border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.05); position: relative; overflow: hidden; background: white; border-radius: 1rem; }
+        .queue-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 6px; background: #2563eb; }
         .status-badge { display: inline-block; padding: 0.5rem 1.25rem; border-radius: 9999px; font-weight: 700; font-size: 0.875rem; margin-bottom: 2rem; text-transform: uppercase; letter-spacing: 0.05em; }
         .status-waiting { background: #fff7ed; color: #9a3412; }
         .status-serving { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; box-shadow: 0 0 20px rgba(16, 185, 129, 0.1); }
-        .time-display { font-size: 5rem; font-weight: 800; color: var(--primary); line-height: 1; margin: 1.5rem 0; font-variant-numeric: tabular-nums; }
-        .pos-display { font-size: 1.5rem; color: var(--text-main); margin-bottom: 2.5rem; }
-        .pos-number { background: var(--primary-soft); color: var(--primary); padding: 0.25rem 0.75rem; border-radius: 0.75rem; font-weight: 800; }
-        .spinner { width: 40px; height: 40px; border: 3px solid var(--primary-soft); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem; }
+        .time-display { font-size: 5rem; font-weight: 800; color: #2563eb; line-height: 1; margin: 1.5rem 0; font-variant-numeric: tabular-nums; }
+        .pos-display { font-size: 1.25rem; color: #1e293b; margin-bottom: 2.5rem; }
+        .pos-number { background: #dbeafe; color: #2563eb; padding: 0.25rem 0.75rem; border-radius: 0.75rem; font-weight: 800; }
+        .spinner { width: 40px; height: 40px; border: 3px solid #dbeafe; border-top-color: #2563eb; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem; }
         @keyframes spin { to { transform: rotate(360deg); } }
+        .btn { padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; border: none; width: 100%; }
+        .btn-primary { background: #2563eb; color: white; }
+        .btn-outline-danger { background: transparent; border: 1px solid #fee2e2; color: #dc2626; margin-top: 1rem; }
     </style>
 </head>
 <body class="bg-light">
     <nav class="navbar">
         <div class="container nav-content">
-            <a href="index.html" class="logo"></a>
+            <a href="index.html" class="logo">skipQs</a>
         </div>
     </nav>
 
     <main class="queue-container">
-                <div id="nameForm" class="card queue-card p-5 animate-fade-in" style="max-width: 400px; margin: 2rem auto;">
+        <div id="nameForm" class="queue-card p-5 animate-fade-in" style="display: none; padding: 2rem;">
             <h2 class="h3 mb-4">Join the Queue</h2>
-            <form onsubmit="joinQueueWithName(event)" style="display: flex; flex-direction: column; gap: 1rem;">
-                <div>
-                    <label for="customerName" class="form-label font-weight-bold mb-2" style="display: block;">Enter your name:</label>
-                    <input type="text" id="customerName" class="form-control" placeholder="Your name" required style="padding: 0.75rem; border: 1px solid #ddd; border-radius: 0.5rem; font-size: 1rem;">
+            <form onsubmit="joinQueueWithName(event)">
+                <div style="margin-bottom: 1.5rem; text-align: left;">
+                    <label for="customerName" style="display: block; font-weight: bold; margin-bottom: 0.5rem;">Enter your name:</label>
+                    <input type="text" id="customerName" class="form-control" placeholder="Your name" required style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 0.5rem; box-sizing: border-box;">
                 </div>
-                <button type="submit" class="btn btn-primary" style="padding: 0.75rem 1.5rem; width: 100%;">Join Queue</button>
+                <button type="submit" class="btn btn-primary">Join Queue</button>
             </form>
         </div>
-        <div id="status-msg" class="text-center animate-fade-in" style="display:none;">
+
+        <div id="status-msg" class="text-center animate-fade-in">
             <div class="spinner"></div>
             <p id="loading-text" class="text-secondary font-weight-bold">Synchronizing with live queue...</p>
         </div>
 
-        <div id="queueContent" class="card queue-card p-5 animate-fade-in" style="display:none;">
+        <div id="queueContent" class="queue-card p-5 animate-fade-in" style="display:none; padding: 2rem;">
             <div id="statusBadge" class="status-badge status-waiting">In Queue</div>
             <h1 id="providerName" class="h2 mb-1">--</h1>
             <p id="providerAddress" class="small text-secondary mb-4">--</p>
             
             <div id="waitingInfo">
-                <p class="text-muted small uppercase font-weight-bold" style="letter-spacing: 0.1em;">Estimated wait time</p>
+                <p style="text-transform: uppercase; font-size: 0.75rem; font-weight: bold; color: #64748b; letter-spacing: 0.1em; margin-bottom: 0;">Estimated wait time</p>
                 <div id="waitTime" class="time-display">0</div>
                 <p class="text-secondary font-weight-bold mb-4">minutes</p>
                 <div class="pos-display">
@@ -57,11 +61,11 @@
             </div>
 
             <div id="servingInfo" style="display:none;" class="py-4">
-                <div class="h1 text-success mb-3">✓ It's your turn!</div>
-                <p class="text-secondary mb-4">A staff member is ready to serve you. Please proceed to the entrance immediately.</p>
+                <div style="font-size: 1.5rem; color: #166534; font-weight: bold; margin-bottom: 1rem;">✓ It's your turn!</div>
+                <p style="color: #64748b; margin-bottom: 1.5rem;">A staff member is ready to serve you. Please proceed to the entrance immediately.</p>
             </div>
 
-            <button onclick="leaveQueue()" class="btn btn-outline-danger w-100">Leave Virtual Line</button>
+            <button onclick="leaveQueue()" class="btn btn-outline-danger">Leave Virtual Line</button>
         </div>
     </main>
 
@@ -71,81 +75,100 @@
     <script src="firebase-config.js"></script>
     <script>
         let db, currentUserId, providerId;
+
         function init() {
             db = firebase.firestore();
             firebase.auth().onAuthStateChanged(async user => {
                 if (!user) {
                     const params = new URLSearchParams(window.location.search);
-                    if (params.has('provider')) localStorage.setItem('pendingJoin', params.get('provider'));
-                    window.location.href = 'login.html'; return;
-                }
-            });
-        }
-        function startListener(qid) {
-            db.collection('providers').doc(providerId).get().then(doc => {
-                if (doc.exists) { document.getElementById('providerName').innerText = doc.data().businessName; document.getElementById('providerAddress').innerText = doc.data().location?.address || ''; }
-            });
-            db.collection('queues').where('providerId', '==', providerId).where('status', 'in', ['waiting', 'serving']).orderBy('joinedAt', 'asc').onSnapshot(async snap => {
-                const docs = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                const my = docs.find(d => d.id === qid);
-                if (!my) { window.location.reload(); return; }
-                document.getElementById('status-msg').style.display = 'none';
-                document.getElementById('queueContent').style.display = 'block';
-                if (my.status === 'serving') {
-                    document.getElementById('waitingInfo').style.display = 'none';
-                    document.getElementById('servingInfo').style.display = 'block';
-                    document.getElementById('statusBadge').innerText = 'Ready for service';
-                    document.getElementById('statusBadge').className = 'status-badge status-serving';
+                    if (params.has('id')) localStorage.setItem('pendingJoin', params.get('id'));
+                    window.location.href = 'login.html'; 
                     return;
                 }
-                const pDoc = await db.collection('providers').doc(providerId).get();
-                const avg = pDoc.data().avgWait || 15;
-                const serving = docs.find(d => d.status === 'serving');
-                const waiting = docs.filter(d => d.status === 'waiting');
-                const pos = waiting.findIndex(d => d.id === qid);
-                document.getElementById('posNumber').innerText = pos + 1;
-                let wait = 0;
-                if (pos > 0) {
-                    let rem = avg;
-                    if (serving && serving.servingStartTime) {
-                        const elap = (Date.now() - serving.servingStartTime.toDate()) / 60000;
-                        rem = Math.max(0, avg - elap);
-                    }
-                    wait = Math.round(rem + (pos - 1) * avg);
-                }
-                document.getElementById('waitTime').innerText = wait;
+
+                currentUserId = user.uid; // Critical Fix: Assign the ID
+                checkExistingQueue();
             });
         }
-        async function leaveQueue() {
-            if (confirm('Are you sure you want to leave the virtual line?')) {
-                const snap = await db.collection('queues').where('customerId', '==', currentUserId).where('status', 'in', ['waiting', 'serving']).get();
-                const batch = db.batch(); snap.forEach(d => batch.update(d.ref, {status: 'cancelled'}));
-                await batch.commit(); window.location.href = 'index.html';
+
+        async function checkExistingQueue() {
+            // Check if user is already in a queue
+            const snap = await db.collection('queues')
+                .where('customerId', '==', currentUserId)
+                .where('status', 'in', ['waiting', 'serving'])
+                .get();
+
+            if (!snap.empty) {
+                const entry = snap.docs[0];
+                providerId = entry.data().providerId;
+                startListener(entry.id);
+            } else {
+                // Show name form if not in queue
+                document.getElementById('status-msg').style.display = 'none';
+                document.getElementById('nameForm').style.display = 'block';
             }
         }
-        window.onload = init;
-        
+
+        function startListener(qid) {
+            // Get Provider Details
+            db.collection('providers').doc(providerId).get().then(doc => {
+                if (doc.exists) { 
+                    document.getElementById('providerName').innerText = doc.data().businessName; 
+                    document.getElementById('providerAddress').innerText = doc.data().location?.address || ''; 
+                }
+            });
+
+            // Listen to Live Queue
+            db.collection('queues')
+                .where('providerId', '==', providerId)
+                .where('status', 'in', ['waiting', 'serving'])
+                .orderBy('joinedAt', 'asc')
+                .onSnapshot(async snap => {
+                    const docs = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                    const my = docs.find(d => d.id === qid);
+                    
+                    if (!my) { 
+                        alert("You are no longer in the queue.");
+                        window.location.href = 'index.html'; 
+                        return; 
+                    }
+
+                    document.getElementById('nameForm').style.display = 'none';
+                    document.getElementById('status-msg').style.display = 'none';
+                    document.getElementById('queueContent').style.display = 'block';
+
+                    if (my.status === 'serving') {
+                        document.getElementById('waitingInfo').style.display = 'none';
+                        document.getElementById('servingInfo').style.display = 'block';
+                        document.getElementById('statusBadge').innerText = 'Ready for service';
+                        document.getElementById('statusBadge').className = 'status-badge status-serving';
+                    } else {
+                        // Calculate Wait Time
+                        const pDoc = await db.collection('providers').doc(providerId).get();
+                        const avg = pDoc.data().avgWait || 15;
+                        
+                        const waitingOnly = docs.filter(d => d.status === 'waiting');
+                        const myPos = waitingOnly.findIndex(d => d.id === qid);
+                        
+                        document.getElementById('posNumber').innerText = myPos + 1;
+                        document.getElementById('waitTime').innerText = (myPos + 1) * avg;
+                    }
+                });
+        }
+
         async function joinQueueWithName(event) {
             event.preventDefault();
             const name = document.getElementById('customerName').value.trim();
-            if (!name) { alert('Please enter your name'); return; }
             
-            // Hide name form and show loading
             document.getElementById('nameForm').style.display = 'none';
             document.getElementById('status-msg').style.display = 'block';
-            
-            // Check for existing queue entry
-            const snap = await db.collection('queues').where('customerId', '==', currentUserId).where('status', 'in', ['waiting', 'serving']).get();
-            if (!snap.empty) { providerId = snap.docs[0].data().providerId; startListener(snap.docs[0].id); return; }
-            
-            // Get provider ID from URL
+
             const params = new URLSearchParams(window.location.search);
-            const targetId = params.get('provider') || localStorage.getItem('pendingJoin');
+            const targetId = params.get('id') || localStorage.getItem('pendingJoin');
             localStorage.removeItem('pendingJoin');
-            
+
             if (targetId) {
                 try {
-                    // Add customer to queue with their name
                     const newEntry = await db.collection('queues').add({
                         customerId: currentUserId,
                         customerName: name,
@@ -156,16 +179,29 @@
                     providerId = targetId;
                     startListener(newEntry.id);
                 } catch (error) {
-                    console.error('Error joining queue:', error);
-                    alert('Error joining queue. Please try again.');
+                    alert('Error joining queue: ' + error.message);
                     document.getElementById('nameForm').style.display = 'block';
-                    document.getElementById('status-msg').style.display = 'none';
                 }
             } else {
-                alert('No service provider found.');
+                alert('No business ID found in link.');
+            }
+        }
+
+        async function leaveQueue() {
+            if (confirm('Leave the virtual line?')) {
+                const snap = await db.collection('queues')
+                    .where('customerId', '==', currentUserId)
+                    .where('status', 'in', ['waiting', 'serving'])
+                    .get();
+                
+                const batch = db.batch();
+                snap.forEach(d => batch.update(d.ref, {status: 'cancelled'}));
+                await batch.commit();
                 window.location.href = 'index.html';
             }
         }
+
+        window.onload = init;
     </script>
 </body>
 </html>
