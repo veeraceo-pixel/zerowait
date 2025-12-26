@@ -6,24 +6,23 @@
     <title>Business Dashboard | skipQs</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #2563eb; --primary-hover: #1d4ed8; --bg-light: #f8fafc; --border: #e2e8f0; --text-main: #1e293b; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg-light); color: var(--text-main); margin: 0; }
+        :root { --primary: #2563eb; --bg-light: #f8fafc; --border: #e2e8f0; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-light); margin: 0; }
         header { background: white; border-bottom: 1px solid var(--border); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
         .container { max-width: 1000px; margin: 2rem auto; padding: 0 1rem; }
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
-        .card { background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); text-align: center; border: 1px solid var(--border); }
+        .card { background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; border: 1px solid var(--border); }
         .stat-value { font-size: 3rem; font-weight: 800; color: var(--primary); margin: 0.5rem 0; }
-        .btn { padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; border: none; transition: 0.2s; font-size: 0.95rem; }
+        .btn { padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; border: none; transition: 0.2s; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-outline { background: white; border: 1px solid var(--border); color: #64748b; }
-        .btn-danger { background: #fee2e2; color: #991b1b; border: 1px solid #f87171; }
         .status-badge { display: inline-block; padding: 0.5rem 1.5rem; border-radius: 9999px; font-weight: 700; margin-bottom: 1rem; }
         .status-open { background: #dcfce7; color: #166534; }
         .status-closed { background: #fee2e2; color: #991b1b; }
         .qr-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); display: none; align-items: center; justify-content: center; z-index: 9999; }
         .qr-overlay.active { display: flex; }
         .qr-card { background: white; padding: 2rem; border-radius: 1rem; text-align: center; }
-        .queue-item { display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid var(--border); text-align: left; }
+        .queue-item { display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid var(--border); }
     </style>
 </head>
 <body>
@@ -45,23 +44,21 @@
             </div>
         </div>
 
-        <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <h3 style="margin:0;">Active Queue List</h3>
+        <div class="card" style="text-align: left;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Active Queue</h3>
                 <button id="qrBtn" class="btn btn-primary">Show Check-in QR</button>
             </div>
-            <div id="queueItems">
-                <p style="color: #94a3b8; padding: 2rem;">No customers in line yet.</p>
+            <div id="queueItems" style="margin-top: 1rem;">
+                <p style="text-align:center; color:#94a3b8;">No customers in line yet.</p>
             </div>
         </div>
     </main>
 
     <div id="qrOverlay" class="qr-overlay">
         <div class="qr-card">
-            <h3>Customer Check-in QR</h3>
-            <p style="color: #64748b; font-size: 0.9rem;">Customers scan this to join your line.</p>
-            <div id="qrcode-box" style="margin: 1.5rem auto; display: inline-block; background: white; padding: 10px; border: 1px solid #eee;"></div>
-            <br>
+            <h3>Check-in QR Code</h3>
+            <div id="qrcode-box" style="margin: 1.5rem auto;"></div>
             <button onclick="document.getElementById('qrOverlay').classList.remove('active')" class="btn btn-outline">Close</button>
         </div>
     </div>
@@ -75,109 +72,68 @@
     <script>
         const db = firebase.firestore();
 
-        // 1. LOGOUT
         document.getElementById('logoutBtn').onclick = () => {
-            firebase.auth().signOut().then(() => window.location.href = 'index.html');
+            firebase.auth().signOut().then(() => window.location.href = 'login.html');
         };
 
-        // 2. QR CODE GENERATION
-        document.getElementById('qrBtn').onclick = () => {
-            const user = firebase.auth().currentUser;
-            if (!user) return alert("Session expired. Please login again.");
-            
-            const box = document.getElementById('qrcode-box');
-            box.innerHTML = ""; 
-            
-            // Generate link using the current user's UID
-            const joinUrl = `https://veeraceo-pixel.github.io/zerowait/join-queue.html?id=${user.uid}`;
-            
-            new QRCode(box, {
-                text: joinUrl,
-                width: 200,
-                height: 200,
-                colorDark : "#000000",
-                colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.H
-            });
-            document.getElementById('qrOverlay').classList.add('active');
-        };
-
-        // 3. MAIN DASHBOARD LOGIC
         firebase.auth().onAuthStateChanged(user => {
-            if (!user) {
-                window.location.href = 'login.html';
-                return;
-            }
+            if (!user) { window.location.href = 'login.html'; return; }
 
+            // 1. Load Business Data
             const docRef = db.collection('providers').doc(user.uid);
-
-            // A. LISTEN TO BUSINESS DETAILS (Name & Status)
             docRef.onSnapshot(doc => {
                 if (doc.exists) {
                     const data = doc.data();
                     document.getElementById('businessName').innerText = data.businessName || "My Business";
-                    
                     const badge = document.getElementById('statusBadge');
                     badge.innerText = data.isOpen ? "Open" : "Closed";
                     badge.className = `status-badge ${data.isOpen ? 'status-open' : 'status-closed'}`;
-                } else {
-                    document.getElementById('businessName').innerText = "Business Record Not Found";
-                    console.error("Provider document missing in Firestore for UID:", user.uid);
                 }
             });
 
-            // B. LISTEN TO ACTIVE QUEUE (New Collection Method)
+            // 2. Status Switch
+            document.getElementById('switchBtn').onclick = async () => {
+                const doc = await docRef.get();
+                await docRef.update({ isOpen: !doc.data().isOpen });
+            };
+
+            // 3. QR Generation
+            document.getElementById('qrBtn').onclick = () => {
+                const box = document.getElementById('qrcode-box');
+                box.innerHTML = "";
+                const url = `https://veeraceo-pixel.github.io/zerowait/join-queue.html?id=${user.uid}`;
+                new QRCode(box, { text: url, width: 200, height: 200 });
+                document.getElementById('qrOverlay').classList.add('active');
+            };
+
+            // 4. Queue List Listener
             db.collection('queues')
                 .where('providerId', '==', user.uid)
                 .where('status', '==', 'waiting')
                 .orderBy('joinedAt', 'asc')
                 .onSnapshot(snap => {
                     document.getElementById('queueCount').innerText = snap.size;
-                    const listDiv = document.getElementById('queueItems');
-                    
+                    const list = document.getElementById('queueItems');
                     if (snap.empty) {
-                        listDiv.innerHTML = '<p style="color: #94a3b8; padding: 2rem;">No customers in line yet.</p>';
+                        list.innerHTML = '<p style="text-align:center; color:#94a3b8;">No customers in line.</p>';
                         return;
                     }
-
-                    listDiv.innerHTML = ""; // Clear current list
+                    list.innerHTML = "";
                     snap.forEach(doc => {
                         const person = doc.data();
-                        const item = document.createElement('div');
-                        item.className = 'queue-item';
-                        item.innerHTML = `
-                            <div>
-                                <div style="font-weight: 700;">${person.customerName}</div>
-                                <div style="font-size: 0.75rem; color: #64748b;">Waiting...</div>
-                            </div>
-                            <button onclick="markAsServed('${doc.id}')" class="btn btn-outline" style="font-size: 0.8rem; border-color: #2563eb; color: #2563eb;">Next / Serve</button>
+                        const div = document.createElement('div');
+                        div.className = 'queue-item';
+                        div.innerHTML = `
+                            <span><b>${person.customerName}</b></span>
+                            <button onclick="serve('${doc.id}')" class="btn btn-outline" style="color:#2563eb;">Serve Next</button>
                         `;
-                        listDiv.appendChild(item);
+                        list.appendChild(div);
                     });
-                }, err => {
-                    console.error("Queue Listener Error:", err);
-                });
-
-            // C. TOGGLE STATUS BUTTON
-            document.getElementById('switchBtn').onclick = async () => {
-                const doc = await docRef.get();
-                if (doc.exists) {
-                    const currentStatus = doc.data().isOpen || false;
-                    await docRef.update({ isOpen: !currentStatus });
-                }
-            };
+                }, err => console.log("If you see an index error here, click the link in console to fix it."));
         });
 
-        // 4. ACTION: MARK AS SERVED
-        async function markAsServed(docId) {
-            try {
-                await db.collection('queues').doc(docId).update({
-                    status: 'served',
-                    servedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-            } catch (err) {
-                alert("Error updating status: " + err.message);
-            }
+        async function serve(id) {
+            await db.collection('queues').doc(id).update({ status: 'served' });
         }
     </script>
 </body>
