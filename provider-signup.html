@@ -6,9 +6,9 @@
     <title>Business Registration | skipQs</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        .pac-container { z-index: 10000 !important; border-radius: 8px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border: 1px solid #e5e7eb; font-family: 'Inter', sans-serif; }
+        .pac-container { z-index: 10000 !important; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; font-family: 'Inter', sans-serif; }
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; }
-        .success-modal { background: white; padding: 3rem; border-radius: 12px; max-width: 450px; width: 90%; text-align: center; box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); }
+        .success-modal { background: white; padding: 3rem; border-radius: 12px; max-width: 450px; width: 90%; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
         .success-icon { width: 64px; height: 64px; background: #f0fdf4; color: #166534; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 1.5rem; }
     </style>
 </head>
@@ -100,7 +100,7 @@
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAJFGE5OFfn-OhDNJ_rWO5oi2d2CHl2fXE&libraries=places"></script>
 
     <script>
-        // Google Maps Autocomplete Logic
+        // Google Maps Autocomplete
         let autocomplete;
         function initAutocomplete() {
             const input = document.getElementById('addressLookup');
@@ -108,7 +108,7 @@
             autocomplete.addListener("place_changed", () => {
                 const place = autocomplete.getPlace();
                 if (!place.geometry) {
-                    alert("Please select an address from the dropdown suggestions.");
+                    alert("Please select an address from the suggestions.");
                     return;
                 }
                 document.getElementById('placeId').value = place.place_id;
@@ -119,18 +119,16 @@
         }
         window.onload = initAutocomplete;
 
-        // Signup Logic
+        // Unified Signup and Firestore Logic
         document.getElementById('providerSignupForm').onsubmit = async (e) => {
             e.preventDefault();
             const submitBtn = document.getElementById('submitBtn');
-            
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const placeId = document.getElementById('placeId').value;
 
-            // Validation: Ensure address was actually selected
             if (!placeId) {
-                alert('Please search and select an address from the Google suggestions.');
+                alert('Please select an address from the dropdown suggestions to confirm location.');
                 return;
             }
 
@@ -152,7 +150,7 @@
 
             try {
                 submitBtn.disabled = true;
-                submitBtn.innerText = 'Processing...';
+                submitBtn.innerText = 'Creating Account...';
 
                 // 1. Create Auth User
                 const cred = await firebase.auth().createUserWithEmailAndPassword(email, password);
@@ -160,14 +158,16 @@
                 // 2. Create entry in 'providers' collection
                 await firebase.firestore().collection('providers').doc(cred.user.uid).set(providerData);
                 
-                // 3. Show Success
+                // 3. Show Success UI
                 document.getElementById('successModal').style.display = 'flex';
                 
             } catch (err) {
                 submitBtn.disabled = false;
                 submitBtn.innerText = 'Create Business Account';
                 console.error("Signup failed:", err);
-                alert("Signup Error: " + err.message);
+                
+                // Detailed error alert to catch "Missing Permissions" or "Network Error"
+                alert("Signup Error!\nCode: " + err.code + "\nMessage: " + err.message);
             }
         };
     </script>
