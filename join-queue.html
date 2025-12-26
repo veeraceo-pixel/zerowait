@@ -1,88 +1,96 @@
 <script>
-        let db, currentUserId, providerId;
+    let db, currentUserId, providerId;
 
-        function init() {
-            db = firebase.firestore();
-            firebase.auth().onAuthStateChanged(async user => {
-                if (!user) {
-                    // Not logged in? Save the provider ID and go to login
-                    const params = new URLSearchParams(window.location.search);
-                    const idFromUrl = params.get('id');
-                    if (idFromUrl) localStorage.setItem('pendingJoin', idFromUrl);
-                    
-                    console.log("No user found, redirecting to login...");
-                    window.location.href = 'login.html'; 
-                    return;
-                }
-
-                currentUserId = user.uid;
-                console.log("Logged in as:", currentUserId);
-
-                // Get Provider ID from URL or LocalStorage
+    async function init() {
+        console.log("Initializing...");
+        db = firebase.firestore();
+        
+        firebase.auth().onAuthStateChanged(async user => {
+            if (!user) {
+                console.log("No user, saving ID and redirecting...");
                 const params = new URLSearchParams(window.location.search);
-                providerId = params.get('id') || localStorage.getItem('pendingJoin');
-                
-                if (!providerId) {
-                    alert("No Business ID found. Please scan the QR code again.");
-                    return;
-                }
+                const id = params.get('id');
+                if (id) localStorage.setItem('pendingJoin', id);
+                window.location.href = 'login.html';
+                return;
+            }
 
-                checkExistingQueue();
+            currentUserId = user.uid;
+            const params = new URLSearchParams(window.location.search);
+            providerId = params.get('id') || localStorage.getItem('pendingJoin');
+
+            if (!providerId) {
+                document.getElementById('loading-text').innerText = "Error: No Business ID found in URL.";
+                return;
+            }
+
+            // SAFETY TIMEOUT: If DB is slow, show the form anyway after 4 seconds
+            setTimeout(() => {
+                if (document.getElementById('nameForm').style.display === 'none' && 
+                    document.getElementById('queueContent').style.display === 'none') {
+                    console.log("Safety timeout triggered.");
+                    showJoinForm();
+                }
+            }, 4000);
+
+            checkStatus();
+        });
+    }
+
+    async function checkStatus() {
+        try {
+            // Check if this specific user is ALREADY in a queue
+            const snap = await db.collection('queues')
+                .where('customerId', '==', currentUserId)
+                .where('status', 'in', ['waiting', 'serving'])
+                .get();
+
+            if (!snap.empty) {
+                // If they are already in ANY queue, show that status
+                const entry = snap.docs[0];
+                providerId = entry.data().providerId;
+                startListener(entry.id);
+            } else {
+                showJoinForm();
+            }
+        } catch (err) {
+            console.error("Firebase Error:", err);
+            showJoinForm(); // Show form even if query fails (e.g., missing index)
+        }
+    }
+
+    function showJoinForm() {
+        document.getElementById('status-msg').style.display = 'none';
+        document.getElementById('nameForm').style.display = 'block';
+    }
+
+    async function joinQueueWithName(event) {
+        event.preventDefault();
+        const name = document.getElementById('customerName').value.trim();
+        if(!name) return;
+
+        const btn = event.target.querySelector('button');
+        btn.disabled = true;
+        btn.innerText = "Joining...";
+
+        try {
+            const newEntry = await db.collection('queues').add({
+                customerId: currentUserId,
+                customerName: name,
+                providerId: providerId,
+                status: 'waiting',
+                joinedAt: firebase.firestore.FieldValue.serverTimestamp()
             });
-        }
-
-        async function checkExistingQueue() {
-            try {
-                console.log("Checking for existing entries for provider:", providerId);
-                
-                // Look for an active queue for THIS specific user at THIS specific business
-                const snap = await db.collection('queues')
-                    .where('customerId', '==', currentUserId)
-                    .where('providerId', '==', providerId)
-                    .where('status', 'in', ['waiting', 'serving'])
-                    .get();
-
-                if (!snap.empty) {
-                    console.log("Existing entry found. Starting listener...");
-                    startListener(snap.docs[0].id);
-                } else {
-                    console.log("No entry found. Showing name form.");
-                    document.getElementById('status-msg').style.display = 'none';
-                    document.getElementById('nameForm').style.display = 'block';
-                }
-            } catch (error) {
-                console.error("Database error:", error);
-                alert("Connection Error: " + error.message);
-            }
-        }
-
-        async function joinQueueWithName(event) {
-            event.preventDefault();
-            const name = document.getElementById('customerName').value.trim();
             
-            const btn = event.target.querySelector('button');
-            btn.disabled = true;
-            btn.innerText = "Joining...";
-
-            try {
-                const newEntry = await db.collection('queues').add({
-                    customerId: currentUserId,
-                    customerName: name,
-                    providerId: providerId,
-                    status: 'waiting',
-                    joinedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                
-                console.log("Joined successfully! Entry ID:", newEntry.id);
-                localStorage.removeItem('pendingJoin');
-                startListener(newEntry.id);
-            } catch (error) {
-                console.error("Join error:", error);
-                alert("Failed to join: " + error.message);
-                btn.disabled = false;
-                btn.innerText = "Join Queue";
-            }
+            localStorage.removeItem('pendingJoin');
+            startListener(newEntry.id);
+        } catch (error) {
+            alert("Join failed: " + error.message);
+            btn.disabled = false;
+            btn.innerText = "Join Queue";
         }
+    }
 
-        // ... keep your existing startListener and leaveQueue functions below ...
-    </script>
+    // ... Keep your startListener and leaveQueue functions ...
+    window.onload = init;
+</script>
