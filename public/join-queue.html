@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Join Queue | skipQs</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #2563eb; --bg: #f8fafc; --nav-bg: #2d1b4d; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding: 0; }
+        
+        .navbar { background: var(--nav-bg); padding: 1rem 0; color: white; text-align: center; position: relative; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .nav-container { max-width: 800px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-weight: 800; font-size: 1.5rem; color: white; text-decoration: none; letter-spacing: -0.5px; }
+        .nav-links { display: flex; align-items: center; }
+        .nav-links a { color: white; text-decoration: none; font-size: 0.9rem; margin-left: 15px; font-weight: 600; transition: 0.2s; }
+
+        .content-area { display: flex; align-items: center; justify-content: center; min-height: calc(100vh - 80px); padding: 20px; box-sizing: border-box; }
+        .card { background: white; padding: 2rem; border-radius: 1.5rem; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 400px; text-align: center; }
+        
+        .wait-preview { background: #eff6ff; padding: 1rem; border-radius: 1rem; margin-bottom: 1.5rem; display: flex; justify-content: space-around; }
+        .stat { display: block; font-size: 1.5rem; font-weight: 800; color: var(--primary); }
+        .label { font-size: 0.7rem; color: #64748b; text-transform: uppercase; font-weight: 600; }
+        
+        input, select { width: 100%; padding: 0.8rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 1rem; box-sizing: border-box; margin-top: 0.8rem; outline: none; transition: 0.2s; }
+        
+        .btn { width: 100%; padding: 1rem; background: var(--primary); color: white; border: none; border-radius: 0.5rem; font-weight: 700; cursor: pointer; margin-top: 1.2rem; transition: 0.3s; }
+        .btn:disabled { background: #94a3b8; cursor: not-allowed; }
+        
+        .hidden { display: none; }
+        .error-state { color: #dc2626; padding: 1rem; background: #fee2e2; border-radius: 0.5rem; margin-bottom: 1rem; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">skipQs</a>
+            <div class="nav-links">
+                <a href="index.html#categories">Find Services</a>
+                <a href="dashboard.html" id="dashboardLink" style="display:none;">My Visits</a>
+                <a href="login.html" id="authBtn">Login</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="content-area">
+        <div class="card">
+            <h2 id="bizName" style="margin-bottom: 0.5rem; color: #1e293b;">Loading...</h2>
+            <div id="errorMessage" class="hidden error-state"></div>
+
+            <div id="joinSection">
+                <div class="wait-preview">
+                    <div><span class="label">People Ahead</span><span class="stat" id="aheadCount">0</span></div>
+                    <div><span class="label">Est. Wait</span><span class="stat" id="estWait">0</span><span class="label">mins</span></div>
+                </div>
+                <select id="serviceSelect" onchange="calculateWait()">
+                    <option value="0" disabled selected>Choose a Service...</option>
+                </select>
+                <input type="text" id="custName" placeholder="Full Name" required>
+                <input type="tel" id="custPhone" placeholder="Mobile Number" required>
+                <button onclick="handleCustomerJoin()" id="joinBtn" class="btn">Join Queue Now</button>
+            </div>
+
+            <div id="statusSection" class="hidden">
+                <div style="background: #dcfce7; color: #166534; padding: 0.4rem; border-radius: 2rem; font-size: 0.8rem; font-weight: bold; margin-bottom: 1.5rem;">YOU ARE IN LINE</div>
+                <div style="font-size: 4rem; font-weight: 800; color: var(--primary); line-height: 1;" id="liveWait">--</div>
+                <p style="font-weight: 600; color: #64748b; margin-top: 0.5rem;">Estimated Minutes</p>
+                <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 1.5rem 0;">
+                <div style="display: flex; justify-content: space-between; padding: 0 10px;">
+                    <p style="margin:0; color: #64748b;">Your Position:</p>
+                    <p style="margin:0; font-weight: 800; color: var(--primary);" id="livePos">--</p>
+                </div>
+                <p id="selectedSvcLabel" style="font-size: 0.9rem; color: #1e293b; margin-top: 1rem; font-weight: 600;"></p>
+                <p style="font-size: 0.8rem; color: #94a3b8; margin-top: 2rem;">Please keep this page open to track your turn.</p>
+                <a href="index.html" style="display:block; margin-top:1rem; color:var(--primary); font-size:0.85rem; text-decoration:none; font-weight:600;">← Back to Home</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+
+    <script>
+        const db = firebase.firestore();
+        const urlParams = new URLSearchParams(window.location.search);
+        const providerId = urlParams.get('id') || urlParams.get('provider');
+        let currentBusinessName = "";
+
+        firebase.auth().onAuthStateChanged((user) => {
+            const authBtn = document.getElementById('authBtn');
+            const dashboardLink = document.getElementById('dashboardLink');
+            if (user) {
+                authBtn.innerText = "Logout";
+                authBtn.onclick = () => firebase.auth().signOut().then(() => location.reload());
+                dashboardLink.style.display = 'inline-block';
+                if (user.displayName) document.getElementById('custName').value = user.displayName;
+                
+                // NEW: Auto-check if user is ALREADY in this queue
+                checkForExistingSession(user.uid);
+            } else {
+                authBtn.innerText = "Login";
+                authBtn.href = "login.html";
+            }
+        });
+
+        async function checkForExistingSession(uid) {
+            const snap = await db.collection('queues')
+                .where('userId', '==', uid)
+                .where('providerId', '==', providerId)
+                .where('status', 'in', ['waiting', 'serving'])
+                .limit(1).get();
+
+            if (!snap.empty) {
+                const doc = snap.docs[0];
+                startLiveTracking(doc.id, doc.data().selectedService);
+            }
+        }
+
+        window.onload = () => {
+            if (!providerId) return showError("Invalid Provider ID.");
+            fetchBusinessDetails();
+            listenToServices();
+            previewQueue();
+        };
+
+        async function fetchBusinessDetails() {
+            const doc = await db.collection('providers').doc(providerId).get();
+            if (doc.exists) {
+                currentBusinessName = doc.data().businessName;
+                document.getElementById('bizName').innerText = currentBusinessName;
+            }
+        }
+
+        function listenToServices() {
+            const select = document.getElementById('serviceSelect');
+            db.collection('providers').doc(providerId).collection('services').onSnapshot(snap => {
+                select.innerHTML = '<option value="0" disabled selected>Choose a Service...</option>';
+                snap.forEach(doc => {
+                    const s = doc.data();
+                    const opt = document.createElement('option');
+                    opt.value = s.duration; opt.text = `${s.name} (${s.duration} mins)`;
+                    opt.dataset.name = s.name;
+                    select.appendChild(opt);
+                });
+            });
+        }
+
+        function previewQueue() {
+            db.collection('queues').where('providerId', '==', providerId).where('status', '==', 'waiting')
+                .onSnapshot(snap => {
+                    document.getElementById('aheadCount').innerText = snap.size;
+                    calculateWait();
+                });
+        }
+
+        function calculateWait() {
+            const ahead = parseInt(document.getElementById('aheadCount').innerText) || 0;
+            const duration = parseInt(document.getElementById('serviceSelect').value) || 0;
+            document.getElementById('estWait').innerText = (ahead * 10) + duration;
+        }
+
+        async function handleCustomerJoin() {
+            const name = document.getElementById('custName').value.trim();
+            const phone = document.getElementById('custPhone').value.trim();
+            const svcSelect = document.getElementById('serviceSelect');
+
+            if (svcSelect.selectedIndex <= 0 || !name || !phone) return alert("Fill all fields");
+
+            const btn = document.getElementById('joinBtn');
+            btn.disabled = true;
+
+            try {
+                let user = firebase.auth().currentUser;
+                if (!user) user = (await firebase.auth().signInAnonymously()).user;
+
+                const totalWait = (parseInt(document.getElementById('aheadCount').innerText) * 10) + parseInt(svcSelect.value);
+                const estTimeDate = new Date(Date.now() + totalWait * 60000);
+
+                const newDoc = await db.collection('queues').add({
+                    userId: user.uid,
+                    customerName: name,
+                    customerPhone: phone,
+                    providerId: providerId,
+                    businessName: currentBusinessName,
+                    selectedService: svcSelect.options[svcSelect.selectedIndex].dataset.name,
+                    serviceDuration: parseInt(svcSelect.value),
+                    status: 'waiting',
+                    joinedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    estimatedTime: firebase.firestore.Timestamp.fromDate(estTimeDate)
+                });
+                startLiveTracking(newDoc.id, svcSelect.options[svcSelect.selectedIndex].dataset.name);
+            } catch (err) { alert(err.message); btn.disabled = false; }
+        }
+
+        function startLiveTracking(myQueueId, svcName) {
+            document.getElementById('joinSection').classList.add('hidden');
+            document.getElementById('statusSection').classList.remove('hidden');
+            document.getElementById('selectedSvcLabel').innerText = "Service: " + svcName;
+
+            db.collection('queues').where('providerId', '==', providerId).where('status', '==', 'waiting')
+                .orderBy('joinedAt', 'asc').onSnapshot(snap => {
+                    const docs = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                    const myIndex = docs.findIndex(d => d.id === myQueueId);
+                    
+                    if (myIndex !== -1) {
+                        document.getElementById('livePos').innerText = myIndex + 1;
+                        document.getElementById('liveWait').innerText = (myIndex * 10) + (docs[myIndex].serviceDuration || 0);
+                    } else {
+                        db.collection('queues').doc(myQueueId).get().then(doc => {
+                            if(doc.exists && doc.data().status === 'serving') {
+                                document.getElementById('statusSection').innerHTML = "<h2 style='color:#166534'>It's your turn!</h2><p>Please proceed to the counter.</p>";
+                            }
+                        });
+                    }
+                });
+        }
+
+        function showError(msg) {
+            const errDiv = document.getElementById('errorMessage');
+            errDiv.innerText = msg; errDiv.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>

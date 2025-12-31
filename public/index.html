@@ -1,89 +1,425 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Welcome to Firebase Hosting</title>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>skipQs | Skip the Line. Save Your Time.</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-soft: #eff6ff;
+      --bg-light: #f8fafc;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --white: #ffffff;
+      --border: #e2e8f0;
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
 
-    <!-- update the version number as needed -->
-    <script defer src="/__/firebase/12.7.0/firebase-app-compat.js"></script>
-    <!-- include only the Firebase features as you need -->
-    <script defer src="/__/firebase/12.7.0/firebase-auth-compat.js"></script>
-    <script defer src="/__/firebase/12.7.0/firebase-database-compat.js"></script>
-    <script defer src="/__/firebase/12.7.0/firebase-firestore-compat.js"></script>
-    <script defer src="/__/firebase/12.7.0/firebase-functions-compat.js"></script>
-    <script defer src="/__/firebase/12.7.0/firebase-messaging-compat.js"></script>
-    <script defer src="/__/firebase/12.7.0/firebase-storage-compat.js"></script>
-    <script defer src="/__/firebase/12.7.0/firebase-analytics-compat.js"></script>
-    <script defer src="/__/firebase/12.7.0/firebase-remote-config-compat.js"></script>
-    <script defer src="/__/firebase/12.7.0/firebase-performance-compat.js"></script>
-    <!-- 
-      initialize the SDK after all desired features are loaded, set useEmulator to false
-      to avoid connecting the SDK to running emulators.
-    -->
-    <script defer src="/__/firebase/init.js?useEmulator=true"></script>
+    * { box-sizing: border-box; }
 
-    <style media="screen">
-      body { background: #ECEFF1; color: rgba(0,0,0,0.87); font-family: Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; }
-      #message { background: white; max-width: 360px; margin: 100px auto 16px; padding: 32px 24px; border-radius: 3px; }
-      #message h2 { color: #ffa100; font-weight: bold; font-size: 16px; margin: 0 0 8px; }
-      #message h1 { font-size: 22px; font-weight: 300; color: rgba(0,0,0,0.6); margin: 0 0 16px;}
-      #message p { line-height: 140%; margin: 16px 0 24px; font-size: 14px; }
-      #message a { display: block; text-align: center; background: #039be5; text-transform: uppercase; text-decoration: none; color: white; padding: 16px; border-radius: 4px; }
-      #message, #message a { box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24); }
-      #load { color: rgba(0,0,0,0.4); text-align: center; font-size: 13px; }
-      @media (max-width: 600px) {
-        body, #message { margin-top: 0; background: white; box-shadow: none; }
-        body { border-top: 16px solid #ffa100; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-light);
+      color: var(--text-main);
+      margin: 0;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+
+    /* --- Navbar --- */
+    .navbar {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .nav-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--primary);
+      text-decoration: none;
+      letter-spacing: -0.5px;
+    }
+
+    .menu-toggle {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      border: none;
+      background: none;
+      padding: 5px;
+    }
+
+    .menu-toggle span {
+      width: 25px;
+      height: 3px;
+      background: var(--primary);
+      border-radius: 2px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--text-muted);
+      font-weight: 500;
+      font-size: 0.95rem;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--primary); }
+
+    /* --- Queue Bar --- */
+    .queue-bar {
+      background: var(--primary);
+      color: white;
+      padding: 1.2rem 1.5rem;
+      border-radius: 1rem;
+      margin-top: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+    }
+
+    .timer-display {
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: #ffd700;
+      margin-left: 5px;
+    }
+
+    /* --- Hero Section --- */
+    .hero {
+      padding: 4rem 0;
+      text-align: center;
+      background: radial-gradient(circle at top right, #eff6ff, transparent);
+    }
+
+    .badge {
+      background: var(--primary-soft);
+      color: var(--primary);
+      padding: 0.4rem 1rem;
+      border-radius: 2rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: inline-block;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.2rem, 8vw, 3.5rem);
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 1.5rem;
+      letter-spacing: -1px;
+    }
+
+    .hero p {
+      font-size: clamp(1rem, 4vw, 1.25rem);
+      color: var(--text-muted);
+      max-width: 650px;
+      margin: 0 auto 2.5rem;
+    }
+
+    .hero-btns {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* --- Buttons --- */
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.6rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 160px;
+    }
+
+    .btn-primary { background: var(--primary); color: white; border: none; }
+    .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
+    .btn-outline { border: 1.5px solid var(--border); color: var(--text-main); background: var(--white); }
+    .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+
+    /* --- Services Grid --- */
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      padding-bottom: 5rem;
+    }
+
+    .category-card {
+      background: var(--white);
+      padding: 2.5rem;
+      border-radius: 1.25rem;
+      border: 1px solid var(--border);
+      text-decoration: none;
+      text-align: center;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .category-card:hover {
+      transform: translateY(-8px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--primary);
+    }
+
+    .category-card .icon { font-size: 3rem; margin-bottom: 1.5rem; display: block; }
+    .category-card h3 { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; }
+
+    @media (max-width: 768px) {
+      .menu-toggle { display: flex; }
+      .nav-links {
+        display: none;
+        flex-direction: column;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        background: white;
+        padding: 2rem;
+        border-bottom: 1px solid var(--border);
+        box-shadow: var(--shadow-lg);
+        text-align: center;
       }
-    </style>
-  </head>
-  <body>
-    <div id="message">
-      <h2>Welcome</h2>
-      <h1>Firebase Hosting Setup Complete</h1>
-      <p>You're seeing this because you've successfully setup Firebase Hosting. Now it's time to go build something extraordinary!</p>
-      <a target="_blank" href="https://firebase.google.com/docs/hosting/">Open Hosting Documentation</a>
+      .nav-links.active { display: flex; }
+      .hero { padding: 3rem 0; }
+      .hero-btns .btn { width: 100%; }
+      .queue-bar { flex-direction: column; text-align: center; gap: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="container nav-content">
+      <a href="index.html" class="logo">skipQs</a>
+      
+      <button class="menu-toggle" id="mobile-menu">
+        <span></span><span></span><span></span>
+      </button>
+
+      <div class="nav-links" id="nav-list">
+        <a href="index.html#categories">Find Services</a>
+        <a href="about.html">About</a>
+        <a href="how-it-works.html">How It Works</a>
+        <a href="dashboard.html" id="dashboardLink" style="display:none;">My Visits</a>
+        
+        <span id="userGreeting" style="display:none; color: var(--text-main); font-weight: 600; font-size: 0.9rem;">
+          Hi, <span id="userDisplayName" style="color: var(--primary);"></span>
+        </span>
+        
+        <a href="login.html" id="loginLink" class="btn btn-primary" style="min-width: 100px;">Login</a>
+        <button id="logoutBtn" class="btn btn-outline" style="display:none; min-width: 100px;" onclick="logoutUser()">Logout</button>
+        <a href="provider-signup.html" class="btn btn-outline" id="businessBtn" style="min-width: 130px;">For Business</a>
+      </div>
     </div>
-    <p id="load">Firebase SDK Loading&hellip;</p>
+  </nav>
 
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        const loadEl = document.querySelector('#load');
-        // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
-        // // The Firebase SDK is initialized and available here!
-        //
-        // firebase.auth().onAuthStateChanged(user => { });
-        // firebase.database().ref('/path/to/ref').on('value', snapshot => { });
-        // firebase.firestore().doc('/foo/bar').get().then(() => { });
-        // firebase.functions().httpsCallable('yourFunction')().then(() => { });
-        // firebase.messaging().requestPermission().then(() => { });
-        // firebase.storage().ref('/path/to/ref').getDownloadURL().then(() => { });
-        // firebase.analytics(); // call to activate
-        // firebase.analytics().logEvent('tutorial_completed');
-        // firebase.performance(); // call to activate
-        //
-        // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
+  <main class="container">
+    <div id="queueStatusBanner" class="queue-bar" style="display:none;">
+      <div class="banner-info">
+        <span style="font-weight: 700;">Live Queue: </span>
+        <span id="activeQueueName" style="opacity: 0.9;"></span>
+        <span id="timerDisplay" class="timer-display"></span>
+      </div>
+      <a id="trackBtn" href="join-queue.html" class="btn" style="background: white; color: var(--primary); min-width: auto; padding: 0.5rem 1.2rem; font-size: 0.85rem;">Track Position</a>
+    </div>
 
-        try {
-          let app = firebase.app();
-          let features = [
-            'auth', 
-            'database', 
-            'firestore',
-            'functions',
-            'messaging', 
-            'storage', 
-            'analytics', 
-            'remoteConfig',
-            'performance',
-          ].filter(feature => typeof app[feature] === 'function');
-          loadEl.textContent = `Firebase SDK loaded with ${features.join(', ')}`;
-        } catch (e) {
-          console.error(e);
-          loadEl.textContent = 'Error loading the Firebase SDK, check the console.';
+    <section class="hero">
+      <div class="badge">Trusted by Local Businesses</div>
+      <h1>Skip the Line.<br><span style="color: var(--primary);">Save Your Time.</span></h1>
+      <p>Join virtual queues for your favorite salons, clinics, and restaurants. No more waiting—reclaim your day.</p>
+      <div class="hero-btns">
+        <a href="#categories" class="btn btn-primary">Browse Services</a>
+        <a href="how-it-works.html" class="btn btn-outline">How it Works</a>
+      </div>
+    </section>
+
+    <section id="categories">
+      <h2 style="text-align: center; margin-bottom: 3rem; font-size: 2rem; font-weight: 800;">Popular Services</h2>
+      <div class="services-grid">
+        <a href="nearby.html?type=salon" class="category-card">
+          <span class="icon">💇‍♀️</span>
+          <h3>Salons & Spas</h3>
+          <p>Hair, nails & beauty</p>
+        </a>
+        <a href="nearby.html?type=restaurant" class="category-card">
+          <span class="icon">🍽️</span>
+          <h3>Restaurants</h3>
+          <p>Dining & cafe seats</p>
+        </a>
+        <a href="nearby.html?type=clinic" class="category-card">
+          <span class="icon">⚕️</span>
+          <h3>Health Services</h3>
+          <p>Medical & wellness</p>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="firebase-config.js"></script>
+
+  <script>
+    const db = firebase.firestore();
+    const mobileMenu = document.getElementById('mobile-menu');
+    const navList = document.getElementById('nav-list');
+    let countdownInterval;
+
+    mobileMenu.addEventListener('click', () => { navList.classList.toggle('active'); });
+
+    firebase.auth().onAuthStateChanged(user => {
+      const loginLink = document.getElementById('loginLink');
+      const logoutBtn = document.getElementById('logoutBtn');
+      const userGreeting = document.getElementById('userGreeting');
+      const userDisplayName = document.getElementById('userDisplayName');
+      const dashboardLink = document.getElementById('dashboardLink');
+      const businessBtn = document.getElementById('businessBtn');
+
+      if (user) {
+        loginLink.style.display = 'none';
+        logoutBtn.style.display = 'inline-flex';
+        userGreeting.style.display = 'inline-block';
+        dashboardLink.style.display = 'inline-block';
+        userDisplayName.textContent = user.displayName || user.email.split('@')[0];
+        if(businessBtn) businessBtn.style.display = 'none';
+        fetchActiveQueue(user.uid);
+      } else {
+        loginLink.style.display = 'inline-flex';
+        logoutBtn.style.display = 'none';
+        userGreeting.style.display = 'none';
+        dashboardLink.style.display = 'none';
+        if(businessBtn) businessBtn.style.display = 'inline-flex';
+        document.getElementById('queueStatusBanner').style.display = 'none';
+        clearInterval(countdownInterval);
+      }
+    });
+
+    async function fetchActiveQueue(uid) {
+      // Listen for the user's current active booking
+      db.collection('queues')
+        .where('userId', '==', uid)
+        .where('status', '==', 'waiting')
+        .onSnapshot(async (snapshot) => {
+          const banner = document.getElementById('queueStatusBanner');
+          const timerDisplay = document.getElementById('timerDisplay');
+          
+          if (!snapshot.empty) {
+            const myData = snapshot.docs[0].data();
+            const providerId = myData.providerId;
+            const myJoinTime = myData.joinedAt;
+
+            document.getElementById('activeQueueName').innerText = myData.businessName;
+            document.getElementById('trackBtn').href = `join-queue.html?id=${providerId}`;
+            banner.style.display = 'flex';
+
+            // DYNAMIC CALCULATION: Count how many people are in front of this user
+            db.collection('queues')
+              .where('providerId', '==', providerId)
+              .where('status', '==', 'waiting')
+              .where('joinedAt', '<', myJoinTime)
+              .onSnapshot(aheadSnap => {
+                const peopleAhead = aheadSnap.size;
+                
+                // If 0 people ahead, it's almost their turn
+                if (peopleAhead === 0) {
+                    timerDisplay.innerHTML = " — You're next in line!";
+                    timerDisplay.style.color = "#4ade80";
+                    clearInterval(countdownInterval);
+                    return;
+                }
+
+                // Estimate time: people ahead * 10 mins (fallback) + your own service duration
+                const totalEstimatedMins = (peopleAhead * 10) + (myData.serviceDuration || 10);
+                
+                // Set a target date from now
+                const targetDate = new Date();
+                targetDate.setMinutes(targetDate.getMinutes() + totalEstimatedMins);
+                
+                startCountdown(targetDate);
+              });
+
+          } else {
+            // Check if status changed to 'serving' (It's your turn!)
+            const servingSnap = await db.collection('queues')
+                .where('userId', '==', uid)
+                .where('status', '==', 'serving')
+                .limit(1).get();
+
+            if (!servingSnap.empty) {
+                banner.style.display = 'flex';
+                timerDisplay.innerHTML = " — It's your turn! Please enter.";
+                timerDisplay.style.color = "#4ade80";
+            } else {
+                banner.style.display = 'none';
+                clearInterval(countdownInterval);
+            }
+          }
+        });
+    }
+
+    function startCountdown(targetDate) {
+      clearInterval(countdownInterval);
+      const timerDisplay = document.getElementById('timerDisplay');
+      timerDisplay.style.color = "#ffd700";
+
+      const update = () => {
+        const now = new Date().getTime();
+        const distance = targetDate - now;
+
+        if (distance < 0) {
+          timerDisplay.innerHTML = " — Ready soon!";
+          return;
         }
-      });
-    </script>
-  </body>
+
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+        timerDisplay.innerHTML = ` — ETA: ~${minutes}m ${seconds}s`;
+      };
+
+      update();
+      countdownInterval = setInterval(update, 1000);
+    }
+
+    function logoutUser() {
+      firebase.auth().signOut().then(() => { window.location.reload(); });
+    }
+  </script>
+</body>
 </html>

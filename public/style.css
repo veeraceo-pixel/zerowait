@@ -1,0 +1,244 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+    --primary: #2563eb;
+    --primary-dark: #1e40af;
+    --primary-light: #dbeafe;
+    --primary-soft: #eff6ff;
+    --accent: #f59e0b;
+    --nav-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --footer-bg: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    --bg-light: #f8fafc;
+    --bg-white: #ffffff;
+    --text-main: #1e293b;
+    --text-secondary: #64748b;
+    --text-muted: #94a3b8;
+    --white: #ffffff;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    --border: #e2e8f0;
+    --radius-sm: 0.375rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 1rem;
+    --radius-xl: 1.5rem;
+}
+
+/* Reset */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg-light);
+    color: var(--text-main);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+/* Typography */
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.text-secondary { color: var(--text-secondary); }
+.text-muted { color: var(--text-muted); }
+.text-primary { color: var(--primary); }
+.text-success { color: #10b981; }
+.font-weight-bold { font-weight: 700; }
+.font-weight-extrabold { font-weight: 800; }
+.h1, .h2, .h3, .h4, .h5, .h6 { font-weight: 700; line-height: 1.2; margin-bottom: 1rem; color: var(--text-main); }
+.h1 { font-size: 3rem; letter-spacing: -0.025em; }
+.h2 { font-size: 2.25rem; }
+.h3 { font-size: 1.875rem; }
+.h4 { font-size: 1.5rem; }
+.h5 { font-size: 1.25rem; }
+.small { font-size: 0.875rem; }
+.uppercase { text-transform: uppercase; }
+.display-4 { font-size: 3.5rem; font-weight: 700; }
+
+/* Spacing */
+.mb-0 { margin-bottom: 0; }
+.mb-1 { margin-bottom: 0.25rem; }
+.mb-2 { margin-bottom: 0.5rem; }
+.mb-3 { margin-bottom: 1rem; }
+.mb-4 { margin-bottom: 1.5rem; }
+.mb-5 { margin-bottom: 3rem; }
+.mt-3 { margin-top: 1rem; }
+.mt-4 { margin-top: 1.5rem; }
+.mt-5 { margin-top: 3rem; }
+.py-3 { padding-top: 1rem; padding-bottom: 1rem; }
+.py-4 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+.py-5 { padding-top: 3rem; padding-bottom: 3rem; }
+.py-6 { padding-top: 5rem; padding-bottom: 5rem; }
+.p-4 { padding: 1.5rem; }
+.p-5 { padding: 3rem; }
+
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid transparent;
+    font-size: 0.875rem;
+}
+
+.btn-primary { 
+    background: var(--primary); 
+    color: var(--white); 
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); 
+}
+
+.btn-primary:hover { 
+    background: var(--primary-dark); 
+    transform: translateY(-1px); 
+    box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3); 
+}
+
+.btn-outline { 
+    border-color: var(--border); 
+    color: var(--text-main); 
+    background: var(--white); 
+}
+
+.btn-outline:hover { 
+    background: #f8fafc; 
+    border-color: var(--text-muted); 
+}
+
+/* Navbar */
+.navbar {
+    background: var(--nav-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 1rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    border-bottom: 1px solid var(--border);
+}
+
+.nav-content { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--white);
+    text-decoration: none;
+    letter-spacing: -0.05em;
+}
+
+.nav-links { 
+    display: flex; 
+    gap: 2rem; 
+    align-items: center; 
+}
+
+.nav-links a { 
+    text-decoration: none; 
+    color: var(--white); 
+    font-weight: 600; 
+    font-size: 0.9375rem; 
+    transition: color 0.2s; 
+}
+
+.nav-links a:hover { 
+    color: var(--primary-light); 
+}
+
+/* Footer */
+footer {
+    background: var(--footer-bg);
+    color: var(--white);
+    padding: 3rem 0 1rem;
+    border-top: 3px solid var(--primary);
+}
+
+footer a {
+    color: #aaa;
+    text-decoration: none;
+}
+
+footer a:hover {
+    color: var(--white);
+}
+
+footer p {
+    color: #aaa;
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Cards, Badges, Hero, Forms etc. - Keep your existing CSS */
+.card { 
+    background: var(--bg-white); 
+    border: 1px solid var(--border); 
+    border-radius: var(--radius-lg); 
+    box-shadow: var(--shadow-sm); 
+    transition: all 0.3s; 
+}
+.card:hover { 
+    box-shadow: var(--shadow-md); 
+}
+.card.h-100 { 
+    height: 100%; 
+}
+
+.badge { 
+    display: inline-flex; 
+    align-items: center; 
+    padding: 0.35rem 1rem; 
+    border-radius: 9999px; 
+    font-size: 0.75rem; 
+    font-weight: 700; 
+    text-transform: uppercase; 
+    letter-spacing: 0.05em; 
+}
+
+.bg-primary-light { 
+    background: var(--primary-soft); 
+    color: var(--primary); 
+}
+
+/* Hero section */
+.hero { 
+    padding: 10rem 0 8rem; 
+    text-align: center; 
+    background: radial-gradient(circle at top right, var(--primary-soft), transparent 40%), radial-gradient(circle at bottom left, #fff7ed, transparent 40%);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .nav-links {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        background: var(--nav-bg);
+        flex-direction: column;
+        padding: 1.5rem;
+        gap: 1rem;
+        border-bottom: 1px solid var(--border);
+        box-shadow: var(--shadow-lg);
+        z-index: 999;
+    }
+    .nav-links.active { display: flex; }
+    .nav-links a { padding: 0.75rem 0; width: 100%; }
+    .nav-links .btn { width: 100%; margin-top: 0.5rem; }
+} fix this and give me whole code to paste

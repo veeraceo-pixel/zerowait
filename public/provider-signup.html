@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Business Registration | skipQs</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --primary: #2563eb; 
+            --primary-hover: #1d4ed8; 
+            --bg-light: #f8fafc; 
+            --text-main: #1e293b; 
+            --text-muted: #64748b; 
+            --border: #e2e8f0; 
+            --white: #ffffff;
+            --shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-light); 
+            color: var(--text-main); 
+            margin: 0; 
+            display: flex; 
+            flex-direction: column;
+            min-height: 100vh; 
+        }
+
+        .navbar {
+            background: var(--white);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .auth-wrapper {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .form-card { 
+            background: white; 
+            padding: 2.5rem; 
+            border-radius: 1.25rem; 
+            box-shadow: var(--shadow); 
+            width: 100%; 
+            max-width: 480px; 
+        }
+
+        .header-section { text-align: center; margin-bottom: 2rem; }
+        .form-group { margin-bottom: 1.25rem; }
+        .form-label { display: block; font-weight: 600; font-size: 0.875rem; margin-bottom: 0.5rem; }
+        
+        .form-control { 
+            width: 100%; 
+            padding: 0.8rem 1rem; 
+            border: 1px solid var(--border); 
+            border-radius: 0.6rem; 
+            box-sizing: border-box; 
+            font-size: 1rem; 
+            font-family: inherit;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        /* Highlight for the Google Search Input */
+        #googleSearchInput {
+            border: 2px solid var(--border);
+            background: #fff;
+        }
+
+        .selection-preview {
+            background: #f1f5f9;
+            padding: 1rem;
+            border-radius: 0.6rem;
+            margin-top: 0.5rem;
+            display: none;
+            border-left: 4px solid var(--primary);
+        }
+
+        .btn-submit { 
+            width: 100%; 
+            padding: 1rem; 
+            background: var(--primary); 
+            color: white; 
+            border: none; 
+            border-radius: 0.6rem; 
+            font-weight: 700; 
+            cursor: pointer; 
+            margin-top: 1rem; 
+            transition: 0.2s; 
+        }
+
+        .btn-submit:hover { background: var(--primary-hover); }
+        .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        #successModal { 
+            display: none; 
+            position: fixed; 
+            inset: 0; 
+            background: rgba(15, 23, 42, 0.8); 
+            align-items: center; 
+            justify-content: center; 
+            z-index: 9999; 
+            backdrop-filter: blur(4px); 
+        }
+
+        .modal-content { 
+            background: white; 
+            padding: 3rem; 
+            border-radius: 1.5rem; 
+            text-align: center; 
+            width: 90%; 
+            max-width: 400px; 
+        }
+
+        /* Google Autocomplete Dropdown styling */
+        .pac-container {
+            border-radius: 8px;
+            margin-top: 5px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            border: none;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="navbar">
+        <a href="index.html" class="logo">skipQs</a>
+        <a href="login.html" class="nav-link">Already a Partner? Log in</a>
+    </header>
+
+    <main class="auth-wrapper">
+        <div class="form-card">
+            <div class="header-section">
+                <h1 style="margin:0; font-size: 1.75rem;">Register Business</h1>
+                <p style="color: var(--text-muted); margin-top: 0.5rem;">Link your Google Maps business to skipQs.</p>
+            </div>
+
+            <form id="providerSignupForm">
+                <div class="form-group">
+                    <label class="form-label">Search Your Business (Google Maps)</label>
+                    <input type="text" id="googleSearchInput" class="form-control" placeholder="Start typing your business name..." required>
+                    
+                    <div id="bizPreview" class="selection-preview">
+                        <span id="selectedName" style="font-weight: 800; display: block;"></span>
+                        <span id="selectedAddress" style="font-size: 0.75rem; color: var(--text-muted);"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Work Email</label>
+                    <input type="email" id="email" class="form-control" placeholder="admin@business.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" id="password" class="form-control" placeholder="Minimum 6 characters" required minlength="6">
+                </div>
+
+                <button type="submit" id="submitBtn" class="btn-submit" disabled>Verify & Create Account</button>
+            </form>
+        </div>
+    </main>
+
+    <div id="successModal">
+        <div class="modal-content">
+            <div style="width: 64px; height: 64px; background: #dcfce7; color: #166534; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 1.5rem;">✓</div>
+            <h2 style="margin: 0 0 0.5rem 0;">Success!</h2>
+            <p style="color: var(--text-muted); margin-bottom: 2rem;">Your business is now linked. Log in to manage your queue.</p>
+            <button class="btn-submit" onclick="window.location.href='login.html'">Go to Login</button>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+
+    <script>
+        const signupForm = document.getElementById('providerSignupForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const modal = document.getElementById('successModal');
+        
+        let selectedPlace = null;
+
+        // Initialize Google Places Autocomplete
+        function initAutocomplete() {
+            const input = document.getElementById('googleSearchInput');
+            const autocomplete = new google.maps.places.Autocomplete(input, {
+                types: ['establishment'],
+                fields: ['place_id', 'name', 'formatted_address', 'geometry', 'types']
+            });
+
+            autocomplete.addListener('place_changed', () => {
+                const place = autocomplete.getPlace();
+                
+                if (!place.place_id) {
+                    submitBtn.disabled = true;
+                    return;
+                }
+
+                selectedPlace = {
+                    googlePlaceId: place.place_id,
+                    businessName: place.name,
+                    address: place.formatted_address,
+                    lat: place.geometry.location.lat(),
+                    lng: place.geometry.location.lng(),
+                    // Map Google type to your simplified categories
+                    category: place.types.includes('restaurant') ? 'restaurant' : 
+                              (place.types.includes('health') ? 'clinic' : 'salon')
+                };
+
+                // Show visual confirmation
+                document.getElementById('bizPreview').style.display = 'block';
+                document.getElementById('selectedName').innerText = place.name;
+                document.getElementById('selectedAddress').innerText = place.formatted_address;
+                
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Create Business Account";
+            });
+        }
+
+        signupForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!selectedPlace) {
+                alert("Please select a business from the Google suggestions.");
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Verifying Business...";
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                // 1. Double check if this Google Place ID is already taken
+                const checkDuplicate = await firebase.firestore().collection('providers')
+                    .where('googlePlaceId', '==', selectedPlace.googlePlaceId)
+                    .get();
+
+                if (!checkDuplicate.empty) {
+                    throw new Error("This business location is already registered on skipQs.");
+                }
+
+                // 2. Create Auth User
+                const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+
+                // 3. Create Firestore Entry
+                await firebase.firestore().collection('providers').doc(user.uid).set({
+                    ...selectedPlace,
+                    email: email,
+                    role: 'provider',
+                    isOpen: false,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                modal.style.display = 'flex';
+                
+            } catch (error) {
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Create Business Account";
+                alert("Signup Error: " + error.message);
+            }
+        });
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAG-Qv4aH4xE2VFAMImB_xwG4J8TmehUMQ&libraries=places&callback=initAutocomplete" async defer></script>
+</body>
+</html>

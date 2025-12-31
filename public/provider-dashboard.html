@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>skipQs | Provider Command Center</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #2563eb; --bg: #f8fafc; --sidebar: #0f172a; --text: #1e293b; --border: #e2e8f0; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; min-height: 100vh; }
+
+        /* Sidebar - Fixed on the left */
+        nav { width: 260px; background: var(--sidebar); color: white; display: flex; flex-direction: column; padding: 1.5rem; position: fixed; height: 100vh; box-sizing: border-box; z-index: 1000; }
+        .nav-logo { font-size: 1.6rem; font-weight: 800; color: var(--primary); margin-bottom: 2rem; }
+        .nav-link { padding: 0.8rem 1rem; color: #94a3b8; text-decoration: none; border-radius: 0.5rem; margin-bottom: 0.5rem; cursor: pointer; display: flex; align-items: center; gap: 12px; font-weight: 500; }
+        .nav-link.active { background: #1e293b; color: white; border-left: 4px solid var(--primary); }
+
+        /* Main Content - Offset for sidebar */
+        main { flex: 1; margin-left: 260px; padding: 2rem; width: calc(100% - 260px); box-sizing: border-box; }
+
+        /* Header UI */
+        .header-bar { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; }
+        .status-badge { padding: 0.4rem 1rem; border-radius: 2rem; font-size: 0.75rem; font-weight: 700; display: inline-block; margin-top: 8px; }
+        .open { background: #dcfce7; color: #15803d; }
+        .closed { background: #fee2e2; color: #b91c1c; }
+
+        /* Stats Grid */
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 2rem; }
+        .stat-card { background: white; padding: 1.5rem; border-radius: 1rem; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .stat-card h4 { margin: 0; font-size: 0.75rem; color: #64748b; text-transform: uppercase; }
+        .stat-val { font-size: 2.2rem; font-weight: 800; margin-top: 0.5rem; }
+
+        /* Table & Cards */
+        .content-card { background: white; border-radius: 1rem; border: 1px solid var(--border); margin-bottom: 2rem; overflow: hidden; }
+        .card-header { padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--border); font-weight: 700; background: #fff; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 1rem 1.5rem; font-size: 0.7rem; color: #64748b; text-transform: uppercase; border-bottom: 1px solid var(--border); background: #fcfcfd; }
+        td { padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--border); }
+
+        /* Form for Managing Services */
+        .form-group { display: flex; gap: 10px; padding: 1.5rem; background: #fff; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+        input { padding: 0.7rem 1rem; border: 1px solid var(--border); border-radius: 0.5rem; font-family: inherit; flex: 1; min-width: 120px; }
+        .btn { padding: 0.7rem 1.2rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border); transition: 0.2s; }
+        .btn-primary { background: var(--primary); color: white; border: none; }
+
+        /* QR Overlay */
+        #qrOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; display: none; align-items: center; justify-content: center; }
+        .qr-card { background: white; padding: 2rem; border-radius: 1rem; text-align: center; }
+
+        /* Service Tags */
+        .svc-tag { display: inline-flex; align-items: center; gap: 8px; background: #eff6ff; color: #1e40af; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; font-size: 0.9rem; margin: 5px; }
+        .svc-del { color: #ef4444; cursor: pointer; font-size: 1.2rem; }
+
+        /* Mobile Sidebar Adjustment */
+        @media (max-width: 850px) {
+            nav { width: 70px; padding: 1.5rem 0.5rem; align-items: center; }
+            .nav-logo, .nav-link span:last-child { display: none; }
+            main { margin-left: 70px; width: calc(100% - 70px); padding: 1rem; }
+            .grid { grid-template-columns: 1fr; }
+            .header-bar { flex-direction: column; gap: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="nav-logo">skipQs</div>
+        <div class="nav-link active" onclick="showSection('live', this)"><span>📡</span><span>Live Queue</span></div>
+        <div class="nav-link" onclick="showSection('history', this)"><span>📊</span><span>History</span></div>
+        <div class="nav-link" onclick="showSection('services', this)"><span>🛠️</span><span>Manage Services</span></div>
+        <div class="nav-link" onclick="toggleQR()"><span>📱</span><span>QR Code</span></div>
+        <div class="nav-link" onclick="handleLogout()"><span>🚪</span><span>Logout</span></div>
+    </nav>
+
+    <main>
+        <div class="header-bar">
+            <div>
+                <h1 style="margin:0;" id="bizTitle">Dashboard</h1>
+                <div id="statusBadge"></div>
+            </div>
+            <button class="btn" onclick="toggleStatus()">Switch Status</button>
+        </div>
+
+        <div class="grid">
+            <div class="stat-card"><h4>Waiting</h4><div class="stat-val" id="waitCount">0</div></div>
+            <div class="stat-card"><h4>Backlog</h4><div class="stat-val" id="totalMins">0<small style="font-size:1rem">m</small></div></div>
+            <div class="stat-card"><h4>Served Today</h4><div class="stat-val" id="servedToday">0</div></div>
+        </div>
+
+        <section id="sec-live" class="content-card">
+            <div class="card-header">Active Queue Management</div>
+            <table>
+                <thead><tr><th>Customer</th><th>Service</th><th>Duration</th><th>Action</th></tr></thead>
+                <tbody id="qItems"></tbody>
+            </table>
+        </section>
+
+        <section id="sec-services" class="content-card" style="display:none">
+            <div class="card-header">Setup Services (For Customers)</div>
+            <div class="form-group">
+                <input type="text" id="sName" placeholder="Service Name">
+                <input type="number" id="sTime" placeholder="Mins">
+                <input type="number" id="sPrice" placeholder="Price ($)">
+                <button class="btn btn-primary" onclick="addSvc()">Add</button>
+            </div>
+            <div id="svcList" style="padding: 1.5rem; display: flex; flex-wrap: wrap;"></div>
+        </section>
+
+        <section id="sec-history" class="content-card" style="display:none">
+            <div class="card-header">Daily History</div>
+            <div style="padding:1rem; border-bottom:1px solid var(--border)">
+                <input type="date" id="hDate" class="btn" onchange="loadHistory()" style="width: auto;">
+            </div>
+            <table>
+                <thead><tr><th>Customer</th><th>Service</th><th>Time Completed</th></tr></thead>
+                <tbody id="hItems"></tbody>
+            </table>
+        </section>
+    </main>
+
+    <div id="qrOverlay">
+        <div class="qr-card">
+            <h3>Customer Entrance QR</h3>
+            <p style="color: #64748b; font-size: 0.9rem;">Customers scan this to choose a service and join.</p>
+            <div id="qrcode-box" style="margin: 20px auto; display: flex; justify-content: center;"></div>
+            <button class="btn btn-primary" onclick="toggleQR()">Close</button>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/easyqrcodejs@4.4.10/dist/easy.qrcode.min.js"></script>
+
+    <script>
+        const db = firebase.firestore();
+        let curUid, pubId, qUnsub;
+
+        firebase.auth().onAuthStateChanged(user => {
+            if (!user) { window.location.href = 'login.html'; return; }
+            curUid = user.uid;
+            db.collection('providers').doc(user.uid).onSnapshot(doc => {
+                const data = doc.data();
+                if(!data) return;
+                pubId = data.googlePlaceId || user.uid;
+                document.getElementById('bizTitle').innerText = data.businessName;
+                
+                const badge = document.getElementById('statusBadge');
+                badge.innerHTML = data.isOpen ? 
+                    '<span class="status-badge open">● Business is Open</span>' : 
+                    '<span class="status-badge closed">● Business is Closed</span>';
+
+                startLiveQ();
+                loadServices();
+                updateServedToday();
+            });
+        });
+
+        async function toggleStatus() {
+            const ref = db.collection('providers').doc(curUid);
+            const snap = await ref.get();
+            await ref.update({ isOpen: !snap.data().isOpen });
+        }
+
+        async function serveNext(id) {
+            const today = new Date().toISOString().split('T')[0];
+            await db.collection('queues').doc(id).update({
+                status: 'completed',
+                completedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                completedDate: today
+            });
+            updateServedToday();
+        }
+
+        function toggleQR() {
+            const overlay = document.getElementById('qrOverlay');
+            if(overlay.style.display === 'flex') { overlay.style.display = 'none'; } 
+            else {
+                overlay.style.display = 'flex';
+                const box = document.getElementById('qrcode-box');
+                box.innerHTML = "";
+                const url = `https://veeraceo-pixel.github.io/zerowait/join-queue.html?id=${pubId}`;
+                new QRCode(box, { text: url, width: 200, height: 200 });
+            }
+        }
+
+        function startLiveQ() {
+            if(qUnsub) qUnsub();
+            qUnsub = db.collection('queues').where('providerId', '==', pubId).where('status', '==', 'waiting')
+                .onSnapshot(snap => {
+                    let mins = 0;
+                    document.getElementById('waitCount').innerText = snap.size;
+                    const items = document.getElementById('qItems');
+                    items.innerHTML = snap.empty ? '<tr><td colspan="4" style="text-align:center">Queue is empty</td></tr>' : "";
+                    snap.forEach(doc => {
+                        const d = doc.data();
+                        mins += (d.serviceDuration || 0);
+                        items.innerHTML += `<tr>
+                            <td><strong>${d.customerName}</strong><br><small>${d.customerPhone || ''}</small></td>
+                            <td>${d.selectedService || '--'}</td>
+                            <td>${d.serviceDuration || 0}m</td>
+                            <td><button class="btn btn-primary" onclick="serveNext('${doc.id}')">Serve Next</button></td>
+                        </tr>`;
+                    });
+                    document.getElementById('totalMins').innerHTML = mins + '<small style="font-size:1rem">m</small>';
+                });
+        }
+
+        function loadServices() {
+            db.collection('providers').doc(pubId).collection('services').onSnapshot(snap => {
+                const list = document.getElementById('svcList');
+                list.innerHTML = "";
+                snap.forEach(doc => {
+                    const s = doc.data();
+                    list.innerHTML += `<div class="svc-tag">
+                        <span>${s.name} • ${s.duration}m</span>
+                        <span class="svc-del" onclick="delSvc('${doc.id}')">×</span>
+                    </div>`;
+                });
+            });
+        }
+
+        async function addSvc() {
+            const n = document.getElementById('sName').value, t = document.getElementById('sTime').value, p = document.getElementById('sPrice').value;
+            if(!n || !t) return;
+            await db.collection('providers').doc(pubId).collection('services').add({
+                name: n, duration: parseInt(t), price: p || 0
+            });
+            document.getElementById('sName').value = ""; document.getElementById('sTime').value = ""; document.getElementById('sPrice').value = "";
+        }
+
+        async function delSvc(id) { if(confirm("Delete service?")) await db.collection('providers').doc(pubId).collection('services').doc(id).delete(); }
+
+        function showSection(id, el) {
+            document.querySelectorAll('section').forEach(s => s.style.display = 'none');
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            document.getElementById('sec-' + id).style.display = 'block';
+            el.classList.add('active');
+        }
+
+        async function updateServedToday() {
+            const today = new Date().toISOString().split('T')[0];
+            const snap = await db.collection('queues').where('providerId','==',pubId).where('status','==','completed').where('completedDate','==',today).get();
+            document.getElementById('servedToday').innerText = snap.size;
+        }
+
+        function handleLogout() { firebase.auth().signOut().then(() => window.location.href='index.html'); }
+    </script>
+</body>
+</html>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Visits | skipQs</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #2563eb; --bg: #f8fafc; --text: #1e293b; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; }
+        .navbar { background: #2d1b4d; padding: 1rem 0; color: white; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { margin-bottom: 2rem; }
+        .visit-card { 
+            background: white; padding: 1.25rem; border-radius: 12px; 
+            margin-bottom: 1rem; border: 1px solid #e2e8f0;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .status { font-size: 0.75rem; font-weight: 700; padding: 4px 12px; border-radius: 20px; text-transform: uppercase; }
+        .waiting { background: #fef3c7; color: #92400e; }
+        .serving { background: #dcfce7; color: #166534; }
+        .nav-link { color: white; text-decoration: none; font-size: 0.9rem; float: right; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="container">
+        <a href="index.html" style="text-decoration: none; color: white;">
+            <span style="font-weight:800; font-size:1.2rem; cursor: pointer;">skipQs</span>
+        </a>
+        <a href="nearby.html" class="nav-link">Find Services</a>
+    </div>
+</nav>
+
+    <div class="container">
+        <div class="header">
+            <h1 style="font-size: 1.75rem; margin: 0;">My Visit History</h1>
+            <p style="color: #64748b;">Live status of your current and past queues.</p>
+        </div>
+
+        <div id="visits-list">
+            <p style="text-align:center; color: #94a3b8;">Checking for visits...</p>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+
+    <script>
+        const db = firebase.firestore();
+
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                console.log("Logged in as:", user.uid);
+                renderVisits(user.uid);
+            } else {
+                // If they joined anonymously, they should have a session. 
+                // If not, we trigger anonymous login so they can at least see the page.
+                firebase.auth().signInAnonymously();
+            }
+        });
+
+        function renderVisits(uid) {
+            const listDiv = document.getElementById('visits-list');
+
+            // IMPORTANT: collection must be 'queues' to match your join-queue code
+            db.collection('queues')
+                .where('userId', '==', uid)
+                .orderBy('joinedAt', 'desc')
+                .onSnapshot((snapshot) => {
+                    if (snapshot.empty) {
+                        listDiv.innerHTML = `<div style="text-align:center; padding: 40px;">
+                            <p style="color:#64748b;">No active visits found.</p>
+                            <a href="nearby.html" style="color:var(--primary); font-weight:600; text-decoration:none;">Search Nearby</a>
+                        </div>`;
+                        return;
+                    }
+
+                    let html = '';
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        const statusClass = data.status === 'waiting' ? 'waiting' : 'serving';
+                        const date = data.joinedAt ? data.joinedAt.toDate().toLocaleDateString() : 'Just now';
+                        
+                        html += `
+                            <div class="visit-card">
+                                <div>
+                                    <div style="font-weight:700;">${data.businessName || 'Service Provider'}</div>
+                                    <div style="font-size:0.8rem; color:#64748b;">${data.selectedService} • ${date}</div>
+                                </div>
+                                <div class="status ${statusClass}">${data.status}</div>
+                            </div>
+                        `;
+                    });
+                    listDiv.innerHTML = html;
+                }, (error) => {
+                    console.error("Dashboard Error:", error);
+                    if (error.message.includes("FAILED_PRECONDITION")) {
+                        listDiv.innerHTML = `
+                            <div style="background:#fff4f4; color:#c53030; padding:1rem; border-radius:8px; font-size:0.9rem;">
+                                <strong>Index Required:</strong> Click the link in your browser console (F12) to enable this view.
+                            </div>`;
+                    } else {
+                        listDiv.innerHTML = "<p>Error loading visits. Check console for details.</p>";
+                    }
+                });
+        }
+    </script>
+</body>
+</html>
