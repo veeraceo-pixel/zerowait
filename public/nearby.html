@@ -20,7 +20,6 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: 'Inter', sans-serif; background-color: var(--bg-light); color: var(--text-main); margin: 0; overflow: hidden; height: 100vh; }
 
-        /* Consistent Navbar */
         .navbar { background: var(--nav-bg); padding: 0.75rem 0; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); position: relative; z-index: 1000; }
         .container { max-width: 1200px; margin: 0 auto; padding: 0 1rem; display: flex; justify-content: space-between; align-items: center; }
         .logo { font-weight: 800; font-size: 1.25rem; color: white; text-decoration: none; letter-spacing: -0.5px; }
@@ -124,10 +123,11 @@
         const params = new URLSearchParams(window.location.search);
         let serviceType = params.get("type") || 'salon';
         
+        // Category Map: 'health' and 'doctor' work better for city clinics than 'hospital'
         const SERVICE_MAP = {
             salon: { type: "hair_care", keyword: "salon", label: "Salons Nearby" },
             restaurant: { type: "restaurant", keyword: "restaurant", label: "Restaurants Nearby" },
-            clinic: { type: "hospital", keyword: "clinic", label: "Clinics Nearby" }
+            clinic: { type: "health", keyword: "clinic", label: "Clinics Nearby" }
         };
 
         const config = SERVICE_MAP[serviceType] || SERVICE_MAP.salon;
@@ -135,9 +135,8 @@
 
         let map, placesService, userLocation;
         let markers = [];
-        const defaultLocation = { lat: 53.4875, lng: -2.2901 }; 
+        const defaultLocation = { lat: 53.4875, lng: -2.2901 }; // Manchester
 
-        // Login status listener
         firebase.auth().onAuthStateChanged((user) => {
             const authBtn = document.getElementById('authBtn');
             const myVisits = document.getElementById('myVisitsLink');
@@ -149,7 +148,7 @@
                 };
             } else {
                 authBtn.innerText = "Login";
-                myVisits.style.display = 'none';
+                if(myVisits) myVisits.style.display = 'none';
             }
         });
 
@@ -180,9 +179,12 @@
             document.getElementById("status-text").innerText = "Finding " + serviceType + "s...";
             
             placesService.nearbySearch({
-                location: userLocation, radius: 5000, 
-                type: config.type, keyword: config.keyword
+                location: userLocation, 
+                radius: 10000, // Increased to 10km for better results
+                type: config.type, 
+                keyword: config.keyword
             }, (results, status) => {
+                console.log("Search Status:", status); // Debug log
                 if (status === "OK") {
                     results.forEach(p => {
                         p.distMeters = google.maps.geometry.spherical.computeDistanceBetween(
@@ -194,7 +196,7 @@
                     renderResults(results);
                     document.getElementById("status-text").innerText = results.length + " locations found near you.";
                 } else {
-                    document.getElementById("results").innerHTML = "<p style='text-align:center; padding:2rem;'>No results found.</p>";
+                    document.getElementById("results").innerHTML = `<p style='text-align:center; padding:2rem;'>No results found (Status: ${status}).</p>`;
                 }
             });
         }
@@ -282,6 +284,7 @@
 
                     db.collection('providers').where('googlePlaceId', '==', placeId).get().then(snap => {
                         const actionDiv = document.getElementById('modalAction');
+                        // Corrected the template literal syntax error below ($ instead of 0)
                         const mapUrl = placeDetails.url || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name)}&query_place_id=${placeId}`;
                         
                         let html = `<div class="btn-group">
@@ -290,7 +293,6 @@
                         if (!snap.empty) {
                             const providerDoc = snap.docs[0];
                             const providerData = providerDoc.data();
-                            // Pass the actual Firestore Document ID to the join-queue page
                             const firestoreId = providerDoc.id;
 
                             if (providerData.status === 'closed' || providerData.active === false) {
