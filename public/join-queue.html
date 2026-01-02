@@ -220,42 +220,47 @@
             }
         }
 
-        function startLiveTracking(myQueueId, svcNames) {
-            document.getElementById('joinSection').classList.add('hidden');
-            document.getElementById('statusSection').classList.remove('hidden');
-            document.getElementById('selectedSvcLabel').innerText = "Services: " + svcNames;
+    function startLiveTracking(myQueueId, svcNames) {
+    document.getElementById('joinSection').classList.add('hidden');
+    document.getElementById('statusSection').classList.remove('hidden');
+    document.getElementById('selectedSvcLabel').innerText = "Services: " + svcNames;
 
-            db.collection('queues')
-                .where('providerId', '==', providerId)
-                .where('status', '==', 'waiting')
-                .orderBy('joinedAt', 'asc')
-                .onSnapshot(snap => {
-                    const docs = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                    const myIndex = docs.findIndex(d => d.id === myQueueId);
-                    
-                    if (myIndex !== -1) {
-                        // Calculate wait for existing session: sum of service times for everyone BEFORE myIndex
-                        let waitBeforeMe = 0;
-                        for(let i = 0; i < myIndex; i++) {
-                            waitBeforeMe += (Number(docs[i].serviceDuration) || 0);
-                        }
-                        
-                        document.getElementById('livePos').innerText = myIndex + 1;
-                        document.getElementById('liveWait').innerText = waitBeforeMe;
-                    } else {
-                        db.collection('queues').doc(myQueueId).get().then(doc => {
-                            if(doc.exists && doc.data().status === 'serving') {
-                                document.getElementById('statusSection').innerHTML = `
-                                    <div style="padding: 2rem;">
-                                        <h2 style='color:#166534; font-size: 2rem;'>It's Your Turn!</h2>
-                                        <p style="font-size: 1.1rem;">Please head to the counter now.</p>
-                                        <button onclick="location.reload()" class="btn">Done</button>
-                                    </div>`;
-                            }
-                        });
+    // Listen for real-time changes in the queue
+    db.collection('queues')
+        .where('providerId', '==', providerId)
+        .where('status', '==', 'waiting')
+        .orderBy('joinedAt', 'asc')
+        .onSnapshot(snap => {
+            const docs = snap.docs.map(d => ({id: d.id, ...d.data()}));
+            const myIndex = docs.findIndex(d => d.id === myQueueId);
+            
+            if (myIndex !== -1) {
+                // THE TIMER LOGIC:
+                // Sum up the specific service times for only the people positioned BEFORE you
+                let waitBeforeMe = 0;
+                for(let i = 0; i < myIndex; i++) {
+                    // Ensure duration is treated as a number
+                    waitBeforeMe += (Number(docs[i].serviceDuration) || 0);
+                }
+                
+                // Update the Customer's Live Timer and Position
+                document.getElementById('livePos').innerText = myIndex + 1;
+                document.getElementById('liveWait').innerText = waitBeforeMe;
+            } else {
+                // Logic for when status changes to 'serving' or 'completed'
+                db.collection('queues').doc(myQueueId).get().then(doc => {
+                    if(doc.exists && doc.data().status === 'serving') {
+                        document.getElementById('statusSection').innerHTML = `
+                            <div style="padding: 2rem;">
+                                <h2 style='color:#166534; font-size: 2rem;'>It's Your Turn!</h2>
+                                <p style="font-size: 1.1rem;">Please head to the counter now.</p>
+                                <button onclick="location.reload()" class="btn">Done</button>
+                            </div>`;
                     }
                 });
-        }
+            }
+        });
+}
 
         function showError(msg) {
             const errDiv = document.getElementById('errorMessage');
