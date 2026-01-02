@@ -46,52 +46,33 @@
         .provider-registered { background: #d1fae5; color: #065f46; }
         .provider-not-registered { background: #f1f5f9; color: #64748b; }
 
-        /* New Button Style */
+        /* HUD & Street View UI */
         .btn-explore {
-            margin-top: 8px;
-            background: white;
-            border: 1px solid var(--primary);
-            color: var(--primary);
-            border-radius: 6px;
-            padding: 5px 10px;
-            font-size: 0.7rem;
-            font-weight: 700;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            transition: all 0.2s;
+            margin-top: 8px; background: white; border: 1px solid var(--primary); color: var(--primary);
+            border-radius: 6px; padding: 5px 10px; font-size: 0.7rem; font-weight: 700; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 4px; transition: 0.2s;
         }
-        .btn-explore:hover { background: var(--primary); color: white; }
-
-        /* Street View Overlay */
-        #street-view-container { 
-            display: none; 
-            position: fixed; 
-            top: 0; left: 0; 
-            width: 100%; height: 100%; 
-            z-index: 3000; 
-            background: black; 
-        }
-        .close-street-view {
-            position: absolute; top: 20px; right: 20px; z-index: 3001;
-            background: rgba(0,0,0,0.6); color: white; border: none;
-            border-radius: 50%; width: 40px; height: 40px; font-size: 20px; cursor: pointer;
+        #street-view-container { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 3000; background: black; }
+        .close-street-view { position: absolute; top: 20px; right: 20px; z-index: 3001; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; cursor: pointer; }
+        
+        #street-hud {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            z-index: 3002; background: white; padding: 12px 20px; border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3); display: flex; align-items: center;
+            gap: 12px; width: 90%; max-width: 380px; border-left: 5px solid var(--primary);
         }
 
+        /* Modals */
         #detailModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; align-items: flex-end; justify-content: center; }
         .modal-content { background: white; width: 100%; max-width: 500px; border-radius: 1.5rem 1.5rem 0 0; overflow: hidden; position: relative; animation: slideUp 0.2s ease-out; max-height: 90vh; display: flex; flex-direction: column; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        
         .photo-gallery { display: flex; overflow-x: auto; height: 180px; background: #eee; scroll-snap-type: x mandatory; }
         .photo-gallery img { height: 100%; object-fit: cover; min-width: 100%; scroll-snap-align: start; }
         .modal-body { padding: 1.25rem; overflow-y: auto; flex: 1; }
-        
         .btn-group { display: flex; gap: 10px; margin-top: 1rem; }
         .btn-join { flex: 2; padding: 1rem; background: var(--primary); color: white; border: none; border-radius: 0.75rem; font-weight: 700; cursor: pointer; font-size: 0.9rem; }
         .btn-offline { background: #64748b !important; cursor: not-allowed; }
         .btn-maps { flex: 1; padding: 1rem; background: #f1f5f9; color: var(--text-main); border: 1px solid var(--border); border-radius: 0.75rem; font-weight: 600; text-decoration: none; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; }
-        
         .travel-info { margin-top: 8px; font-size: 0.85rem; color: var(--success); font-weight: 700; display: flex; align-items: center; gap: 5px; }
 
         @media (min-width: 769px) {
@@ -128,6 +109,14 @@
 
     <div id="street-view-container">
         <button class="close-street-view" onclick="closeStreetView()">✕</button>
+        <div id="street-hud">
+            <div id="hud-count" style="background: var(--primary); color: white; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800;">?</div>
+            <div style="flex: 1;">
+                <div id="hud-name" style="font-size: 0.85rem; font-weight: 800;">Loading...</div>
+                <div id="hud-status" style="font-size: 0.65rem; color: var(--text-muted);">Checking queue...</div>
+            </div>
+            <button id="hud-btn" style="background: var(--success); color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 0.7rem; cursor: pointer;">JOIN</button>
+        </div>
         <div id="street-pano" style="width: 100%; height: 100%;"></div>
     </div>
 
@@ -261,8 +250,8 @@
                         <span style="font-size:0.75rem; color:var(--text-muted)">${place.vicinity}</span>
                         <div class="dist-text">📍 ${miles} miles away</div>
                         
-                        <button class="btn-explore" onclick="event.stopPropagation(); openStreetView(${place.geometry.location.lat()}, ${place.geometry.location.lng()})">
-                           🚶 Walk the street
+                        <button class="btn-explore" onclick="event.stopPropagation(); openStreetView(${place.geometry.location.lat()}, ${place.geometry.location.lng()}, '${place.name.replace(/'/g, "\\'")}', '${place.place_id}')">
+                            🚶 Walk the street
                         </button>
 
                         <div id="st-${index}" class="provider-status" style="background:#eee; display:block; margin-top:8px;">Checking skipQs...</div>
@@ -282,40 +271,45 @@
             });
         }
 
-        /* NEW STREET VIEW LOGIC */
-        function openStreetView(lat, lng) {
+        /* HUD & STREET VIEW LOGIC */
+        function openStreetView(lat, lng, name, pid) {
             document.getElementById('street-view-container').style.display = 'block';
-            new google.maps.StreetViewPanorama(
-                document.getElementById("street-pano"),
-                {
-                    position: { lat: lat, lng: lng },
-                    pov: { heading: 165, pitch: 0 },
-                    zoom: 1,
-                    addressControl: false,
-                    fullscreenControl: false
+            document.getElementById('hud-name').innerText = name;
+            
+            new google.maps.StreetViewPanorama(document.getElementById("street-pano"), {
+                position: { lat, lng }, pov: { heading: 165, pitch: 0 }, zoom: 1, addressControl: false
+            });
+
+            db.collection('providers').where('googlePlaceId', '==', pid).get().then(snap => {
+                const count = document.getElementById('hud-count');
+                const status = document.getElementById('hud-status');
+                const btn = document.getElementById('hud-btn');
+                
+                if (!snap.empty) {
+                    const d = snap.docs[0].data();
+                    count.innerText = d.queueCount || "0";
+                    status.innerText = "People in line";
+                    btn.style.display = "block";
+                    btn.onclick = () => window.location.href=`join-queue.html?id=${snap.docs[0].id}&name=${encodeURIComponent(name)}`;
+                } else {
+                    count.innerText = "!";
+                    status.innerText = "Not registered";
+                    btn.style.display = "none";
                 }
-            );
+            });
         }
 
-        function closeStreetView() {
-            document.getElementById('street-view-container').style.display = 'none';
-        }
+        function closeStreetView() { document.getElementById('street-view-container').style.display = 'none'; }
 
         function calculateTravelTime(destLocation) {
             const service = new google.maps.DistanceMatrixService();
             const timeDisplay = document.getElementById('modalTravelTime');
-
             service.getDistanceMatrix({
-                origins: [userLocation],
-                destinations: [destLocation],
-                travelMode: 'DRIVING',
+                origins: [userLocation], destinations: [destLocation], travelMode: 'DRIVING',
             }, (response, status) => {
                 if (status === 'OK' && response.rows[0].elements[0].status === 'OK') {
-                    const durationText = response.rows[0].elements[0].duration.text;
-                    timeDisplay.innerHTML = `🚗 <b>${durationText}</b> drive from your location`;
-                } else {
-                    timeDisplay.innerHTML = ""; 
-                }
+                    timeDisplay.innerHTML = `🚗 <b>${response.rows[0].elements[0].duration.text}</b> drive from your location`;
+                } else { timeDisplay.innerHTML = ""; }
             });
         }
 
@@ -329,43 +323,33 @@
             document.getElementById('modalDistance').innerText = `📍 ${miles} miles away`;
             document.getElementById('modalTravelTime').innerHTML = "<span style='color:#94a3b8;'>Calculating...</span>";
             document.getElementById('modalPhotos').innerHTML = "<div style='padding:40px; text-align:center; width:100%;'>Loading photos...</div>";
-            document.getElementById('modalReviews').innerHTML = "";
 
             if (userLocation) calculateTravelTime(place.geometry.location);
 
             placesService.getDetails({ placeId, fields: ['photos', 'reviews', 'rating', 'url'] }, (placeDetails, status) => {
                 if (status === "OK") {
                     document.getElementById('modalRating').innerText = "★ " + (placeDetails.rating || "N/A");
-                    if (placeDetails.photos) {
-                        document.getElementById('modalPhotos').innerHTML = placeDetails.photos.slice(0, 5).map(p => `<img src="${p.getUrl()}">`).join('');
-                    }
-                    if (placeDetails.reviews && placeDetails.reviews.length > 0) {
-                        document.getElementById('modalReviews').innerHTML = `<b>Top Review:</b><p style="margin:5px 0;">"${placeDetails.reviews[0].text.substring(0,120)}..."</p>`;
-                    }
+                    if (placeDetails.photos) document.getElementById('modalPhotos').innerHTML = placeDetails.photos.slice(0, 5).map(p => `<img src="${p.getUrl()}">`).join('');
+                    if (placeDetails.reviews && placeDetails.reviews.length > 0) document.getElementById('modalReviews').innerHTML = `<b>Top Review:</b><p style="margin:5px 0;">"${placeDetails.reviews[0].text.substring(0,120)}..."</p>`;
 
                     db.collection('providers').where('googlePlaceId', '==', placeId).get().then(snap => {
                         const actionDiv = document.getElementById('modalAction');
                         const mapUrl = placeDetails.url || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name)}&query_place_id=${placeId}`;
                         
-                        let html = `<div class="btn-group">
-                            <a href="${mapUrl}" target="_blank" class="btn-maps">📍 Directions</a>`;
+                        let html = `<div class="btn-group"><a href="${mapUrl}" target="_blank" class="btn-maps">📍 Directions</a>`;
                         
                         if (!snap.empty) {
-                            const providerDoc = snap.docs[0];
-                            const providerData = providerDoc.data();
-                            if (providerData.status === 'closed' || providerData.active === false) {
+                            const d = snap.docs[0].data();
+                            if (d.status === 'closed' || d.active === false) {
                                 html += `<button class="btn-join btn-offline">QUEUE OFFLINE</button>`;
                             } else {
-                                html += `<button class="btn-join" onclick="window.location.href='join-queue.html?id=${providerDoc.id}&name=${encodeURIComponent(place.name)}'">JOIN QUEUE</button>`;
+                                html += `<button class="btn-join" onclick="window.location.href='join-queue.html?id=${snap.docs[0].id}&name=${encodeURIComponent(place.name)}'">JOIN QUEUE</button>`;
                             }
                         } else {
                             html += `<button class="btn-join btn-offline">Queue Offline</button>`;
                         }
                         html += `</div>`;
-                        
-                        if (snap.empty) {
-                            html += `<a href="provider-signup.html" style="display:block; text-align:center; margin-top:1rem; font-size:0.8rem; color:var(--primary); font-weight:600; text-decoration:none;">Business Owner? Register here</a>`;
-                        }
+                        if (snap.empty) html += `<a href="provider-signup.html" style="display:block; text-align:center; margin-top:1rem; font-size:0.8rem; color:var(--primary); font-weight:600; text-decoration:none;">Business Owner? Register here</a>`;
                         actionDiv.innerHTML = html;
                     });
                 }
