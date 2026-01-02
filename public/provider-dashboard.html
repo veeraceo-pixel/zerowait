@@ -1,165 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>skipQs | Provider Command Center</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        :root { --primary: #2563eb; --bg: #f8fafc; --sidebar: #0f172a; --text: #1e293b; --border: #e2e8f0; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; min-height: 100vh; }
-
-        nav { width: 260px; background: var(--sidebar); color: white; display: flex; flex-direction: column; padding: 1.5rem; position: fixed; height: 100vh; box-sizing: border-box; z-index: 1000; }
-        .nav-logo { font-size: 1.6rem; font-weight: 800; color: var(--primary); margin-bottom: 2rem; }
-        .nav-link { padding: 0.8rem 1rem; color: #94a3b8; text-decoration: none; border-radius: 0.5rem; margin-bottom: 0.5rem; cursor: pointer; display: flex; align-items: center; gap: 12px; font-weight: 500; }
-        .nav-link.active { background: #1e293b; color: white; border-left: 4px solid var(--primary); }
-
-        main { flex: 1; margin-left: 260px; padding: 2rem; width: calc(100% - 260px); box-sizing: border-box; }
-
-        .header-bar { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; }
-        .status-badge { padding: 0.4rem 1rem; border-radius: 2rem; font-size: 0.75rem; font-weight: 700; display: inline-block; margin-top: 8px; }
-        .open { background: #dcfce7; color: #15803d; }
-        .closed { background: #fee2e2; color: #b91c1c; }
-
-        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 2rem; }
-        .stat-card { background: white; padding: 1.5rem; border-radius: 1rem; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .stat-card h4 { margin: 0; font-size: 0.75rem; color: #64748b; text-transform: uppercase; }
-        .stat-val { font-size: 2.2rem; font-weight: 800; margin-top: 0.5rem; }
-
-        .content-card { background: white; border-radius: 1rem; border: 1px solid var(--border); margin-bottom: 2rem; overflow: hidden; }
-        .card-header { padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--border); font-weight: 700; background: #fff; display: flex; justify-content: space-between; align-items: center; }
-        
-        table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 1rem 1.5rem; font-size: 0.7rem; color: #64748b; text-transform: uppercase; border-bottom: 1px solid var(--border); background: #fcfcfd; }
-        td { padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--border); }
-
-        .form-group { display: flex; gap: 10px; padding: 1.5rem; background: #fff; border-bottom: 1px solid var(--border); flex-wrap: wrap; align-items: center; }
-        input { padding: 0.7rem 1rem; border: 1px solid var(--border); border-radius: 0.5rem; font-family: inherit; }
-        .btn { padding: 0.7rem 1.2rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border); transition: 0.2s; background: white; }
-        .btn-primary { background: var(--primary); color: white; border: none; }
-        .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
-
-        #qrOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; display: none; align-items: center; justify-content: center; }
-        .qr-card { background: white; padding: 2rem; border-radius: 1rem; text-align: center; }
-
-        .svc-del { color: #ef4444; cursor: pointer; font-weight: bold; font-size: 1.2rem; border: none; background: none; }
-        .edit-input { width: 80px; padding: 0.4rem; border: 1px solid var(--border); border-radius: 0.4rem; text-align: center; }
-
-        #menuPreviewImg { max-width: 100%; border-radius: 8px; margin-top: 15px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
-
-        @media (max-width: 850px) {
-            nav { width: 70px; padding: 1.5rem 0.5rem; align-items: center; }
-            .nav-logo, .nav-link span:last-child { display: none; }
-            main { margin-left: 70px; width: calc(100% - 70px); padding: 1rem; }
-            .grid { grid-template-columns: 1fr; }
-        }
-    </style>
-</head>
-<body>
-
-    <nav>
-        <div class="nav-logo">skipQs</div>
-        <div class="nav-link active" onclick="showSection('live', this)"><span>📡</span><span>Live Queue</span></div>
-        <div class="nav-link" onclick="showSection('history', this)"><span>📊</span><span>History</span></div>
-        <div class="nav-link" onclick="showSection('services', this)"><span>🛠️</span><span>Manage Services</span></div>
-        <div class="nav-link" onclick="toggleQR()"><span>📱</span><span>QR Code</span></div>
-        <div class="nav-link" onclick="handleLogout()"><span>🚪</span><span>Logout</span></div>
-    </nav>
-
-    <main>
-        <div class="header-bar">
-            <div>
-                <h1 style="margin:0;" id="bizTitle">Dashboard</h1>
-                <div id="statusBadge"></div>
-            </div>
-            <button class="btn" onclick="toggleStatus()">Switch Status</button>
-        </div>
-
-        <div class="grid">
-            <div class="stat-card"><h4>Waiting</h4><div class="stat-val" id="waitCount">0</div></div>
-            <div class="stat-card"><h4>Backlog</h4><div class="stat-val" id="totalMins">0<small style="font-size:1rem">m</small></div></div>
-            <div class="stat-card"><h4>Served Today</h4><div class="stat-val" id="servedToday">0</div></div>
-        </div>
-
-        <section id="sec-live" class="content-card">
-            <div class="card-header">Active Queue Management</div>
-            <table>
-                <thead><tr><th>Customer</th><th>Service</th><th>Duration</th><th>Action</th></tr></thead>
-                <tbody id="qItems"></tbody>
-            </table>
-        </section>
-
-        <section id="sec-services" class="content-card" style="display:none">
-            <div class="card-header">
-                <span>Service Management</span>
-                <div style="display: flex; gap: 8px;">
-                    <button class="btn btn-sm" id="btnManual" onclick="setInputMode('manual')" style="background: #e2e8f0;">Manual Entry</button>
-                    <button class="btn btn-sm" id="btnUpload" onclick="setInputMode('upload')">Upload Menu Image</button>
-                </div>
-            </div>
-
-            <div id="form-manual">
-                <div class="form-group">
-                    <input type="text" id="sName" placeholder="Service Name" style="flex: 2;">
-                    <input type="number" id="sTime" placeholder="Mins" style="flex: 1;">
-                    <input type="number" id="sPrice" placeholder="Price ($)" style="flex: 1;">
-                    <button class="btn btn-primary" onclick="addSvc()">Add Service</button>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Service Name</th>
-                            <th>Price</th>
-                            <th>Duration (Mins)</th>
-                            <th style="text-align: right;">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="svcList"></tbody>
-                </table>
-            </div>
-
-            <div id="form-upload" style="display:none; padding: 2rem; text-align: center;">
-                <div style="margin-bottom: 20px;">
-                    <p style="color: #64748b; font-size: 0.9rem;">Upload a clear photo of your price list or menu for customers to view.</p>
-                    <input type="file" id="menuImgFile" accept="image/*" class="btn" style="border: 1px dashed var(--border);">
-                    <button class="btn btn-primary" onclick="handleMenuUpload()">Save Menu Image</button>
-                </div>
-                <div id="menuImageArea">
-                    <p id="noMenuMsg" style="color: #cbd5e1; font-style: italic;">No menu image saved yet.</p>
-                </div>
-            </div>
-        </section>
-
-        <section id="sec-history" class="content-card" style="display:none">
-            <div class="card-header">Daily History</div>
-            <div style="padding:1rem; border-bottom:1px solid var(--border)">
-                <input type="date" id="hDate" class="btn" onchange="loadHistory()" style="width: auto;">
-            </div>
-            <table>
-                <thead><tr><th>Customer</th><th>Service</th><th>Time Completed</th></tr></thead>
-                <tbody id="hItems"></tbody>
-            </table>
-        </section>
-    </main>
-
-    <div id="qrOverlay">
-        <div class="qr-card">
-            <h3>Customer Entrance QR</h3>
-            <p style="color: #64748b; font-size: 0.9rem;">Customers scan this to choose a service and join.</p>
-            <div id="qrcode-box" style="margin: 20px auto; display: flex; justify-content: center;"></div>
-            <button class="btn btn-primary" onclick="toggleQR()">Close</button>
-        </div>
-    </div>
-
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
-    <script src="firebase-config.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/easyqrcodejs@4.4.10/dist/easy.qrcode.min.js"></script>
-
-    <script>
-        const db = firebase.firestore();
+const db = firebase.firestore();
         const storage = firebase.storage();
         let curUid, pubId, qUnsub;
 
@@ -177,7 +16,6 @@
                     '<span class="status-badge open">● Business is Open</span>' : 
                     '<span class="status-badge closed">● Business is Closed</span>';
 
-                // Load Menu Image if it exists
                 if(data.menuImageUrl) {
                     renderMenuImage(data.menuImageUrl);
                 }
@@ -188,7 +26,7 @@
             });
         });
 
-        // Toggle Views
+        // --- UI & Navigation ---
         function setInputMode(mode) {
             document.getElementById('form-manual').style.display = mode === 'manual' ? 'block' : 'none';
             document.getElementById('form-upload').style.display = mode === 'upload' ? 'block' : 'none';
@@ -196,47 +34,73 @@
             document.getElementById('btnUpload').style.background = mode === 'upload' ? '#e2e8f0' : 'white';
         }
 
-        // NEW: Handle Menu Image Upload
-        async function handleMenuUpload() {
-            const file = document.getElementById('menuImgFile').files[0];
-            if (!file) return alert("Please select an image file first.");
+        function showSection(id, el) {
+            document.querySelectorAll('section').forEach(s => s.style.display = 'none');
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            document.getElementById('sec-' + id).style.display = 'block';
+            el.classList.add('active');
+        }
 
-            const uploadBtn = document.querySelector('button[onclick="handleMenuUpload()"]');
-            uploadBtn.innerText = "Uploading...";
-            uploadBtn.disabled = true;
+        // --- Queue Management (SYNCED WITH CUSTOMER TIMER) ---
+        function startLiveQ() {
+            if(qUnsub) qUnsub();
+            
+            // Listen for 'waiting' and 'serving' to manage the flow
+            qUnsub = db.collection('queues')
+                .where('providerId', '==', pubId)
+                .where('status', 'in', ['waiting', 'serving'])
+                .orderBy('joinedAt', 'asc')
+                .onSnapshot(snap => {
+                    let totalBacklogMins = 0;
+                    let waitingCount = 0;
+                    const items = document.getElementById('qItems');
+                    items.innerHTML = "";
 
-            try {
-                const ref = storage.ref(`menus/${curUid}/price_list`);
-                const snapshot = await ref.put(file);
-                const url = await snapshot.ref.getDownloadURL();
+                    if (snap.empty) {
+                        items.innerHTML = '<tr><td colspan="4" style="text-align:center">Queue is empty</td></tr>';
+                    }
 
-                await db.collection('providers').doc(curUid).update({
-                    menuImageUrl: url
+                    snap.forEach(doc => {
+                        const d = doc.data();
+                        
+                        if (d.status === 'serving') {
+                            // Highlight the active customer at the top
+                            const row = `
+                                <tr style="background: #f0fdf4; border-left: 4px solid #22c55e;">
+                                    <td><span class="status-badge open" style="font-size:0.6rem">NOW SERVING</span><br><strong>${d.customerName}</strong></td>
+                                    <td>${d.selectedService || '--'}</td>
+                                    <td><span style="color:#16a34a; font-weight:bold;">In Progress</span></td>
+                                    <td><button class="btn btn-primary" style="background:#16a34a;" onclick="completeService('${doc.id}')">Finish & Complete</button></td>
+                                </tr>`;
+                            items.innerHTML = row + items.innerHTML;
+                        } else {
+                            // Count waiting customers and their combined duration
+                            waitingCount++;
+                            totalBacklogMins += (Number(d.serviceDuration) || 0);
+                            
+                            items.innerHTML += `
+                                <tr>
+                                    <td><strong>${d.customerName}</strong><br><small>${d.customerPhone || ''}</small></td>
+                                    <td>${d.selectedService || '--'}</td>
+                                    <td>${d.serviceDuration || 0}m</td>
+                                    <td><button class="btn btn-primary btn-sm" onclick="startServing('${doc.id}')">Start Serving</button></td>
+                                </tr>`;
+                        }
+                    });
+
+                    document.getElementById('waitCount').innerText = waitingCount;
+                    document.getElementById('totalMins').innerHTML = totalBacklogMins + '<small style="font-size:1rem">m</small>';
                 });
-
-                alert("Menu image saved successfully!");
-                renderMenuImage(url);
-            } catch (error) {
-                console.error(error);
-                alert("Upload failed. Ensure Firebase Storage is enabled.");
-            } finally {
-                uploadBtn.innerText = "Save Menu Image";
-                uploadBtn.disabled = false;
-            }
         }
 
-        function renderMenuImage(url) {
-            const area = document.getElementById('menuImageArea');
-            area.innerHTML = `<img src="${url}" id="menuPreviewImg">`;
+        async function startServing(id) {
+            await db.collection('queues').doc(id).update({
+                status: 'serving',
+                servedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
         }
 
-        async function toggleStatus() {
-            const ref = db.collection('providers').doc(curUid);
-            const snap = await ref.get();
-            await ref.update({ isOpen: !snap.data().isOpen });
-        }
-
-        async function serveNext(id) {
+        async function completeService(id) {
             const today = new Date().toISOString().split('T')[0];
             await db.collection('queues').doc(id).update({
                 status: 'completed',
@@ -246,51 +110,38 @@
             updateServedToday();
         }
 
-        function toggleQR() {
-            const overlay = document.getElementById('qrOverlay');
-            if(overlay.style.display === 'flex') { overlay.style.display = 'none'; } 
-            else {
-                overlay.style.display = 'flex';
-                const box = document.getElementById('qrcode-box');
-                box.innerHTML = "";
-                const url = `https://skipqs.com/join-queue.html?id=${pubId}`;
-                new QRCode(box, { 
-                    text: url, width: 250, height: 250,
-                    colorDark: "#0f172a", colorLight: "#ffffff",
-                    correctLevel: QRCode.CorrectLevel.H 
-                });
-            }
+        // --- Service Management ---
+        async function addSvc() {
+            const n = document.getElementById('sName').value;
+            const t = document.getElementById('sTime').value;
+            const p = document.getElementById('sPrice').value;
+            if(!n || !t) return;
+            
+            await db.collection('providers').doc(curUid).collection('services').add({
+                name: n, 
+                duration: Number(t), // Forces duration to be a number for the timer
+                price: p || 0
+            });
+            
+            document.getElementById('sName').value = ""; 
+            document.getElementById('sTime').value = ""; 
+            document.getElementById('sPrice').value = "";
         }
 
-        function startLiveQ() {
-            if(qUnsub) qUnsub();
-            qUnsub = db.collection('queues').where('providerId', '==', pubId).where('status', '==', 'waiting')
-                .onSnapshot(snap => {
-                    let mins = 0;
-                    document.getElementById('waitCount').innerText = snap.size;
-                    const items = document.getElementById('qItems');
-                    items.innerHTML = snap.empty ? '<tr><td colspan="4" style="text-align:center">Queue is empty</td></tr>' : "";
-                    snap.forEach(doc => {
-                        const d = doc.data();
-                        mins += (d.serviceDuration || 0);
-                        items.innerHTML += `<tr>
-                            <td><strong>${d.customerName}</strong><br><small>${d.customerPhone || ''}</small></td>
-                            <td>${d.selectedService || '--'}</td>
-                            <td>${d.serviceDuration || 0}m</td>
-                            <td><button class="btn btn-primary btn-sm" onclick="serveNext('${doc.id}')">Serve Next</button></td>
-                        </tr>`;
-                    });
-                    document.getElementById('totalMins').innerHTML = mins + '<small style="font-size:1rem">m</small>';
-                });
+        async function updateSvcDuration(id, newTime) {
+            await db.collection('providers').doc(curUid).collection('services').doc(id).update({
+                duration: Number(newTime)
+            });
+        }
+
+        async function delSvc(id) { 
+            if(confirm("Delete service?")) await db.collection('providers').doc(curUid).collection('services').doc(id).delete(); 
         }
 
         function loadServices() {
             db.collection('providers').doc(curUid).collection('services').onSnapshot(snap => {
                 const list = document.getElementById('svcList');
                 list.innerHTML = "";
-                if(snap.empty) {
-                    list.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#94a3b8; padding:2rem;">No services found.</td></tr>';
-                }
                 snap.forEach(doc => {
                     const s = doc.data();
                     list.innerHTML += `<tr>
@@ -309,30 +160,51 @@
             });
         }
 
-        async function updateSvcDuration(id, newTime) {
-            await db.collection('providers').doc(curUid).collection('services').doc(id).update({
-                duration: parseInt(newTime)
-            });
+        // --- Menu Image Storage ---
+        async function handleMenuUpload() {
+            const file = document.getElementById('menuImgFile').files[0];
+            if (!file) return alert("Please select an image file.");
+            const uploadBtn = document.querySelector('button[onclick="handleMenuUpload()"]');
+            uploadBtn.innerText = "Uploading...";
+            uploadBtn.disabled = true;
+
+            try {
+                const ref = storage.ref(`menus/${curUid}/price_list`);
+                const snapshot = await ref.put(file);
+                const url = await snapshot.ref.getDownloadURL();
+                await db.collection('providers').doc(curUid).update({ menuImageUrl: url });
+                alert("Menu image saved!");
+                renderMenuImage(url);
+            } catch (error) {
+                alert("Upload failed. Verify Storage is enabled in Firebase Console.");
+            } finally {
+                uploadBtn.innerText = "Save Menu Image";
+                uploadBtn.disabled = false;
+            }
         }
 
-        async function addSvc() {
-            const n = document.getElementById('sName').value, t = document.getElementById('sTime').value, p = document.getElementById('sPrice').value;
-            if(!n || !t) return;
-            await db.collection('providers').doc(curUid).collection('services').add({
-                name: n, duration: parseInt(t), price: p || 0
-            });
-            document.getElementById('sName').value = ""; document.getElementById('sTime').value = ""; document.getElementById('sPrice').value = "";
+        function renderMenuImage(url) {
+            const area = document.getElementById('menuImageArea');
+            area.innerHTML = `<img src="${url}" id="menuPreviewImg">`;
         }
 
-        async function delSvc(id) { 
-            if(confirm("Delete service?")) await db.collection('providers').doc(curUid).collection('services').doc(id).delete(); 
+        // --- Extras & Auth ---
+        async function toggleStatus() {
+            const ref = db.collection('providers').doc(curUid);
+            const snap = await ref.get();
+            await ref.update({ isOpen: !snap.data().isOpen });
         }
 
-        function showSection(id, el) {
-            document.querySelectorAll('section').forEach(s => s.style.display = 'none');
-            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-            document.getElementById('sec-' + id).style.display = 'block';
-            el.classList.add('active');
+        function toggleQR() {
+            const overlay = document.getElementById('qrOverlay');
+            if(overlay.style.display === 'flex') { overlay.style.display = 'none'; } 
+            else {
+                overlay.style.display = 'flex';
+                const box = document.getElementById('qrcode-box');
+                box.innerHTML = "";
+                const url = `https://zerowait-c21fc.web.app/join-queue.html?id=${pubId}`;
+                new QRCode(box, { text: url, width: 250, height: 250 });
+            }
         }
 
         async function updateServedToday() {
@@ -342,6 +214,3 @@
         }
 
         function handleLogout() { firebase.auth().signOut().then(() => window.location.href='index.html'); }
-    </script>
-</body>
-</html>
