@@ -6,375 +6,47 @@
   <title>About Us | skipQs</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --primary: #2563eb;
-      --primary-dark: #1d4ed8;
-      --primary-soft: #eff6ff;
-      --bg-light: #f8fafc;
-      --text-main: #1e293b;
-      --text-muted: #64748b;
-      --white: #ffffff;
-      --border: #e2e8f0;
-      --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    }
-
-    * { box-sizing: border-box; }
-
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: var(--white);
-      color: var(--text-main);
-      margin: 0;
-      line-height: 1.6;
-      overflow-x: hidden;
-    }
-
-    .container {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 0 1.5rem;
-    }
-
-    /* --- Professional Navbar --- */
-    .navbar {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
-      padding: 0.75rem 0;
-      border-bottom: 1px solid var(--border);
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-    }
-
-    .nav-content {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .logo {
-      font-size: 1.5rem;
-      font-weight: 800;
-      color: var(--primary);
-      text-decoration: none;
-      letter-spacing: -0.5px;
-    }
-
-    /* Mobile Toggle */
-    .menu-toggle {
-      display: none;
-      flex-direction: column;
-      gap: 5px;
-      cursor: pointer;
-      border: none;
-      background: none;
-    }
-
-    .menu-toggle span {
-      width: 25px;
-      height: 3px;
-      background: var(--primary);
-      border-radius: 2px;
-    }
-
-    .nav-links { display: flex; align-items: center; gap: 2rem; }
-    .nav-links a { text-decoration: none; color: var(--text-muted); font-weight: 500; font-size: 0.95rem; transition: 0.2s; }
-    .nav-links a:hover, .nav-links a.active { color: var(--primary); }
-
-    /* --- Hero Section --- */
-    .about-hero {
-      background: linear-gradient(to bottom, var(--primary-soft), var(--white));
-      padding: clamp(3rem, 10vw, 6rem) 0;
-      text-align: center;
-    }
-
-    .badge {
-      background: var(--primary);
-      color: white;
-      padding: 0.4rem 1rem;
-      border-radius: 2rem;
-      font-size: 0.8rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      margin-bottom: 1.5rem;
-      display: inline-block;
-    }
-
-    .about-hero h1 {
-      font-size: clamp(2.2rem, 8vw, 3.5rem);
-      font-weight: 800;
-      color: #0f172a;
-      margin: 0 0 1.5rem;
-      letter-spacing: -1px;
-      line-height: 1.1;
-    }
-
-    .about-hero p {
-      font-size: clamp(1rem, 4vw, 1.25rem);
-      color: var(--text-muted);
-      max-width: 700px;
-      margin: 0 auto;
-    }
-
-    /* --- Stats Section --- */
-    .stats-bar {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1.5rem;
-      padding: 2rem 0;
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-      margin: 2rem 0 4rem;
-      text-align: center;
-    }
-
-    .stat-item h2 { font-size: clamp(1.8rem, 5vw, 2.5rem); color: var(--primary); margin: 0; }
-    .stat-item p { color: var(--text-muted); font-weight: 600; margin: 0.5rem 0 0; font-size: 0.9rem; }
-
-    /* --- Split Content (Responsive Grid) --- */
-    .split-content {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 2rem;
-      align-items: center;
-      margin-bottom: 5rem;
-    }
-
-    .image-placeholder {
-      background: var(--bg-light);
-      border-radius: 1.5rem;
-      height: 300px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 4rem;
-      border: 1px solid var(--border);
-    }
-
-    .text-content h3 { font-size: 1.75rem; color: var(--primary); margin-bottom: 1rem; }
-    .text-content p { font-size: 1.05rem; color: var(--text-muted); margin-bottom: 1.5rem; }
-
-    /* --- Value Cards --- */
-    .section-title { margin-bottom: 3rem; text-align: center; }
-    .section-title h2 { font-size: 2rem; font-weight: 800; }
-
-    .values-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1.5rem;
-      margin-top: 3rem;
-    }
-
-    .value-card {
-      padding: 2rem;
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: 1.25rem;
-      transition: all 0.3s ease;
-      text-align: center;
-    }
-
-    .value-card:hover {
-      transform: translateY(-5px);
-      box-shadow: var(--shadow);
-      border-color: var(--primary);
-    }
-
-    .value-icon { font-size: 2.5rem; margin-bottom: 1rem; }
-
-    /* --- Footer --- */
-    footer {
-      background: #0f172a;
-      color: white;
-      padding: 4rem 0 2rem;
-      margin-top: 4rem;
-    }
-
-    .footer-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 3rem;
-    }
-
-    footer h5 { color: white; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; margin-bottom: 1.5rem; }
-    footer ul { list-style: none; padding: 0; }
-    footer li { margin-bottom: 0.75rem; }
-    footer a { color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: 0.2s; }
-    footer a:hover { color: var(--primary); }
-
-    /* --- Mobile Responsive Queries --- */
-    @media (max-width: 768px) {
-      .menu-toggle { display: flex; }
-
-      .nav-links {
-        display: none;
-        flex-direction: column;
-        position: absolute;
-        top: 100%;
-        left: 0;
-        width: 100%;
-        background: white;
-        padding: 1.5rem;
-        gap: 1rem;
-        box-shadow: var(--shadow);
-        border-bottom: 1px solid var(--border);
-        text-align: center;
-      }
-
-      .nav-links.active { display: flex; }
-
-      .stats-bar { grid-template-columns: 1fr; gap: 2rem; }
-
-      .split-content { 
-        grid-template-columns: 1fr; 
-        text-align: center;
-        gap: 1.5rem;
-      }
-      
-      /* Reorder reversed content for mobile so text stays on top */
-      .split-content[style*="direction: rtl"] {
-        direction: ltr !important; 
-      }
-      
-      .image-placeholder { height: 250px; order: 2; }
-      .text-content { order: 1; }
-
-      .footer-grid { text-align: center; }
-    }
+    :root { --primary: #2563eb; --bg-light: #f8fafc; --text-main: #1e293b; --text-muted: #64748b; --border: #e2e8f0; }
+    body { font-family: 'Inter', sans-serif; margin: 0; color: var(--text-main); line-height: 1.6; }
+    .container { max-width: 1000px; margin: 0 auto; padding: 0 1.5rem; }
+    .navbar { background: white; padding: 0.75rem 0; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 1000; }
+    .nav-content { display: flex; justify-content: space-between; align-items: center; }
+    .logo { font-size: 1.6rem; font-weight: 800; color: var(--primary); text-decoration: none; }
+    .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+    .nav-links a { text-decoration: none; color: var(--text-muted); font-weight: 500; }
+    .hero { padding: 5rem 0; text-align: center; background: linear-gradient(to bottom, #eff6ff, white); }
   </style>
 </head>
 <body>
-
   <nav class="navbar">
     <div class="container nav-content">
       <a href="index.html" class="logo">skipQs</a>
-      
-      <button class="menu-toggle" id="mobile-toggle">
-        <span></span><span></span><span></span>
-      </button>
-
-      <nav class="nav-links" id="nav-list">
+      <div class="nav-links">
         <a href="index.html">Home</a>
-        <a href="about.html" class="active">About</a>
+        <a href="about.html" style="color: var(--primary);">About</a>
         <a href="how-it-works.html">How It Works</a>
-        <a id="authLink" href="login.html" style="color: var(--primary); font-weight: 700;">Login</a>
-      </nav>
+      </div>
     </div>
   </nav>
 
-  <section class="about-hero">
+  <header class="hero">
     <div class="container">
-      <span class="badge">Our Story</span>
-      <h1>We’re giving time<br>back to humanity.</h1>
-      <p>skipQs was founded on a simple realization: waiting in line is a waste of human potential. We build the technology to fix it.</p>
+      <h1>Giving time back to humanity.</h1>
+      <p style="font-size: 1.1rem; color: var(--text-muted);">skipQs solves the problem of physical waiting by virtualizing queues for local businesses.</p>
     </div>
-  </section>
+  </header>
 
-  <main class="container">
-    <div class="stats-bar">
-      <div class="stat-item">
-        <h2>10k+</h2>
-        <p>Hours Saved</p>
-      </div>
-      <div class="stat-item">
-        <h2>500+</h2>
-        <p>Partner Businesses</p>
-      </div>
-      <div class="stat-item">
-        <h2>4.9/5</h2>
-        <p>User Satisfaction</p>
-      </div>
-    </div>
-
-    <section class="split-content">
-      <div class="text-content">
-        <h3>The Problem with Physical Lines</h3>
-        <p>Whether it's a doctor's clinic, a popular hair salon, or a local government office, physical queues are inefficient, stressful, and outdated.</p>
-        <p>We saw people spending 30% of their free time simply standing in place. We knew there was a better way to connect customers with the services they need without the physical friction.</p>
-      </div>
-      <div class="image-placeholder">⏳</div>
-    </section>
-
-    <section class="split-content" style="direction: rtl;">
-      <div class="text-content" style="direction: ltr;">
-        <h3>The skipQs Solution</h3>
-        <p>We've created a cloud-based synchronization engine that links your phone directly to the service provider's workflow.</p>
-        <p>By virtualizing the queue, we allow businesses to manage their flow perfectly and allow customers to wait wherever they feel most comfortable—at home, in a cafe, or running other errands.</p>
-      </div>
-      <div class="image-placeholder">🚀</div>
-    </section>
-
-    <section>
-      <div class="section-title">
-        <h2>Our Operating Values</h2>
-      </div>
-      <div class="values-grid">
-        <div class="value-card">
-          <div class="value-icon">⚡</div>
-          <h4>Radical Efficiency</h4>
-          <p>We optimize every interaction to be as fast as possible for both parties.</p>
-        </div>
-        <div class="value-card">
-          <div class="value-icon">💎</div>
-          <h4>Integrity</h4>
-          <p>Data privacy and queue fairness are the pillars of our platform.</p>
-        </div>
-        <div class="value-card">
-          <div class="value-icon">🎨</div>
-          <h4>Simple Design</h4>
-          <p>Technology shouldn't be a hurdle. skipQs is built to be used by anyone, anywhere.</p>
-        </div>
-      </div>
-    </section>
+  <main class="container" style="padding: 4rem 0;">
+    <h2>Our Mission</h2>
+    <p>At skipQs, we believe your time is your most valuable asset. We use real-time synchronization to allow customers to wait wherever they choose, rather than being confined to a lobby or sidewalk. This improves customer satisfaction and helps business owners manage their flow efficiently.</p>
   </main>
 
-  <footer>
-    <div class="container footer-grid">
-      <div>
-        <h4 style="color: white; margin-bottom: 1.5rem;">skipQs</h4>
-        <p style="color: #94a3b8; font-size: 0.9rem;">The future of queue management. Reclaiming time for a digital-first world.</p>
-      </div>
-      <div>
-        <h5>Platform</h5>
-        <ul>
-          <li><a href="how-it-works.html">Features</a></li>
-          <li><a href="provider-signup.html">For Businesses</a></li>
-        </ul>
-      </div>
-      <div>
-        <h5>Legal</h5>
-        <ul>
-          <li><a href="#">Privacy Policy</a></li>
-          <li><a href="#">Terms of Use</a></li>
-        </ul>
-      </div>
-    </div>
-    <div class="container" style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #1e293b; text-align: center; color: #64748b; font-size: 0.85rem;">
-      © 2025 skipQs Inc. All rights reserved.
+  <footer style="background: #0f172a; color: white; padding: 4rem 0 2rem;">
+    <div class="container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 3rem;">
+        <div><h4 style="color: white;">skipQs</h4><p style="color: #94a3b8;">The future of waiting.</p></div>
+        <div><h5 style="color: white;">Legal</h5><ul style="list-style: none; padding: 0;"><li><a href="privacy.html" style="color: #94a3b8; text-decoration: none;">Privacy Policy</a></li></ul></div>
+        <div><h5 style="color: white;">Support</h5><p style="color: #94a3b8;">Email: support@skipqs.com</p></div>
     </div>
   </footer>
-
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="firebase-config.js"></script>
-  
-  <script>
-    // --- Mobile Menu Toggle ---
-    const mobileToggle = document.getElementById('mobile-toggle');
-    const navList = document.getElementById('nav-list');
-
-    mobileToggle.addEventListener('click', () => {
-      navList.classList.toggle('active');
-    });
-
-    // --- Auth Logic ---
-    firebase.auth().onAuthStateChanged(user => {
-      const authLink = document.getElementById('authLink');
-      if (user) {
-        authLink.textContent = 'Dashboard';
-        authLink.href = 'provider-dashboard.html';
-      }
-    });
-  </script>
 </body>
 </html>
