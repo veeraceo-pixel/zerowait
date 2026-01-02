@@ -100,7 +100,7 @@
         let map, placesService, userLocation, autocomplete, pano;
         let allResults = [];
 
-        // 1. Auth & Login Logic
+        // 1. Auth Logic
         firebase.auth().onAuthStateChanged((user) => {
             const btn = document.getElementById('authBtn');
             if (user) {
@@ -112,7 +112,7 @@
             }
         });
 
-        // 2. Initialize Google Maps & Autocomplete
+        // 2. Map Setup
         function initMap() {
             map = new google.maps.Map(document.getElementById("map"), {
                 center: { lat: 53.4875, lng: -2.2901 }, zoom: 14, disableDefaultUI: true,
@@ -142,7 +142,7 @@
             }
         }
 
-        // 3. Category Filter Logic
+        // 3. Filter Logic
         document.querySelectorAll('.filter-chip').forEach(chip => {
             chip.onclick = function() {
                 document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
@@ -152,7 +152,6 @@
             }
         });
 
-        // 4. Core Search Logic
         function searchNearby() {
             const queryMap = { salon: "hair salon barber beauty", restaurant: "restaurant cafe food", clinic: "medical health center", hotel: "hotel lodging" };
             placesService.nearbySearch({
@@ -165,15 +164,20 @@
             });
         }
 
-        // 5. Render List Panel
+        // 4. Render Main List (With Distance & Wait Metrics)
         function renderListView(results) {
             const container = document.getElementById("results");
             container.innerHTML = `<h3 style="margin:0 0 12px 0; font-weight:800;">Nearby ${serviceType.charAt(0).toUpperCase() + serviceType.slice(1)}s</h3>`;
             
             results.forEach((place, index) => {
                 const photo = place.photos ? place.photos[0].getUrl({maxWidth: 200}) : 'https://via.placeholder.com/150';
-                const dist = google.maps.geometry.spherical.computeDistanceBetween(new google.maps.LatLng(userLocation.lat, userLocation.lng), place.geometry.location);
-                const miles = (dist * 0.000621371).toFixed(1);
+                
+                // Distance Logic
+                const distMeters = google.maps.geometry.spherical.computeDistanceBetween(
+                    new google.maps.LatLng(userLocation.lat, userLocation.lng), 
+                    place.geometry.location
+                );
+                const miles = (distMeters * 0.000621371).toFixed(1);
 
                 const card = document.createElement('div');
                 card.className = 'place-card';
@@ -181,18 +185,46 @@
                     <img src="${photo}" class="card-img">
                     <div style="flex:1">
                         <div style="font-weight:800; font-size:0.95rem; color:var(--text-main); line-height:1.2;">${place.name}</div>
-                        <div class="card-meta">📍 ${miles} miles away</div>
-                        <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">${place.vicinity}</div>
+                        <div style="font-size:0.7rem; font-weight:700; color:var(--primary); margin: 4px 0;">📍 ${miles} miles away</div>
+                        
+                        <div id="wait-info-${index}"></div>
+                        
                         <button class="btn-explore" onclick="event.stopPropagation(); openStreetView(${index})">🚶 Walk the street</button>
                     </div>
-                    <div style="font-weight:800; color:#f59e0b; font-size:0.8rem;">★ ${place.rating || 'N/A'}</div>
+                    <div style="text-align:right">
+                        <div style="font-weight:800; color:#f59e0b; font-size:0.8rem;">★ ${place.rating || 'N/A'}</div>
+                    </div>
                 `;
                 card.onclick = () => { map.panTo(place.geometry.location); map.setZoom(17); };
                 container.appendChild(card);
+
+                // Fetch Firebase Data
+                db.collection('providers').where('googlePlaceId', '==', place.place_id).get().then(snap => {
+                    const infoDiv = document.getElementById(`wait-info-${index}`);
+                    if (!snap.empty) {
+                        const d = snap.docs[0].data();
+                        const count = d.queueCount || 0;
+                        const waitTime = count * 10;
+                        
+                        let color = "#059669"; let level = "LOW WAIT";
+                        if(count > 10) { color = "#dc2626"; level = "HIGH WAIT"; }
+                        else if(count > 5) { color = "#ca8a04"; level = "MEDIUM WAIT"; }
+
+                        infoDiv.innerHTML = `
+                            <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+                                <span style="background:${color}; color:white; font-size:0.6rem; padding:2px 6px; border-radius:4px; font-weight:800;">${level}</span>
+                                <span style="font-size:0.75rem; font-weight:700; color:var(--text-main);">~${waitTime} mins</span>
+                            </div>
+                            <div style="font-size:0.65rem; color:var(--text-muted); font-weight:500;">👥 ${count} people ahead</div>
+                        `;
+                    } else {
+                        infoDiv.innerHTML = `<div style="font-size:0.65rem; color:var(--text-muted); font-style:italic;">Not on skipQs yet</div>`;
+                    }
+                });
             });
         }
 
-        // 6. Immersive Street View Logic
+        // 5. Immersive Street View (HUD + Business Growth)
         function openStreetView(index) {
             const place = allResults[index];
             document.getElementById('street-view-container').style.display = 'block';
@@ -211,47 +243,66 @@
             scroller.innerHTML = "";
             
             allResults.forEach((place, i) => {
+                const distMeters = google.maps.geometry.spherical.computeDistanceBetween(
+                    new google.maps.LatLng(userLocation.lat, userLocation.lng), 
+                    place.geometry.location
+                );
+                const miles = (distMeters * 0.000621371).toFixed(1);
+
                 const card = document.createElement('div');
                 card.className = 'shop-card-immersive';
                 card.id = `imm-card-${i}`;
                 card.innerHTML = `
                     <div class="hud-row">
-                        <div style="font-weight:800; font-size:1.1rem; max-width:70%;">${place.name}</div>
-                        <div class="hud-status" id="stat-${i}">Checking...</div>
+                        <div style="font-weight:800; font-size:1.1rem; max-width:65%;">${place.name}</div>
+                        <div class="hud-status" id="stat-${i}">New Discovery</div>
                     </div>
-                    <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:10px;">${place.vicinity}</div>
-                    <div id="q-area-${i}" style="display:none">
-                        <div style="background:#f8fafc; padding:10px; border-radius:12px; display:flex; justify-content:space-between; align-items:center;">
-                            <span style="font-size:0.85rem; font-weight:600;">Current Queue:</span>
-                            <span style="font-weight:800; color:var(--primary); font-size:1.1rem;" id="cnt-${i}">0</span>
+
+                    <div style="font-size:0.75rem; color:var(--primary); font-weight:700; margin-bottom:12px;">📍 ${miles} miles from you</div>
+                    
+                    <div id="q-stats-${i}" style="display:none; margin-bottom:12px; display:flex; gap:10px;">
+                        <div style="flex:1; background:#f1f5f9; padding:8px; border-radius:10px; text-align:center;">
+                            <div style="font-size:0.55rem; color:var(--text-muted); font-weight:700; text-transform:uppercase;">Wait Time</div>
+                            <div style="font-weight:800; color:var(--primary); font-size:1.1rem;" id="time-${i}">--</div>
                         </div>
+                        <div style="flex:1; background:#f1f5f9; padding:8px; border-radius:10px; text-align:center;">
+                            <div style="font-size:0.55rem; color:var(--text-muted); font-weight:700; text-transform:uppercase;">Ahead</div>
+                            <div style="font-weight:800; color:var(--primary); font-size:1.1rem;" id="cnt-${i}">--</div>
+                        </div>
+                    </div>
+
+                    <div id="q-area-${i}" style="display:none">
                         <button class="btn-join-immersive" onclick="joinQueue('${place.place_id}', '${place.name.replace(/'/g, "\\'")}')">JOIN THE QUEUE</button>
                     </div>
-                    <div id="off-area-${i}" style="font-size:0.75rem; color:var(--text-muted); font-weight:500; text-align:center; padding:10px;">Not integrated with skipQs yet</div>
+
+                    <div id="claim-area-${i}" style="background: #eff6ff; border: 1.5px dashed var(--primary); padding: 12px; border-radius: 12px; margin-top: 5px; text-align:center;">
+                        <div style="font-size: 0.75rem; font-weight: 800; color: var(--primary);">Is this your business?</div>
+                        <p style="font-size: 0.65rem; color: var(--text-muted); margin: 4px 0 8px 0;">Start accepting digital joins here.</p>
+                        <a href="provider-signup.html" style="font-size: 0.7rem; font-weight: 800; color: white; background: var(--primary); padding: 5px 12px; border-radius: 6px; text-decoration: none; display: inline-block;">CLAIM FOR FREE</a>
+                    </div>
                 `;
                 
                 card.onclick = () => {
                     pano.setPosition(place.geometry.location);
                     card.scrollIntoView({ behavior: 'smooth', inline: 'center' });
                 };
-
                 scroller.appendChild(card);
 
-                // Fetch Firebase Data for each card
                 db.collection('providers').where('googlePlaceId', '==', place.place_id).get().then(snap => {
-                    const statusBadge = document.getElementById(`stat-${i}`);
                     if (!snap.empty) {
                         const d = snap.docs[0].data();
-                        statusBadge.innerText = "✓ skipQs PARTNER";
-                        statusBadge.className = "hud-status partner";
-                        document.getElementById(`cnt-${i}`).innerText = d.queueCount || 0;
+                        const count = d.queueCount || 0;
+                        document.getElementById(`stat-${i}`).innerText = "✓ skipQs PARTNER";
+                        document.getElementById(`stat-${i}`).className = "hud-status partner";
+                        document.getElementById(`q-stats-${i}`).style.display = "flex";
+                        document.getElementById(`cnt-${i}`).innerText = count;
+                        document.getElementById(`time-${i}`).innerText = (count * 10) + "m";
                         document.getElementById(`q-area-${i}`).style.display = "block";
-                        document.getElementById(`off-area-${i}`).style.display = "none";
+                        document.getElementById(`claim-area-${i}`).style.display = "none";
                     }
                 });
             });
 
-            // Smooth scroll to the one clicked
             setTimeout(() => {
                 const activeCard = document.getElementById(`imm-card-${activeIndex}`);
                 if(activeCard) activeCard.scrollIntoView({ inline: 'center', behavior: 'smooth' });
