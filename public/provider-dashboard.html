@@ -45,6 +45,8 @@
         .svc-del { color: #ef4444; cursor: pointer; font-weight: bold; font-size: 1.2rem; border: none; background: none; }
         .edit-input { width: 80px; padding: 0.4rem; border: 1px solid var(--border); border-radius: 0.4rem; text-align: center; }
 
+        #menuPreviewImg { max-width: 100%; border-radius: 8px; margin-top: 15px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+
         @media (max-width: 850px) {
             nav { width: 70px; padding: 1.5rem 0.5rem; align-items: center; }
             .nav-logo, .nav-link span:last-child { display: none; }
@@ -89,39 +91,43 @@
 
         <section id="sec-services" class="content-card" style="display:none">
             <div class="card-header">
-                <span>Service Menu</span>
+                <span>Service Management</span>
                 <div style="display: flex; gap: 8px;">
                     <button class="btn btn-sm" id="btnManual" onclick="setInputMode('manual')" style="background: #e2e8f0;">Manual Entry</button>
-                    <button class="btn btn-sm" id="btnUpload" onclick="setInputMode('upload')">Bulk Upload (CSV)</button>
+                    <button class="btn btn-sm" id="btnUpload" onclick="setInputMode('upload')">Upload Menu Image</button>
                 </div>
             </div>
 
-            <div id="form-manual" class="form-group">
-                <input type="text" id="sName" placeholder="Service Name" style="flex: 2;">
-                <input type="number" id="sTime" placeholder="Mins" style="flex: 1;">
-                <input type="number" id="sPrice" placeholder="Price ($)" style="flex: 1;">
-                <button class="btn btn-primary" onclick="addSvc()">Add Service</button>
-            </div>
-
-            <div id="form-upload" class="form-group" style="display:none;">
-                <div style="width: 100%; margin-bottom: 10px; font-size: 0.85rem; color: #64748b;">
-                    Upload CSV with columns: <b>Name, Minutes, Price</b>
+            <div id="form-manual">
+                <div class="form-group">
+                    <input type="text" id="sName" placeholder="Service Name" style="flex: 2;">
+                    <input type="number" id="sTime" placeholder="Mins" style="flex: 1;">
+                    <input type="number" id="sPrice" placeholder="Price ($)" style="flex: 1;">
+                    <button class="btn btn-primary" onclick="addSvc()">Add Service</button>
                 </div>
-                <input type="file" id="csvFile" accept=".csv" style="flex: 1;">
-                <button class="btn btn-primary" onclick="handleBulkUpload()">Process CSV</button>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Service Name</th>
+                            <th>Price</th>
+                            <th>Duration (Mins)</th>
+                            <th style="text-align: right;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="svcList"></tbody>
+                </table>
             </div>
 
-            <table>
-                <thead>
-                    <tr>
-                        <th>Service Name</th>
-                        <th>Price</th>
-                        <th>Duration (Mins)</th>
-                        <th style="text-align: right;">Action</th>
-                    </tr>
-                </thead>
-                <tbody id="svcList"></tbody>
-            </table>
+            <div id="form-upload" style="display:none; padding: 2rem; text-align: center;">
+                <div style="margin-bottom: 20px;">
+                    <p style="color: #64748b; font-size: 0.9rem;">Upload a clear photo of your price list or menu for customers to view.</p>
+                    <input type="file" id="menuImgFile" accept="image/*" class="btn" style="border: 1px dashed var(--border);">
+                    <button class="btn btn-primary" onclick="handleMenuUpload()">Save Menu Image</button>
+                </div>
+                <div id="menuImageArea">
+                    <p id="noMenuMsg" style="color: #cbd5e1; font-style: italic;">No menu image saved yet.</p>
+                </div>
+            </div>
         </section>
 
         <section id="sec-history" class="content-card" style="display:none">
@@ -148,11 +154,13 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
     <script src="firebase-config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/easyqrcodejs@4.4.10/dist/easy.qrcode.min.js"></script>
 
     <script>
         const db = firebase.firestore();
+        const storage = firebase.storage();
         let curUid, pubId, qUnsub;
 
         firebase.auth().onAuthStateChanged(user => {
@@ -169,18 +177,57 @@
                     '<span class="status-badge open">● Business is Open</span>' : 
                     '<span class="status-badge closed">● Business is Closed</span>';
 
+                // Load Menu Image if it exists
+                if(data.menuImageUrl) {
+                    renderMenuImage(data.menuImageUrl);
+                }
+
                 startLiveQ();
                 loadServices();
                 updateServedToday();
             });
         });
 
-        // Toggle Input Modes
+        // Toggle Views
         function setInputMode(mode) {
-            document.getElementById('form-manual').style.display = mode === 'manual' ? 'flex' : 'none';
-            document.getElementById('form-upload').style.display = mode === 'upload' ? 'flex' : 'none';
+            document.getElementById('form-manual').style.display = mode === 'manual' ? 'block' : 'none';
+            document.getElementById('form-upload').style.display = mode === 'upload' ? 'block' : 'none';
             document.getElementById('btnManual').style.background = mode === 'manual' ? '#e2e8f0' : 'white';
             document.getElementById('btnUpload').style.background = mode === 'upload' ? '#e2e8f0' : 'white';
+        }
+
+        // NEW: Handle Menu Image Upload
+        async function handleMenuUpload() {
+            const file = document.getElementById('menuImgFile').files[0];
+            if (!file) return alert("Please select an image file first.");
+
+            const uploadBtn = document.querySelector('button[onclick="handleMenuUpload()"]');
+            uploadBtn.innerText = "Uploading...";
+            uploadBtn.disabled = true;
+
+            try {
+                const ref = storage.ref(`menus/${curUid}/price_list`);
+                const snapshot = await ref.put(file);
+                const url = await snapshot.ref.getDownloadURL();
+
+                await db.collection('providers').doc(curUid).update({
+                    menuImageUrl: url
+                });
+
+                alert("Menu image saved successfully!");
+                renderMenuImage(url);
+            } catch (error) {
+                console.error(error);
+                alert("Upload failed. Ensure Firebase Storage is enabled.");
+            } finally {
+                uploadBtn.innerText = "Save Menu Image";
+                uploadBtn.disabled = false;
+            }
+        }
+
+        function renderMenuImage(url) {
+            const area = document.getElementById('menuImageArea');
+            area.innerHTML = `<img src="${url}" id="menuPreviewImg">`;
         }
 
         async function toggleStatus() {
@@ -275,39 +322,6 @@
                 name: n, duration: parseInt(t), price: p || 0
             });
             document.getElementById('sName').value = ""; document.getElementById('sTime').value = ""; document.getElementById('sPrice').value = "";
-        }
-
-        async function handleBulkUpload() {
-            const fileInput = document.getElementById('csvFile');
-            if (!fileInput.files.length) return alert("Please select a CSV file");
-            
-            const file = fileInput.files[0];
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                const text = e.target.result;
-                const lines = text.split('\n');
-                const batch = db.batch();
-                
-                // Skip header if it exists
-                const startIdx = lines[0].toLowerCase().includes('name') ? 1 : 0;
-
-                for (let i = startIdx; i < lines.length; i++) {
-                    const columns = lines[i].split(',');
-                    if (columns.length >= 2 && columns[0].trim()) {
-                        const sRef = db.collection('providers').doc(curUid).collection('services').doc();
-                        batch.set(sRef, {
-                            name: columns[0].trim(),
-                            duration: parseInt(columns[1].trim()) || 15,
-                            price: columns[2] ? columns[2].trim() : "0"
-                        });
-                    }
-                }
-                await batch.commit();
-                alert("Bulk import complete!");
-                fileInput.value = "";
-                setInputMode('manual');
-            };
-            reader.readAsText(file);
         }
 
         async function delSvc(id) { 
