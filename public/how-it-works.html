@@ -7,38 +7,39 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --primary: #2563eb; --primary-hover: #1d4ed8; --bg-light: #f8fafc;
-      --text-main: #1e293b; --text-muted: #64748b; --white: #ffffff; --border: #e2e8f0;
+      --primary: #2563eb; --primary-soft: #eff6ff; --dark: #0f172a;
+      --bg-light: #f8fafc; --white: #ffffff; --border: #e2e8f0;
     }
     * { box-sizing: border-box; }
-    body { font-family: 'Inter', sans-serif; background-color: var(--bg-light); color: var(--text-main); margin: 0; line-height: 1.6; }
+    body { font-family: 'Inter', sans-serif; margin: 0; background-color: var(--bg-light); line-height: 1.6; }
     .container { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
 
-    /* --- Navbar (Synced) --- */
-    .navbar { background: white; padding: 0.75rem 0; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 1000; }
+    /* --- Blue Header --- */
+    .navbar { background: var(--primary); padding: 0.75rem 0; position: sticky; top: 0; z-index: 1000; }
     .nav-content { display: flex; justify-content: space-between; align-items: center; }
-    .logo { font-size: 1.6rem; font-weight: 800; color: var(--primary); text-decoration: none; }
+    .logo { font-size: 1.6rem; font-weight: 800; color: white; text-decoration: none; }
     .nav-links { display: flex; align-items: center; gap: 1.5rem; }
-    .nav-links a { text-decoration: none; color: var(--text-muted); font-weight: 500; font-size: 0.95rem; }
-    .btn { padding: 0.75rem 1.5rem; border-radius: 0.6rem; font-weight: 600; text-decoration: none; display: inline-flex; }
+    .nav-links a { text-decoration: none; color: rgba(255,255,255,0.9); font-weight: 500; }
+    .btn-nav { background: white; color: var(--primary); padding: 0.6rem 1.2rem; border-radius: 0.5rem; font-weight: 700; text-decoration: none; }
 
-    /* --- Original Body Content Styles --- */
-    .hero { background: white; padding: 5rem 0; text-align: center; border-bottom: 1px solid var(--border); }
+    /* --- Original Body Styles --- */
+    .hero { background: var(--white); padding: 4rem 0; text-align: center; border-bottom: 1px solid var(--border); }
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; margin: 4rem 0; }
-    .card { background: white; padding: 3rem 2rem; border-radius: 1.25rem; border: 1px solid var(--border); text-align: center; }
+    .card { background: var(--white); padding: 3rem 2rem; border-radius: 1.25rem; text-align: center; border: 1px solid var(--border); position: relative; }
+    .step-number { position: absolute; top: -16px; left: 50%; transform: translateX(-50%); background: var(--primary); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+    .cta-card { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; padding: 4rem; border-radius: 2rem; text-align: center; margin: 4rem 0; }
     @media (max-width: 768px) { .nav-links { display: none; } }
   </style>
 </head>
 <body>
-
   <nav class="navbar">
     <div class="container nav-content">
       <a href="index.html" class="logo">skipQs</a>
       <div class="nav-links">
         <a href="index.html">Home</a>
         <a href="about.html">About</a>
-        <a href="how-it-works.html" style="color: var(--primary);">How It Works</a>
-        <a href="login.html" id="loginLogoutBtn" class="btn btn-primary" style="color: white;">Login</a>
+        <a href="how-it-works.html">How It Works</a>
+        <a href="login.html" class="btn-nav" id="loginLogoutBtn">Login</a>
       </div>
     </div>
   </nav>
@@ -52,29 +53,39 @@
 
   <main class="container">
     <div class="grid">
-      <div class="card"><h3>1. Discover</h3><p>Check live wait times before you leave home.</p></div>
-      <div class="card"><h3>2. Join</h3><p>Join the line with one tap. Get real-time updates.</p></div>
-      <div class="card"><h3>3. Arrive</h3><p>We'll alert you exactly when it's your turn.</p></div>
+      <div class="card"><div class="step-number">1</div><h3>Discover</h3><p>Search for local businesses and check wait times.</p></div>
+      <div class="card"><div class="step-number">2</div><h3>Join Virtually</h3><p>Join the line with one tap from your phone.</p></div>
+      <div class="card"><div class="step-number">3</div><h3>Arrive Ready</h3><p>We'll alert you exactly when it's your turn.</p></div>
     </div>
+
+    <section class="cta-card">
+      <h2>Ready to reclaim your time?</h2>
+      <p>Join the virtual queue revolution today.</p>
+    </section>
   </main>
 
   <footer style="background: #0f172a; color: white; padding: 4rem 0 2rem; margin-top: 4rem;">
     <div class="container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 3rem;">
-      <div><h4 style="color: white; font-weight: 800;">skipQs</h4><p style="color: #94a3b8;">Eliminating queues through digital synchronization.</p></div>
-      <div><h5 style="color: white;">Support</h5><ul style="list-style: none; padding: 0;">
-          <li><a href="privacy.html" style="color: #94a3b8; text-decoration: none;">Privacy Policy</a></li>
-          <li style="color: #94a3b8; margin-top: 10px;">Contact: <a href="mailto:support@skipqs.com" style="color: #2563eb; text-decoration: none;">support@skipqs.com</a></li>
+      <div><h4 style="color: white; margin-bottom: 1.5rem;">skipQs</h4><p style="color: #94a3b8; font-size: 0.9rem;">The world's leading virtual queue platform.</p></div>
+      <div><h5 style="color: white; font-size: 0.8rem; margin-bottom: 1.5rem;">Product</h5><ul style="list-style: none; padding: 0;">
+        <li><a href="how-it-works.html" style="color: #94a3b8; text-decoration: none;">Features</a></li>
+        <li><a href="contact.html" style="color: #94a3b8; text-decoration: none;">Support</a></li>
+      </ul></div>
+      <div><h5 style="color: white; font-size: 0.8rem; margin-bottom: 1.5rem;">Legal & Support</h5><ul style="list-style: none; padding: 0;">
+        <li><a href="privacy.html" style="color: #94a3b8; text-decoration: none;">Privacy Policy</a></li>
+        <li style="color: #94a3b8; font-size: 0.9rem;">Contact: <a href="mailto:support@skipqs.com" style="color: #2563eb; text-decoration: none;">support@skipqs.com</a></li>
       </ul></div>
     </div>
+    <div style="text-align: center; color: #64748b; font-size: 0.85rem; margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #1e293b;">© 2026 skipQs Inc. All rights reserved.</div>
   </footer>
 
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="firebase-config.js"></script>
   <script>
-    firebase.auth().onAuthStateChanged(user => {
-      const btn = document.getElementById('loginLogoutBtn');
-      if (user) { btn.textContent = 'Logout'; btn.onclick = () => firebase.auth().signOut(); }
+    firebase.auth().onAuthStateChanged((user) => {
+      const loginBtn = document.getElementById('loginLogoutBtn');
+      if (user) { loginBtn.textContent = 'Logout'; loginBtn.onclick = () => firebase.auth().signOut().then(() => window.location.reload()); }
     });
   </script>
 </body>
