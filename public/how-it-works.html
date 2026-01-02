@@ -7,297 +7,64 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --primary: #2563eb;
-      --primary-soft: #eff6ff;
-      --secondary: #64748b;
-      --dark: #0f172a;
-      --bg-light: #f8fafc;
-      --white: #ffffff;
-      --border: #e2e8f0;
-      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+      --primary: #2563eb; --primary-hover: #1d4ed8; --bg-light: #f8fafc;
+      --text-main: #1e293b; --text-muted: #64748b; --white: #ffffff; --border: #e2e8f0;
     }
-
     * { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background-color: var(--bg-light); color: var(--text-main); margin: 0; line-height: 1.6; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
 
-    body {
-      font-family: 'Inter', sans-serif;
-      margin: 0;
-      color: var(--dark);
-      background-color: var(--bg-light);
-      line-height: 1.6;
-      overflow-x: hidden;
-    }
+    /* --- Navbar (Synced) --- */
+    .navbar { background: white; padding: 0.75rem 0; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 1000; }
+    .nav-content { display: flex; justify-content: space-between; align-items: center; }
+    .logo { font-size: 1.6rem; font-weight: 800; color: var(--primary); text-decoration: none; }
+    .nav-links { display: flex; align-items: center; gap: 1.5rem; }
+    .nav-links a { text-decoration: none; color: var(--text-muted); font-weight: 500; font-size: 0.95rem; }
+    .btn { padding: 0.75rem 1.5rem; border-radius: 0.6rem; font-weight: 600; text-decoration: none; display: inline-flex; }
 
-    .container {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 0 1.5rem;
-    }
-
-    /* --- Navbar --- */
-    .navbar {
-      background: var(--white);
-      padding: 0.75rem 0;
-      border-bottom: 1px solid var(--border);
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-    }
-
-    .nav-content {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .logo {
-      font-size: 1.5rem;
-      font-weight: 800;
-      color: var(--primary);
-      text-decoration: none;
-      letter-spacing: -0.5px;
-    }
-
-    .menu-toggle {
-      display: none;
-      flex-direction: column;
-      gap: 5px;
-      cursor: pointer;
-      border: none;
-      background: none;
-    }
-
-    .menu-toggle span {
-      width: 25px; height: 3px; background: var(--primary); border-radius: 2px;
-    }
-
-    .nav-links { display: flex; gap: 1.5rem; align-items: center; }
-    .nav-links a { text-decoration: none; color: var(--secondary); font-weight: 500; font-size: 0.95rem; transition: 0.2s; }
-    .nav-links a:hover, .nav-links a.active { color: var(--primary); }
-
-    /* --- Hero Section --- */
-    .hero {
-      background: var(--white);
-      padding: clamp(3rem, 10vw, 5rem) 0;
-      text-align: center;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .badge {
-      background: var(--primary-soft);
-      color: var(--primary);
-      padding: 0.5rem 1rem;
-      border-radius: 2rem;
-      font-size: 0.85rem;
-      font-weight: 600;
-      display: inline-block;
-      margin-bottom: 1.5rem;
-    }
-
-    .hero h1 { font-size: clamp(2.2rem, 8vw, 3rem); font-weight: 800; margin: 0; line-height: 1.1; }
-    .hero p { font-size: clamp(1rem, 4vw, 1.2rem); color: var(--secondary); max-width: 700px; margin: 1.5rem auto 0; }
-
-    /* --- Grid Layouts --- */
-    .section-title { margin: 4rem 0 2rem; text-align: center; }
-    .section-title h2 { font-size: clamp(1.75rem, 5vw, 2.25rem); font-weight: 700; }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 2rem;
-      margin-bottom: 4rem;
-    }
-
-    .card {
-      background: var(--white);
-      padding: 3rem 2rem;
-      border-radius: 1.25rem;
-      text-align: center;
-      border: 1px solid var(--border);
-      position: relative;
-      transition: 0.3s;
-    }
-
-    .card:hover { transform: translateY(-10px); box-shadow: var(--shadow-md); border-color: var(--primary); }
-
-    .step-number {
-      position: absolute;
-      top: -16px; left: 50%; transform: translateX(-50%);
-      background: var(--primary); color: white;
-      width: 32px; height: 32px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center; font-weight: 700;
-    }
-
-    .icon-box { font-size: 3rem; margin-bottom: 1rem; }
-
-    /* --- CTA Card --- */
-    .cta-card {
-      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-      color: white;
-      padding: clamp(2.5rem, 8vw, 4rem);
-      border-radius: 2rem;
-      text-align: center;
-      margin: 4rem 0;
-    }
-
-    .cta-card h2 { font-size: clamp(1.6rem, 6vw, 2.5rem); margin-bottom: 1rem; }
-    .cta-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 2rem; }
-
-    .btn {
-      padding: 1rem 2.5rem;
-      border-radius: 0.75rem;
-      font-weight: 600;
-      text-decoration: none;
-      transition: 0.2s;
-      display: inline-block;
-      min-width: 200px;
-    }
-
-    .btn-white { background: white; color: var(--primary); }
-    .btn-outline-white { border: 2px solid white; color: white; }
-
-    /* --- Footer --- */
-    footer { background: var(--white); padding: 4rem 0 2rem; border-top: 1px solid var(--border); }
-    .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 3rem; }
-    .footer-col h5 { font-weight: 700; text-transform: uppercase; font-size: 0.8rem; margin-bottom: 1.25rem; }
-    .footer-col ul { list-style: none; padding: 0; margin: 0; }
-    .footer-col li { margin-bottom: 0.75rem; }
-    .footer-col a { color: var(--secondary); text-decoration: none; font-size: 0.95rem; }
-
-    /* --- Mobile Overrides --- */
-    @media (max-width: 768px) {
-      .menu-toggle { display: flex; }
-      .nav-links {
-        display: none;
-        flex-direction: column;
-        position: absolute;
-        top: 100%; left: 0; width: 100%;
-        background: white; padding: 2rem; gap: 1.25rem;
-        border-bottom: 1px solid var(--border);
-        box-shadow: var(--shadow-md);
-        text-align: center;
-      }
-      .nav-links.active { display: flex; }
-      .btn { width: 100%; }
-      .footer-grid { text-align: center; }
-    }
+    /* --- Original Body Content Styles --- */
+    .hero { background: white; padding: 5rem 0; text-align: center; border-bottom: 1px solid var(--border); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; margin: 4rem 0; }
+    .card { background: white; padding: 3rem 2rem; border-radius: 1.25rem; border: 1px solid var(--border); text-align: center; }
+    @media (max-width: 768px) { .nav-links { display: none; } }
   </style>
 </head>
 <body>
 
-  <header class="navbar">
+  <nav class="navbar">
     <div class="container nav-content">
       <a href="index.html" class="logo">skipQs</a>
-      
-      <button class="menu-toggle" id="mobile-toggle" aria-label="Toggle Menu">
-        <span></span><span></span><span></span>
-      </button>
-
-      <nav class="nav-links" id="nav-list">
+      <div class="nav-links">
         <a href="index.html">Home</a>
         <a href="about.html">About</a>
-        <a href="how-it-works.html" class="active">How It Works</a>
-        <a id="loginLogoutBtn" href="login.html">Login</a>
-        <a href="provider-signup.html" style="color: var(--primary); font-weight: 700;">For Business</a>
-      </nav>
+        <a href="how-it-works.html" style="color: var(--primary);">How It Works</a>
+        <a href="login.html" id="loginLogoutBtn" class="btn btn-primary" style="color: white;">Login</a>
+      </div>
     </div>
-  </header>
+  </nav>
 
   <section class="hero">
     <div class="container">
-      <div class="badge">The skipQs Process</div>
       <h1>Wait less. Do more.</h1>
-      <p>skipQs transforms your phone into a live ticket for every local queue. Join from your couch, track from the street, and arrive just in time.</p>
+      <p>skipQs transforms your phone into a live ticket for every local queue.</p>
     </div>
   </section>
 
   <main class="container">
-    
-    <section>
-      <div class="section-title">
-        <h2>For Customers</h2>
-        <p style="color: var(--secondary);">Reclaim the hours lost standing in line.</p>
-      </div>
-      <div class="grid">
-        <div class="card">
-          <div class="step-number">1</div>
-          <div class="icon-box">🔍</div>
-          <h3>Discover</h3>
-          <p style="color: var(--secondary); font-size: 0.95rem;">Search for local businesses and check live wait times before you leave home.</p>
-        </div>
-        <div class="card">
-          <div class="step-number">2</div>
-          <div class="icon-box">📱</div>
-          <h3>Join Virtually</h3>
-          <p style="color: var(--secondary); font-size: 0.95rem;">Join the line with one tap. Get your position number and real-time updates.</p>
-        </div>
-        <div class="card">
-          <div class="step-number">3</div>
-          <div class="icon-box">☕</div>
-          <h3>Arrive Ready</h3>
-          <p style="color: var(--secondary); font-size: 0.95rem;">Wait where you want. We'll alert you exactly when it's your turn to head over.</p>
-        </div>
-      </div>
-    </section>
-
-    <section>
-      <div class="section-title">
-        <h2>For Businesses</h2>
-        <p style="color: var(--secondary);">Manage your customer flow with digital precision.</p>
-      </div>
-      <div class="grid">
-        <div class="card">
-          <div class="icon-box">🏢</div>
-          <h3>Quick Setup</h3>
-          <p style="color: var(--secondary); font-size: 0.95rem;">Create your profile and generate your unique QR code for walk-ins in under 5 minutes.</p>
-        </div>
-        <div class="card">
-          <div class="icon-box">📊</div>
-          <h3>Live Control</h3>
-          <p style="color: var(--secondary); font-size: 0.95rem;">Manage your queue from any tablet or phone. Handle delays and walk-ins instantly.</p>
-        </div>
-        <div class="card">
-          <div class="icon-box">📈</div>
-          <h3>Scale Up</h3>
-          <p style="color: var(--secondary); font-size: 0.95rem;">Eliminate crowded waiting rooms and use insights to optimize your staff scheduling.</p>
-        </div>
-      </div>
-    </section>
-
-    <section class="cta-card">
-      <h2>Ready to reclaim your time?</h2>
-      <p>Join the virtual queue revolution today. Better for users, smarter for businesses.</p>
-      <div class="cta-btns">
-        <a href="signup.html" class="btn btn-white">Join as Customer</a>
-        <a href="provider-signup.html" class="btn btn-outline-white">Register Business</a>
-      </div>
-    </section>
+    <div class="grid">
+      <div class="card"><h3>1. Discover</h3><p>Check live wait times before you leave home.</p></div>
+      <div class="card"><h3>2. Join</h3><p>Join the line with one tap. Get real-time updates.</p></div>
+      <div class="card"><h3>3. Arrive</h3><p>We'll alert you exactly when it's your turn.</p></div>
+    </div>
   </main>
 
-  <footer>
-    <div class="container footer-grid">
-      <div class="footer-col">
-        <a href="#" class="logo">skipQs</a>
-        <p style="color: var(--secondary); font-size: 0.9rem; margin-top: 1rem;">The world's leading virtual queue platform.</p>
-      </div>
-      <div class="footer-col">
-        <h5>Product</h5>
-        <ul>
-          <li><a href="how-it-works.html">Features</a></li>
-          <li><a href="contact.html">Support</a></li>
-        </ul>
-      </div>
-      <div class="footer-col">
-        <h5>Company</h5>
-        <ul>
-          <li><a href="about.html">About Us</a></li>
-          <li><a href="#">Privacy</a></li>
-          <li><a href="#">Terms</a></li>
-        </ul>
-      </div>
-    </div>
-    <div class="container" style="border-top: 1px solid var(--border); margin-top: 3rem; padding-top: 2rem; text-align: center; color: var(--secondary); font-size: 0.85rem;">
-      © 2025 skipQs Inc. All rights reserved.
+  <footer style="background: #0f172a; color: white; padding: 4rem 0 2rem; margin-top: 4rem;">
+    <div class="container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 3rem;">
+      <div><h4 style="color: white; font-weight: 800;">skipQs</h4><p style="color: #94a3b8;">Eliminating queues through digital synchronization.</p></div>
+      <div><h5 style="color: white;">Support</h5><ul style="list-style: none; padding: 0;">
+          <li><a href="privacy.html" style="color: #94a3b8; text-decoration: none;">Privacy Policy</a></li>
+          <li style="color: #94a3b8; margin-top: 10px;">Contact: <a href="mailto:support@skipqs.com" style="color: #2563eb; text-decoration: none;">support@skipqs.com</a></li>
+      </ul></div>
     </div>
   </footer>
 
@@ -305,21 +72,9 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="firebase-config.js"></script>
   <script>
-    // --- Mobile Menu Toggle ---
-    const mobileToggle = document.getElementById('mobile-toggle');
-    const navList = document.getElementById('nav-list');
-    mobileToggle.addEventListener('click', () => navList.classList.toggle('active'));
-
-    // --- Authentication Sync ---
-    const loginBtn = document.getElementById('loginLogoutBtn');
-    firebase.auth().onAuthStateChanged((user) => {
-      if (user) {
-        loginBtn.textContent = 'Logout';
-        loginBtn.onclick = (e) => {
-          e.preventDefault();
-          firebase.auth().signOut().then(() => window.location.reload());
-        };
-      }
+    firebase.auth().onAuthStateChanged(user => {
+      const btn = document.getElementById('loginLogoutBtn');
+      if (user) { btn.textContent = 'Logout'; btn.onclick = () => firebase.auth().signOut(); }
     });
   </script>
 </body>
