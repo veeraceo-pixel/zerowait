@@ -46,6 +46,39 @@
         .provider-registered { background: #d1fae5; color: #065f46; }
         .provider-not-registered { background: #f1f5f9; color: #64748b; }
 
+        /* New Button Style */
+        .btn-explore {
+            margin-top: 8px;
+            background: white;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            border-radius: 6px;
+            padding: 5px 10px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s;
+        }
+        .btn-explore:hover { background: var(--primary); color: white; }
+
+        /* Street View Overlay */
+        #street-view-container { 
+            display: none; 
+            position: fixed; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            z-index: 3000; 
+            background: black; 
+        }
+        .close-street-view {
+            position: absolute; top: 20px; right: 20px; z-index: 3001;
+            background: rgba(0,0,0,0.6); color: white; border: none;
+            border-radius: 50%; width: 40px; height: 40px; font-size: 20px; cursor: pointer;
+        }
+
         #detailModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; align-items: flex-end; justify-content: center; }
         .modal-content { background: white; width: 100%; max-width: 500px; border-radius: 1.5rem 1.5rem 0 0; overflow: hidden; position: relative; animation: slideUp 0.2s ease-out; max-height: 90vh; display: flex; flex-direction: column; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
@@ -93,6 +126,11 @@
         </div>
     </div>
 
+    <div id="street-view-container">
+        <button class="close-street-view" onclick="closeStreetView()">✕</button>
+        <div id="street-pano" style="width: 100%; height: 100%;"></div>
+    </div>
+
     <div id="detailModal">
         <div class="modal-content">
             <button onclick="closeModal()" style="position:absolute; right:12px; top:12px; border:none; background:rgba(0,0,0,0.5); color:white; border-radius:50%; width:30px; height:30px; cursor:pointer; font-weight:bold; z-index:100;">✕</button>
@@ -123,38 +161,19 @@
         const params = new URLSearchParams(window.location.search);
         let serviceType = params.get("type") || 'salon';
         
-        // Category Map: 'health' and 'doctor' work better for city clinics than 'hospital'
-
         const SERVICE_MAP = {
-    salon: { 
-        type: "hair_care", 
-        keyword: "salon barber hair styling hairdresser beautician beauty parlor unisex haircut fade shave styling", 
-        label: "Salons & Barbers" 
-    },
-    restaurant: { 
-        type: "restaurant", 
-        keyword: "restaurant cafe eatery dining bistro food gastropub steakhouse pizzeria buffet takeaway grill kitchen", 
-        label: "Restaurants & Dining" 
-    },
-    clinic: { 
-        type: "health", 
-        keyword: "clinic doctor medical dental pharmacy surgery health center physician specialist practitioner", 
-        label: "Clinics & Health" 
-    },
-    hotel: { 
-        type: "lodging", 
-        // Broad keywords to cover all accommodation types
-        keyword: "hotel motel inn guest house accommodation hostel boutique resort suites stay b&b lodge", 
-        label: "Hotels & Lodging" 
-    }
-};
+            salon: { type: "hair_care", keyword: "salon barber hair styling hairdresser beautician beauty parlor unisex haircut fade shave styling", label: "Salons & Barbers" },
+            restaurant: { type: "restaurant", keyword: "restaurant cafe eatery dining bistro food gastropub steakhouse pizzeria buffet takeaway grill kitchen", label: "Restaurants & Dining" },
+            clinic: { type: "health", keyword: "clinic doctor medical dental pharmacy surgery health center physician specialist practitioner", label: "Clinics & Health" },
+            hotel: { type: "lodging", keyword: "hotel motel inn guest house accommodation hostel boutique resort suites stay b&b lodge", label: "Hotels & Lodging" }
+        };
 
         const config = SERVICE_MAP[serviceType] || SERVICE_MAP.salon;
         document.getElementById("title").innerText = config.label;
 
         let map, placesService, userLocation;
         let markers = [];
-        const defaultLocation = { lat: 53.4875, lng: -2.2901 }; // Manchester
+        const defaultLocation = { lat: 53.4875, lng: -2.2901 }; 
 
         firebase.auth().onAuthStateChanged((user) => {
             const authBtn = document.getElementById('authBtn');
@@ -199,11 +218,10 @@
             
             placesService.nearbySearch({
                 location: userLocation, 
-                radius: 10000, // Increased to 10km for better results
+                radius: 10000, 
                 type: config.type, 
                 keyword: config.keyword
             }, (results, status) => {
-                console.log("Search Status:", status); // Debug log
                 if (status === "OK") {
                     results.forEach(p => {
                         p.distMeters = google.maps.geometry.spherical.computeDistanceBetween(
@@ -215,7 +233,7 @@
                     renderResults(results);
                     document.getElementById("status-text").innerText = results.length + " locations found near you.";
                 } else {
-                    document.getElementById("results").innerHTML = `<p style='text-align:center; padding:2rem;'>No results found (Status: ${status}).</p>`;
+                    document.getElementById("results").innerHTML = `<p style='text-align:center; padding:2rem;'>No results found.</p>`;
                 }
             });
         }
@@ -242,7 +260,12 @@
                         <strong>${place.name}</strong>
                         <span style="font-size:0.75rem; color:var(--text-muted)">${place.vicinity}</span>
                         <div class="dist-text">📍 ${miles} miles away</div>
-                        <span id="st-${index}" class="provider-status" style="background:#eee;">Checking skipQs...</span>
+                        
+                        <button class="btn-explore" onclick="event.stopPropagation(); openStreetView(${place.geometry.location.lat()}, ${place.geometry.location.lng()})">
+                           🚶 Walk the street
+                        </button>
+
+                        <div id="st-${index}" class="provider-status" style="background:#eee; display:block; margin-top:8px;">Checking skipQs...</div>
                     </div>
                     <span class="rating-badge">★ ${place.rating || "N/A"}</span>
                 `;
@@ -257,6 +280,25 @@
                     badge.style.background = "";
                 });
             });
+        }
+
+        /* NEW STREET VIEW LOGIC */
+        function openStreetView(lat, lng) {
+            document.getElementById('street-view-container').style.display = 'block';
+            new google.maps.StreetViewPanorama(
+                document.getElementById("street-pano"),
+                {
+                    position: { lat: lat, lng: lng },
+                    pov: { heading: 165, pitch: 0 },
+                    zoom: 1,
+                    addressControl: false,
+                    fullscreenControl: false
+                }
+            );
+        }
+
+        function closeStreetView() {
+            document.getElementById('street-view-container').style.display = 'none';
         }
 
         function calculateTravelTime(destLocation) {
@@ -285,7 +327,7 @@
             document.getElementById('modalName').innerText = place.name;
             document.getElementById('modalAddress').innerText = place.vicinity;
             document.getElementById('modalDistance').innerText = `📍 ${miles} miles away`;
-            document.getElementById('modalTravelTime').innerHTML = "<span style='color:#94a3b8; font-weight:400; font-size:0.8rem;'>Calculating travel time...</span>";
+            document.getElementById('modalTravelTime').innerHTML = "<span style='color:#94a3b8;'>Calculating...</span>";
             document.getElementById('modalPhotos').innerHTML = "<div style='padding:40px; text-align:center; width:100%;'>Loading photos...</div>";
             document.getElementById('modalReviews').innerHTML = "";
 
@@ -303,7 +345,6 @@
 
                     db.collection('providers').where('googlePlaceId', '==', placeId).get().then(snap => {
                         const actionDiv = document.getElementById('modalAction');
-                        // Corrected the template literal syntax error below ($ instead of 0)
                         const mapUrl = placeDetails.url || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name)}&query_place_id=${placeId}`;
                         
                         let html = `<div class="btn-group">
@@ -312,12 +353,10 @@
                         if (!snap.empty) {
                             const providerDoc = snap.docs[0];
                             const providerData = providerDoc.data();
-                            const firestoreId = providerDoc.id;
-
                             if (providerData.status === 'closed' || providerData.active === false) {
                                 html += `<button class="btn-join btn-offline">QUEUE OFFLINE</button>`;
                             } else {
-                                html += `<button class="btn-join" onclick="window.location.href='join-queue.html?id=${firestoreId}&name=${encodeURIComponent(place.name)}'">JOIN QUEUE</button>`;
+                                html += `<button class="btn-join" onclick="window.location.href='join-queue.html?id=${providerDoc.id}&name=${encodeURIComponent(place.name)}'">JOIN QUEUE</button>`;
                             }
                         } else {
                             html += `<button class="btn-join btn-offline">Queue Offline</button>`;
