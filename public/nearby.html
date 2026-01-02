@@ -124,11 +124,30 @@
         let serviceType = params.get("type") || 'salon';
         
         // Category Map: 'health' and 'doctor' work better for city clinics than 'hospital'
+
         const SERVICE_MAP = {
-            salon: { type: "hair_care", keyword: "salon", label: "Salons Nearby" },
-            restaurant: { type: "restaurant", keyword: "restaurant", label: "Restaurants Nearby" },
-            clinic: { type: "health", keyword: "clinic", label: "Clinics Nearby" }
-        };
+    salon: { 
+        type: "hair_care", 
+        keyword: "salon barber hair styling hairdresser beautician beauty parlor unisex haircut fade shave styling", 
+        label: "Salons & Barbers" 
+    },
+    restaurant: { 
+        type: "restaurant", 
+        keyword: "restaurant cafe eatery dining bistro food gastropub steakhouse pizzeria buffet takeaway grill kitchen", 
+        label: "Restaurants & Dining" 
+    },
+    clinic: { 
+        type: "health", 
+        keyword: "clinic doctor medical dental pharmacy surgery health center physician specialist practitioner", 
+        label: "Clinics & Health" 
+    },
+    hotel: { 
+        type: "lodging", 
+        // Broad keywords to cover all accommodation types
+        keyword: "hotel motel inn guest house accommodation hostel boutique resort suites stay b&b lodge", 
+        label: "Hotels & Lodging" 
+    }
+};
 
         const config = SERVICE_MAP[serviceType] || SERVICE_MAP.salon;
         document.getElementById("title").innerText = config.label;
