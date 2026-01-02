@@ -6,56 +6,96 @@
   <title>About Us | skipQs</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    :root { --primary: #2563eb; --bg-light: #f8fafc; --text-main: #1e293b; --text-muted: #64748b; --border: #e2e8f0; }
-    body { font-family: 'Inter', sans-serif; margin: 0; background: var(--bg-light); line-height: 1.6; }
+    :root {
+      --primary: #2563eb; --primary-hover: #1d4ed8; --primary-soft: #eff6ff;
+      --bg-light: #f8fafc; --text-main: #1e293b; --text-muted: #64748b;
+      --white: #ffffff; --border: #e2e8f0; --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background-color: var(--white); color: var(--text-main); margin: 0; line-height: 1.6; overflow-x: hidden; }
     .container { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
-    .navbar { background: white; padding: 0.75rem 0; border-bottom: 1px solid var(--border); position: sticky; top: 0; }
-    .logo { font-size: 1.6rem; font-weight: 800; color: var(--primary); text-decoration: none; }
-    .nav-links { display: flex; gap: 1.5rem; align-items: center; }
-    .nav-links a { text-decoration: none; color: var(--text-muted); font-weight: 500; }
-    .about-hero { padding: 5rem 0; text-align: center; background: white; border-bottom: 1px solid var(--border); }
-    .stats-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; padding: 3rem 0; text-align: center; }
-    @media (max-width: 768px) { .nav-links { display: none; } }
+
+    /* --- Blue Header --- */
+    .navbar { background: var(--primary); padding: 0.75rem 0; position: sticky; top: 0; z-index: 1000; box-shadow: var(--shadow-lg); }
+    .nav-content { display: flex; justify-content: space-between; align-items: center; }
+    .logo { font-size: 1.6rem; font-weight: 800; color: white; text-decoration: none; letter-spacing: -0.5px; }
+    .nav-links { display: flex; align-items: center; gap: 1.5rem; }
+    .nav-links a { text-decoration: none; color: rgba(255,255,255,0.9); font-weight: 500; font-size: 0.95rem; transition: 0.2s; }
+    .nav-links a:hover { color: white; }
+    .btn-nav { background: white; color: var(--primary); padding: 0.6rem 1.2rem; border-radius: 0.5rem; font-weight: 700; text-decoration: none; }
+
+    /* --- Original Body Styles --- */
+    .about-hero { background: linear-gradient(to bottom, var(--primary-soft), var(--white)); padding: 4rem 0; text-align: center; }
+    .stats-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; padding: 2rem 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin: 2rem 0; text-align: center; }
+    .split-content { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: center; margin-bottom: 5rem; }
+    .image-placeholder { background: var(--bg-light); border-radius: 1.5rem; height: 300px; display: flex; align-items: center; justify-content: center; font-size: 4rem; border: 1px solid var(--border); }
+    .values-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 3rem; }
+    .value-card { padding: 2rem; background: var(--white); border: 1px solid var(--border); border-radius: 1.25rem; text-align: center; }
+    @media (max-width: 768px) { .nav-links { display: none; } .split-content { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
-
   <nav class="navbar">
-    <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
+    <div class="container nav-content">
       <a href="index.html" class="logo">skipQs</a>
       <div class="nav-links">
         <a href="index.html">Home</a>
-        <a href="about.html" style="color: var(--primary);">About</a>
+        <a href="about.html">About</a>
         <a href="how-it-works.html">How It Works</a>
-        <a href="login.html" id="authBtn" style="color: var(--primary); font-weight: 700;">Login</a>
+        <a href="login.html" class="btn-nav" id="authLink">Login</a>
       </div>
     </div>
   </nav>
 
-  <header class="about-hero">
+  <section class="about-hero">
     <div class="container">
-      <h1>Giving time back to humanity.</h1>
-      <p>skipQs was founded to solve a simple problem: physical waiting is a waste of potential.</p>
+      <h1>We’re giving time<br>back to humanity.</h1>
+      <p>skipQs was founded on a simple realization: waiting in line is a waste of human potential.</p>
     </div>
-  </header>
+  </section>
 
   <main class="container">
     <div class="stats-bar">
-      <div><h2 style="color: var(--primary); margin:0;">10k+</h2><p>Hours Saved</p></div>
-      <div><h2 style="color: var(--primary); margin:0;">500+</h2><p>Partners</p></div>
-      <div><h2 style="color: var(--primary); margin:0;">4.9/5</h2><p>Satisfaction</p></div>
+      <div class="stat-item"><h2>10k+</h2><p>Hours Saved</p></div>
+      <div class="stat-item"><h2>500+</h2><p>Partners</p></div>
+      <div class="stat-item"><h2>4.9/5</h2><p>Satisfaction</p></div>
     </div>
+    <section class="split-content">
+      <div class="text-content">
+        <h3>The Problem with Physical Lines</h3>
+        <p>Physical queues are inefficient, stressful, and outdated. We saw people spending 30% of their free time standing in place.</p>
+      </div>
+      <div class="image-placeholder">⏳</div>
+    </section>
+    <section class="values-grid">
+      <div class="value-card"><h4>Radical Efficiency</h4><p>We optimize every interaction to be as fast as possible.</p></div>
+      <div class="value-card"><h4>Integrity</h4><p>Data privacy and queue fairness are our pillars.</p></div>
+    </section>
   </main>
 
   <footer style="background: #0f172a; color: white; padding: 4rem 0 2rem; margin-top: 4rem;">
     <div class="container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 3rem;">
-      <div><h4 style="color: white; font-weight: 800;">skipQs</h4><p style="color: #94a3b8;">The future of queue management.</p></div>
-      <div><h5 style="color: white;">Support</h5><ul style="list-style: none; padding: 0;">
-          <li><a href="privacy.html" style="color: #94a3b8; text-decoration: none;">Privacy Policy</a></li>
-          <li style="color: #94a3b8; margin-top: 10px;">Contact: <a href="mailto:support@skipqs.com" style="color: #2563eb; text-decoration: none;">support@skipqs.com</a></li>
+      <div><h4 style="color: white; margin-bottom: 1.5rem;">skipQs</h4><p style="color: #94a3b8; font-size: 0.9rem;">The future of queue management. Reclaiming time for a digital-first world.</p></div>
+      <div><h5 style="color: white; font-size: 0.8rem; margin-bottom: 1.5rem;">Platform</h5><ul style="list-style: none; padding: 0;">
+        <li><a href="how-it-works.html" style="color: #94a3b8; text-decoration: none;">Features</a></li>
+        <li><a href="provider-signup.html" style="color: #94a3b8; text-decoration: none;">For Business</a></li>
+      </ul></div>
+      <div><h5 style="color: white; font-size: 0.8rem; margin-bottom: 1.5rem;">Legal & Support</h5><ul style="list-style: none; padding: 0;">
+        <li><a href="privacy.html" style="color: #94a3b8; text-decoration: none;">Privacy Policy</a></li>
+        <li style="color: #94a3b8; font-size: 0.9rem;">Contact: <a href="mailto:support@skipqs.com" style="color: #2563eb; text-decoration: none;">support@skipqs.com</a></li>
       </ul></div>
     </div>
+    <div style="text-align: center; color: #64748b; font-size: 0.85rem; margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #1e293b;">© 2026 skipQs Inc. All rights reserved.</div>
   </footer>
 
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script>
+    firebase.auth().onAuthStateChanged(user => {
+      const authLink = document.getElementById('authLink');
+      if (user) { authLink.textContent = 'Dashboard'; authLink.href = 'dashboard.html'; }
+    });
+  </script>
 </body>
 </html>
