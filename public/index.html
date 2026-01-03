@@ -7,98 +7,104 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --primary: #2563eb; --primary-soft: #eff6ff; --bg-light: #f8fafc;
-      --text-main: #1e293b; --text-muted: #64748b; --white: #ffffff;
-      --border: #e2e8f0; --accent: #f59e0b; --dark-nav: #0f172a;
+      --primary: #2563eb; --primary-hover: #1d4ed8; --primary-soft: #eff6ff;
+      --bg-light: #f8fafc; --text-main: #1e293b; --text-muted: #64748b;
+      --white: #ffffff; --border: #e2e8f0; --accent: #f59e0b;
+      --dark-nav: #0f172a; --shadow-sm: 0 1px 3px rgba(0,0,0,0.1); --shadow-lg: 0 10px 25px rgba(0,0,0,0.05);
     }
     * { box-sizing: border-box; transition: all 0.2s ease-in-out; }
-    body { font-family: 'Inter', sans-serif; background-color: var(--bg-light); color: var(--text-main); margin: 0; padding-bottom: 40px; }
-    .container { max-width: 1250px; margin: 0 auto; padding: 0 1.5rem; }
+    body { font-family: 'Inter', sans-serif; background-color: var(--bg-light); color: var(--text-main); margin: 0; line-height: 1.6; padding-bottom: 70px; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
 
-    /* --- LIVE BANNER (Top Bar) --- */
+    /* --- 1. LIVE QUEUE BANNER --- */
     .wait-banner {
-      background: var(--dark-nav); color: white; padding: 0.6rem 0;
-      position: sticky; top: 0; z-index: 3000; display: none;
+      background: var(--dark-nav); color: white; padding: 0.75rem 0;
+      position: sticky; top: 0; z-index: 2000; border-bottom: 2px solid var(--accent);
+      display: none; 
     }
     .wait-banner.active { display: block; }
     .banner-content { display: flex; justify-content: space-between; align-items: center; }
-    .timer-badge { background: var(--accent); color: #000; padding: 0.3rem 0.8rem; border-radius: 6px; font-weight: 800; font-size: 0.85rem; }
+    .live-dot { height: 8px; width: 8px; background: #22c55e; border-radius: 50%; display: inline-block; margin-right: 8px; animation: pulse 1.5s infinite; }
+    .timer-badge { background: var(--accent); color: #000; padding: 0.2rem 0.6rem; border-radius: 6px; font-weight: 800; font-size: 0.85rem; min-width: 65px; text-align: center; }
 
-    /* --- NAVBAR --- */
+    /* --- 2. NAVBAR --- */
     .navbar { background: var(--white); border-bottom: 1px solid var(--border); padding: 1rem 0; }
     .nav-content { display: flex; justify-content: space-between; align-items: center; }
     .logo { font-size: 1.8rem; font-weight: 800; color: var(--primary); text-decoration: none; letter-spacing: -1px; }
-    .nav-links { display: flex; align-items: center; gap: 1.5rem; }
-    .nav-links a { text-decoration: none; color: var(--text-muted); font-weight: 600; font-size: 0.9rem; }
-    .btn-business { border: 1px solid var(--primary); color: var(--primary) !important; padding: 0.5rem 1rem; border-radius: 8px; }
+    .nav-links { display: flex; align-items: center; gap: 2rem; }
+    .nav-links a { text-decoration: none; color: var(--text-muted); font-weight: 600; font-size: 0.95rem; }
+    .btn-business { color: var(--primary) !important; border: 1px solid var(--primary); padding: 0.5rem 1rem; border-radius: 8px; }
 
-    /* --- HERO & DUAL SEARCH --- */
-    .hero { text-align: center; padding: 4rem 1rem 2rem; background: var(--primary-soft); border-radius: 0 0 40px 40px; }
-    .hero h1 { font-size: 3.2rem; font-weight: 800; margin: 0; letter-spacing: -2px; }
-    .hero span { color: var(--primary); }
-    .search-wrapper {
-      max-width: 750px; margin: 2rem auto; display: flex; align-items: center;
-      background: var(--white); border-radius: 100px; padding: 8px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid var(--border);
+    /* --- 3. HERO & SEARCH --- */
+    .hero { padding: 4rem 0 3rem; text-align: center; background: radial-gradient(circle at top, #eff6ff 0%, #f8fafc 100%); }
+    .hero h1 { font-size: clamp(2.2rem, 6vw, 3.5rem); font-weight: 800; margin-bottom: 1rem; letter-spacing: -2px; line-height: 1.1; }
+    .search-wrapper { 
+      max-width: 700px; margin: 2rem auto; display: flex; background: white; 
+      border-radius: 100px; padding: 8px; box-shadow: var(--shadow-lg); border: 1px solid var(--border);
     }
-    .search-group { flex: 1; display: flex; align-items: center; padding: 0 1.2rem; gap: 8px; }
-    .search-group:not(:last-child) { border-right: 1px solid var(--border); }
-    .search-group input { border: none; outline: none; width: 100%; font-size: 0.95rem; padding: 10px; }
+    .search-group { display: flex; align-items: center; flex: 1; padding: 0 15px; border-right: 1px solid var(--border); }
+    .search-group:last-of-type { border-right: none; }
+    .search-input { border: none; padding: 12px; width: 100%; outline: none; font-size: 1rem; }
     .btn-search { background: var(--primary); color: white; border: none; border-radius: 100px; padding: 12px 25px; font-weight: 700; cursor: pointer; }
 
-    /* --- MAIN CONTENT GRID --- */
-    .main-grid { display: grid; grid-template-columns: 1fr 320px; gap: 3rem; margin-top: 3rem; }
-    .section-title { font-size: 1.2rem; font-weight: 800; margin-bottom: 1.5rem; }
+    /* --- 4. MAIN LAYOUT (Grid + Sidebar) --- */
+    .main-wrapper { display: grid; grid-template-columns: 1fr 320px; gap: 2.5rem; margin-top: 2rem; }
+    .section-title { font-size: 1.3rem; font-weight: 800; margin-bottom: 1.5rem; }
+    
+    .quick-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; }
+    .quick-card { background: var(--white); padding: 2rem 1rem; border-radius: 1.5rem; border: 1px solid var(--border); text-align: center; text-decoration: none; color: inherit; }
+    .quick-card:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: var(--shadow-lg); }
+    .quick-card span { font-size: 2.5rem; display: block; margin-bottom: 1rem; }
+    .quick-card h3 { font-size: 0.95rem; margin: 0; font-weight: 700; }
 
-    /* Quick Access Icons */
-    .icon-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.2rem; }
-    .icon-card { 
-      background: var(--white); border: 1px solid var(--border); border-radius: 1.5rem; 
-      padding: 2rem 1rem; text-align: center; text-decoration: none; color: inherit;
-    }
-    .icon-card:hover { border-color: var(--primary); transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
-    .icon-card .emoji { font-size: 2.2rem; display: block; margin-bottom: 0.8rem; }
-    .icon-card h3 { margin: 0; font-size: 0.85rem; font-weight: 700; }
+    /* --- 5. SIDEBAR STYLING --- */
+    .sidebar { background: var(--white); border-radius: 1.5rem; border: 1px solid var(--border); padding: 1.5rem; position: sticky; top: 100px; height: fit-content; }
+    .sidebar h4 { font-size: 1rem; font-weight: 800; margin-bottom: 1.2rem; display: flex; align-items: center; gap: 8px; }
+    .feat-item { display: flex; align-items: center; gap: 12px; margin-bottom: 1.2rem; text-decoration: none; color: inherit; }
+    .feat-img { width: 45px; height: 45px; border-radius: 12px; background: var(--bg-light); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+    .feat-info h5 { margin: 0; font-size: 0.85rem; font-weight: 700; }
+    .feat-info p { margin: 0; font-size: 0.75rem; color: var(--text-muted); }
+    .wait-mini { font-size: 0.75rem; font-weight: 800; color: var(--primary); margin-top: 2px; }
 
-    /* Sidebar Styling */
-    .sidebar-panel { background: var(--white); border: 1px solid var(--border); border-radius: 1.5rem; padding: 1.5rem; position: sticky; top: 100px; }
-    .sidebar-item { display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem; text-decoration: none; color: inherit; }
-    .item-img { width: 45px; height: 45px; background: var(--bg-light); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
-    .item-info h5 { margin: 0; font-size: 0.85rem; font-weight: 700; }
-    .item-info p { margin: 0; font-size: 0.75rem; color: var(--text-muted); }
-    .wait-mini { font-weight: 800; color: var(--primary); font-size: 0.75rem; margin-top: 2px; }
-
-    @media (max-width: 950px) {
-      .main-grid { grid-template-columns: 1fr; }
-      .icon-grid { grid-template-columns: repeat(2, 1fr); }
+    /* --- MOBILE RESPONSIVE --- */
+    .mobile-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--white); display: none; justify-content: space-around; padding: 0.75rem 0; border-top: 1px solid var(--border); z-index: 1001; }
+    
+    @media (max-width: 900px) {
+      .main-wrapper { grid-template-columns: 1fr; }
+      .sidebar { position: static; margin-top: 2rem; }
+      .quick-grid { grid-template-columns: repeat(2, 1fr); }
+      .desktop-only { display: none; }
+      .mobile-nav { display: flex; }
       .search-wrapper { flex-direction: column; border-radius: 20px; }
-      .search-group { border: none !important; width: 100%; border-bottom: 1px solid var(--border) !important; }
-      .navbar .nav-links a:not(.btn-business) { display: none; }
+      .search-group { border-right: none; border-bottom: 1px solid var(--border); width: 100%; }
     }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
   </style>
 </head>
 <body>
 
   <div id="statusBanner" class="wait-banner">
     <div class="container banner-content">
-      <div style="font-weight: 600; font-size: 0.85rem;">
-        Live: <span id="activeQueueName">...</span> | <span id="peopleAhead" style="color:var(--primary)">0</span> ahead
+      <div style="display: flex; align-items: center;">
+        <span class="live-dot"></span>
+        <span style="font-weight: 600; font-size: 0.9rem;">Live: <span id="activeQueueName">...</span> | <span id="peopleAhead" style="color:var(--accent)">0</span> ahead</span>
       </div>
       <div style="display: flex; align-items: center; gap: 15px;">
-        <span class="timer-badge" id="activeTimer">00:00</span>
-        <a href="dashboard.html" style="color:white; font-size:0.75rem; font-weight:700;">TRACK</a>
+        <span class="timer-badge" id="activeTimer">--:--</span>
+        <a href="dashboard.html" style="color: var(--primary); font-weight: 800; text-decoration: none; font-size: 0.8rem; background: white; padding: 3px 10px; border-radius: 4px;">TRACK</a>
       </div>
     </div>
   </div>
 
-  <nav class="navbar">
+  <nav class="navbar desktop-only">
     <div class="container nav-content">
       <a href="index.html" class="logo">skipQs</a>
       <div class="nav-links">
         <a href="how-it-works.html">How It Works</a>
-        <a href="business.html" class="btn-business">Business</a>
+        <a href="business.html" class="btn-business">For Business</a>
+        <span id="userGreeting" style="display:none; font-weight: 700;">Hi, <b id="userDisplayName"></b></span>
         <a href="login.html" id="loginLink">Login</a>
-        <span id="userGreeting" style="display:none; font-weight:700;">Hi, <b id="userDisplayName"></b></span>
+        <a href="#" id="logoutBtn" style="display:none;" onclick="logoutUser()">Logout</a>
       </div>
     </div>
   </nav>
@@ -106,73 +112,129 @@
   <main>
     <section class="hero">
       <div class="container">
-        <h1>Skip the Line. <span>Save Time.</span></h1>
+        <h1>Skip the Line.<br><span style="color: var(--primary);">Save Your Time.</span></h1>
         <div class="search-wrapper">
           <div class="search-group">
             <span>🔍</span>
-            <input type="text" placeholder="Service (Salon, Clinic...)">
+            <input type="text" class="search-input" placeholder="Service (Salon, Clinic...)">
           </div>
           <div class="search-group">
             <span>📍</span>
-            <input type="text" placeholder="Location (Near me)">
+            <input type="text" id="locInput" class="search-input" placeholder="Location (Near me)">
           </div>
           <button class="btn-search">Search</button>
         </div>
       </div>
     </section>
 
-    <div class="container main-grid">
+    <div class="container main-wrapper">
       <section>
         <h2 class="section-title">Quick Access</h2>
-        <div class="icon-grid">
-          <a href="#" class="icon-card"><span class="emoji">💇‍♀️</span><h3>Salons</h3></a>
-          <a href="#" class="icon-card"><span class="emoji">🍽️</span><h3>Dining</h3></a>
-          <a href="#" class="icon-card"><span class="emoji">🏥</span><h3>Clinics</h3></a>
-          <a href="#" class="icon-card"><span class="emoji">🏦</span><h3>Banking</h3></a>
-          <a href="#" class="icon-card"><span class="emoji">🏋️</span><h3>Gyms</h3></a>
-          <a href="#" class="icon-card"><span class="emoji">🛠️</span><h3>Repairs</h3></a>
-          <a href="#" class="icon-card"><span class="emoji">🏛️</span><h3>Gov</h3></a>
-          <a href="#" class="icon-card"><span class="emoji">🧼</span><h3>Wash</h3></a>
+        <div class="quick-grid">
+          <a href="nearby.html?type=salon" class="quick-card"><span>💇‍♀️</span><h3>Salons</h3></a>
+          <a href="nearby.html?type=dining" class="quick-card"><span>🍽️</span><h3>Dining</h3></a>
+          <a href="nearby.html?type=clinic" class="quick-card"><span>🏥</span><h3>Clinics</h3></a>
+          <a href="nearby.html?type=banking" class="quick-card"><span>🏦</span><h3>Banking</h3></a>
+          <a href="nearby.html?type=gym" class="quick-card"><span>🏋️</span><h3>Gyms</h3></a>
+          <a href="nearby.html?type=repair" class="quick-card"><span>🛠️</span><h3>Repairs</h3></a>
+          <a href="nearby.html?type=gov" class="quick-card"><span>🏛️</span><h3>Gov</h3></a>
+          <a href="nearby.html?type=wash" class="quick-card"><span>🧼</span><h3>Wash</h3></a>
         </div>
       </section>
 
-      <aside>
-        <div class="sidebar-panel">
-          <h2 class="section-title" style="font-size: 1rem;">⚡ Shortest Waits Near Me</h2>
-          
-          <a href="#" class="sidebar-item">
-            <div class="item-img">✂️</div>
-            <div class="item-info">
-              <h5>Elite Cuts</h5>
-              <p>0.4 miles away</p>
-              <div class="wait-mini">5 min wait</div>
-            </div>
-          </a>
-
-          <a href="#" class="sidebar-item">
-            <div class="item-icon item-img">🦷</div>
-            <div class="item-info">
-              <h5>City Dental</h5>
-              <p>1.2 miles away</p>
-              <div class="wait-mini">12 min wait</div>
-            </div>
-          </a>
-
-          <hr style="border:0; border-top: 1px solid var(--border); margin: 1.5rem 0;">
-          
-          <h2 class="section-title" style="font-size: 1rem;">🌟 Featured Services</h2>
-          <a href="#" class="sidebar-item">
-            <div class="item-img">💪</div>
-            <div class="item-info">
-              <h5>Iron Gym</h5>
-              <p>Premium Facility</p>
-              <div class="wait-mini" style="color:var(--accent)">Join Queue</div>
-            </div>
-          </a>
-        </div>
+      <aside class="sidebar">
+        <h4>⚡ Shortest Waits Near Me</h4>
+        <a href="#" class="feat-item">
+          <div class="feat-img">✂️</div>
+          <div class="feat-info">
+            <h5>Elite Cuts</h5>
+            <p>0.4 miles away</p>
+            <div class="wait-mini">5 min wait</div>
+          </div>
+        </a>
+        <a href="#" class="feat-item">
+          <div class="feat-img">🦷</div>
+          <div class="feat-info">
+            <h5>City Dental</h5>
+            <p>1.2 miles away</p>
+            <div class="wait-mini">12 min wait</div>
+          </div>
+        </a>
+        <hr style="border:0; border-top:1px solid var(--border); margin: 1.5rem 0;">
+        <h4>🌟 Featured Services</h4>
+        <a href="#" class="feat-item">
+          <div class="feat-img">💪</div>
+          <div class="feat-info">
+            <h5>Iron Gym</h5>
+            <p>Premium Facility</p>
+            <div class="wait-mini" style="color:var(--accent)">Join Queue</div>
+          </div>
+        </a>
       </aside>
     </div>
   </main>
 
-  </body>
+  <nav class="mobile-nav">
+    <a href="index.html" class="active">🏠<br>Home</a>
+    <a href="nearby.html">🔍<br>Search</a>
+    <a href="dashboard.html">📋<br>Queues</a>
+    <a href="login.html">👤<br>Profile</a>
+  </nav>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script>
+    const db = firebase.firestore();
+    let timerInterval;
+
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        document.getElementById('loginLink').style.display = 'none';
+        document.getElementById('logoutBtn').style.display = 'inline-block';
+        document.getElementById('userGreeting').style.display = 'inline-block';
+        document.getElementById('userDisplayName').textContent = user.displayName || user.email.split('@')[0];
+        setupRealTimeBanner(user.uid);
+      }
+    });
+
+    function setupRealTimeBanner(uid) {
+      db.collection('bookings').where('userId', '==', uid).where('status', '==', 'waiting').limit(1)
+        .onSnapshot(snapshot => {
+          if (!snapshot.empty) {
+            const booking = snapshot.docs[0].data();
+            document.getElementById('statusBanner').classList.add('active');
+            document.getElementById('activeQueueName').innerText = booking.businessName;
+            startCountdown(booking.estimatedWaitTime);
+            
+            // Calculate people ahead
+            db.collection('bookings')
+              .where('businessId', '==', booking.businessId)
+              .where('status', '==', 'waiting')
+              .where('createdAt', '<', booking.createdAt)
+              .onSnapshot(qSnap => {
+                document.getElementById('peopleAhead').innerText = qSnap.size;
+              });
+          } else {
+            document.getElementById('statusBanner').classList.remove('active');
+          }
+        });
+    }
+
+    function startCountdown(mins) {
+      clearInterval(timerInterval);
+      let seconds = mins * 60;
+      timerInterval = setInterval(() => {
+        seconds--;
+        if (seconds <= 0) { clearInterval(timerInterval); document.getElementById('activeTimer').innerText = "READY"; return; }
+        let m = Math.floor(seconds / 60);
+        let s = seconds % 60;
+        document.getElementById('activeTimer').innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+      }, 1000);
+    }
+
+    function logoutUser() { firebase.auth().signOut().then(() => window.location.reload()); }
+  </script>
+</body>
 </html>
