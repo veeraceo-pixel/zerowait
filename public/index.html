@@ -13,7 +13,7 @@
       --dark-nav: #0f172a; --shadow-lg: 0 10px 25px rgba(0,0,0,0.05);
     }
     * { box-sizing: border-box; transition: all 0.2s ease-in-out; }
-    body { font-family: 'Inter', sans-serif; background-color: var(--bg-light); color: var(--text-main); margin: 0; line-height: 1.6; }
+    body { font-family: 'Inter', sans-serif; background-color: var(--bg-light); color: var(--text-main); margin: 0; line-height: 1.6; padding-bottom: 80px; }
     .container { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
 
     /* --- 1. LIVE QUEUE BANNER --- */
@@ -27,18 +27,18 @@
     .timer-badge { background: var(--accent); color: #000; padding: 0.2rem 0.6rem; border-radius: 6px; font-weight: 800; font-size: 0.85rem; }
 
     /* --- 2. NAVBAR --- */
-    .navbar { background: var(--white); border-bottom: 1px solid var(--border); padding: 1rem 0; }
+    .navbar { background: var(--white); border-bottom: 1px solid var(--border); padding: 0.75rem 0; }
     .nav-content { display: flex; justify-content: space-between; align-items: center; }
     .logo { font-size: 1.8rem; font-weight: 800; color: var(--primary); text-decoration: none; letter-spacing: -1px; }
     .nav-links { display: flex; align-items: center; gap: 2rem; }
     .nav-links a { text-decoration: none; color: var(--text-muted); font-weight: 600; font-size: 0.95rem; }
     .btn-business { color: var(--primary) !important; border: 1px solid var(--primary); padding: 0.5rem 1rem; border-radius: 8px; }
 
-    /* --- 3. HERO & SEARCH --- */
-    .hero { padding: 5rem 0 4rem; text-align: center; background: radial-gradient(circle at top, #eff6ff 0%, #f8fafc 100%); }
-    .hero h1 { font-size: 3.5rem; font-weight: 800; margin-bottom: 1rem; letter-spacing: -2px; }
+    /* --- 3. HERO & SEARCH (Adjusted Padding/Margins) --- */
+    .hero { padding: 3rem 0 2rem; text-align: center; background: radial-gradient(circle at top, #eff6ff 0%, #f8fafc 100%); }
+    .hero h1 { font-size: 3.5rem; font-weight: 800; margin: 0 0 0.5rem 0; letter-spacing: -2px; line-height: 1.1; }
     .search-wrapper { 
-      max-width: 750px; margin: 2.5rem auto; display: flex; background: white; 
+      max-width: 750px; margin: 1.5rem auto 0; display: flex; background: white; 
       border-radius: 100px; padding: 8px; box-shadow: var(--shadow-lg); border: 1px solid var(--border);
     }
     .search-group { display: flex; align-items: center; flex: 1; padding: 0 20px; border-right: 1px solid var(--border); }
@@ -47,7 +47,7 @@
     .btn-search { background: var(--primary); color: white; border: none; border-radius: 100px; padding: 12px 35px; font-weight: 700; cursor: pointer; }
 
     /* --- 4. MAIN LAYOUT --- */
-    .main-wrapper { display: grid; grid-template-columns: 1fr 340px; gap: 3rem; margin-top: 3rem; padding-bottom: 5rem; }
+    .main-wrapper { display: grid; grid-template-columns: 1fr 340px; gap: 3rem; margin-top: 2rem; padding-bottom: 5rem; }
     .section-title { font-size: 1.4rem; font-weight: 800; margin-bottom: 1.5rem; }
     .quick-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; }
     .quick-card { background: var(--white); padding: 2.5rem 1rem; border-radius: 1.8rem; border: 1px solid var(--border); text-align: center; text-decoration: none; color: inherit; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
@@ -62,7 +62,18 @@
     .feat-info h5 { margin: 0; font-size: 0.9rem; font-weight: 700; }
     .wait-mini { font-size: 0.8rem; font-weight: 800; color: var(--primary); }
 
-    /* --- 6. FOOTER --- */
+    /* --- 6. MOBILE NAVIGATION (Fixed Bottom) --- */
+    .mobile-nav { 
+      display: none; position: fixed; bottom: 0; left: 0; right: 0; 
+      background: var(--white); border-top: 1px solid var(--border); 
+      justify-content: space-around; padding: 0.8rem 0; z-index: 3000;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+    }
+    .mobile-nav a { text-decoration: none; color: var(--text-muted); text-align: center; font-size: 0.75rem; font-weight: 600; }
+    .mobile-nav a span { display: block; font-size: 1.4rem; margin-bottom: 2px; }
+    .mobile-nav a.active { color: var(--primary); }
+
+    /* --- 7. FOOTER --- */
     footer { background: var(--dark-nav); color: #94a3b8; padding: 4rem 0 2rem; }
     .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 3rem; }
     .footer-logo { font-size: 1.5rem; font-weight: 800; color: white; text-decoration: none; display: block; margin-bottom: 1rem; }
@@ -73,11 +84,14 @@
     .footer-col a:hover { color: white; }
 
     @media (max-width: 900px) {
-      .main-wrapper { grid-template-columns: 1fr; }
+      .main-wrapper { grid-template-columns: 1fr; margin-top: 1rem; }
       .quick-grid { grid-template-columns: repeat(2, 1fr); }
-      .search-wrapper { flex-direction: column; border-radius: 25px; }
-      .search-group { border: none; border-bottom: 1px solid var(--border); width: 100%; }
+      .search-wrapper { flex-direction: column; border-radius: 25px; margin-top: 1rem; }
+      .search-group { border: none; border-bottom: 1px solid var(--border); width: 100%; padding: 5px 20px; }
       .footer-grid { grid-template-columns: 1fr 1fr; }
+      .mobile-nav { display: flex; }
+      .hero h1 { font-size: 2.5rem; }
+      .desktop-only { display: none; }
     }
   </style>
 </head>
@@ -100,7 +114,7 @@
     <div class="container nav-content">
       <a href="index.html" class="logo">skipQs</a>
       <div class="nav-links">
-        <a href="how-it-works.html">How It Works</a>
+        <a href="how-it-works.html" class="desktop-only">How It Works</a>
         <a href="business.html" class="btn-business">For Business</a>
         <span id="userGreeting" style="display:none; font-weight:700;">Hi, <b id="userDisplayName"></b></span>
         <a href="login.html" id="loginLink">Login</a>
@@ -162,6 +176,13 @@
     </div>
   </main>
 
+  <nav class="mobile-nav">
+    <a href="index.html" class="active"><span>🏠</span>Home</a>
+    <a href="nearby.html"><span>🔍</span>Search</a>
+    <a href="dashboard.html"><span>📋</span>Queues</a>
+    <a href="login.html"><span>👤</span>Profile</a>
+  </nav>
+
   <footer>
     <div class="container">
       <div class="footer-grid">
@@ -218,6 +239,8 @@
               .where('createdAt', '<', data.createdAt).onSnapshot(q => {
                 document.getElementById('peopleAhead').innerText = q.size;
               });
+          } else {
+            document.getElementById('statusBanner').classList.remove('active');
           }
         });
     }
