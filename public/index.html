@@ -1,259 +1,175 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>skipQs | Live Street View</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #2563eb; --success: #059669; --nav-bg: rgba(255, 255, 255, 0.9);
-            --text-main: #1e293b; --text-muted: #64748b; --border: #e2e8f0;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>skipQs | Skip the Line. Save Your Time.</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #2563eb; --primary-hover: #1d4ed8; --primary-soft: #eff6ff;
+      --bg-light: #f8fafc; --text-main: #1e293b; --text-muted: #64748b;
+      --white: #ffffff; --border: #e2e8f0; --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background-color: var(--bg-light); color: var(--text-main); margin: 0; line-height: 1.6; padding-bottom: 80px; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 1.2rem; }
 
-        /* --- DESKTOP & MOBILE VISIBILITY FIX --- */
-        html, body { 
-            margin: 0; padding: 0; 
-            width: 100%; height: 100%; 
-            overflow: hidden; 
-            background: #000; 
-        }
+    /* --- Navbar (Desktop) --- */
+    .navbar { background: var(--white); border-bottom: 1px solid var(--border); padding: 0.75rem 0; position: sticky; top: 0; z-index: 1000; }
+    .nav-content { display: flex; justify-content: space-between; align-items: center; }
+    .logo { font-size: 1.6rem; font-weight: 800; color: var(--primary); text-decoration: none; letter-spacing: -0.5px; }
+    .nav-links { display: flex; align-items: center; gap: 1.5rem; }
+    .nav-links a { text-decoration: none; color: var(--text-muted); font-weight: 500; font-size: 0.95rem; }
+    .btn-login { background: var(--primary); color: white; padding: 0.6rem 1.2rem; border-radius: 0.5rem; font-weight: 600; text-decoration: none; }
 
-        /* Forces Street View to fill the desktop screen */
-        #home-pano { 
-            position: absolute; 
-            top: 0; left: 0; 
-            width: 100%; 
-            height: 100% !important; 
-            min-height: 100vh; 
-            z-index: 1; 
-        }
+    /* --- Hero & Search --- */
+    .hero { padding: 3rem 0 2rem; text-align: center; }
+    .hero h1 { font-size: clamp(1.8rem, 6vw, 2.8rem); font-weight: 800; margin-bottom: 0.5rem; line-height: 1.2; }
+    .search-container { position: relative; max-width: 500px; margin: 2rem auto; }
+    .search-input { width: 100%; padding: 1.1rem 1rem 1.1rem 3.2rem; border-radius: 50px; border: 1px solid var(--border); box-shadow: var(--shadow-sm); font-size: 1rem; outline: none; transition: 0.2s; }
+    .search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-soft); }
+    .search-icon { position: absolute; left: 1.3rem; top: 50%; transform: translateY(-50%); font-size: 1.2rem; }
 
-        /* Navbar Overlay */
-        .navbar { 
-            position: absolute; top: 0; left: 0; width: 100%; z-index: 1000; 
-            background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, transparent 100%);
-            padding: 1rem 0;
-        }
-        .container { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; display: flex; justify-content: space-between; align-items: center; }
-        .logo { font-size: 1.6rem; font-weight: 800; color: white; text-decoration: none; letter-spacing: -0.5px; }
-        
-        .nav-links { display: flex; align-items: center; gap: 1rem; }
-        .btn { padding: 0.6rem 1.2rem; border-radius: 0.6rem; font-weight: 600; text-decoration: none; font-size: 0.85rem; transition: 0.2s; cursor: pointer; border: none; }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-outline { background: rgba(255,255,255,0.2); color: white; backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.3); }
+    /* --- Grid System --- */
+    .section-title { font-size: 1.1rem; font-weight: 700; margin: 2rem 0 1rem; color: var(--text-main); }
+    .quick-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+    .quick-card { background: var(--white); padding: 1.5rem 0.5rem; border-radius: 1.2rem; border: 1px solid var(--border); text-align: center; text-decoration: none; transition: 0.2s; }
+    .quick-card:hover { transform: translateY(-3px); border-color: var(--primary); box-shadow: var(--shadow-sm); }
+    .quick-card span { font-size: 1.8rem; display: block; margin-bottom: 0.5rem; }
+    .quick-card h3 { font-size: 0.9rem; margin: 0; color: var(--text-main); font-weight: 600; }
 
-        /* HUD: Search & Categories */
-        .hud-top {
-            position: absolute; top: 90px; left: 50%; transform: translateX(-50%);
-            width: 90%; max-width: 500px; z-index: 10; display: flex; flex-direction: column; gap: 12px;
-        }
-        #location-search {
-            width: 100%; padding: 16px 24px; border-radius: 30px; border: none; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.4); font-size: 1rem; outline: none;
-        }
-        .categories { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; justify-content: center; }
-        .categories::-webkit-scrollbar { display: none; }
-        .cat-chip { background: rgba(0,0,0,0.7); color: white; padding: 10px 18px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; backdrop-filter: blur(10px); cursor: pointer; white-space: nowrap; border: 1px solid rgba(255,255,255,0.2); }
-        .cat-chip.active { background: var(--primary); border-color: var(--primary); }
+    /* --- Near You Cards --- */
+    .near-you-card { background: var(--white); padding: 1.2rem; border-radius: 1.2rem; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+    .near-info h4 { margin: 0; font-size: 1rem; }
+    .near-info p { margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--text-muted); }
+    .wait-pill { background: var(--primary-soft); color: var(--primary); padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.8rem; font-weight: 700; }
 
-        /* Active Queue Bar */
-        #queueStatusBanner {
-            position: absolute; top: 190px; left: 50%; transform: translateX(-50%);
-            z-index: 11; width: 90%; max-width: 500px; background: var(--primary);
-            color: white; padding: 12px 20px; border-radius: 15px; display: none; justify-content: space-between; align-items: center;
-        }
+    /* --- Mobile Bottom Navigation --- */
+    .mobile-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--white); display: flex; justify-content: space-around; padding: 0.7rem 0; border-top: 1px solid var(--border); z-index: 1001; }
+    .mobile-nav a { color: var(--text-muted); text-decoration: none; font-size: 0.7rem; text-align: center; font-weight: 500; }
+    .mobile-nav a.active { color: var(--primary); }
+    .nav-icon { font-size: 1.4rem; display: block; margin-bottom: 2px; }
 
-        /* Bottom Scroller */
-        .bottom-ui {
-            position: absolute; bottom: 0; left: 0; width: 100%; z-index: 10;
-            padding-bottom: 40px; background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
-        }
-        #shop-scroller {
-            display: flex; overflow-x: auto; padding: 0 25px; gap: 20px;
-            scroll-snap-type: x mandatory; scrollbar-width: none;
-        }
-        #shop-scroller::-webkit-scrollbar { display: none; }
-        .shop-card {
-            min-width: 300px; background: white; border-radius: 24px; padding: 22px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5); scroll-snap-align: center;
-            display: flex; flex-direction: column; gap: 8px; border-bottom: 6px solid var(--primary);
-            cursor: pointer;
-        }
-
-        #loader { position: fixed; inset: 0; background: #2d1b4d; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; transition: 0.6s; }
-    </style>
+    /* --- Responsiveness --- */
+    @media (max-width: 768px) {
+      .quick-grid { grid-template-columns: repeat(2, 1fr); }
+      .desktop-nav { display: none; }
+      .hero { padding: 2rem 0; }
+    }
+    @media (min-width: 769px) {
+      .mobile-nav { display: none; }
+    }
+  </style>
 </head>
 <body>
 
-    <div id="loader">
-        <h1 style="font-weight: 800; letter-spacing: -1px; margin: 0;">skipQs</h1>
-        <p style="font-size: 0.8rem; opacity: 0.7;">Entering Street View...</p>
+  <nav class="navbar desktop-nav">
+    <div class="container nav-content">
+      <a href="index.html" class="logo">skipQs</a>
+      <div class="nav-links">
+        <a href="how-it-works.html">How It Works</a>
+        <a href="dashboard.html" id="dashboardLink" style="display:none;">My Visits</a>
+        <span id="userGreeting" style="display:none; font-weight: 600;">Hi, <span id="userDisplayName" style="color: var(--primary);"></span></span>
+        <a href="login.html" id="loginLink" class="btn-login">Login</a>
+        <a href="#" id="logoutBtn" style="display:none; color: var(--text-muted);" onclick="logoutUser()">Logout</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <section class="hero">
+      <h1>Skip the Line.<br><span style="color: var(--primary);">Save Your Time.</span></h1>
+      <div class="search-container">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="search-input" placeholder="Search for a salon, clinic, or restaurant...">
+      </div>
+    </section>
+
+    <h2 class="section-title">Quick Access</h2>
+    <div class="quick-grid">
+      <a href="nearby.html?type=salon" class="quick-card"><span>💇‍♀️</span><h3>Salons</h3></a>
+      <a href="nearby.html?type=restaurant" class="quick-card"><span>🍽️</span><h3>Dining</h3></a>
+      <a href="nearby.html?type=clinic" class="quick-card"><span>🏥</span><h3>Clinics</h3></a>
+      <a href="nearby.html?type=banking" class="quick-card"><span>🏦</span><h3>Banking</h3></a>
+      <a href="nearby.html?type=gym" class="quick-card"><span>🏋️</span><h3>Gyms</h3></a>
+      <a href="nearby.html?type=repair" class="quick-card"><span>🛠️</span><h3>Repairs</h3></a>
+      <a href="nearby.html?type=gov" class="quick-card"><span>🏛️</span><h3>Gov Services</h3></a>
+      <a href="nearby.html?type=carwash" class="quick-card"><span>🧼</span><h3>Car Wash</h3></a>
     </div>
 
-    <nav class="navbar">
-        <div class="container">
-            <a href="index.html" class="logo">skipQs</a>
-            <div class="nav-links">
-                <span id="userGreeting" style="display:none; color: white; font-weight: 600; font-size: 0.85rem; margin-right: 8px;">Hi, <span id="userDisplayName"></span></span>
-                <a href="login.html" id="loginLink" class="btn btn-primary">Login</a>
-                <button id="logoutBtn" class="btn btn-outline" style="display:none;" onclick="logoutUser()">Logout</button>
-            </div>
-        </div>
-    </nav>
-
-    <div class="hud-top">
-        <input id="location-search" type="text" placeholder="Search a street or area...">
-        <div class="categories">
-            <div class="cat-chip active" onclick="updateCategory('salon', this)">✂️ Salons</div>
-            <div class="cat-chip" onclick="updateCategory('restaurant', this)">🍕 Food</div>
-            <div class="cat-chip" onclick="updateCategory('clinic', this)">🏥 Health</div>
-            <div class="cat-chip" onclick="updateCategory('hotel', this)">🏨 Stays</div>
-        </div>
+    <h2 class="section-title">Near You Now</h2>
+    <div class="near-you-card">
+      <div class="near-info">
+        <h4>The Golden Scissors</h4>
+        <p>Hair & Beauty • 1.2 miles away</p>
+      </div>
+      <div style="text-align: right;">
+        <div class="wait-pill">15 min wait</div>
+        <a href="join-queue.html" style="font-size: 0.85rem; color: var(--primary); font-weight: 700; text-decoration: none; display: block; margin-top: 0.4rem;">Join Queue</a>
+      </div>
     </div>
 
-    <div id="queueStatusBanner">
-        <div style="font-size: 0.85rem;"><b>Live Queue:</b> <span id="activeQueueName"></span></div>
-        <a href="join-queue.html" class="btn" style="background: white; color: var(--primary); padding: 5px 12px; font-size: 0.7rem;">Track Spot</a>
+    <div class="near-you-card">
+      <div class="near-info">
+        <h4>City Cafe</h4>
+        <p>Dining • 0.5 miles away</p>
+      </div>
+      <div style="text-align: right;">
+        <div class="wait-pill">5 min wait</div>
+        <a href="join-queue.html" style="font-size: 0.85rem; color: var(--primary); font-weight: 700; text-decoration: none; display: block; margin-top: 0.4rem;">Join Queue</a>
+      </div>
     </div>
+  </main>
 
-    <div id="home-pano"></div>
+  <nav class="mobile-nav">
+    <a href="index.html" class="active"><span class="nav-icon">🏠</span>Home</a>
+    <a href="#"><span class="nav-icon">🔍</span>Search</a>
+    <a href="dashboard.html"><span class="nav-icon">📋</span>My Queues</a>
+    <a href="login.html"><span class="nav-icon">👤</span>Profile</a>
+  </nav>
 
-    <div class="bottom-ui">
-        <div id="shop-scroller"></div>
+  <footer style="background: #0f172a; color: white; padding: 4rem 0 2rem; margin-top: 4rem;">
+    <div class="container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 3rem;">
+      <div>
+        <h4 style="color: white; margin-bottom: 1.5rem; font-size: 1.5rem; font-weight: 800;">skipQs</h4>
+        <p style="color: #94a3b8; font-size: 0.9rem;">Eliminating physical queues through digital-first synchronization.</p>
+      </div>
+      <div>
+        <h5 style="color: white; text-transform: uppercase; font-size: 0.8rem; margin-bottom: 1.25rem;">Legal</h5>
+        <ul style="list-style: none; padding: 0;">
+          <li style="margin-bottom: 0.75rem;"><a href="privacy.html" style="color: #94a3b8; text-decoration: none;">Privacy Policy</a></li>
+        </ul>
+      </div>
     </div>
+    <div style="text-align: center; color: #64748b; font-size: 0.85rem; margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #1e293b;">© 2026 skipQs Inc.</div>
+  </footer>
 
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="firebase-config.js"></script>
-
-    <script>
-        const db = firebase.firestore();
-        let pano, placesService, autocomplete;
-        let userLoc = { lat: 53.4875, lng: -2.2901 }; 
-        let currentCategory = 'salon';
-
-        // 1. Auth Sync
-        firebase.auth().onAuthStateChanged(user => {
-            if (user) {
-                document.getElementById('loginLink').style.display = 'none';
-                document.getElementById('logoutBtn').style.display = 'inline-block';
-                document.getElementById('userGreeting').style.display = 'inline-block';
-                document.getElementById('userDisplayName').textContent = user.displayName || user.email.split('@')[0];
-                checkActiveQueue(user.uid);
-            } else {
-                document.getElementById('loginLink').style.display = 'inline-block';
-                document.getElementById('logoutBtn').style.display = 'none';
-                document.getElementById('userGreeting').style.display = 'none';
-            }
-        });
-
-        function logoutUser() { firebase.auth().signOut().then(() => window.location.reload()); }
-
-        // 2. Maps & Pano Initialization
-        function initHome() {
-            autocomplete = new google.maps.places.Autocomplete(document.getElementById("location-search"));
-            autocomplete.addListener("place_changed", () => {
-                const place = autocomplete.getPlace();
-                if (place.geometry) {
-                    userLoc = place.geometry.location.toJSON();
-                    pano.setPosition(userLoc);
-                    fetchShops();
-                }
-            });
-
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(pos => {
-                    userLoc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                    renderPano();
-                }, () => renderPano());
-            } else { renderPano(); }
-        }
-
-        function renderPano() {
-            pano = new google.maps.StreetViewPanorama(document.getElementById("home-pano"), {
-                position: userLoc, pov: { heading: 165, pitch: 0 },
-                zoom: 1, addressControl: false, showRoadLabels: false, disableDefaultUI: true
-            });
-
-            // Desktop Resize Fix
-            window.addEventListener('resize', () => google.maps.event.trigger(pano, 'resize'));
-
-            const dummyMap = new google.maps.Map(document.createElement('div'), { center: userLoc });
-            placesService = new google.maps.places.PlacesService(dummyMap);
-
-            fetchShops();
-            setTimeout(() => {
-                document.getElementById('loader').style.opacity = '0';
-                setTimeout(() => document.getElementById('loader').style.display = 'none', 600);
-            }, 1000);
-        }
-
-        function updateCategory(cat, el) {
-            currentCategory = cat;
-            document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
-            el.classList.add('active');
-            fetchShops();
-        }
-
-        function fetchShops() {
-            const queryMap = { salon: "salon barber", restaurant: "food restaurant", clinic: "clinic", hotel: "hotel" };
-            placesService.nearbySearch({
-                location: userLoc, radius: 2500, keyword: queryMap[currentCategory]
-            }, (results, status) => {
-                if (status === "OK") renderCards(results);
-            });
-        }
-
-        function renderCards(results) {
-            const scroller = document.getElementById('shop-scroller');
-            scroller.innerHTML = "";
-            results.slice(0, 10).forEach((place, i) => {
-                const card = document.createElement('div');
-                card.className = 'shop-card';
-                card.innerHTML = `
-                    <div style="font-weight:800; font-size:1.1rem;">${place.name}</div>
-                    <div style="font-size:0.8rem; color:var(--text-muted);">📍 ${place.vicinity}</div>
-                    <div id="q-area-${i}" style="display:none">
-                        <div style="color:var(--primary); font-weight:700; margin:5px 0;">👥 <span id="cnt-${i}">0</span> in queue</div>
-                        <button class="btn btn-primary" style="width:100%; padding:12px;" onclick="join('${place.place_id}', '${place.name.replace(/'/g, "\\'")}')">JOIN QUEUE</button>
-                    </div>
-                    <div id="off-${i}" style="font-size:0.75rem; color:#cbd5e1; margin-top:8px;">Not partnered yet</div>
-                `;
-                card.onclick = () => {
-                    pano.setPosition(place.geometry.location);
-                    card.scrollIntoView({ behavior: 'smooth', inline: 'center' });
-                };
-                scroller.appendChild(card);
-
-                db.collection('providers').where('googlePlaceId', '==', place.place_id).get().then(snap => {
-                    if (!snap.empty) {
-                        const d = snap.docs[0].data();
-                        document.getElementById(`q-area-${i}`).style.display = "block";
-                        document.getElementById(`off-${i}`).style.display = "none";
-                        document.getElementById(`cnt-${i}`).innerText = d.queueCount || 0;
-                    }
-                });
-            });
-        }
-
-        function join(pid, name) {
-            db.collection('providers').where('googlePlaceId', '==', pid).get().then(snap => {
-                if(!snap.empty) window.location.href=`join-queue.html?id=${snap.docs[0].id}&name=${encodeURIComponent(name)}`;
-            });
-        }
-
-        function checkActiveQueue(uid) {
-            db.collection('queues').where('userId', '==', uid).where('status', '==', 'waiting').limit(1).get().then(snap => {
-                if (!snap.empty) {
-                    const q = snap.docs[0].data();
-                    document.getElementById('queueStatusBanner').style.display = 'flex';
-                    document.getElementById('activeQueueName').textContent = q.providerName;
-                }
-            });
-        }
-    </script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAJFGE5OFfn-OhDNJ_rWO5oi2d2CHl2fXE&libraries=places&callback=initHome" async defer></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script>
+    firebase.auth().onAuthStateChanged(user => {
+      const loginLink = document.getElementById('loginLink');
+      const logoutBtn = document.getElementById('logoutBtn');
+      const greeting = document.getElementById('userGreeting');
+      const dash = document.getElementById('dashboardLink');
+      if (user) {
+        if(loginLink) loginLink.style.display = 'none';
+        if(logoutBtn) logoutBtn.style.display = 'inline-block';
+        if(greeting) greeting.style.display = 'inline-block'; 
+        if(dash) dash.style.display = 'inline-block';
+        document.getElementById('userDisplayName').textContent = user.displayName || user.email.split('@')[0];
+      } else {
+        if(loginLink) loginLink.style.display = 'inline-block';
+        if(logoutBtn) logoutBtn.style.display = 'none';
+        if(greeting) greeting.style.display = 'none';
+        if(dash) dash.style.display = 'none';
+      }
+    });
+    function logoutUser() { firebase.auth().signOut().then(() => window.location.reload()); }
+  </script>
 </body>
 </html>
