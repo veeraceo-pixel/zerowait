@@ -67,8 +67,8 @@
         .dist-tag { font-size: 0.65rem; color: var(--primary); font-weight: 800; background: #eff6ff; padding: 2px 6px; border-radius: 4px; }
         .time-tag { font-size: 0.65rem; color: var(--success); font-weight: 700; }
 
-        .action-row { display: flex; gap: 8px; margin-top: 10px; }
-        .btn { flex: 1; padding: 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 700; text-align: center; cursor: pointer; border: none; text-decoration: none; display: flex; align-items: center; justify-content: center; }
+        .action-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+        .btn { flex: 1; min-width: 80px; padding: 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 700; text-align: center; cursor: pointer; border: none; text-decoration: none; display: flex; align-items: center; justify-content: center; }
         .btn-join { background: var(--primary); color: white; }
         .btn-reg { background: #475569; color: white; line-height: 1.2; }
         .btn-sec { background: #f1f5f9; color: var(--text-main); border: 1px solid var(--border); }
@@ -188,8 +188,10 @@
         function initMap() {
             if (locationQuery && locationQuery.trim() !== "" && locationQuery.toLowerCase() !== "near me") {
                 new google.maps.Geocoder().geocode({ address: locationQuery }, (results, status) => {
-                    if (status === "OK") { userLocation = results[0].geometry.location; setupMap(); } 
-                    else { tryGPS(); }
+                    if (status === "OK") { 
+                        userLocation = results[0].geometry.location; 
+                        setupMap(); 
+                    } else { tryGPS(); }
                 });
             } else { tryGPS(); }
         }
@@ -198,10 +200,12 @@
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition((pos) => {
                     userLocation = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
-                    if (map) { map.setCenter(userLocation); executePlacesSearch(); } 
-                    else { setupMap(); }
+                    if (map) { 
+                        map.setCenter(userLocation); 
+                        executePlacesSearch(); 
+                    } else { setupMap(); }
                 }, () => {
-                    userLocation = new google.maps.LatLng(53.4808, -2.2426);
+                    userLocation = new google.maps.LatLng(53.4808, -2.2426); // Default Manchester
                     setupMap();
                 });
             }
@@ -212,9 +216,16 @@
                 center: userLocation, 
                 zoom: 14, 
                 disableDefaultUI: true,
-                gestureHandling: "greedy" // Better for web performance
+                gestureHandling: "greedy" 
             });
-            map.addListener('dragend', () => { document.getElementById('redo-search').style.display = 'flex'; });
+            
+            // INITIALIZE SERVICE ONCE HERE
+            placesService = new google.maps.places.PlacesService(map);
+
+            map.addListener('dragend', () => { 
+                document.getElementById('redo-search').style.display = 'flex'; 
+            });
+            
             executePlacesSearch();
         }
 
@@ -225,17 +236,26 @@
         }
 
         function executePlacesSearch() {
+            if(!placesService) return;
+
             markers.forEach(m => m.setMap(null));
             markers = [];
-            placesService = new google.maps.places.PlacesService(map);
+            
             const config = SERVICE_MAP[serviceType];
-            placesService.nearbySearch({
+            const request = {
                 location: userLocation,
                 rankBy: google.maps.places.RankBy.DISTANCE,
                 type: config.type,
                 keyword: searchQuery ? `${searchQuery} ${config.keyword}` : config.keyword
-            }, (results, status) => {
-                if (status === "OK") renderList(results);
+            };
+
+            placesService.nearbySearch(request, (results, status) => {
+                if (status === google.maps.places.PlacesServiceStatus.OK) {
+                    renderList(results);
+                } else {
+                    document.getElementById("results").innerHTML = "<p style='padding:20px;'>No results found in this area.</p>";
+                    document.getElementById("counter").innerText = "0 results found.";
+                }
             });
         }
 
@@ -251,7 +271,9 @@
                 const thumb = place.photos ? place.photos[0].getUrl({maxWidth: 150}) : 'https://via.placeholder.com/150';
 
                 const marker = new google.maps.Marker({
-                    position: place.geometry.location, map: map, label: { text: (i+1).toString(), color: "white" }
+                    position: place.geometry.location, 
+                    map: map, 
+                    label: { text: (i+1).toString(), color: "white" }
                 });
                 markers.push(marker);
 
@@ -260,7 +282,7 @@
                 card.id = `card-${i}`;
                 card.setAttribute('data-live', 'false');
                 
-                // Fixed string interpolation for Maps URL
+                // FIXED: Corrected string template with backticks and ${}
                 const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${place.geometry.location.lat()},${place.geometry.location.lng()}&destination_place_id=${place.place_id}`;
 
                 card.innerHTML = `
@@ -285,7 +307,7 @@
                 `;
                 container.appendChild(card);
 
-                // FIREBASE LOGIC
+                // FIREBASE STATUS CHECK
                 db.collection('providers').where('googlePlaceId', '==', place.place_id).get().then(snap => {
                     const statusDiv = document.getElementById(`status-${i}`);
                     const estDiv = document.getElementById(`est-${i}`);
@@ -311,7 +333,7 @@
 
                         let whatsappHtml = "";
                         if (phoneRaw) {
-                            // CLEANUP: Strip non-digits to fix WhatsApp links for India/any country
+                            // CLEANUP: Fixes WhatsApp link formatting
                             const cleanPhone = phoneRaw.toString().replace(/\D/g, '');
                             const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent("Hi " + place.name + ", I'm interested in joining your queue via skipQs.")}`;
                             whatsappHtml = `<a href="${waUrl}" target="_blank" class="btn btn-whatsapp"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"> Chat</a>`;
@@ -337,7 +359,6 @@
             document.getElementById(`card-${index}`).classList.add('active');
             document.getElementById('details-overlay').style.display = 'flex';
             
-            // Web optimization: only load details and panorama when clicked
             placesService.getDetails({ placeId: pid, fields: ['photos'] }, (details) => {
                 const strip = document.getElementById('photo-strip');
                 if (details && details.photos) {
@@ -350,9 +371,7 @@
                     position: { lat, lng }, 
                     pov: { heading: 165, pitch: 0 }, 
                     zoom: 1, 
-                    addressControl: false,
-                    linksControl: false,
-                    panControl: false
+                    addressControl: false
                 });
             }, 100);
         }
