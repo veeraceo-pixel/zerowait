@@ -9,29 +9,64 @@
         :root {
             --primary: #2563eb; --bg-light: #f8fafc; --text-main: #1e293b;
             --text-muted: #64748b; --border: #e2e8f0; --nav-bg: #2d1b4d;
+            --success: #059669;
         }
 
         body { font-family: 'Inter', sans-serif; background-color: var(--bg-light); margin: 0; height: 100vh; overflow: hidden; }
         .navbar { background: var(--nav-bg); padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; z-index: 1000; position: relative; }
         .logo { font-weight: 800; color: white; text-decoration: none; font-size: 1.2rem; }
 
-        .main-layout { display: flex; height: calc(100vh - 58px); flex-direction: column-reverse; }
+        /* Filter Bar & Chips */
+        .service-filter-bar {
+            display: flex; gap: 8px; overflow-x: auto; padding: 10px 1.25rem;
+            background: white; border-bottom: 1px solid var(--border);
+            scrollbar-width: none; align-items: center;
+        }
+        .service-filter-bar::-webkit-scrollbar { display: none; }
+        
+        .filter-chip {
+            white-space: nowrap; padding: 6px 16px; border-radius: 50px;
+            background: var(--bg-light); border: 1px solid var(--border);
+            font-size: 0.8rem; font-weight: 600; cursor: pointer; color: var(--text-muted);
+        }
+        .filter-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
+        
+        .live-toggle { background: #ecfdf5; color: var(--success); border: 1px solid #34d399; }
+        .live-toggle.active { background: var(--success); color: white; }
+
+        .main-layout { display: flex; height: calc(100vh - 110px); flex-direction: column-reverse; }
         .list-panel { flex: 1; overflow-y: auto; padding: 1.25rem; background: white; border-right: 1px solid var(--border); z-index: 10; }
         .visual-panel { flex: 1.5; background: #0f172a; position: relative; display: flex; flex-direction: column; }
         
         #map { position: absolute; top:0; left:0; width:100%; height:100%; }
-        #details-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background:#0f172a; display:none; flex-direction: column; z-index: 5; }
+        
+        #redo-search {
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            z-index: 20; background: white; color: var(--primary);
+            border: none; padding: 10px 20px; border-radius: 50px;
+            font-weight: 700; font-size: 0.85rem; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: none; cursor: pointer;
+        }
 
-        .place-card { padding: 1rem; margin-bottom: 1rem; border: 1px solid var(--border); border-radius: 12px; background: white; cursor: pointer; transition: 0.2s; }
-        .place-card:hover { border-color: var(--primary); }
+        #gps-btn {
+            position: absolute; bottom: 30px; right: 20px;
+            z-index: 20; background: white; border: none;
+            width: 45px; height: 45px; border-radius: 50%;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+        }
+
+        #details-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background:#0f172a; display:none; flex-direction: column; z-index: 30; }
+
+        .place-card { padding: 1rem; margin-bottom: 1rem; border: 1px solid var(--border); border-radius: 12px; background: white; cursor: pointer; transition: 0.2s; position: relative; }
+        .place-card.hidden { display: none; }
         .place-card.active { border: 2.5px solid var(--primary); background: #f0f7ff; }
 
         .card-top { display: flex; gap: 12px; margin-bottom: 12px; }
-        .thumb { width: 70px; height: 70px; border-radius: 8px; object-fit: cover; background: #eee; }
-        
+        .thumb { width: 75px; height: 75px; border-radius: 8px; object-fit: cover; background: #eee; }
         .info-tags { display: flex; gap: 8px; margin-top: 5px; align-items: center; }
         .dist-tag { font-size: 0.65rem; color: var(--primary); font-weight: 800; background: #eff6ff; padding: 2px 6px; border-radius: 4px; }
-        .time-tag { font-size: 0.65rem; color: #059669; font-weight: 700; }
+        .time-tag { font-size: 0.65rem; color: var(--success); font-weight: 700; }
 
         .action-row { display: flex; gap: 8px; margin-top: 10px; }
         .btn { flex: 1; padding: 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 700; text-align: center; cursor: pointer; border: none; text-decoration: none; }
@@ -39,9 +74,11 @@
         .btn-reg { background: #475569; color: white; line-height: 1.2; }
         .btn-sec { background: #f1f5f9; color: var(--text-main); border: 1px solid var(--border); }
 
-        .q-badge { font-size: 0.65rem; font-weight: 800; padding: 4px 8px; border-radius: 4px; margin-top: 5px; display: inline-block; }
+        .q-badge { font-size: 0.7rem; font-weight: 800; padding: 4px 8px; border-radius: 4px; margin-top: 5px; display: inline-block; }
         .q-online { background: #d1fae5; color: #065f46; border: 1px solid #34d399; }
         .q-offline { background: #f1f5f9; color: #64748b; }
+        
+        .est-box { font-size: 0.65rem; color: var(--success); margin-top: 4px; line-height: 1.4; }
 
         #photo-strip { flex: 1; display: flex; overflow-x: auto; scroll-snap-type: x mandatory; }
         #photo-strip img { height: 100%; min-width: 100%; object-fit: cover; scroll-snap-align: start; }
@@ -60,6 +97,19 @@
         </div>
     </nav>
 
+    <div class="service-filter-bar" id="filterBar">
+        <div class="filter-chip live-toggle" id="toggleLive" onclick="toggleLiveOnly()">⚡ Live Only</div>
+        <div style="border-left: 1px solid #eee; height: 20px; margin: 0 5px;"></div>
+        <div class="filter-chip" data-type="salon">💇‍♀️ Salons</div>
+        <div class="filter-chip" data-type="dining">🍽️ Dining</div>
+        <div class="filter-chip" data-type="clinic">🏥 Clinics</div>
+        <div class="filter-chip" data-type="banking">🏦 Banking</div>
+        <div class="filter-chip" data-type="gym">🏋️ Gyms</div>
+        <div class="filter-chip" data-type="repair">🛠️ Repairs</div>
+        <div class="filter-chip" data-type="gov">🏛️ Gov</div>
+        <div class="filter-chip" data-type="wash">🧼 Wash</div>
+    </div>
+
     <div class="main-layout">
         <div class="list-panel">
             <h2 id="title" style="margin:0; font-size:1.2rem;">Nearby Services</h2>
@@ -68,9 +118,11 @@
         </div>
 
         <div class="visual-panel">
+            <button id="redo-search" onclick="redoSearch()">🔄 Search this area</button>
+            <button id="gps-btn" onclick="tryGPS()" title="Find my location">🎯</button>
             <div id="map"></div>
             <div id="details-overlay">
-                <button onclick="closeDetails()" style="position:absolute; top:15px; right:15px; z-index:10; background:rgba(0,0,0,0.7); color:white; border:none; border-radius:50%; width:35px; height:35px; cursor:pointer;">✕</button>
+                <button onclick="closeDetails()" style="position:absolute; top:15px; right:15px; z-index:40; background:rgba(0,0,0,0.7); color:white; border:none; border-radius:50%; width:35px; height:35px; cursor:pointer;">✕</button>
                 <div id="photo-strip"></div>
                 <div id="mini-pano"></div>
             </div>
@@ -85,92 +137,105 @@
         const db = firebase.firestore();
         const params = new URLSearchParams(window.location.search);
         
-        // Handle search parameters from index.html
         let serviceType = params.get("type") || 'salon';
         let searchQuery = params.get("q") || '';
         let locationQuery = params.get("l") || '';
+        let liveOnly = false;
 
         const SERVICE_MAP = {
-            salon: { type: "hair_care", keyword: "salon barber hair styling hairdresser beautician beauty parlor unisex haircut fade shave nail cut spa", label: "Salons & Barbers" },
-            dining: { type: "restaurant", keyword: "restaurant cafe eatery dining bistro food gastropub steakhouse pizzeria buffet takeaway grill kitchen", label: "Restaurants & Dining" },
-            clinic: { type: "health", keyword: "clinic doctor medical dental pharmacy surgery health center physician specialist dentist hospital", label: "Clinics & Health" },
-            banking: { type: "bank", keyword: "bank atm financial services credit union finance money transfer exchange", label: "Banking & Finance" },
-            gym: { type: "fitness_center", keyword: "gym 'The Gym Group' PureGym fitness center workout yoga studio crossfit health club exercise pilates", label: "Gyms & Fitness" },
-            repair: { type: "car_repair", keyword: "auto repair mechanic electronics repair handyman phone repair plumber electrician garage", label: "Repairs & Services" },
-            gov: { type: "local_government_office", keyword: "government office post office town hall embassy court library municipal", label: "Gov & Public Services" },
-            wash: { type: "car_wash", keyword: "car wash laundry dry cleaning laundromat cleaning services detailer", label: "Wash & Laundry" }
+            salon: { type: "hair_care", keyword: "salon barber hair styling hairdresser beautician beauty parlor unisex haircut fade shave nail cut spa", label: "Salons & Barbers", avgTime: 20 },
+            dining: { type: "restaurant", keyword: "restaurant cafe eatery dining bistro food gastropub steakhouse pizzeria buffet takeaway grill kitchen", label: "Restaurants & Dining", avgTime: 15 },
+            clinic: { type: "health", keyword: "clinic doctor medical dental pharmacy surgery health center physician specialist dentist hospital", label: "Clinics & Health", avgTime: 25 },
+            banking: { type: "bank", keyword: "bank atm financial services credit union finance money transfer exchange", label: "Banking & Finance", avgTime: 10 },
+            gym: { type: "fitness_center", keyword: "gym 'The Gym Group' PureGym fitness center workout yoga studio crossfit health club exercise pilates", label: "Gyms & Fitness", avgTime: 0 },
+            repair: { type: "car_repair", keyword: "auto repair mechanic electronics repair handyman phone repair plumber electrician garage", label: "Repairs & Services", avgTime: 45 },
+            gov: { type: "local_government_office", keyword: "government office post office town hall embassy court library municipal", label: "Gov & Public Services", avgTime: 20 },
+            wash: { type: "car_wash", keyword: "car wash laundry dry cleaning laundromat cleaning services detailer", label: "Wash & Laundry", avgTime: 15 }
         };
 
-        const config = SERVICE_MAP[serviceType] || SERVICE_MAP.salon;
-        document.getElementById("title").innerText = searchQuery ? `Results for "${searchQuery}"` : config.label;
+        let map, placesService, userLocation, markers = [];
 
-        let map, placesService, userLocation;
+        document.querySelectorAll('.filter-chip[data-type]').forEach(chip => {
+            if(chip.dataset.type === serviceType) chip.classList.add('active');
+            chip.onclick = () => {
+                document.querySelectorAll('.filter-chip[data-type]').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+                serviceType = chip.dataset.type;
+                document.getElementById("title").innerText = SERVICE_MAP[serviceType].label;
+                executePlacesSearch();
+            };
+        });
+
+        function toggleLiveOnly() {
+            liveOnly = !liveOnly;
+            document.getElementById('toggleLive').classList.toggle('active', liveOnly);
+            applyLiveFilter();
+        }
+
+        function applyLiveFilter() {
+            const cards = document.querySelectorAll('.place-card');
+            let visibleCount = 0;
+            cards.forEach(card => {
+                const isLive = card.getAttribute('data-live') === 'true';
+                if (liveOnly && !isLive) card.classList.add('hidden');
+                else { card.classList.remove('hidden'); visibleCount++; }
+            });
+            document.getElementById("counter").innerText = `Showing ${visibleCount} results.`;
+        }
 
         function initMap() {
-            const geocoder = new google.maps.Geocoder();
-
-            // 1. Check if user typed a specific city in the search bar
             if (locationQuery && locationQuery.trim() !== "" && locationQuery.toLowerCase() !== "near me") {
-                geocoder.geocode({ address: locationQuery }, (results, status) => {
-                    if (status === "OK") {
-                        userLocation = results[0].geometry.location;
-                        setupSearch();
-                    } else {
-                        // If city not found, try GPS
-                        tryGPS();
-                    }
+                new google.maps.Geocoder().geocode({ address: locationQuery }, (results, status) => {
+                    if (status === "OK") { userLocation = results[0].geometry.location; setupMap(); } 
+                    else { tryGPS(); }
                 });
-            } else {
-                tryGPS();
-            }
+            } else { tryGPS(); }
         }
 
         function tryGPS() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition((pos) => {
                     userLocation = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
-                    setupSearch();
+                    if (map) { map.setCenter(userLocation); executePlacesSearch(); } 
+                    else { setupMap(); }
                 }, () => {
-                    // Fallback to Manchester
                     userLocation = new google.maps.LatLng(53.4808, -2.2426);
-                    setupSearch();
-                }, { timeout: 5000 });
-            } else {
-                userLocation = new google.maps.LatLng(53.4808, -2.2426);
-                setupSearch();
+                    setupMap();
+                });
             }
         }
 
-        function setupSearch() {
+        function setupMap() {
             map = new google.maps.Map(document.getElementById("map"), { center: userLocation, zoom: 14, disableDefaultUI: true });
+            map.addListener('dragend', () => { document.getElementById('redo-search').style.display = 'flex'; });
+            executePlacesSearch();
+        }
+
+        function redoSearch() {
+            document.getElementById('redo-search').style.display = 'none';
+            userLocation = map.getCenter();
+            executePlacesSearch();
+        }
+
+        function executePlacesSearch() {
+            markers.forEach(m => m.setMap(null));
+            markers = [];
             placesService = new google.maps.places.PlacesService(map);
-
-            // Combine the category keywords with the user's specific text search
-            const finalKeyword = searchQuery ? `${searchQuery} ${config.keyword}` : config.keyword;
-
+            const config = SERVICE_MAP[serviceType];
             placesService.nearbySearch({
-                location: userLocation, 
-                radius: 10000, 
-                type: config.type, 
-                keyword: finalKeyword
+                location: userLocation,
+                rankBy: google.maps.places.RankBy.DISTANCE,
+                type: config.type,
+                keyword: searchQuery ? `${searchQuery} ${config.keyword}` : config.keyword
             }, (results, status) => {
-                if (status === "OK") {
-                    results.sort((a, b) => {
-                        const dA = google.maps.geometry.spherical.computeDistanceBetween(userLocation, a.geometry.location);
-                        const dB = google.maps.geometry.spherical.computeDistanceBetween(userLocation, b.geometry.location);
-                        return dA - dB;
-                    });
-                    renderList(results);
-                } else {
-                    document.getElementById("counter").innerText = "No results found in this area.";
-                }
+                if (status === "OK") renderList(results);
             });
         }
 
         function renderList(results) {
             const container = document.getElementById("results");
             container.innerHTML = "";
-            document.getElementById("counter").innerText = locationQuery ? `Showing results near ${locationQuery}` : `Found ${results.length} results near you.`;
+            const currentConfig = SERVICE_MAP[serviceType];
 
             results.forEach((place, i) => {
                 const rawDist = google.maps.geometry.spherical.computeDistanceBetween(userLocation, place.geometry.location);
@@ -178,11 +243,17 @@
                 const driveTime = Math.round((miles / 12) * 60) + 2; 
                 const thumb = place.photos ? place.photos[0].getUrl({maxWidth: 150}) : 'https://via.placeholder.com/150';
 
+                const marker = new google.maps.Marker({
+                    position: place.geometry.location, map: map, label: { text: (i+1).toString(), color: "white" }
+                });
+                markers.push(marker);
+
                 const card = document.createElement('div');
                 card.className = 'place-card';
                 card.id = `card-${i}`;
+                card.setAttribute('data-live', 'false');
                 
-                const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name)}&query_place_id=${place.place_id}`;
+                const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${place.geometry.location.lat()},${place.geometry.location.lng()}&destination_place_id=${place.place_id}`;
 
                 card.innerHTML = `
                     <div onclick="selectPlace(${i}, '${place.place_id}', ${place.geometry.location.lat()}, ${place.geometry.location.lng()})">
@@ -195,7 +266,8 @@
                                     <span class="time-tag">🚗 ${driveTime} min drive</span>
                                 </div>
                                 <span style="font-size:0.75rem; color:var(--text-muted);">${place.vicinity}</span>
-                                <div id="status-${i}" class="q-badge q-offline">Checking status...</div>
+                                <div id="status-${i}" class="q-badge q-offline">Checking Status...</div>
+                                <div id="est-${i}" class="est-box"></div>
                             </div>
                         </div>
                     </div>
@@ -205,42 +277,56 @@
                 `;
                 container.appendChild(card);
 
+                // FIREBASE LOGIC: Status + Time Estimation
                 db.collection('providers').where('googlePlaceId', '==', place.place_id).get().then(snap => {
                     const statusDiv = document.getElementById(`status-${i}`);
+                    const estDiv = document.getElementById(`est-${i}`);
                     const actionDiv = document.getElementById(`actions-${i}`);
+
                     if (!snap.empty) {
                         const d = snap.docs[0].data();
+                        const count = d.queueCount || 0;
+                        card.setAttribute('data-live', 'true');
+                        
+                        // Time Estimation Logic
+                        const waitMins = count * currentConfig.avgTime;
+                        const serviceTime = new Date(new Date().getTime() + waitMins * 60000);
+                        const timeStr = serviceTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
                         statusDiv.className = "q-badge q-online";
-                        statusDiv.innerText = `LIVE: ${d.queueCount || 0} waiting`;
+                        statusDiv.innerText = `LIVE: ${count} in line`;
+                        
+                        if(currentConfig.avgTime > 0) {
+                            estDiv.innerHTML = `⌛ Wait: <b>~${waitMins}m</b> • Service at <b>${timeStr}</b>`;
+                        }
+
                         actionDiv.innerHTML += `<button onclick="window.location.href='join-queue.html?id=${snap.docs[0].id}'" class="btn btn-join">JOIN QUEUE</button>`;
                     } else {
-                        statusDiv.innerText = "No live queue";
+                        statusDiv.innerText = "No Live Queue";
                         actionDiv.innerHTML += `<button onclick="window.location.href='provider-signup.html'" class="btn btn-reg">BUSINESS OWNER?<br>REGISTER FREE</button>`;
                     }
+                    if(liveOnly) applyLiveFilter();
                 });
             });
+            document.getElementById("counter").innerText = `Found ${results.length} results nearby.`;
         }
 
         function selectPlace(index, pid, lat, lng) {
             document.querySelectorAll('.place-card').forEach(c => c.classList.remove('active'));
             document.getElementById(`card-${index}`).classList.add('active');
             document.getElementById('details-overlay').style.display = 'flex';
-
             placesService.getDetails({ placeId: pid, fields: ['photos'] }, (details) => {
                 const strip = document.getElementById('photo-strip');
                 if (details && details.photos) {
                     strip.innerHTML = details.photos.slice(0, 5).map(p => `<img src="${p.getUrl({maxWidth: 1000})}">`).join('');
                 }
             });
-
             new google.maps.StreetViewPanorama(document.getElementById("mini-pano"), {
                 position: { lat, lng }, pov: { heading: 165, pitch: 0 }, zoom: 1, addressControl: false
             });
         }
 
-        function closeDetails() {
-            document.getElementById('details-overlay').style.display = 'none';
-        }
+        function closeDetails() { document.getElementById('details-overlay').style.display = 'none'; }
     </script>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAJFGE5OFfn-OhDNJ_rWO5oi2d2CHl2fXE&libraries=places,geometry&callback=initMap" async defer></script>
 </body>
