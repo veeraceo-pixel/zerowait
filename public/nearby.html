@@ -69,10 +69,15 @@
         .time-tag { font-size: 0.65rem; color: var(--success); font-weight: 700; }
 
         .action-row { display: flex; gap: 8px; margin-top: 10px; }
-        .btn { flex: 1; padding: 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 700; text-align: center; cursor: pointer; border: none; text-decoration: none; }
+        .btn { flex: 1; padding: 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 700; text-align: center; cursor: pointer; border: none; text-decoration: none; display: flex; align-items: center; justify-content: center; }
         .btn-join { background: var(--primary); color: white; }
         .btn-reg { background: #475569; color: white; line-height: 1.2; }
         .btn-sec { background: #f1f5f9; color: var(--text-main); border: 1px solid var(--border); }
+        
+        /* WhatsApp Specific Style */
+        .btn-whatsapp { background: #25D366 !important; color: white !important; gap: 5px; }
+        .btn-whatsapp:hover { background: #128C7E !important; }
+        .btn-whatsapp img { width: 14px; height: 14px; filter: brightness(0) invert(1); }
 
         .q-badge { font-size: 0.7rem; font-weight: 800; padding: 4px 8px; border-radius: 4px; margin-top: 5px; display: inline-block; }
         .q-online { background: #d1fae5; color: #065f46; border: 1px solid #34d399; }
@@ -277,7 +282,7 @@
                 `;
                 container.appendChild(card);
 
-                // FIREBASE LOGIC: Status + Time Estimation
+                // FIREBASE LOGIC: Status + Time Estimation + WhatsApp Button
                 db.collection('providers').where('googlePlaceId', '==', place.place_id).get().then(snap => {
                     const statusDiv = document.getElementById(`status-${i}`);
                     const estDiv = document.getElementById(`est-${i}`);
@@ -286,9 +291,11 @@
                     if (!snap.empty) {
                         const d = snap.docs[0].data();
                         const count = d.queueCount || 0;
+                        const providerId = snap.docs[0].id;
+                        const phone = d.phone; // Fetches phone for WhatsApp
+                        
                         card.setAttribute('data-live', 'true');
                         
-                        // Time Estimation Logic
                         const waitMins = count * currentConfig.avgTime;
                         const serviceTime = new Date(new Date().getTime() + waitMins * 60000);
                         const timeStr = serviceTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -300,7 +307,18 @@
                             estDiv.innerHTML = `⌛ Wait: <b>~${waitMins}m</b> • Service at <b>${timeStr}</b>`;
                         }
 
-                        actionDiv.innerHTML += `<button onclick="window.location.href='join-queue.html?id=${snap.docs[0].id}'" class="btn btn-join">JOIN QUEUE</button>`;
+                        // Generate WhatsApp Button if phone exists
+                        let whatsappHtml = "";
+                        if (phone) {
+                            const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent("Hi " + place.name + ", I'm interested in joining your queue via skipQs.")}`;
+                            whatsappHtml = `<a href="${waUrl}" target="_blank" class="btn btn-whatsapp"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"> Chat</a>`;
+                        }
+
+                        actionDiv.innerHTML = `
+                            <a href="${mapsUrl}" target="_blank" class="btn btn-sec">Directions</a>
+                            ${whatsappHtml}
+                            <button onclick="window.location.href='join-queue.html?id=${providerId}'" class="btn btn-join">JOIN QUEUE</button>
+                        `;
                     } else {
                         statusDiv.innerText = "No Live Queue";
                         actionDiv.innerHTML += `<button onclick="window.location.href='provider-signup.html'" class="btn btn-reg">BUSINESS OWNER?<br>REGISTER FREE</button>`;
