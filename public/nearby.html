@@ -23,6 +23,7 @@
         #details-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background:#0f172a; display:none; flex-direction: column; z-index: 5; }
 
         .place-card { padding: 1rem; margin-bottom: 1rem; border: 1px solid var(--border); border-radius: 12px; background: white; cursor: pointer; transition: 0.2s; }
+        .place-card:hover { border-color: var(--primary); }
         .place-card.active { border: 2.5px solid var(--primary); background: #f0f7ff; }
 
         .card-top { display: flex; gap: 12px; margin-bottom: 12px; }
@@ -144,7 +145,7 @@
                 card.className = 'place-card';
                 card.id = `card-${i}`;
                 
-                // FIXED Directions URL
+                // FIXED Directions URL with Template Literal syntax
                 const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name)}&query_place_id=${place.place_id}`;
 
                 card.innerHTML = `
