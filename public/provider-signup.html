@@ -88,7 +88,6 @@
             box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
         }
 
-        /* Highlight for the Google Search Input */
         #googleSearchInput {
             border: 2px solid var(--border);
             background: #fff;
@@ -139,7 +138,6 @@
             max-width: 400px; 
         }
 
-        /* Google Autocomplete Dropdown styling */
         .pac-container {
             border-radius: 8px;
             margin-top: 5px;
@@ -174,8 +172,15 @@
                 </div>
 
                 <div class="form-group">
+                    <label class="form-label">WhatsApp Number</label>
+                    <input type="tel" id="phone" class="form-control" placeholder="e.g. 441612220420" required>
+                    <small style="color: var(--text-muted); font-size: 0.7rem;">Verified from Google Maps. Edit if needed for WhatsApp.</small>
+                </div>
+
+                <div class="form-group">
                     <label class="form-label">Work Email</label>
                     <input type="email" id="email" class="form-control" placeholder="admin@business.com" required>
+                    <small style="color: var(--text-muted); font-size: 0.7rem;">Use your official business email for verification.</small>
                 </div>
 
                 <div class="form-group">
@@ -190,9 +195,9 @@
 
     <div id="successModal">
         <div class="modal-content">
-            <div style="width: 64px; height: 64px; background: #dcfce7; color: #166534; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 1.5rem;">✓</div>
-            <h2 style="margin: 0 0 0.5rem 0;">Success!</h2>
-            <p style="color: var(--text-muted); margin-bottom: 2rem;">Your business is now linked. Log in to manage your queue.</p>
+            <div style="width: 64px; height: 64px; background: #dcfce7; color: #166534; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 1.5rem;">✉️</div>
+            <h2 style="margin: 0 0 0.5rem 0;">Check your Email!</h2>
+            <p style="color: var(--text-muted); margin-bottom: 2rem;">We've sent a verification link to your email. You must click it to activate your business listing.</p>
             <button class="btn-submit" onclick="window.location.href='login.html'">Go to Login</button>
         </div>
     </div>
@@ -209,12 +214,12 @@
         
         let selectedPlace = null;
 
-        // Initialize Google Places Autocomplete
         function initAutocomplete() {
             const input = document.getElementById('googleSearchInput');
             const autocomplete = new google.maps.places.Autocomplete(input, {
                 types: ['establishment'],
-                fields: ['place_id', 'name', 'formatted_address', 'geometry', 'types']
+                // Added formatted_phone_number to fields
+                fields: ['place_id', 'name', 'formatted_address', 'geometry', 'types', 'formatted_phone_number']
             });
 
             autocomplete.addListener('place_changed', () => {
@@ -225,18 +230,21 @@
                     return;
                 }
 
+                // Pre-fill phone from Google
+                if (place.formatted_phone_number) {
+                    document.getElementById('phone').value = place.formatted_phone_number;
+                }
+
                 selectedPlace = {
                     googlePlaceId: place.place_id,
                     businessName: place.name,
                     address: place.formatted_address,
                     lat: place.geometry.location.lat(),
                     lng: place.geometry.location.lng(),
-                    // Map Google type to your simplified categories
                     category: place.types.includes('restaurant') ? 'restaurant' : 
                               (place.types.includes('health') ? 'clinic' : 'salon')
                 };
 
-                // Show visual confirmation
                 document.getElementById('bizPreview').style.display = 'block';
                 document.getElementById('selectedName').innerText = place.name;
                 document.getElementById('selectedAddress').innerText = place.formatted_address;
@@ -255,13 +263,14 @@
             }
 
             submitBtn.disabled = true;
-            submitBtn.innerText = "Verifying Business...";
+            submitBtn.innerText = "Verifying Ownership...";
 
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
+            const phone = document.getElementById('phone').value;
 
             try {
-                // 1. Double check if this Google Place ID is already taken
+                // 1. Check if Place ID is already registered
                 const checkDuplicate = await firebase.firestore().collection('providers')
                     .where('googlePlaceId', '==', selectedPlace.googlePlaceId)
                     .get();
@@ -274,12 +283,18 @@
                 const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
                 const user = userCredential.user;
 
-                // 3. Create Firestore Entry
+                // 3. OWNER VALIDATION STEP: Send Verification Email
+                // This ensures they own the email address provided.
+                await user.sendEmailVerification();
+
+                // 4. Create Firestore Entry
                 await firebase.firestore().collection('providers').doc(user.uid).set({
                     ...selectedPlace,
                     email: email,
+                    phone: phone,
                     role: 'provider',
                     isOpen: false,
+                    isVerified: false, // Set to false until they verify email
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
