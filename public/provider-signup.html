@@ -88,11 +88,6 @@
             box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
         }
 
-        #googleSearchInput {
-            border: 2px solid var(--border);
-            background: #fff;
-        }
-
         .selection-preview {
             background: #f1f5f9;
             padding: 1rem;
@@ -118,32 +113,33 @@
         .btn-submit:hover { background: var(--primary-hover); }
         .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        #successModal { 
+        /* MODAL / STEP 2 STYLE */
+        #step2Modal { 
             display: none; 
             position: fixed; 
             inset: 0; 
-            background: rgba(15, 23, 42, 0.8); 
+            background: rgba(15, 23, 42, 0.9); 
             align-items: center; 
             justify-content: center; 
             z-index: 9999; 
-            backdrop-filter: blur(4px); 
+            backdrop-filter: blur(8px); 
         }
 
         .modal-content { 
             background: white; 
-            padding: 3rem; 
+            padding: 2.5rem; 
             border-radius: 1.5rem; 
-            text-align: center; 
             width: 90%; 
-            max-width: 400px; 
+            max-width: 450px; 
         }
 
-        .pac-container {
-            border-radius: 8px;
-            margin-top: 5px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            border: none;
+        .service-input-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
         }
+
+        .pac-container { border-radius: 8px; margin-top: 5px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); border: none; }
     </style>
 </head>
 <body>
@@ -154,10 +150,10 @@
     </header>
 
     <main class="auth-wrapper">
-        <div class="form-card">
+        <div class="form-card" id="signupCard">
             <div class="header-section">
                 <h1 style="margin:0; font-size: 1.75rem;">Register Business</h1>
-                <p style="color: var(--text-muted); margin-top: 0.5rem;">Link your Google Maps business to skipQs.</p>
+                <p style="color: var(--text-muted); margin-top: 0.5rem;">Step 1: Link your Google Business</p>
             </div>
 
             <form id="providerSignupForm">
@@ -174,13 +170,11 @@
                 <div class="form-group">
                     <label class="form-label">WhatsApp Number</label>
                     <input type="tel" id="phone" class="form-control" placeholder="e.g. 441612220420" required>
-                    <small style="color: var(--text-muted); font-size: 0.7rem;">Verified from Google Maps. Edit if needed for WhatsApp.</small>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Work Email</label>
                     <input type="email" id="email" class="form-control" placeholder="admin@business.com" required>
-                    <small style="color: var(--text-muted); font-size: 0.7rem;">Use your official business email for verification.</small>
                 </div>
 
                 <div class="form-group">
@@ -188,17 +182,39 @@
                     <input type="password" id="password" class="form-control" placeholder="Minimum 6 characters" required minlength="6">
                 </div>
 
-                <button type="submit" id="submitBtn" class="btn-submit" disabled>Verify & Create Account</button>
+                <button type="submit" id="submitBtn" class="btn-submit" disabled>Continue to Service Setup</button>
             </form>
         </div>
     </main>
 
-    <div id="successModal">
+    <div id="step2Modal">
         <div class="modal-content">
-            <div style="width: 64px; height: 64px; background: #dcfce7; color: #166534; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 1.5rem;">✉️</div>
-            <h2 style="margin: 0 0 0.5rem 0;">Check your Email!</h2>
-            <p style="color: var(--text-muted); margin-bottom: 2rem;">We've sent a verification link to your email. You must click it to activate your business listing.</p>
-            <button class="btn-submit" onclick="window.location.href='login.html'">Go to Login</button>
+            <div style="text-align: center; margin-bottom: 1.5rem;">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🛠️</div>
+                <h2 style="margin:0">Add Your Services</h2>
+                <p style="color: var(--text-muted); font-size: 0.9rem;">You must list at least one service to go live.</p>
+            </div>
+
+            <div id="mandatoryServiceForm">
+                <div class="form-group">
+                    <label class="form-label">Service Name</label>
+                    <input type="text" id="setupSName" class="form-control" placeholder="e.g. Standard Haircut">
+                </div>
+                
+                <div class="service-input-row">
+                    <div style="flex:1">
+                        <label class="form-label">Mins</label>
+                        <input type="number" id="setupSTime" class="form-control" placeholder="30">
+                    </div>
+                    <div style="flex:1">
+                        <label class="form-label">Price ($)</label>
+                        <input type="number" id="setupSPrice" class="form-control" placeholder="20">
+                    </div>
+                </div>
+
+                <button type="button" onclick="saveMandatoryService()" id="finalBtn" class="btn-submit">Save & Complete Registration</button>
+                <p id="loadingMsg" style="display:none; text-align:center; font-size:0.8rem; color:var(--primary);">Finalizing your account...</p>
+            </div>
         </div>
     </div>
 
@@ -208,29 +224,25 @@
     <script src="firebase-config.js"></script>
 
     <script>
+        const db = firebase.firestore();
         const signupForm = document.getElementById('providerSignupForm');
         const submitBtn = document.getElementById('submitBtn');
-        const modal = document.getElementById('successModal');
+        const step2Modal = document.getElementById('step2Modal');
         
         let selectedPlace = null;
+        let createdUserId = null;
 
         function initAutocomplete() {
             const input = document.getElementById('googleSearchInput');
             const autocomplete = new google.maps.places.Autocomplete(input, {
                 types: ['establishment'],
-                // Added formatted_phone_number to fields
                 fields: ['place_id', 'name', 'formatted_address', 'geometry', 'types', 'formatted_phone_number']
             });
 
             autocomplete.addListener('place_changed', () => {
                 const place = autocomplete.getPlace();
-                
-                if (!place.place_id) {
-                    submitBtn.disabled = true;
-                    return;
-                }
+                if (!place.place_id) return;
 
-                // Pre-fill phone from Google
                 if (place.formatted_phone_number) {
                     document.getElementById('phone').value = place.formatted_phone_number;
                 }
@@ -248,64 +260,83 @@
                 document.getElementById('bizPreview').style.display = 'block';
                 document.getElementById('selectedName').innerText = place.name;
                 document.getElementById('selectedAddress').innerText = place.formatted_address;
-                
                 submitBtn.disabled = false;
-                submitBtn.innerText = "Create Business Account";
             });
         }
 
         signupForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            if (!selectedPlace) {
-                alert("Please select a business from the Google suggestions.");
-                return;
-            }
+            if (!selectedPlace) return;
 
             submitBtn.disabled = true;
-            submitBtn.innerText = "Verifying Ownership...";
+            submitBtn.innerText = "Creating Account...";
 
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const phone = document.getElementById('phone').value;
 
             try {
-                // 1. Check if Place ID is already registered
-                const checkDuplicate = await firebase.firestore().collection('providers')
-                    .where('googlePlaceId', '==', selectedPlace.googlePlaceId)
-                    .get();
+                // Check duplicate Place ID
+                const checkDuplicate = await db.collection('providers')
+                    .where('googlePlaceId', '==', selectedPlace.googlePlaceId).get();
 
-                if (!checkDuplicate.empty) {
-                    throw new Error("This business location is already registered on skipQs.");
-                }
+                if (!checkDuplicate.empty) throw new Error("This business is already registered.");
 
-                // 2. Create Auth User
+                // Create Auth
                 const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
-                const user = userCredential.user;
+                createdUserId = userCredential.user.uid;
 
-                // 3. OWNER VALIDATION STEP: Send Verification Email
-                // This ensures they own the email address provided.
-                await user.sendEmailVerification();
-
-                // 4. Create Firestore Entry
-                await firebase.firestore().collection('providers').doc(user.uid).set({
+                // Create Initial Provider Doc
+                await db.collection('providers').doc(createdUserId).set({
                     ...selectedPlace,
-                    email: email,
-                    phone: phone,
+                    email,
+                    phone,
                     role: 'provider',
                     isOpen: false,
-                    isVerified: false, // Set to false until they verify email
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                modal.style.display = 'flex';
-                
+                // Transition to Step 2
+                step2Modal.style.display = 'flex';
+
             } catch (error) {
+                alert(error.message);
                 submitBtn.disabled = false;
-                submitBtn.innerText = "Create Business Account";
-                alert("Signup Error: " + error.message);
+                submitBtn.innerText = "Continue to Service Setup";
             }
         });
+
+        async function saveMandatoryService() {
+            const name = document.getElementById('setupSName').value;
+            const time = document.getElementById('setupSTime').value;
+            const price = document.getElementById('setupSPrice').value;
+
+            if (!name || !time) {
+                alert("Please name your service and set the duration.");
+                return;
+            }
+
+            document.getElementById('finalBtn').disabled = true;
+            document.getElementById('loadingMsg').style.display = 'block';
+
+            try {
+                // Add the mandatory service
+                await db.collection('providers').doc(createdUserId).collection('services').add({
+                    name,
+                    duration: Number(time),
+                    price: price || 0
+                });
+
+                // Send verification and redirect
+                await firebase.auth().currentUser.sendEmailVerification();
+                alert("Registration Complete! Please verify your email before logging in.");
+                window.location.href = 'login.html';
+
+            } catch (error) {
+                alert("Error saving service: " + error.message);
+                document.getElementById('finalBtn').disabled = false;
+            }
+        }
     </script>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAJFGE5OFfn-OhDNJ_rWO5oi2d2CHl2fXE&libraries=places&callback=initAutocomplete" async defer></script>
 </body>
