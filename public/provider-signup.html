@@ -114,7 +114,6 @@
         .btn-submit:hover { background: var(--primary-hover); }
         .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        /* MODAL STYLES */
         #step2Modal, #successModal { 
             display: none; 
             position: fixed; 
@@ -135,7 +134,6 @@
             text-align: center;
         }
 
-        /* NEW SCANNER TABLE STYLES */
         .scan-container {
             border: 2px dashed var(--border);
             padding: 1rem;
@@ -245,8 +243,7 @@
                             <th style="width:30px;"></th>
                         </tr>
                     </thead>
-                    <tbody id="servicesList">
-                        </tbody>
+                    <tbody id="servicesList"></tbody>
                 </table>
             </div>
 
@@ -290,17 +287,46 @@
             'United Arab Emirates': 'AED', 'Nigeria': '₦', 'Canada': 'CA$', 'Europe': '€'
         };
 
-        // --- PRESERVED ORIGINAL AUTOCOMPLETE ---
+        // Mapping for Auto-Select
+        const categoryMapping = {
+            'hair_care': 'Barber',
+            'beauty_salon': 'Salon',
+            'dentist': 'Clinic',
+            'doctor': 'Clinic',
+            'health': 'Clinic',
+            'restaurant': 'Restaurant',
+            'food': 'Restaurant',
+            'bank': 'Bank',
+            'finance': 'Bank',
+            'store': 'Retail',
+            'car_repair': 'Repair',
+            'local_government_office': 'Gov Office'
+        };
+
         function initAutocomplete() {
             const input = document.getElementById('googleSearchInput');
             const autocomplete = new google.maps.places.Autocomplete(input, {
                 types: ['establishment'],
-                fields: ['place_id', 'name', 'formatted_address', 'geometry', 'address_components', 'formatted_phone_number']
+                fields: ['place_id', 'name', 'formatted_address', 'geometry', 'address_components', 'formatted_phone_number', 'types']
             });
 
             autocomplete.addListener('place_changed', () => {
                 const place = autocomplete.getPlace();
                 if (!place.place_id) return;
+
+                // Auto-select Category Logic
+                const categorySelect = document.getElementById('bizCategory');
+                if (place.types) {
+                    let matchFound = false;
+                    for (const type of place.types) {
+                        if (categoryMapping[type]) {
+                            categorySelect.value = categoryMapping[type];
+                            matchFound = true;
+                            break;
+                        }
+                    }
+                    if (!matchFound) categorySelect.value = "Other";
+                }
 
                 if (place.formatted_phone_number) {
                     document.getElementById('phone').value = place.formatted_phone_number;
@@ -329,7 +355,6 @@
             });
         }
 
-        // --- PRESERVED ORIGINAL SIGNUP FLOW ---
         signupForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             if (!selectedPlace) return;
@@ -359,7 +384,7 @@
                 });
 
                 step2Modal.style.display = 'flex';
-                addNewRow(); // Start with one empty row
+                addNewRow(); 
 
             } catch (error) {
                 alert(error.message);
@@ -368,23 +393,19 @@
             }
         });
 
-        // --- NEW BATCH OCR LOGIC ---
         async function performBatchOCR(event) {
             const files = event.target.files;
             const status = document.getElementById('ocrStatus');
             if (!files.length) return;
 
             status.style.display = 'block';
-            
             for (let file of files) {
                 status.innerText = `Scanning ${file.name}...`;
                 const { data: { text } } = await Tesseract.recognize(file, 'eng');
-                
                 const lines = text.split('\n');
                 lines.forEach(line => {
                     const priceMatch = line.match(/(\d+[\.,]\d{2})|(\d{2,})/);
                     const namePart = line.replace(/[0-9£$€\.,]/g, '').trim();
-                    
                     if (priceMatch && namePart.length > 2) {
                         addNewRow(namePart, priceMatch[0].replace(',', '.'));
                     }
@@ -409,7 +430,6 @@
             if(confirm("Clear all items?")) document.getElementById('servicesList').innerHTML = '';
         }
 
-        // --- FINAL BATCH SAVE ---
         async function saveAllServices() {
             const rows = document.querySelectorAll('#servicesList tr');
             const services = [];
