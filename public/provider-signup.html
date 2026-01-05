@@ -113,8 +113,8 @@
         .btn-submit:hover { background: var(--primary-hover); }
         .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        /* MODAL / STEP 2 STYLE */
-        #step2Modal { 
+        /* MODAL STYLES */
+        #step2Modal, #successModal { 
             display: none; 
             position: fixed; 
             inset: 0; 
@@ -131,12 +131,14 @@
             border-radius: 1.5rem; 
             width: 90%; 
             max-width: 450px; 
+            text-align: center;
         }
 
         .service-input-row {
             display: flex;
             gap: 10px;
             margin-bottom: 10px;
+            text-align: left;
         }
 
         .pac-container { border-radius: 8px; margin-top: 5px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); border: none; }
@@ -164,7 +166,24 @@
                     <div id="bizPreview" class="selection-preview">
                         <span id="selectedName" style="font-weight: 800; display: block;"></span>
                         <span id="selectedAddress" style="font-size: 0.75rem; color: var(--text-muted);"></span>
+                        <span id="detectedCurrencyText" style="font-size: 0.75rem; color: var(--primary); font-weight: bold; display: block; margin-top: 4px;"></span>
                     </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Business Category</label>
+                    <select id="bizCategory" class="form-control" required>
+                        <option value="" disabled selected>Select your industry</option>
+                        <option value="Barber">Barber</option>
+                        <option value="Salon">Salon</option>
+                        <option value="Clinic">Clinic</option>
+                        <option value="Restaurant">Restaurant</option>
+                        <option value="Bank">Bank</option>
+                        <option value="Retail">Retail</option>
+                        <option value="Repair">Repair</option>
+                        <option value="Gov Office">Government Office</option>
+                        <option value="Other">Other</option>
+                    </select>
                 </div>
 
                 <div class="form-group">
@@ -196,7 +215,7 @@
             </div>
 
             <div id="mandatoryServiceForm">
-                <div class="form-group">
+                <div class="form-group" style="text-align: left;">
                     <label class="form-label">Service Name</label>
                     <input type="text" id="setupSName" class="form-control" placeholder="e.g. Standard Haircut">
                 </div>
@@ -207,7 +226,7 @@
                         <input type="number" id="setupSTime" class="form-control" placeholder="30">
                     </div>
                     <div style="flex:1">
-                        <label class="form-label">Price ($)</label>
+                        <label class="form-label">Price (<span id="currencySymbolLabel">$</span>)</label>
                         <input type="number" id="setupSPrice" class="form-control" placeholder="20">
                     </div>
                 </div>
@@ -215,6 +234,15 @@
                 <button type="button" onclick="saveMandatoryService()" id="finalBtn" class="btn-submit">Save & Complete Registration</button>
                 <p id="loadingMsg" style="display:none; text-align:center; font-size:0.8rem; color:var(--primary);">Finalizing your account...</p>
             </div>
+        </div>
+    </div>
+
+    <div id="successModal">
+        <div class="modal-content">
+            <div style="width: 70px; height: 70px; background: #dcfce7; color: #166534; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 1.5rem;">✉️</div>
+            <h2 style="margin: 0 0 0.5rem 0;">Check your Email!</h2>
+            <p style="color: var(--text-muted); margin-bottom: 2rem; line-height: 1.5;">We've sent a verification link to your email. Please verify your account to start accepting bookings.</p>
+            <button class="btn-submit" onclick="window.location.href='login.html'">Back to Login</button>
         </div>
     </div>
 
@@ -228,24 +256,42 @@
         const signupForm = document.getElementById('providerSignupForm');
         const submitBtn = document.getElementById('submitBtn');
         const step2Modal = document.getElementById('step2Modal');
+        const successModal = document.getElementById('successModal');
         
         let selectedPlace = null;
         let createdUserId = null;
+        let detectedCurrency = '$';
+
+        const currencyMap = {
+            'United Kingdom': '£',
+            'United States': '$',
+            'India': '₹',
+            'United Arab Emirates': 'AED',
+            'Nigeria': '₦',
+            'Canada': 'CA$',
+            'Europe': '€'
+        };
 
         function initAutocomplete() {
             const input = document.getElementById('googleSearchInput');
             const autocomplete = new google.maps.places.Autocomplete(input, {
                 types: ['establishment'],
-                fields: ['place_id', 'name', 'formatted_address', 'geometry', 'types', 'formatted_phone_number']
+                fields: ['place_id', 'name', 'formatted_address', 'geometry', 'address_components', 'formatted_phone_number']
             });
 
             autocomplete.addListener('place_changed', () => {
                 const place = autocomplete.getPlace();
                 if (!place.place_id) return;
 
+                // Auto-fill phone if Google has it
                 if (place.formatted_phone_number) {
                     document.getElementById('phone').value = place.formatted_phone_number;
                 }
+
+                // Detect Currency based on Country
+                const countryComponent = place.address_components.find(c => c.types.includes('country'));
+                const countryName = countryComponent ? countryComponent.long_name : 'United States';
+                detectedCurrency = currencyMap[countryName] || '$';
 
                 selectedPlace = {
                     googlePlaceId: place.place_id,
@@ -253,13 +299,17 @@
                     address: place.formatted_address,
                     lat: place.geometry.location.lat(),
                     lng: place.geometry.location.lng(),
-                    category: place.types.includes('restaurant') ? 'restaurant' : 
-                              (place.types.includes('health') ? 'clinic' : 'salon')
+                    currencySymbol: detectedCurrency,
+                    country: countryName
                 };
 
+                // Update UI Previews
                 document.getElementById('bizPreview').style.display = 'block';
                 document.getElementById('selectedName').innerText = place.name;
                 document.getElementById('selectedAddress').innerText = place.formatted_address;
+                document.getElementById('detectedCurrencyText').innerText = "Detected Currency: " + detectedCurrency;
+                document.getElementById('currencySymbolLabel').innerText = detectedCurrency;
+                
                 submitBtn.disabled = false;
             });
         }
@@ -274,6 +324,7 @@
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const phone = document.getElementById('phone').value;
+            const category = document.getElementById('bizCategory').value;
 
             try {
                 // Check duplicate Place ID
@@ -289,6 +340,7 @@
                 // Create Initial Provider Doc
                 await db.collection('providers').doc(createdUserId).set({
                     ...selectedPlace,
+                    category: category,
                     email,
                     phone,
                     role: 'provider',
@@ -324,17 +376,21 @@
                 await db.collection('providers').doc(createdUserId).collection('services').add({
                     name,
                     duration: Number(time),
-                    price: price || 0
+                    price: price || 0,
+                    currency: detectedCurrency
                 });
 
-                // Send verification and redirect
+                // Send verification
                 await firebase.auth().currentUser.sendEmailVerification();
-                alert("Registration Complete! Please verify your email before logging in.");
-                window.location.href = 'login.html';
+                
+                // Show Success Modal instead of Alert
+                step2Modal.style.display = 'none';
+                successModal.style.display = 'flex';
 
             } catch (error) {
                 alert("Error saving service: " + error.message);
                 document.getElementById('finalBtn').disabled = false;
+                document.getElementById('loadingMsg').style.display = 'none';
             }
         }
     </script>
