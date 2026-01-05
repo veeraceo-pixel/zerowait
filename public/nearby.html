@@ -219,7 +219,6 @@
                 gestureHandling: "greedy" 
             });
             
-            // INITIALIZE SERVICE ONCE HERE
             placesService = new google.maps.places.PlacesService(map);
 
             map.addListener('dragend', () => { 
@@ -238,6 +237,7 @@
         function executePlacesSearch() {
             if(!placesService) return;
 
+            // FIX 1: Explicitly clear old markers so the search can refresh properly
             markers.forEach(m => m.setMap(null));
             markers = [];
             
@@ -282,7 +282,7 @@
                 card.id = `card-${i}`;
                 card.setAttribute('data-live', 'false');
                 
-                // FIXED: Corrected string template with backticks and ${}
+                // FIX 2: Corrected the backtick syntax and removed the typo "0"
                 const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${place.geometry.location.lat()},${place.geometry.location.lng()}&destination_place_id=${place.place_id}`;
 
                 card.innerHTML = `
@@ -307,7 +307,6 @@
                 `;
                 container.appendChild(card);
 
-                // FIREBASE STATUS CHECK
                 db.collection('providers').where('googlePlaceId', '==', place.place_id).get().then(snap => {
                     const statusDiv = document.getElementById(`status-${i}`);
                     const estDiv = document.getElementById(`est-${i}`);
@@ -333,7 +332,6 @@
 
                         let whatsappHtml = "";
                         if (phoneRaw) {
-                            // CLEANUP: Fixes WhatsApp link formatting
                             const cleanPhone = phoneRaw.toString().replace(/\D/g, '');
                             const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent("Hi " + place.name + ", I'm interested in joining your queue via skipQs.")}`;
                             whatsappHtml = `<a href="${waUrl}" target="_blank" class="btn btn-whatsapp"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"> Chat</a>`;
