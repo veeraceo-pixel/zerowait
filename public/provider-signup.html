@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Business Registration | skipQs</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
     <style>
         :root { 
             --primary: #2563eb; 
@@ -130,16 +131,30 @@
             padding: 2.5rem; 
             border-radius: 1.5rem; 
             width: 90%; 
-            max-width: 450px; 
+            max-width: 500px; 
             text-align: center;
         }
 
-        .service-input-row {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-            text-align: left;
+        /* NEW SCANNER TABLE STYLES */
+        .scan-container {
+            border: 2px dashed var(--border);
+            padding: 1rem;
+            border-radius: 0.8rem;
+            margin-bottom: 1rem;
+            background: #fdfdfd;
         }
+
+        .service-table-wrapper {
+            max-height: 200px;
+            overflow-y: auto;
+            margin: 1rem 0;
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+        }
+
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th { background: #f8fafc; padding: 8px; border-bottom: 1px solid var(--border); text-align: left; position: sticky; top: 0; }
+        td { padding: 6px; border-bottom: 1px solid #f1f5f9; }
 
         .pac-container { border-radius: 8px; margin-top: 5px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); border: none; }
     </style>
@@ -208,41 +223,49 @@
 
     <div id="step2Modal">
         <div class="modal-content">
-            <div style="text-align: center; margin-bottom: 1.5rem;">
-                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🛠️</div>
-                <h2 style="margin:0">Add Your Services</h2>
-                <p style="color: var(--text-muted); font-size: 0.9rem;">You must list at least one service to go live.</p>
+            <div style="text-align: center; margin-bottom: 1rem;">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">📸</div>
+                <h2 style="margin:0">Set Up Services</h2>
+                <p style="color: var(--text-muted); font-size: 0.85rem;">Upload your menu or add services manually below.</p>
             </div>
 
-            <div id="mandatoryServiceForm">
-                <div class="form-group" style="text-align: left;">
-                    <label class="form-label">Service Name</label>
-                    <input type="text" id="setupSName" class="form-control" placeholder="e.g. Standard Haircut">
-                </div>
-                
-                <div class="service-input-row">
-                    <div style="flex:1">
-                        <label class="form-label">Mins</label>
-                        <input type="number" id="setupSTime" class="form-control" placeholder="30">
-                    </div>
-                    <div style="flex:1">
-                        <label class="form-label">Price (<span id="currencySymbolLabel">$</span>)</label>
-                        <input type="number" id="setupSPrice" class="form-control" placeholder="20">
-                    </div>
-                </div>
-
-                <button type="button" onclick="saveMandatoryService()" id="finalBtn" class="btn-submit">Save & Complete Registration</button>
-                <p id="loadingMsg" style="display:none; text-align:center; font-size:0.8rem; color:var(--primary);">Finalizing your account...</p>
+            <div class="scan-container">
+                <input type="file" id="menuUpload" accept="image/*" multiple style="display:none" onchange="performBatchOCR(event)">
+                <button type="button" onclick="document.getElementById('menuUpload').click()" style="background:none; border:none; color:var(--primary); font-weight:bold; cursor:pointer;">+ Upload Menu (Auto-Scan)</button>
+                <div id="ocrStatus" style="font-size:0.7rem; color:var(--primary); margin-top:5px; display:none;">Scanning images...</div>
             </div>
+
+            <div class="service-table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Service Name</th>
+                            <th style="width:50px;">Price</th>
+                            <th style="width:50px;">Mins</th>
+                            <th style="width:30px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="servicesList">
+                        </tbody>
+                </table>
+            </div>
+
+            <div style="display:flex; justify-content: space-between; align-items: center;">
+                <button type="button" onclick="addNewRow()" style="background:none; border:none; color:var(--primary); font-size:0.8rem; font-weight:bold; cursor:pointer;">+ Add Row Manually</button>
+                <button type="button" onclick="clearAllRows()" style="background:none; border:none; color:#ef4444; font-size:0.8rem; cursor:pointer;">Clear All</button>
+            </div>
+
+            <button type="button" onclick="saveAllServices()" id="finalBtn" class="btn-submit">Complete Registration</button>
+            <p id="loadingMsg" style="display:none; text-align:center; font-size:0.8rem; color:var(--primary);">Processing your services...</p>
         </div>
     </div>
 
     <div id="successModal">
-        <div class="modal-content">
-            <div style="width: 70px; height: 70px; background: #dcfce7; color: #166534; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 1.5rem;">✉️</div>
-            <h2 style="margin: 0 0 0.5rem 0;">Check your Email!</h2>
-            <p style="color: var(--text-muted); margin-bottom: 2rem; line-height: 1.5;">We've sent a verification link to your email. Please verify your account to start accepting bookings.</p>
-            <button class="btn-submit" onclick="window.location.href='login.html'">Back to Login</button>
+        <div class="modal-content" style="padding: 3rem 2rem;">
+            <div style="width: 80px; height: 80px; background: #dcfce7; color: #166534; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 3rem; margin: 0 auto 1.5rem;">✅</div>
+            <h1 style="margin: 0 0 0.5rem 0; font-weight: 800;">All Set!</h1>
+            <p style="color: var(--text-muted); margin-bottom: 2rem; line-height: 1.5;">Your business is now registered. Please check your email to verify your account and go live.</p>
+            <button class="btn-submit" onclick="window.location.href='login.html'">Go to Dashboard</button>
         </div>
     </div>
 
@@ -263,15 +286,11 @@
         let detectedCurrency = '$';
 
         const currencyMap = {
-            'United Kingdom': '£',
-            'United States': '$',
-            'India': '₹',
-            'United Arab Emirates': 'AED',
-            'Nigeria': '₦',
-            'Canada': 'CA$',
-            'Europe': '€'
+            'United Kingdom': '£', 'United States': '$', 'India': '₹',
+            'United Arab Emirates': 'AED', 'Nigeria': '₦', 'Canada': 'CA$', 'Europe': '€'
         };
 
+        // --- PRESERVED ORIGINAL AUTOCOMPLETE ---
         function initAutocomplete() {
             const input = document.getElementById('googleSearchInput');
             const autocomplete = new google.maps.places.Autocomplete(input, {
@@ -283,12 +302,10 @@
                 const place = autocomplete.getPlace();
                 if (!place.place_id) return;
 
-                // Auto-fill phone if Google has it
                 if (place.formatted_phone_number) {
                     document.getElementById('phone').value = place.formatted_phone_number;
                 }
 
-                // Detect Currency based on Country
                 const countryComponent = place.address_components.find(c => c.types.includes('country'));
                 const countryName = countryComponent ? countryComponent.long_name : 'United States';
                 detectedCurrency = currencyMap[countryName] || '$';
@@ -303,17 +320,16 @@
                     country: countryName
                 };
 
-                // Update UI Previews
                 document.getElementById('bizPreview').style.display = 'block';
                 document.getElementById('selectedName').innerText = place.name;
                 document.getElementById('selectedAddress').innerText = place.formatted_address;
                 document.getElementById('detectedCurrencyText').innerText = "Detected Currency: " + detectedCurrency;
-                document.getElementById('currencySymbolLabel').innerText = detectedCurrency;
                 
                 submitBtn.disabled = false;
             });
         }
 
+        // --- PRESERVED ORIGINAL SIGNUP FLOW ---
         signupForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             if (!selectedPlace) return;
@@ -327,29 +343,23 @@
             const category = document.getElementById('bizCategory').value;
 
             try {
-                // Check duplicate Place ID
                 const checkDuplicate = await db.collection('providers')
                     .where('googlePlaceId', '==', selectedPlace.googlePlaceId).get();
 
                 if (!checkDuplicate.empty) throw new Error("This business is already registered.");
 
-                // Create Auth
                 const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
                 createdUserId = userCredential.user.uid;
 
-                // Create Initial Provider Doc
                 await db.collection('providers').doc(createdUserId).set({
                     ...selectedPlace,
                     category: category,
-                    email,
-                    phone,
-                    role: 'provider',
-                    isOpen: false,
+                    email, phone, role: 'provider', isOpen: false,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                // Transition to Step 2
                 step2Modal.style.display = 'flex';
+                addNewRow(); // Start with one empty row
 
             } catch (error) {
                 alert(error.message);
@@ -358,13 +368,69 @@
             }
         });
 
-        async function saveMandatoryService() {
-            const name = document.getElementById('setupSName').value;
-            const time = document.getElementById('setupSTime').value;
-            const price = document.getElementById('setupSPrice').value;
+        // --- NEW BATCH OCR LOGIC ---
+        async function performBatchOCR(event) {
+            const files = event.target.files;
+            const status = document.getElementById('ocrStatus');
+            if (!files.length) return;
 
-            if (!name || !time) {
-                alert("Please name your service and set the duration.");
+            status.style.display = 'block';
+            
+            for (let file of files) {
+                status.innerText = `Scanning ${file.name}...`;
+                const { data: { text } } = await Tesseract.recognize(file, 'eng');
+                
+                const lines = text.split('\n');
+                lines.forEach(line => {
+                    const priceMatch = line.match(/(\d+[\.,]\d{2})|(\d{2,})/);
+                    const namePart = line.replace(/[0-9£$€\.,]/g, '').trim();
+                    
+                    if (priceMatch && namePart.length > 2) {
+                        addNewRow(namePart, priceMatch[0].replace(',', '.'));
+                    }
+                });
+            }
+            status.innerText = "Scanning complete!";
+        }
+
+        function addNewRow(name = '', price = '') {
+            const tbody = document.getElementById('servicesList');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="text" class="form-control s-name" value="${name}" placeholder="Service name" style="padding:4px; font-size:0.8rem;"></td>
+                <td><input type="number" class="form-control s-price" value="${price}" placeholder="0" style="padding:4px; font-size:0.8rem;"></td>
+                <td><input type="number" class="form-control s-time" placeholder="Mins" style="padding:4px; font-size:0.8rem; border:1px solid var(--primary);"></td>
+                <td><button type="button" onclick="this.parentElement.parentElement.remove()" style="border:none; background:none; color:red; cursor:pointer;">&times;</button></td>
+            `;
+            tbody.appendChild(tr);
+        }
+
+        function clearAllRows() {
+            if(confirm("Clear all items?")) document.getElementById('servicesList').innerHTML = '';
+        }
+
+        // --- FINAL BATCH SAVE ---
+        async function saveAllServices() {
+            const rows = document.querySelectorAll('#servicesList tr');
+            const services = [];
+
+            rows.forEach(row => {
+                const name = row.querySelector('.s-name').value;
+                const price = row.querySelector('.s-price').value;
+                const time = row.querySelector('.s-time').value;
+
+                if (name && time) {
+                    services.push({
+                        name,
+                        price: Number(price) || 0,
+                        duration: Number(time),
+                        currency: detectedCurrency
+                    });
+                }
+            });
+
+            if (services.length === 0) {
+                alert("Please add at least one service and provide a duration (Mins).");
                 return;
             }
 
@@ -372,23 +438,19 @@
             document.getElementById('loadingMsg').style.display = 'block';
 
             try {
-                // Add the mandatory service
-                await db.collection('providers').doc(createdUserId).collection('services').add({
-                    name,
-                    duration: Number(time),
-                    price: price || 0,
-                    currency: detectedCurrency
+                const batch = db.batch();
+                services.forEach(service => {
+                    const sRef = db.collection('providers').doc(createdUserId).collection('services').doc();
+                    batch.set(sRef, service);
                 });
-
-                // Send verification
+                
+                await batch.commit();
                 await firebase.auth().currentUser.sendEmailVerification();
                 
-                // Show Success Modal instead of Alert
                 step2Modal.style.display = 'none';
                 successModal.style.display = 'flex';
-
             } catch (error) {
-                alert("Error saving service: " + error.message);
+                alert("Error: " + error.message);
                 document.getElementById('finalBtn').disabled = false;
                 document.getElementById('loadingMsg').style.display = 'none';
             }
