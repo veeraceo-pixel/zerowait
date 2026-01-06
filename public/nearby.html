@@ -4,203 +4,129 @@
     <meta charset="UTF-8">
     <title>Find Nearby Services | skipQs</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <style>
         :root {
-            --primary: #2563eb; --primary-dark: #1e40af; --bg-light: #f8fafc; 
-            --text-main: #1e293b; --text-muted: #64748b; --border: #e2e8f0; 
-            --nav-bg: #2d1b4d; --success: #059669; --star: #f59e0b;
+            --primary: #2563eb; --bg-light: #f8fafc; --text-main: #1e293b;
+            --text-muted: #64748b; --border: #e2e8f0; --nav-bg: #2d1b4d;
+            --success: #059669;
         }
 
-        /* Reset & Base */
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { 
-            font-family: 'Inter', sans-serif; background-color: var(--bg-light); 
-            margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; 
-        }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-light); margin: 0; height: 100vh; overflow: hidden; }
+        .navbar { background: var(--nav-bg); padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; z-index: 1000; position: relative; }
+        .logo { font-weight: 800; color: white; text-decoration: none; font-size: 1.2rem; }
 
-        /* Navbar & Global Search */
-        .navbar { background: var(--nav-bg); padding: 12px 16px; z-index: 1000; flex-shrink: 0; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
-        .nav-content { display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto; width: 100%; }
-        .logo { font-weight: 800; color: white; text-decoration: none; font-size: 1.4rem; letter-spacing: -0.5px; }
-        .nav-links { display: flex; gap: 15px; align-items: center; }
-        .nav-links a { color: white; text-decoration: none; font-size: 0.85rem; font-weight: 500; opacity: 0.9; }
-        
-        .search-bar-wrapper { width: 100%; max-width: 600px; margin: 10px auto 0; position: relative; }
-        #location-search { 
-            width: 100%; padding: 12px 16px 12px 40px; border-radius: 12px; border: none; 
-            font-size: 0.95rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1); outline: none;
-        }
-        .search-icon { position: absolute; left: 14px; top: 14px; color: var(--text-muted); }
-
-        /* Filter & Sort Interaction Bar */
-        .interaction-bar {
-            display: flex; gap: 10px; overflow-x: auto; padding: 15px;
+        .service-filter-bar {
+            display: flex; gap: 8px; overflow-x: auto; padding: 10px 1.25rem;
             background: white; border-bottom: 1px solid var(--border);
-            scrollbar-width: none; align-items: center; flex-shrink: 0;
+            scrollbar-width: none; align-items: center;
         }
-        .interaction-bar::-webkit-scrollbar { display: none; }
+        .service-filter-bar::-webkit-scrollbar { display: none; }
         
-        .chip {
-            white-space: nowrap; padding: 8px 18px; border-radius: 50px;
+        .filter-chip {
+            white-space: nowrap; padding: 6px 16px; border-radius: 50px;
             background: var(--bg-light); border: 1px solid var(--border);
-            font-size: 0.85rem; font-weight: 600; cursor: pointer; color: var(--text-muted);
-            transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+            font-size: 0.8rem; font-weight: 600; cursor: pointer; color: var(--text-muted);
         }
-        .chip.active { background: var(--primary); color: white; border-color: var(--primary); }
-        .chip-live { border-color: var(--success); color: var(--success); background: #f0fdf4; }
-        .chip-live.active { background: var(--success); color: white; }
-        .chip-sort { border-color: #bfdbfe; color: var(--primary); background: #eff6ff; }
-
-        /* Main Application Layout */
-        .main-layout { display: flex; flex: 1; overflow: hidden; position: relative; }
+        .filter-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
         
-        /* List Panel */
-        .list-panel { 
-            flex: 1; overflow-y: auto; background: white; border-right: 1px solid var(--border); 
-            z-index: 10; display: flex; flex-direction: column; transition: 0.3s;
-        }
-        .list-header { padding: 20px 20px 10px; position: sticky; top: 0; background: white; z-index: 20; }
-        .list-header h2 { margin: 0; font-size: 1.25rem; color: var(--text-main); font-weight: 800; }
-        #counter { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
+        .live-toggle { background: #ecfdf5; color: var(--success); border: 1px solid #34d399; }
+        .live-toggle.active { background: var(--success); color: white; }
+
+        .main-layout { display: flex; height: calc(100vh - 110px); flex-direction: column-reverse; }
+        .list-panel { flex: 1; overflow-y: auto; padding: 1.25rem; background: white; border-right: 1px solid var(--border); z-index: 10; }
+        .visual-panel { flex: 1.5; background: #0f172a; position: relative; display: flex; flex-direction: column; }
         
-        .results-container { padding: 0 15px 100px; }
-
-        /* Visual (Map) Panel */
-        .visual-panel { flex: 1.6; background: #e5e7eb; position: relative; }
-        #map { width: 100%; height: 100%; }
-
-        /* Place Cards Architecture */
-        .place-card { 
-            padding: 16px; margin-bottom: 15px; border: 1px solid var(--border); 
-            border-radius: 16px; background: white; cursor: pointer; 
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative;
+        #map { position: absolute; top:0; left:0; width:100%; height:100%; }
+        
+        #redo-search {
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            z-index: 20; background: white; color: var(--primary);
+            border: none; padding: 10px 20px; border-radius: 50px;
+            font-weight: 700; font-size: 0.85rem; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: none; cursor: pointer;
         }
-        .place-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.06); }
-        .place-card.active { border: 2px solid var(--primary); background: #f0f7ff; }
+
+        #gps-btn {
+            position: absolute; bottom: 30px; right: 20px;
+            z-index: 20; background: white; border: none;
+            width: 45px; height: 45px; border-radius: 50%;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+        }
+
+        #details-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background:#0f172a; display:none; flex-direction: column; z-index: 30; }
+
+        .place-card { padding: 1rem; margin-bottom: 1rem; border: 1px solid var(--border); border-radius: 12px; background: white; cursor: pointer; transition: 0.2s; position: relative; }
         .place-card.hidden { display: none; }
+        .place-card.active { border: 2.5px solid var(--primary); background: #f0f7ff; }
 
-        .card-body { display: flex; gap: 15px; }
-        .place-thumb { width: 90px; height: 90px; border-radius: 12px; object-fit: cover; background: #f1f5f9; flex-shrink: 0; }
-        
-        .place-info { flex: 1; min-width: 0; }
-        .place-name { display: block; font-size: 1rem; font-weight: 700; color: var(--text-main); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        
-        .rating-box { display: flex; align-items: center; gap: 4px; margin-bottom: 6px; }
-        .stars { color: var(--star); font-size: 0.75rem; }
-        .rating-val { font-size: 0.75rem; font-weight: 700; color: var(--text-main); }
-        .rating-count { font-size: 0.75rem; color: var(--text-muted); }
+        .card-top { display: flex; gap: 12px; margin-bottom: 12px; }
+        .thumb { width: 75px; height: 75px; border-radius: 8px; object-fit: cover; background: #eee; }
+        .info-tags { display: flex; gap: 8px; margin-top: 5px; align-items: center; }
+        .dist-tag { font-size: 0.65rem; color: var(--primary); font-weight: 800; background: #eff6ff; padding: 2px 6px; border-radius: 4px; }
+        .time-tag { font-size: 0.65rem; color: var(--success); font-weight: 700; }
 
-        .meta-row { display: flex; gap: 10px; align-items: center; margin-top: 6px; }
-        .badge-dist { font-size: 0.7rem; font-weight: 700; color: var(--primary); background: #dbeafe; padding: 2px 8px; border-radius: 4px; }
-        
-        .queue-status-bar { 
-            margin-top: 12px; padding: 8px 12px; border-radius: 8px; 
-            font-size: 0.8rem; font-weight: 600; display: flex; justify-content: space-between; align-items: center;
-        }
-        .status-offline { background: #f1f5f9; color: var(--text-muted); }
-        .status-online { background: #d1fae5; color: #065f46; border: 1px solid #34d399; }
-
-        .card-actions { display: flex; gap: 8px; margin-top: 15px; }
-        .btn { 
-            flex: 1; padding: 11px; border-radius: 10px; font-size: 0.75rem; font-weight: 700; 
-            text-align: center; border: none; cursor: pointer; text-decoration: none; transition: 0.2s;
-        }
+        .action-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+        .btn { flex: 1; min-width: 80px; padding: 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 700; text-align: center; cursor: pointer; border: none; text-decoration: none; display: flex; align-items: center; justify-content: center; }
         .btn-join { background: var(--primary); color: white; }
-        .btn-join:hover { background: var(--primary-dark); }
-        .btn-outline { background: white; color: var(--text-main); border: 1px solid var(--border); }
-        .btn-whatsapp { background: #25D366; color: white; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .btn-reg { background: #475569; color: white; line-height: 1.2; }
+        .btn-sec { background: #f1f5f9; color: var(--text-main); border: 1px solid var(--border); }
+        
+        .btn-whatsapp { background: #25D366 !important; color: white !important; gap: 5px; }
+        .btn-whatsapp img { width: 14px; height: 14px; filter: brightness(0) invert(1); }
 
-        /* Map UI Elements */
-        #redo-search { 
-            position: absolute; top: 20px; left: 50%; transform: translateX(-50%); 
-            z-index: 50; background: white; padding: 12px 24px; border-radius: 50px; 
-            border: none; font-weight: 700; font-size: 0.85rem; box-shadow: 0 4px 15px rgba(0,0,0,0.15); 
-            display: none; cursor: pointer; 
-        }
-        #gps-btn { 
-            position: absolute; bottom: 30px; right: 20px; z-index: 50; 
-            background: white; border: none; width: 50px; height: 50px; border-radius: 50%; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2); font-size: 1.4rem; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-        }
+        .q-badge { font-size: 0.7rem; font-weight: 800; padding: 4px 8px; border-radius: 4px; margin-top: 5px; display: inline-block; }
+        .q-online { background: #d1fae5; color: #065f46; border: 1px solid #34d399; }
+        .q-offline { background: #f1f5f9; color: #64748b; }
+        
+        .est-box { font-size: 0.65rem; color: var(--success); margin-top: 4px; line-height: 1.4; }
 
-        /* Detail Overlay (Photos & StreetView) */
-        #details-overlay { 
-            position: absolute; top:0; left:0; width:100%; height:100%; 
-            background: white; display:none; flex-direction: column; z-index: 100; 
-        }
-        .close-overlay { 
-            position: absolute; top: 20px; right: 20px; z-index: 110; 
-            background: rgba(0,0,0,0.5); color: white; border: none; 
-            width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 1.2rem;
-        }
-        #photo-scroller { flex: 1; display: flex; overflow-x: auto; scroll-snap-type: x mandatory; background: #000; }
-        #photo-scroller img { height: 100%; min-width: 100%; object-fit: contain; scroll-snap-align: start; }
-        #street-view-pano { flex: 1; border-top: 4px solid var(--nav-bg); }
+        #photo-strip { flex: 1; display: flex; overflow-x: auto; scroll-snap-type: x mandatory; }
+        #photo-strip img { height: 100%; min-width: 100%; object-fit: cover; scroll-snap-align: start; }
+        #mini-pano { flex: 1; border-top: 2px solid #1e293b; }
 
-        /* Responsive Adjustments */
-        @media (max-width: 768px) {
-            .main-layout { flex-direction: column-reverse; }
-            .visual-panel { height: 35vh; flex: none; }
-            .list-panel { flex: 1; }
-            .nav-links { display: none; }
-        }
+        @media (min-width: 769px) { .main-layout { flex-direction: row; } .list-panel { max-width: 400px; } }
     </style>
 </head>
 <body>
 
-    <div id="notif-banner" style="display:none; background:#dbeafe; padding:10px; text-align:center; font-size:0.8rem; font-weight:600; color:var(--primary);">
-        🔔 Alerts enabled. We'll buzz you when you're next!
-    </div>
-
     <nav class="navbar">
-        <div class="nav-content">
-            <a href="index.html" class="logo">skipQs</a>
-            <div class="nav-links">
-                <a href="dashboard.html">My Visits</a>
-                <a href="login.html" style="background:rgba(255,255,255,0.15); padding:8px 16px; border-radius:8px;">Business Login</a>
-            </div>
-        </div>
-        <div class="search-bar-wrapper">
-            <i class="fas fa-search search-icon"></i>
-            <input type="text" id="location-search" placeholder="Search city, area, or street name...">
+        <a href="index.html" class="logo">skipQs</a>
+        <div>
+            <a href="dashboard.html" style="color:white; text-decoration:none; font-size:0.85rem; margin-right:15px;">My Visits</a>
+            <a href="login.html" style="color:white; text-decoration:none; font-size:0.85rem; font-weight:600; background:rgba(255,255,255,0.2); padding:6px 12px; border-radius:6px;">Login</a>
         </div>
     </nav>
 
-    <div class="interaction-bar">
-        <div class="chip chip-live" id="toggleLive" onclick="uiToggleLive()">⚡ Live Queues</div>
-        <div class="chip chip-sort" id="sortWait" onclick="uiSortByWait()"><i class="fas fa-clock"></i> Shortest Wait</div>
-        <div style="border-left: 1px solid #ddd; height: 20px; margin: 0 5px;"></div>
-        <div class="chip active" data-type="salon">💇‍♀️ Salons</div>
-        <div class="chip" data-type="dining">🍽️ Dining</div>
-        <div class="chip" data-type="clinic">🏥 Health</div>
-        <div class="chip" data-type="banking">🏦 Banks</div>
-        <div class="chip" data-type="repair">🛠️ Repairs</div>
+    <div class="service-filter-bar" id="filterBar">
+        <div class="filter-chip live-toggle" id="toggleLive" onclick="toggleLiveOnly()">⚡ Live Only</div>
+        <div style="border-left: 1px solid #eee; height: 20px; margin: 0 5px;"></div>
+        <div class="filter-chip" data-type="salon">💇‍♀️ Salons</div>
+        <div class="filter-chip" data-type="dining">🍽️ Dining</div>
+        <div class="filter-chip" data-type="clinic">🏥 Clinics</div>
+        <div class="filter-chip" data-type="banking">🏦 Banking</div>
+        <div class="filter-chip" data-type="gym">🏋️ Gyms</div>
+        <div class="filter-chip" data-type="repair">🛠️ Repairs</div>
+        <div class="filter-chip" data-type="gov">🏛️ Gov</div>
+        <div class="filter-chip" data-type="wash">🧼 Wash</div>
     </div>
 
     <div class="main-layout">
         <div class="list-panel">
-            <div class="list-header">
-                <h2 id="title">Nearby Salons</h2>
-                <div id="counter">Finding local spots...</div>
-            </div>
-            <div id="results" class="results-container">
-                </div>
+            <h2 id="title" style="margin:0; font-size:1.2rem;">Nearby Services</h2>
+            <p id="counter" style="font-size:0.7rem; color:var(--text-muted); margin-bottom:1rem;">Locating area...</p>
+            <div id="results"></div>
         </div>
 
         <div class="visual-panel">
-            <button id="redo-search" onclick="actionRedoSearch()">🔄 Search this area</button>
-            <button id="gps-btn" onclick="actionTryGPS()"><i class="fas fa-crosshairs"></i></button>
+            <button id="redo-search" onclick="redoSearch()">🔄 Search this area</button>
+            <button id="gps-btn" onclick="tryGPS()" title="Find my location">🎯</button>
             <div id="map"></div>
-            
             <div id="details-overlay">
-                <button class="close-overlay" onclick="uiCloseDetails()">✕</button>
-                <div id="photo-scroller"></div>
-                <div id="street-view-pano"></div>
+                <button onclick="closeDetails()" style="position:absolute; top:15px; right:15px; z-index:40; background:rgba(0,0,0,0.7); color:white; border:none; border-radius:50%; width:35px; height:35px; cursor:pointer;">✕</button>
+                <div id="photo-strip"></div>
+                <div id="mini-pano"></div>
             </div>
         </div>
     </div>
@@ -210,324 +136,246 @@
     <script src="firebase-config.js"></script>
 
     <script>
-        /**
-         * GLOBAL STATE & CONFIG
-         */
         const db = firebase.firestore();
-        let map, placesService, autocomplete, userLocation;
-        let markers = [];
-        let currentPlacesData = [];
-        let activeListeners = []; // To clean up Firebase listeners on new search
+        const params = new URLSearchParams(window.location.search);
         
-        let filterServiceType = 'salon';
-        let filterLiveOnly = false;
+        let serviceType = params.get("type") || 'salon';
+        let searchQuery = params.get("q") || '';
+        let locationQuery = params.get("l") || '';
+        let liveOnly = false;
 
-        const SERVICE_DEFS = {
-            salon: { type: "hair_care", keyword: "barber hair salon styling", label: "Salons", avgTime: 20 },
-            dining: { type: "restaurant", keyword: "food restaurant cafe eatery", label: "Dining", avgTime: 15 },
-            clinic: { type: "health", keyword: "clinic doctor medical dental", label: "Health", avgTime: 30 },
-            banking: { type: "bank", keyword: "bank atm finance", label: "Banking", avgTime: 12 },
-            repair: { type: "car_repair", keyword: "mechanic repair garage", label: "Repairs", avgTime: 45 }
+        const SERVICE_MAP = {
+            salon: { type: "hair_care", keyword: "salon barber hair styling hairdresser beautician beauty parlor unisex haircut fade shave nail cut spa", label: "Salons & Barbers", avgTime: 20 },
+            dining: { type: "restaurant", keyword: "restaurant cafe eatery dining bistro food gastropub steakhouse pizzeria buffet takeaway grill kitchen", label: "Restaurants & Dining", avgTime: 15 },
+            clinic: { type: "health", keyword: "clinic doctor medical dental pharmacy surgery health center physician specialist dentist hospital", label: "Clinics & Health", avgTime: 25 },
+            banking: { type: "bank", keyword: "bank atm financial services credit union finance money transfer exchange", label: "Banking & Finance", avgTime: 10 },
+            gym: { type: "fitness_center", keyword: "gym fitness center workout yoga studio crossfit health club exercise pilates", label: "Gyms & Fitness", avgTime: 0 },
+            repair: { type: "car_repair", keyword: "auto repair mechanic electronics repair handyman phone repair plumber electrician garage", label: "Repairs & Services", avgTime: 45 },
+            gov: { type: "local_government_office", keyword: "government office post office town hall embassy court library municipal", label: "Gov & Public Services", avgTime: 20 },
+            wash: { type: "car_wash", keyword: "car wash laundry dry cleaning laundromat cleaning services detailer", label: "Wash & Laundry", avgTime: 15 }
         };
 
-        /**
-         * MAP & SEARCH INITIALIZATION
-         */
-        function initMap() {
-            // Setup Autocomplete Search
-            const searchInput = document.getElementById("location-search");
-            autocomplete = new google.maps.places.Autocomplete(searchInput, {
-                fields: ["geometry", "name"]
-            });
-            
-            autocomplete.addListener("place_changed", () => {
-                const place = autocomplete.getPlace();
-                if (place.geometry && place.geometry.location) {
-                    userLocation = place.geometry.location;
-                    map.setCenter(userLocation);
-                    map.setZoom(15);
-                    executePlacesSearch();
-                }
-            });
+        let map, placesService, userLocation, markers = [];
 
-            // Get User Location
+        document.querySelectorAll('.filter-chip[data-type]').forEach(chip => {
+            if(chip.dataset.type === serviceType) chip.classList.add('active');
+            chip.onclick = () => {
+                document.querySelectorAll('.filter-chip[data-type]').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+                serviceType = chip.dataset.type;
+                document.getElementById("title").innerText = SERVICE_MAP[serviceType].label;
+                executePlacesSearch();
+            };
+        });
+
+        function toggleLiveOnly() {
+            liveOnly = !liveOnly;
+            document.getElementById('toggleLive').classList.toggle('active', liveOnly);
+            applyLiveFilter();
+        }
+
+        function applyLiveFilter() {
+            const cards = document.querySelectorAll('.place-card');
+            let visibleCount = 0;
+            cards.forEach(card => {
+                const isLive = card.getAttribute('data-live') === 'true';
+                if (liveOnly && !isLive) card.classList.add('hidden');
+                else { card.classList.remove('hidden'); visibleCount++; }
+            });
+            document.getElementById("counter").innerText = `Showing ${visibleCount} results.`;
+        }
+
+        function initMap() {
+            if (locationQuery && locationQuery.trim() !== "" && locationQuery.toLowerCase() !== "near me") {
+                new google.maps.Geocoder().geocode({ address: locationQuery }, (results, status) => {
+                    if (status === "OK") { 
+                        userLocation = results[0].geometry.location; 
+                        setupMap(); 
+                    } else { tryGPS(); }
+                });
+            } else { tryGPS(); }
+        }
+
+        function tryGPS() {
             if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (pos) => {
-                        userLocation = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
-                        startApp();
-                    },
-                    () => {
-                        userLocation = new google.maps.LatLng(51.5074, -0.1278); // London Fallback
-                        startApp();
-                    },
-                    { enableHighAccuracy: true }
-                );
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    userLocation = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+                    if (map) { 
+                        map.setCenter(userLocation); 
+                        executePlacesSearch(); 
+                    } else { setupMap(); }
+                }, () => {
+                    userLocation = new google.maps.LatLng(53.4808, -2.2426); // Default Manchester
+                    setupMap();
+                });
             }
         }
 
-        function startApp() {
-            map = new google.maps.Map(document.getElementById("map"), {
-                center: userLocation,
-                zoom: 14,
+        function setupMap() {
+            map = new google.maps.Map(document.getElementById("map"), { 
+                center: userLocation, 
+                zoom: 14, 
                 disableDefaultUI: true,
-                clickableIcons: false,
-                styles: [ { "featureType": "poi.business", "stylers": [{ "visibility": "off" }] } ] // Clean map
+                gestureHandling: "greedy" 
             });
-
+            
             placesService = new google.maps.places.PlacesService(map);
 
-            map.addListener('dragend', () => {
-                document.getElementById('redo-search').style.display = 'block';
+            map.addListener('dragend', () => { 
+                document.getElementById('redo-search').style.display = 'flex'; 
             });
-
+            
             executePlacesSearch();
         }
 
-        /**
-         * CORE SEARCH LOGIC
-         */
-        function executePlacesSearch() {
-            // Cleanup
-            markers.forEach(m => m.setMap(null));
-            markers = [];
-            activeListeners.forEach(unsub => unsub());
-            activeListeners = [];
-            
-            const config = SERVICE_DEFS[filterServiceType];
-            const request = {
-                location: userLocation,
-                radius: '3500', // Meter radius
-                type: [config.type],
-                keyword: config.keyword
-            };
-
-            placesService.nearbySearch(request, (results, status) => {
-                const container = document.getElementById("results");
-                if (status === google.maps.places.PlacesServiceStatus.OK) {
-                    linkFirebaseData(results);
-                } else {
-                    container.innerHTML = `<div style="text-align:center; padding:40px;">
-                        <i class="fas fa-search-minus" style="font-size:3rem; color:#cbd5e1; margin-bottom:15px;"></i>
-                        <p>No ${config.label} found here. Try moving the map.</p>
-                    </div>`;
-                    document.getElementById("counter").innerText = "0 results found.";
-                }
-            });
-        }
-
-        /**
-         * FIREBASE INTEGRATION (The Real-time Engine)
-         */
-        async function linkFirebaseData(googleResults) {
-            currentPlacesData = googleResults.map(place => ({
-                ...place,
-                waitTime: 999, // Unknown/Offline default
-                queueCount: 0,
-                isLive: false,
-                firebaseId: null,
-                phone: null
-            }));
-
-            renderList(); // Initial render with Google data
-
-            // Subscribing to Real-time updates for each place
-            currentPlacesData.forEach((place, index) => {
-                const unsub = db.collection('providers')
-                    .where('googlePlaceId', '==', place.place_id)
-                    .onSnapshot(snapshot => {
-                        if (!snapshot.empty) {
-                            const doc = snapshot.docs[0];
-                            const data = doc.data();
-                            
-                            // Update our local state
-                            currentPlacesData[index].isLive = true;
-                            currentPlacesData[index].firebaseId = doc.id;
-                            currentPlacesData[index].queueCount = data.queueCount || 0;
-                            currentPlacesData[index].phone = data.phone || '';
-                            currentPlacesData[index].waitTime = (data.queueCount || 0) * SERVICE_DEFS[filterServiceType].avgTime;
-                            
-                            updateSingleCardUI(index);
-                        }
-                    });
-                activeListeners.push(unsub);
-            });
-        }
-
-        /**
-         * UI RENDERING
-         */
-        function renderList() {
-            const container = document.getElementById("results");
-            container.innerHTML = "";
-            let visibleCount = 0;
-
-            currentPlacesData.forEach((place, i) => {
-                if (filterLiveOnly && !place.isLive) return;
-                visibleCount++;
-
-                // Map Marker
-                const marker = new google.maps.Marker({
-                    position: place.geometry.location,
-                    map: map,
-                    animation: google.maps.Animation.DROP,
-                    label: { text: (i + 1).toString(), color: "white", fontWeight: "bold" }
-                });
-                markers.push(marker);
-
-                // Distance Calc
-                const dist = (google.maps.geometry.spherical.computeDistanceBetween(userLocation, place.geometry.location) * 0.000621371).toFixed(1);
-
-                // Rating Stars
-                let starsHtml = "";
-                const rating = place.rating || 0;
-                for(let s=1; s<=5; s++) {
-                    starsHtml += `<i class="${s <= Math.floor(rating) ? 'fas' : 'far'} fa-star"></i> `;
-                }
-
-                const card = document.createElement('div');
-                card.className = 'place-card';
-                card.id = `card-${i}`;
-                card.innerHTML = `
-                    <div onclick="uiSelectPlace(${i}, '${place.place_id}', ${place.geometry.location.lat()}, ${place.geometry.location.lng()})">
-                        <div class="card-body">
-                            <img src="${place.photos ? place.photos[0].getUrl({maxWidth: 200}) : 'https://via.placeholder.com/200'}" class="place-thumb">
-                            <div class="place-info">
-                                <span class="place-name">${place.name}</span>
-                                <div class="rating-box">
-                                    <span class="stars">${starsHtml}</span>
-                                    <span class="rating-val">${rating}</span>
-                                    <span class="rating-count">(${place.user_ratings_total || 0})</span>
-                                </div>
-                                <div class="meta-row">
-                                    <span class="badge-dist"><i class="fas fa-map-marker-alt"></i> ${dist} mi</span>
-                                </div>
-                                <div id="status-box-${i}" class="queue-status-bar status-offline">
-                                    <span>No Live Queue</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-actions" id="actions-${i}">
-                        <a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(place.name)}&destination_place_id=${place.place_id}" target="_blank" class="btn btn-outline">Directions</a>
-                        <button onclick="uiOpenBusinessRegister()" class="btn btn-outline" style="font-size:0.6rem; line-height:1">OWNER?<br>CLAIM</button>
-                    </div>
-                `;
-                container.appendChild(card);
-                
-                // If it was already marked live (from a re-render), update the box immediately
-                if(place.isLive) updateSingleCardUI(i);
-            });
-
-            document.getElementById("counter").innerText = `Found ${visibleCount} spots near you.`;
-        }
-
-        function updateSingleCardUI(index) {
-            const place = currentPlacesData[index];
-            const statusBox = document.getElementById(`status-box-${index}`);
-            const actionBox = document.getElementById(`actions-${index}`);
-            if (!statusBox) return;
-
-            statusBox.className = "queue-status-bar status-online";
-            statusBox.innerHTML = `
-                <span><i class="fas fa-bolt"></i> Live Queue</span>
-                <span>${place.queueCount} in line (~${place.waitTime}m)</span>
-            `;
-
-            // Update Actions
-            let waHtml = "";
-            if (place.phone) {
-                const cleanPhone = place.phone.toString().replace(/\D/g, '');
-                waHtml = `<a href="https://wa.me/${cleanPhone}?text=Hi, I am joining your queue via skipQs" target="_blank" class="btn btn-whatsapp"><i class="fab fa-whatsapp"></i> Chat</a>`;
-            }
-
-            actionBox.innerHTML = `
-                <a href="https://www.google.com/maps/dir/?api=1&destination_place_id=${place.place_id}" target="_blank" class="btn btn-outline">Directions</a>
-                ${waHtml}
-                <button onclick="actionJoinQueue('${place.name}', '${place.firebaseId}')" class="btn btn-join">JOIN QUEUE</button>
-            `;
-        }
-
-        /**
-         * USER ACTIONS & INTERACTIVITY
-         */
-        function uiToggleLive() {
-            filterLiveOnly = !filterLiveOnly;
-            document.getElementById('toggleLive').classList.toggle('active', filterLiveOnly);
-            renderList();
-        }
-
-        function uiSortByWait() {
-            currentPlacesData.sort((a, b) => a.waitTime - b.waitTime);
-            renderList();
-        }
-
-        function actionJoinQueue(name, id) {
-            // Request Notification Permission
-            if ("Notification" in window && Notification.permission !== "granted") {
-                Notification.requestPermission().then(p => {
-                    if(p === 'granted') document.getElementById('notif-banner').style.display = 'block';
-                });
-            }
-            // Navigate to join page
-            window.location.href = `join-queue.html?id=${id}`;
-        }
-
-        function uiSelectPlace(index, pid, lat, lng) {
-            document.querySelectorAll('.place-card').forEach(c => c.classList.remove('active'));
-            document.getElementById(`card-${index}`).classList.add('active');
-            
-            const overlay = document.getElementById('details-overlay');
-            overlay.style.display = 'flex';
-
-            // Load Photos
-            placesService.getDetails({ placeId: pid, fields: ['photos'] }, (details) => {
-                const scroller = document.getElementById('photo-scroller');
-                if (details && details.photos) {
-                    scroller.innerHTML = details.photos.map(p => `<img src="${p.getUrl({maxWidth: 1000})}">`).join('');
-                }
-            });
-
-            // Load Street View
-            setTimeout(() => {
-                new google.maps.StreetViewPanorama(document.getElementById("street-view-pano"), {
-                    position: { lat, lng },
-                    pov: { heading: 160, pitch: 0 },
-                    addressControl: false
-                });
-            }, 200);
-        }
-
-        function actionRedoSearch() {
+        function redoSearch() {
             document.getElementById('redo-search').style.display = 'none';
             userLocation = map.getCenter();
             executePlacesSearch();
         }
 
-        function actionTryGPS() {
-            navigator.geolocation.getCurrentPosition(pos => {
-                userLocation = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
-                map.setCenter(userLocation);
-                executePlacesSearch();
+        function executePlacesSearch() {
+            if(!placesService) return;
+
+            // FIX 1: Explicitly clear old markers so the search can refresh properly
+            markers.forEach(m => m.setMap(null));
+            markers = [];
+            
+            const config = SERVICE_MAP[serviceType];
+            const request = {
+                location: userLocation,
+                rankBy: google.maps.places.RankBy.DISTANCE,
+                type: config.type,
+                keyword: searchQuery ? `${searchQuery} ${config.keyword}` : config.keyword
+            };
+
+            placesService.nearbySearch(request, (results, status) => {
+                if (status === google.maps.places.PlacesServiceStatus.OK) {
+                    renderList(results);
+                } else {
+                    document.getElementById("results").innerHTML = "<p style='padding:20px;'>No results found in this area.</p>";
+                    document.getElementById("counter").innerText = "0 results found.";
+                }
             });
         }
 
-        function uiCloseDetails() { document.getElementById('details-overlay').style.display = 'none'; }
-        
-        function uiOpenBusinessRegister() { window.location.href = 'provider-signup.html'; }
+        function renderList(results) {
+            const container = document.getElementById("results");
+            container.innerHTML = "";
+            const currentConfig = SERVICE_MAP[serviceType];
 
-        // Filter Chip Listeners
-        document.querySelectorAll('.chip[data-type]').forEach(chip => {
-            chip.onclick = () => {
-                document.querySelectorAll('.chip[data-type]').forEach(c => c.classList.remove('active'));
-                chip.classList.add('active');
-                filterServiceType = chip.dataset.type;
-                document.getElementById('title').innerText = `Nearby ${SERVICE_DEFS[filterServiceType].label}`;
-                executePlacesSearch();
-            };
-        });
+            results.forEach((place, i) => {
+                const rawDist = google.maps.geometry.spherical.computeDistanceBetween(userLocation, place.geometry.location);
+                const miles = (rawDist * 0.000621371).toFixed(1);
+                const driveTime = Math.round((miles / 12) * 60) + 2; 
+                const thumb = place.photos ? place.photos[0].getUrl({maxWidth: 150}) : 'https://via.placeholder.com/150';
 
+                const marker = new google.maps.Marker({
+                    position: place.geometry.location, 
+                    map: map, 
+                    label: { text: (i+1).toString(), color: "white" }
+                });
+                markers.push(marker);
+
+                const card = document.createElement('div');
+                card.className = 'place-card';
+                card.id = `card-${i}`;
+                card.setAttribute('data-live', 'false');
+                
+                // FIX 2: Corrected the backtick syntax and removed the typo "0"
+                const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${place.geometry.location.lat()},${place.geometry.location.lng()}&destination_place_id=${place.place_id}`;
+
+                card.innerHTML = `
+                    <div onclick="selectPlace(${i}, '${place.place_id}', ${place.geometry.location.lat()}, ${place.geometry.location.lng()})">
+                        <div class="card-top">
+                            <img src="${thumb}" class="thumb">
+                            <div style="flex:1">
+                                <strong style="font-size:0.95rem;">${place.name}</strong>
+                                <div class="info-tags">
+                                    <span class="dist-tag">${miles} mi</span>
+                                    <span class="time-tag">🚗 ${driveTime} min drive</span>
+                                </div>
+                                <span style="font-size:0.75rem; color:var(--text-muted);">${place.vicinity}</span>
+                                <div id="status-${i}" class="q-badge q-offline">Checking Status...</div>
+                                <div id="est-${i}" class="est-box"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="action-row" id="actions-${i}">
+                         <a href="${mapsUrl}" target="_blank" class="btn btn-sec">Directions</a>
+                    </div>
+                `;
+                container.appendChild(card);
+
+                db.collection('providers').where('googlePlaceId', '==', place.place_id).get().then(snap => {
+                    const statusDiv = document.getElementById(`status-${i}`);
+                    const estDiv = document.getElementById(`est-${i}`);
+                    const actionDiv = document.getElementById(`actions-${i}`);
+
+                    if (!snap.empty) {
+                        const d = snap.docs[0].data();
+                        const count = d.queueCount || 0;
+                        const providerId = snap.docs[0].id;
+                        const phoneRaw = d.phone; 
+                        
+                        card.setAttribute('data-live', 'true');
+                        const waitMins = count * currentConfig.avgTime;
+                        const serviceTime = new Date(new Date().getTime() + waitMins * 60000);
+                        const timeStr = serviceTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                        statusDiv.className = "q-badge q-online";
+                        statusDiv.innerText = `LIVE: ${count} in line`;
+                        
+                        if(currentConfig.avgTime > 0) {
+                            estDiv.innerHTML = `⌛ Wait: <b>~${waitMins}m</b> • Service at <b>${timeStr}</b>`;
+                        }
+
+                        let whatsappHtml = "";
+                        if (phoneRaw) {
+                            const cleanPhone = phoneRaw.toString().replace(/\D/g, '');
+                            const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent("Hi " + place.name + ", I'm interested in joining your queue via skipQs.")}`;
+                            whatsappHtml = `<a href="${waUrl}" target="_blank" class="btn btn-whatsapp"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"> Chat</a>`;
+                        }
+
+                        actionDiv.innerHTML = `
+                            <a href="${mapsUrl}" target="_blank" class="btn btn-sec">Directions</a>
+                            ${whatsappHtml}
+                            <button onclick="window.location.href='join-queue.html?id=${providerId}'" class="btn btn-join">JOIN QUEUE</button>
+                        `;
+                    } else {
+                        statusDiv.innerText = "No Live Queue";
+                        actionDiv.innerHTML += `<button onclick="window.location.href='provider-signup.html'" class="btn btn-reg">BUSINESS OWNER?<br>REGISTER FREE</button>`;
+                    }
+                    if(liveOnly) applyLiveFilter();
+                });
+            });
+            document.getElementById("counter").innerText = `Found ${results.length} results nearby.`;
+        }
+
+        function selectPlace(index, pid, lat, lng) {
+            document.querySelectorAll('.place-card').forEach(c => c.classList.remove('active'));
+            document.getElementById(`card-${index}`).classList.add('active');
+            document.getElementById('details-overlay').style.display = 'flex';
+            
+            placesService.getDetails({ placeId: pid, fields: ['photos'] }, (details) => {
+                const strip = document.getElementById('photo-strip');
+                if (details && details.photos) {
+                    strip.innerHTML = details.photos.slice(0, 5).map(p => `<img src="${p.getUrl({maxWidth: 800})}">`).join('');
+                }
+            });
+            
+            setTimeout(() => {
+                new google.maps.StreetViewPanorama(document.getElementById("mini-pano"), {
+                    position: { lat, lng }, 
+                    pov: { heading: 165, pitch: 0 }, 
+                    zoom: 1, 
+                    addressControl: false
+                });
+            }, 100);
+        }
+
+        function closeDetails() { document.getElementById('details-overlay').style.display = 'none'; }
     </script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY_HERE&libraries=places,geometry&callback=initMap" async defer></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAJFGE5OFfn-OhDNJ_rWO5oi2d2CHl2fXE&libraries=places,geometry&callback=initMap" async defer></script>
 </body>
 </html>
