@@ -70,7 +70,7 @@
         .action-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
         .btn { flex: 1; min-width: 80px; padding: 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 700; text-align: center; cursor: pointer; border: none; text-decoration: none; display: flex; align-items: center; justify-content: center; }
         .btn-join { background: var(--primary); color: white; }
-        .btn-reg { background: #475569; color: white; line-height: 1.2; }
+        .btn-reg { background: #475569; color: white; line-height: 1.2; font-size: 0.6rem; text-align: center; }
         .btn-sec { background: #f1f5f9; color: var(--text-main); border: 1px solid var(--border); }
         
         .btn-whatsapp { background: #25D366 !important; color: white !important; gap: 5px; }
@@ -151,7 +151,7 @@
             banking: { type: "bank", keyword: "bank atm financial services credit union finance money transfer exchange", label: "Banking & Finance", avgTime: 10 },
             gym: { type: "fitness_center", keyword: "gym fitness center workout yoga studio crossfit health club exercise pilates", label: "Gyms & Fitness", avgTime: 0 },
             repair: { type: "car_repair", keyword: "auto repair mechanic electronics repair handyman phone repair plumber electrician garage", label: "Repairs & Services", avgTime: 45 },
-            gov: { type: "local_government_office", keyword: "government office post office town hall embassy court library municipal", label: "Gov & Public Services", avgTime: 20 },
+            gov: { type: "local_government_office", keyword: "government office post office town hall embassy court library municipal aadhar card center", label: "Gov & Public Services", avgTime: 20 },
             wash: { type: "car_wash", keyword: "car wash laundry dry cleaning laundromat cleaning services detailer", label: "Wash & Laundry", avgTime: 15 }
         };
 
@@ -205,7 +205,7 @@
                         executePlacesSearch(); 
                     } else { setupMap(); }
                 }, () => {
-                    userLocation = new google.maps.LatLng(53.4808, -2.2426); // Default Manchester
+                    userLocation = new google.maps.LatLng(12.9716, 77.5946); // Default
                     setupMap();
                 });
             }
@@ -220,11 +220,9 @@
             });
             
             placesService = new google.maps.places.PlacesService(map);
-
             map.addListener('dragend', () => { 
                 document.getElementById('redo-search').style.display = 'flex'; 
             });
-            
             executePlacesSearch();
         }
 
@@ -236,8 +234,6 @@
 
         function executePlacesSearch() {
             if(!placesService) return;
-
-            // FIX 1: Explicitly clear old markers so the search can refresh properly
             markers.forEach(m => m.setMap(null));
             markers = [];
             
@@ -245,8 +241,9 @@
             const request = {
                 location: userLocation,
                 rankBy: google.maps.places.RankBy.DISTANCE,
-                type: config.type,
-                keyword: searchQuery ? `${searchQuery} ${config.keyword}` : config.keyword
+                // If there's a custom search "q", we use it, otherwise use the filter's keywords
+                keyword: searchQuery ? searchQuery : config.keyword,
+                type: searchQuery ? undefined : config.type // Allow broad search if specific text is provided
             };
 
             placesService.nearbySearch(request, (results, status) => {
@@ -282,7 +279,7 @@
                 card.id = `card-${i}`;
                 card.setAttribute('data-live', 'false');
                 
-                // FIX 2: Corrected the backtick syntax and removed the typo "0"
+                // FIXED DIRECTIONS URL
                 const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${place.geometry.location.lat()},${place.geometry.location.lng()}&destination_place_id=${place.place_id}`;
 
                 card.innerHTML = `
@@ -296,13 +293,14 @@
                                     <span class="time-tag">🚗 ${driveTime} min drive</span>
                                 </div>
                                 <span style="font-size:0.75rem; color:var(--text-muted);">${place.vicinity}</span>
-                                <div id="status-${i}" class="q-badge q-offline">Checking Status...</div>
+                                <div id="status-${i}" class="q-badge q-offline">No Live Queue</div>
                                 <div id="est-${i}" class="est-box"></div>
                             </div>
                         </div>
                     </div>
                     <div class="action-row" id="actions-${i}">
                          <a href="${mapsUrl}" target="_blank" class="btn btn-sec">Directions</a>
+                         <button onclick="window.location.href='provider-signup.html'" class="btn btn-reg">BUSINESS OWNER?<br>REGISTER FREE</button>
                     </div>
                 `;
                 container.appendChild(card);
@@ -333,7 +331,7 @@
                         let whatsappHtml = "";
                         if (phoneRaw) {
                             const cleanPhone = phoneRaw.toString().replace(/\D/g, '');
-                            const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent("Hi " + place.name + ", I'm interested in joining your queue via skipQs.")}`;
+                            const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent("Hi " + place.name + ", I'm interested in joining your queue.")}`;
                             whatsappHtml = `<a href="${waUrl}" target="_blank" class="btn btn-whatsapp"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"> Chat</a>`;
                         }
 
@@ -342,9 +340,6 @@
                             ${whatsappHtml}
                             <button onclick="window.location.href='join-queue.html?id=${providerId}'" class="btn btn-join">JOIN QUEUE</button>
                         `;
-                    } else {
-                        statusDiv.innerText = "No Live Queue";
-                        actionDiv.innerHTML += `<button onclick="window.location.href='provider-signup.html'" class="btn btn-reg">BUSINESS OWNER?<br>REGISTER FREE</button>`;
                     }
                     if(liveOnly) applyLiveFilter();
                 });
@@ -361,6 +356,8 @@
                 const strip = document.getElementById('photo-strip');
                 if (details && details.photos) {
                     strip.innerHTML = details.photos.slice(0, 5).map(p => `<img src="${p.getUrl({maxWidth: 800})}">`).join('');
+                } else {
+                    strip.innerHTML = "<p style='color:white; padding:20px;'>No photos available</p>";
                 }
             });
             
