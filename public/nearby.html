@@ -121,7 +121,7 @@
 
         <div class="visual-panel">
             <button id="redo-search" onclick="redoSearch()">🔄 Search this area</button>
-            <button id="gps-btn" onclick="tryGPS()" title="Find my location">🎯</button>
+            <button id="gps-btn" onclick="forceGPS()" title="Find my location">🎯</button>
             <div id="map"></div>
             <div id="details-overlay">
                 <button onclick="closeDetails()" style="position:absolute; top:15px; right:15px; z-index:40; background:rgba(0,0,0,0.7); color:white; border:none; border-radius:50%; width:35px; height:35px; cursor:pointer;">✕</button>
@@ -145,14 +145,14 @@
         let liveOnly = false;
 
         const SERVICE_MAP = {
-            salon: { type: "hair_care", keyword: "salon barber hair styling hairdresser beautician beauty parlor unisex haircut fade shave nail cut spa", label: "Salons & Barbers", avgTime: 20 },
-            dining: { type: "restaurant", keyword: "restaurant cafe eatery dining bistro food gastropub steakhouse pizzeria buffet takeaway grill kitchen", label: "Restaurants & Dining", avgTime: 15 },
-            clinic: { type: "health", keyword: "clinic doctor medical dental pharmacy surgery health center physician specialist dentist hospital", label: "Clinics & Health", avgTime: 25 },
-            banking: { type: "bank", keyword: "bank atm financial services credit union finance money transfer exchange", label: "Banking & Finance", avgTime: 10 },
-            gym: { type: "fitness_center", keyword: "gym fitness center workout yoga studio crossfit health club exercise pilates", label: "Gyms & Fitness", avgTime: 0 },
-            repair: { type: "car_repair", keyword: "auto repair mechanic electronics repair handyman phone repair plumber electrician garage", label: "Repairs & Services", avgTime: 45 },
-            gov: { type: "local_government_office", keyword: "government office post office town hall embassy court library municipal aadhar card center", label: "Gov & Public Services", avgTime: 20 },
-            wash: { type: "car_wash", keyword: "car wash laundry dry cleaning laundromat cleaning services detailer", label: "Wash & Laundry", avgTime: 15 }
+            salon: { type: "hair_care", keyword: "salon barber hair hairdresser beauty parlor spa", label: "Salons & Barbers", avgTime: 20 },
+            dining: { type: "restaurant", keyword: "restaurant cafe eatery food", label: "Restaurants & Dining", avgTime: 15 },
+            clinic: { type: "health", keyword: "clinic doctor medical pharmacy hospital", label: "Clinics & Health", avgTime: 25 },
+            banking: { type: "bank", keyword: "bank atm finance", label: "Banking & Finance", avgTime: 10 },
+            gym: { type: "fitness_center", keyword: "gym fitness yoga", label: "Gyms & Fitness", avgTime: 0 },
+            repair: { type: "car_repair", keyword: "repair mechanic handyman plumber", label: "Repairs & Services", avgTime: 45 },
+            gov: { type: "local_government_office", keyword: "government post office municipal", label: "Gov & Public Services", avgTime: 20 },
+            wash: { type: "car_wash", keyword: "car wash laundry cleaning", label: "Wash & Laundry", avgTime: 15 }
         };
 
         let map, placesService, userLocation, markers = [];
@@ -186,43 +186,67 @@
         }
 
         function initMap() {
+            // Check if Search Input 'l' exists first
             if (locationQuery && locationQuery.trim() !== "" && locationQuery.toLowerCase() !== "near me") {
-                new google.maps.Geocoder().geocode({ address: locationQuery }, (results, status) => {
+                const geocoder = new google.maps.Geocoder();
+                geocoder.geocode({ address: locationQuery }, (results, status) => {
                     if (status === "OK") { 
                         userLocation = results[0].geometry.location; 
                         setupMap(); 
-                    } else { tryGPS(); }
+                    } else { 
+                        console.error("Geocoding failed, trying GPS...");
+                        tryGPS(); 
+                    }
                 });
-            } else { tryGPS(); }
+            } else {
+                tryGPS();
+            }
         }
 
         function tryGPS() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition((pos) => {
                     userLocation = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
-                    if (map) { 
-                        map.setCenter(userLocation); 
-                        executePlacesSearch(); 
-                    } else { setupMap(); }
-                }, () => {
-                    userLocation = new google.maps.LatLng(12.9716, 77.5946); // Default
                     setupMap();
+                }, () => {
+                    handleLocationError();
+                });
+            } else {
+                handleLocationError();
+            }
+        }
+
+        function forceGPS() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    userLocation = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+                    map.setCenter(userLocation);
+                    executePlacesSearch();
                 });
             }
         }
 
+        function handleLocationError() {
+            userLocation = new google.maps.LatLng(17.3850, 78.4867); // Hyderabad Default
+            setupMap();
+        }
+
         function setupMap() {
-            map = new google.maps.Map(document.getElementById("map"), { 
-                center: userLocation, 
-                zoom: 14, 
-                disableDefaultUI: true,
-                gestureHandling: "greedy" 
-            });
-            
-            placesService = new google.maps.places.PlacesService(map);
-            map.addListener('dragend', () => { 
-                document.getElementById('redo-search').style.display = 'flex'; 
-            });
+            if (!map) {
+                map = new google.maps.Map(document.getElementById("map"), { 
+                    center: userLocation, 
+                    zoom: 14, 
+                    disableDefaultUI: true,
+                    gestureHandling: "greedy" 
+                });
+                
+                placesService = new google.maps.places.PlacesService(map);
+                map.addListener('dragend', () => { 
+                    document.getElementById('redo-search').style.display = 'flex'; 
+                });
+            } else {
+                map.setCenter(userLocation);
+            }
             executePlacesSearch();
         }
 
@@ -238,19 +262,21 @@
             markers = [];
             
             const config = SERVICE_MAP[serviceType];
+            
+            // Priority Logic: Use URL search keyword if present, otherwise use filter keywords
+            const finalKeyword = searchQuery ? `${searchQuery} ${config.keyword}` : config.keyword;
+
             const request = {
                 location: userLocation,
-                rankBy: google.maps.places.RankBy.DISTANCE,
-                // If there's a custom search "q", we use it, otherwise use the filter's keywords
-                keyword: searchQuery ? searchQuery : config.keyword,
-                type: searchQuery ? undefined : config.type // Allow broad search if specific text is provided
+                radius: '3000', // 3km radius
+                keyword: finalKeyword
             };
 
             placesService.nearbySearch(request, (results, status) => {
                 if (status === google.maps.places.PlacesServiceStatus.OK) {
                     renderList(results);
                 } else {
-                    document.getElementById("results").innerHTML = "<p style='padding:20px;'>No results found in this area.</p>";
+                    document.getElementById("results").innerHTML = "<p style='padding:20px;'>No results found in this area. Try zooming out.</p>";
                     document.getElementById("counter").innerText = "0 results found.";
                 }
             });
@@ -263,8 +289,8 @@
 
             results.forEach((place, i) => {
                 const rawDist = google.maps.geometry.spherical.computeDistanceBetween(userLocation, place.geometry.location);
-                const miles = (rawDist * 0.000621371).toFixed(1);
-                const driveTime = Math.round((miles / 12) * 60) + 2; 
+                const km = (rawDist / 1000).toFixed(1);
+                const driveTime = Math.round((km / 20) * 60) + 2; 
                 const thumb = place.photos ? place.photos[0].getUrl({maxWidth: 150}) : 'https://via.placeholder.com/150';
 
                 const marker = new google.maps.Marker({
@@ -279,7 +305,6 @@
                 card.id = `card-${i}`;
                 card.setAttribute('data-live', 'false');
                 
-                // FIXED DIRECTIONS URL
                 const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${place.geometry.location.lat()},${place.geometry.location.lng()}&destination_place_id=${place.place_id}`;
 
                 card.innerHTML = `
@@ -289,7 +314,7 @@
                             <div style="flex:1">
                                 <strong style="font-size:0.95rem;">${place.name}</strong>
                                 <div class="info-tags">
-                                    <span class="dist-tag">${miles} mi</span>
+                                    <span class="dist-tag">${km} km</span>
                                     <span class="time-tag">🚗 ${driveTime} min drive</span>
                                 </div>
                                 <span style="font-size:0.75rem; color:var(--text-muted);">${place.vicinity}</span>
@@ -305,6 +330,7 @@
                 `;
                 container.appendChild(card);
 
+                // Firebase check for live data
                 db.collection('providers').where('googlePlaceId', '==', place.place_id).get().then(snap => {
                     const statusDiv = document.getElementById(`status-${i}`);
                     const estDiv = document.getElementById(`est-${i}`);
@@ -344,7 +370,7 @@
                     if(liveOnly) applyLiveFilter();
                 });
             });
-            document.getElementById("counter").innerText = `Found ${results.length} results nearby.`;
+            document.getElementById("counter").innerText = `Found ${results.length} results in this area.`;
         }
 
         function selectPlace(index, pid, lat, lng) {
