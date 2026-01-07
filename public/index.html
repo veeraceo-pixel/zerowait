@@ -141,6 +141,17 @@
           <div class="search-group">
             <span>🔍</span>
             <input type="text" id="queryInput" class="search-input" placeholder="Service (Haircut, Dosa, Notary...)">
+            <datalist id="serviceList">
+                <option value="Haircut">
+                <option value="Dosa">
+                <option value="Idly">
+                <option value="Dental Checkup">
+                <option value="Notary">
+                <option value="Car Wash">
+                <option value="Yoga Class">
+                <option value="Consultation">
+                <option value="Bank Deposit">
+            </datalist>
           </div>
           <div class="search-group">
             <span onclick="detectMyLocation()" class="gps-trigger" title="Use current location">📍</span>
@@ -243,10 +254,12 @@
         const queryInput = document.getElementById('queryInput');
         const locationInput = document.getElementById('locationInput');
         
-        // GLOBAL SERVICE SEARCH: Types removed to allow categories/menu items
-        new google.maps.places.Autocomplete(queryInput);
+        // Connect the input to our custom list of SERVICES
+        queryInput.setAttribute('list', 'serviceList');
+
+        // We DO NOT use Google Autocomplete for the Service input because it forces Business Names.
+        // We only use Google Autocomplete for the LOCATION input.
         
-        // GLOBAL LOCATION SEARCH: Country restriction removed
         new google.maps.places.Autocomplete(locationInput, { 
             types: ['(regions)']
         });
