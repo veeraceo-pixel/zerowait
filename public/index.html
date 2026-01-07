@@ -140,11 +140,11 @@
         <div class="search-wrapper">
           <div class="search-group">
             <span>🔍</span>
-            <input type="text" id="queryInput" class="search-input" placeholder="Service (Salon, Clinic...)">
+            <input type="text" id="queryInput" class="search-input" placeholder="Service (Haircut, Dosa, Notary...)">
           </div>
           <div class="search-group">
             <span onclick="detectMyLocation()" class="gps-trigger" title="Use current location">📍</span>
-            <input type="text" id="locationInput" class="search-input" placeholder="Location (Near me)">
+            <input type="text" id="locationInput" class="search-input" placeholder="Location (Global)">
           </div>
           <button class="btn-search" onclick="executeSearch()">Search</button>
         </div>
@@ -238,20 +238,19 @@
     const db = firebase.firestore();
     let timerInt;
 
-    // --- 1. INITIALIZE AUTOCOMPLETE (GLOBAL) ---
+    // --- 1. INITIALIZE AUTOCOMPLETE ---
     function initSearch() {
         const queryInput = document.getElementById('queryInput');
         const locationInput = document.getElementById('locationInput');
         
-        // Suggest businesses globally
-        new google.maps.places.Autocomplete(queryInput, { types: ['establishment'] });
+        // GLOBAL SERVICE SEARCH: Types removed to allow categories/menu items
+        new google.maps.places.Autocomplete(queryInput);
         
-        // Suggest locations globally (Restriction removed)
+        // GLOBAL LOCATION SEARCH: Country restriction removed
         new google.maps.places.Autocomplete(locationInput, { 
             types: ['(regions)']
         });
     }
-    // Ensure init runs when the Google script is ready
     window.addEventListener('load', initSearch);
 
     // --- 2. GPS DETECTION ---
@@ -267,7 +266,7 @@
                     }
                 });
             }, () => {
-                locInput.placeholder = "Location (Near me)";
+                locInput.placeholder = "Location (Global)";
                 alert("Please enable location services.");
             });
         }
