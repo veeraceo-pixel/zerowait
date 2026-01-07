@@ -157,6 +157,9 @@
 
         let map, placesService, userLocation, markers = [];
 
+        // Set initial UI label
+        document.getElementById("title").innerText = SERVICE_MAP[serviceType].label;
+
         document.querySelectorAll('.filter-chip[data-type]').forEach(chip => {
             if(chip.dataset.type === serviceType) chip.classList.add('active');
             chip.onclick = () => {
@@ -185,16 +188,17 @@
             document.getElementById("counter").innerText = `Showing ${visibleCount} results.`;
         }
 
+        /** FIXED: initMap now prioritizes Geocoding 'l' parameter over GPS **/
         function initMap() {
-            // Check if Search Input 'l' exists first
             if (locationQuery && locationQuery.trim() !== "" && locationQuery.toLowerCase() !== "near me") {
+                console.log("Searching for location string:", locationQuery);
                 const geocoder = new google.maps.Geocoder();
                 geocoder.geocode({ address: locationQuery }, (results, status) => {
                     if (status === "OK") { 
                         userLocation = results[0].geometry.location; 
                         setupMap(); 
                     } else { 
-                        console.error("Geocoding failed, trying GPS...");
+                        console.warn("Geocoding failed for search term. Falling back to GPS.");
                         tryGPS(); 
                     }
                 });
@@ -205,29 +209,25 @@
 
         function tryGPS() {
             if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition((pos) => {
-                    userLocation = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
-                    setupMap();
-                }, () => {
-                    handleLocationError();
-                });
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        userLocation = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+                        setupMap();
+                    }, 
+                    (error) => {
+                        console.error("GPS Error:", error);
+                        handleLocationError();
+                    },
+                    { timeout: 5000 }
+                );
             } else {
                 handleLocationError();
             }
         }
 
-        function forceGPS() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition((pos) => {
-                    userLocation = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
-                    map.setCenter(userLocation);
-                    executePlacesSearch();
-                });
-            }
-        }
-
         function handleLocationError() {
-            userLocation = new google.maps.LatLng(17.3850, 78.4867); // Hyderabad Default
+            // Default to Hyderabad if everything else fails
+            userLocation = new google.maps.LatLng(17.3850, 78.4867); 
             setupMap();
         }
 
@@ -250,6 +250,16 @@
             executePlacesSearch();
         }
 
+        function forceGPS() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    userLocation = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+                    map.setCenter(userLocation);
+                    executePlacesSearch();
+                });
+            }
+        }
+
         function redoSearch() {
             document.getElementById('redo-search').style.display = 'none';
             userLocation = map.getCenter();
@@ -262,13 +272,11 @@
             markers = [];
             
             const config = SERVICE_MAP[serviceType];
-            
-            // Priority Logic: Use URL search keyword if present, otherwise use filter keywords
             const finalKeyword = searchQuery ? `${searchQuery} ${config.keyword}` : config.keyword;
 
             const request = {
                 location: userLocation,
-                radius: '3000', // 3km radius
+                radius: '3000',
                 keyword: finalKeyword
             };
 
@@ -276,7 +284,7 @@
                 if (status === google.maps.places.PlacesServiceStatus.OK) {
                     renderList(results);
                 } else {
-                    document.getElementById("results").innerHTML = "<p style='padding:20px;'>No results found in this area. Try zooming out.</p>";
+                    document.getElementById("results").innerHTML = "<p style='padding:20px;'>No results found in this area. Try zooming out or moving the map.</p>";
                     document.getElementById("counter").innerText = "0 results found.";
                 }
             });
@@ -305,6 +313,7 @@
                 card.id = `card-${i}`;
                 card.setAttribute('data-live', 'false');
                 
+                // Fixed lat/lng strings in URL
                 const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${place.geometry.location.lat()},${place.geometry.location.lng()}&destination_place_id=${place.place_id}`;
 
                 card.innerHTML = `
@@ -399,6 +408,6 @@
 
         function closeDetails() { document.getElementById('details-overlay').style.display = 'none'; }
     </script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAJFGE5OFfn-OhDNJ_rWO5oi2d2CHl2fXE&libraries=places,geometry&callback=initMap" async defer></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_KEY_HERE&libraries=places,geometry&callback=initMap" async defer></script>
 </body>
 </html>
