@@ -84,7 +84,7 @@
     .footer-col a { color: inherit; text-decoration: none; font-size: 0.9rem; }
     .footer-col a:hover { color: white; }
 
-    /* --- MOBILE VIEW FIXES --- */
+    /* --- MOBILE VIEW --- */
     @media (max-width: 900px) {
       .navbar { padding: 0.5rem 0; }
       .logo { font-size: 1.5rem; }
@@ -238,21 +238,21 @@
     const db = firebase.firestore();
     let timerInt;
 
-    // --- 1. INITIALIZE AUTOCOMPLETE ---
+    // --- 1. INITIALIZE AUTOCOMPLETE (GLOBAL) ---
     function initSearch() {
         const queryInput = document.getElementById('queryInput');
         const locationInput = document.getElementById('locationInput');
         
-        // Suggest businesses
+        // Suggest businesses globally
         new google.maps.places.Autocomplete(queryInput, { types: ['establishment'] });
         
-        // Suggest locations
+        // Suggest locations globally (Restriction removed)
         new google.maps.places.Autocomplete(locationInput, { 
-            types: ['(regions)'],
-            componentRestrictions: { country: "uk" } 
+            types: ['(regions)']
         });
     }
-    window.onload = initSearch;
+    // Ensure init runs when the Google script is ready
+    window.addEventListener('load', initSearch);
 
     // --- 2. GPS DETECTION ---
     function detectMyLocation() {
@@ -273,7 +273,7 @@
         }
     }
 
-    // --- 3. UPDATED SEARCH EXECUTION ---
+    // --- 3. SEARCH EXECUTION ---
     function executeSearch() {
       const q = document.getElementById('queryInput').value;
       const l = document.getElementById('locationInput').value;
@@ -284,7 +284,7 @@
       window.location.href = 'nearby.html' + (params.length > 0 ? '?' + params.join('&') : '');
     }
 
-    // --- 4. FIREBASE LOGIC (UNCHANGED) ---
+    // --- 4. FIREBASE LOGIC ---
     firebase.auth().onAuthStateChanged(user => {
       if (user) {
         document.getElementById('loginLink').style.display = 'none';
