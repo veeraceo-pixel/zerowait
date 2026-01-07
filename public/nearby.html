@@ -157,7 +157,6 @@
 
         let map, placesService, userLocation, markers = [];
 
-        // Set initial UI label
         document.getElementById("title").innerText = SERVICE_MAP[serviceType].label;
 
         document.querySelectorAll('.filter-chip[data-type]').forEach(chip => {
@@ -188,17 +187,14 @@
             document.getElementById("counter").innerText = `Showing ${visibleCount} results.`;
         }
 
-        /** FIXED: initMap now prioritizes Geocoding 'l' parameter over GPS **/
         function initMap() {
             if (locationQuery && locationQuery.trim() !== "" && locationQuery.toLowerCase() !== "near me") {
-                console.log("Searching for location string:", locationQuery);
                 const geocoder = new google.maps.Geocoder();
                 geocoder.geocode({ address: locationQuery }, (results, status) => {
                     if (status === "OK") { 
                         userLocation = results[0].geometry.location; 
                         setupMap(); 
                     } else { 
-                        console.warn("Geocoding failed for search term. Falling back to GPS.");
                         tryGPS(); 
                     }
                 });
@@ -214,10 +210,7 @@
                         userLocation = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
                         setupMap();
                     }, 
-                    (error) => {
-                        console.error("GPS Error:", error);
-                        handleLocationError();
-                    },
+                    () => handleLocationError(),
                     { timeout: 5000 }
                 );
             } else {
@@ -226,8 +219,7 @@
         }
 
         function handleLocationError() {
-            // Default to Hyderabad if everything else fails
-            userLocation = new google.maps.LatLng(17.3850, 78.4867); 
+            userLocation = new google.maps.LatLng(17.3850, 78.4867); // Hyderabad Default
             setupMap();
         }
 
@@ -239,7 +231,6 @@
                     disableDefaultUI: true,
                     gestureHandling: "greedy" 
                 });
-                
                 placesService = new google.maps.places.PlacesService(map);
                 map.addListener('dragend', () => { 
                     document.getElementById('redo-search').style.display = 'flex'; 
@@ -284,7 +275,7 @@
                 if (status === google.maps.places.PlacesServiceStatus.OK) {
                     renderList(results);
                 } else {
-                    document.getElementById("results").innerHTML = "<p style='padding:20px;'>No results found in this area. Try zooming out or moving the map.</p>";
+                    document.getElementById("results").innerHTML = "<p style='padding:20px;'>No results found. Try another search.</p>";
                     document.getElementById("counter").innerText = "0 results found.";
                 }
             });
@@ -313,7 +304,7 @@
                 card.id = `card-${i}`;
                 card.setAttribute('data-live', 'false');
                 
-                // Fixed lat/lng strings in URL
+                // FIXED DIRECTIONS LINK
                 const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${place.geometry.location.lat()},${place.geometry.location.lng()}&destination_place_id=${place.place_id}`;
 
                 card.innerHTML = `
@@ -339,17 +330,14 @@
                 `;
                 container.appendChild(card);
 
-                // Firebase check for live data
                 db.collection('providers').where('googlePlaceId', '==', place.place_id).get().then(snap => {
-                    const statusDiv = document.getElementById(`status-${i}`);
-                    const estDiv = document.getElementById(`est-${i}`);
-                    const actionDiv = document.getElementById(`actions-${i}`);
-
                     if (!snap.empty) {
                         const d = snap.docs[0].data();
                         const count = d.queueCount || 0;
                         const providerId = snap.docs[0].id;
-                        const phoneRaw = d.phone; 
+                        const statusDiv = document.getElementById(`status-${i}`);
+                        const estDiv = document.getElementById(`est-${i}`);
+                        const actionDiv = document.getElementById(`actions-${i}`);
                         
                         card.setAttribute('data-live', 'true');
                         const waitMins = count * currentConfig.avgTime;
@@ -358,17 +346,9 @@
 
                         statusDiv.className = "q-badge q-online";
                         statusDiv.innerText = `LIVE: ${count} in line`;
-                        
-                        if(currentConfig.avgTime > 0) {
-                            estDiv.innerHTML = `⌛ Wait: <b>~${waitMins}m</b> • Service at <b>${timeStr}</b>`;
-                        }
+                        if(currentConfig.avgTime > 0) estDiv.innerHTML = `⌛ Wait: <b>~${waitMins}m</b> • Service at <b>${timeStr}</b>`;
 
-                        let whatsappHtml = "";
-                        if (phoneRaw) {
-                            const cleanPhone = phoneRaw.toString().replace(/\D/g, '');
-                            const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent("Hi " + place.name + ", I'm interested in joining your queue.")}`;
-                            whatsappHtml = `<a href="${waUrl}" target="_blank" class="btn btn-whatsapp"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"> Chat</a>`;
-                        }
+                        let whatsappHtml = d.phone ? `<a href="https://wa.me/${d.phone.toString().replace(/\D/g, '')}" target="_blank" class="btn btn-whatsapp"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"> Chat</a>` : "";
 
                         actionDiv.innerHTML = `
                             <a href="${mapsUrl}" target="_blank" class="btn btn-sec">Directions</a>
@@ -391,8 +371,6 @@
                 const strip = document.getElementById('photo-strip');
                 if (details && details.photos) {
                     strip.innerHTML = details.photos.slice(0, 5).map(p => `<img src="${p.getUrl({maxWidth: 800})}">`).join('');
-                } else {
-                    strip.innerHTML = "<p style='color:white; padding:20px;'>No photos available</p>";
                 }
             });
             
@@ -408,6 +386,6 @@
 
         function closeDetails() { document.getElementById('details-overlay').style.display = 'none'; }
     </script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_KEY_HERE&libraries=places,geometry&callback=initMap" async defer></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAJFGE5OFfn-OhDNJ_rWO5oi2d2CHl2fXE&libraries=places,geometry&callback=initMap" async defer></script>
 </body>
 </html>
