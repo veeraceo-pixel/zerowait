@@ -243,20 +243,15 @@
         const queryInput = document.getElementById('queryInput');
         const locationInput = document.getElementById('locationInput');
         
-        // Suggest businesses globally
         new google.maps.places.Autocomplete(queryInput, { types: ['establishment'] });
-        
-        // Suggest locations globally (Restriction removed)
-        new google.maps.places.Autocomplete(locationInput, { 
-            types: ['(regions)']
-        });
+        new google.maps.places.Autocomplete(locationInput, { types: ['(regions)'] });
     }
-    // Ensure init runs when the Google script is ready
     window.addEventListener('load', initSearch);
 
     // --- 2. GPS DETECTION ---
     function detectMyLocation() {
         const locInput = document.getElementById('locationInput');
+        locInput.value = "";
         locInput.placeholder = "Locating...";
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition((pos) => {
@@ -279,7 +274,13 @@
       const l = document.getElementById('locationInput').value;
       let params = [];
       if (q) params.push(`q=${encodeURIComponent(q)}`);
-      if (l) params.push(`l=${encodeURIComponent(l)}`);
+      
+      // Fixed: explicitly handle "Near me" or empty location to ensure Nearby page triggers GPS
+      if (l && l.trim() !== "") {
+        params.push(`l=${encodeURIComponent(l)}`);
+      } else {
+        params.push(`l=near me`);
+      }
       
       window.location.href = 'nearby.html' + (params.length > 0 ? '?' + params.join('&') : '');
     }
