@@ -44,7 +44,7 @@
     .search-group { display: flex; align-items: center; flex: 1; padding: 0 20px; border-right: 1px solid var(--border); }
     .search-group:last-of-type { border-right: none; }
     .search-input { border: none; padding: 12px; width: 100%; outline: none; font-size: 1rem; }
-    .gps-trigger { cursor: pointer; color: var(--primary); padding: 5px; }
+    .gps-trigger { cursor: pointer; color: var(--primary); padding: 5px; font-size: 1.2rem; }
     .btn-search { background: var(--primary); color: white; border: none; border-radius: 100px; padding: 12px 35px; font-weight: 700; cursor: pointer; }
 
     /* --- 4. MAIN LAYOUT --- */
@@ -86,19 +86,12 @@
 
     /* --- MOBILE VIEW --- */
     @media (max-width: 900px) {
-      .navbar { padding: 0.5rem 0; }
-      .logo { font-size: 1.5rem; }
-      .nav-links { gap: 0.8rem; }
-      .nav-links a { font-size: 0.8rem; }
-      .btn-business { padding: 0.4rem 0.6rem; }
-      .hero { padding: 2rem 0; }
       .hero h1 { font-size: 2.2rem; }
       .search-wrapper { flex-direction: column; border-radius: 20px; margin: 1rem 1rem 0; padding: 10px; width: calc(100% - 2rem); }
       .search-group { border: none; border-bottom: 1px solid var(--border); width: 100%; padding: 10px; }
       .btn-search { width: 100%; border-radius: 12px; margin-top: 10px; padding: 15px; }
       .main-wrapper { grid-template-columns: 1fr; margin-top: 1rem; padding: 0 1rem; }
       .quick-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-      .footer-grid { grid-template-columns: 1fr 1fr; }
       .mobile-nav { display: flex; }
       .desktop-only { display: none; }
       .sidebar { position: static; margin-top: 2rem; } 
@@ -140,7 +133,7 @@
         <div class="search-wrapper">
           <div class="search-group">
             <span>🔍</span>
-            <input type="text" id="queryInput" class="search-input" placeholder="Service (Haircut, Dosa, Notary...)">
+            <input type="text" id="queryInput" class="search-input" placeholder="Service (Haircut, Dosa, Notary...)" list="serviceList">
             <datalist id="serviceList">
                 <option value="Haircut">
                 <option value="Dosa">
@@ -154,8 +147,8 @@
             </datalist>
           </div>
           <div class="search-group">
-            <span onclick="detectMyLocation()" class="gps-trigger" title="Use current location">📍</span>
-            <input type="text" id="locationInput" class="search-input" placeholder="Location (Global)">
+            <span onclick="detectMyLocation()" class="gps-trigger" id="gpsBtn" title="Use current location">🎯</span>
+            <input type="text" id="locationInput" class="search-input" placeholder="Detecting location...">
           </div>
           <button class="btn-search" onclick="executeSearch()">Search</button>
         </div>
@@ -249,39 +242,46 @@
     const db = firebase.firestore();
     let timerInt;
 
-    // --- 1. INITIALIZE AUTOCOMPLETE ---
+    // --- 1. INITIALIZE & AUTO-DETECT ---
     function initSearch() {
-        const queryInput = document.getElementById('queryInput');
         const locationInput = document.getElementById('locationInput');
         
-        // Connect the input to our custom list of SERVICES
-        queryInput.setAttribute('list', 'serviceList');
+        // Setup Google Autocomplete for manual location entry
+        new google.maps.places.Autocomplete(locationInput, { types: ['(regions)'] });
 
-        // We DO NOT use Google Autocomplete for the Service input because it forces Business Names.
-        // We only use Google Autocomplete for the LOCATION input.
-        
-        new google.maps.places.Autocomplete(locationInput, { 
-            types: ['(regions)']
-        });
+        // AUTOMATIC DETECTION: Triggered as soon as map script loads
+        detectMyLocation(true);
     }
     window.addEventListener('load', initSearch);
 
     // --- 2. GPS DETECTION ---
-    function detectMyLocation() {
+    function detectMyLocation(isSilent = false) {
         const locInput = document.getElementById('locationInput');
-        locInput.placeholder = "Locating...";
+        const gpsBtn = document.getElementById('gpsBtn');
+        
+        if (!isSilent) locInput.placeholder = "Detecting...";
+        gpsBtn.innerText = "⏳";
+
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition((pos) => {
                 const geocoder = new google.maps.Geocoder();
                 geocoder.geocode({ location: { lat: pos.coords.latitude, lng: pos.coords.longitude } }, (results, status) => {
+                    gpsBtn.innerText = "🎯";
                     if (status === "OK" && results[0]) {
                         locInput.value = results[0].formatted_address;
+                    } else {
+                        if(!isSilent) alert("Geocoding failed.");
+                        locInput.placeholder = "Enter location manually";
                     }
                 });
-            }, () => {
-                locInput.placeholder = "Location (Global)";
-                alert("Please enable location services.");
+            }, (err) => {
+                gpsBtn.innerText = "🎯";
+                locInput.placeholder = "Enter location manually";
+                console.log("GPS Blocked or Failed", err);
+                if (!isSilent) alert("Please allow location access to use 'Near Me' feature.");
             });
+        } else {
+            locInput.placeholder = "Enter location manually";
         }
     }
 
@@ -291,9 +291,12 @@
       const l = document.getElementById('locationInput').value;
       let params = [];
       if (q) params.push(`q=${encodeURIComponent(q)}`);
-      if (l) params.push(`l=${encodeURIComponent(l)}`);
       
-      window.location.href = 'nearby.html' + (params.length > 0 ? '?' + params.join('&') : '');
+      // If location is blank, pass 'Near Me' so nearby.html knows to use GPS
+      const locValue = l.trim() !== "" ? l : "Near Me";
+      params.push(`l=${encodeURIComponent(locValue)}`);
+      
+      window.location.href = 'nearby.html?' + params.join('&');
     }
 
     // --- 4. FIREBASE LOGIC ---
