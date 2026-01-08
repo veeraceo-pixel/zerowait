@@ -304,7 +304,7 @@
                 card.id = `card-${i}`;
                 card.setAttribute('data-live', 'false');
                 
-                // FIXED DIRECTIONS LINK
+                // Fixed Directions Link
                 const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${place.geometry.location.lat()},${place.geometry.location.lng()}&destination_place_id=${place.place_id}`;
 
                 card.innerHTML = `
@@ -330,31 +330,52 @@
                 `;
                 container.appendChild(card);
 
+                // Find if this business is registered in skipQs
                 db.collection('providers').where('googlePlaceId', '==', place.place_id).get().then(snap => {
                     if (!snap.empty) {
-                        const d = snap.docs[0].data();
-                        const count = d.queueCount || 0;
-                        const providerId = snap.docs[0].id;
-                        const statusDiv = document.getElementById(`status-${i}`);
-                        const estDiv = document.getElementById(`est-${i}`);
-                        const actionDiv = document.getElementById(`actions-${i}`);
+                        const providerDoc = snap.docs[0];
+                        const d = providerDoc.data();
+                        const providerId = providerDoc.id;
                         
                         card.setAttribute('data-live', 'true');
-                        const waitMins = count * currentConfig.avgTime;
-                        const serviceTime = new Date(new Date().getTime() + waitMins * 60000);
-                        const timeStr = serviceTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        
+                        // REAL-TIME LISTENER FOR THE QUEUE
+                        db.collection('queues')
+                          .where('providerId', '==', providerId)
+                          .where('status', '==', 'waiting')
+                          .onSnapshot(qSnap => {
+                              const count = qSnap.size;
+                              let totalWaitMins = 0;
+                              
+                              // Calculate wait based on real service durations of people in line
+                              qSnap.forEach(doc => {
+                                  totalWaitMins += (Number(doc.data().serviceDuration) || currentConfig.avgTime);
+                              });
 
-                        statusDiv.className = "q-badge q-online";
-                        statusDiv.innerText = `LIVE: ${count} in line`;
-                        if(currentConfig.avgTime > 0) estDiv.innerHTML = `⌛ Wait: <b>~${waitMins}m</b> • Service at <b>${timeStr}</b>`;
+                              const statusDiv = document.getElementById(`status-${i}`);
+                              const estDiv = document.getElementById(`est-${i}`);
+                              const actionDiv = document.getElementById(`actions-${i}`);
 
-                        let whatsappHtml = d.phone ? `<a href="https://wa.me/${d.phone.toString().replace(/\D/g, '')}" target="_blank" class="btn btn-whatsapp"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"> Chat</a>` : "";
+                              statusDiv.className = "q-badge q-online";
+                              statusDiv.innerText = `LIVE: ${count} in line`;
+                              
+                              const serviceTime = new Date(new Date().getTime() + totalWaitMins * 60000);
+                              const timeStr = serviceTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-                        actionDiv.innerHTML = `
-                            <a href="${mapsUrl}" target="_blank" class="btn btn-sec">Directions</a>
-                            ${whatsappHtml}
-                            <button onclick="window.location.href='join-queue.html?id=${providerId}'" class="btn btn-join">JOIN QUEUE</button>
-                        `;
+                              if(totalWaitMins > 0 || count > 0) {
+                                  estDiv.innerHTML = `⌛ Wait: <b>~${totalWaitMins}m</b> • Seen by <b>${timeStr}</b>`;
+                              } else {
+                                  estDiv.innerHTML = `✅ <b>No wait!</b> Get seen immediately.`;
+                              }
+
+                              let whatsappHtml = d.phone ? `<a href="https://wa.me/${d.phone.toString().replace(/\D/g, '')}" target="_blank" class="btn btn-whatsapp"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" style="width:14px; margin-right:5px; filter: brightness(0) invert(1);"> Chat</a>` : "";
+
+                              actionDiv.innerHTML = `
+                                  <a href="${mapsUrl}" target="_blank" class="btn btn-sec">Directions</a>
+                                  ${whatsappHtml}
+                                  <button onclick="window.location.href='join-queue.html?id=${providerId}'" class="btn btn-join">JOIN QUEUE</button>
+                              `;
+                          });
                     }
                     if(liveOnly) applyLiveFilter();
                 });
@@ -371,6 +392,8 @@
                 const strip = document.getElementById('photo-strip');
                 if (details && details.photos) {
                     strip.innerHTML = details.photos.slice(0, 5).map(p => `<img src="${p.getUrl({maxWidth: 800})}">`).join('');
+                } else {
+                    strip.innerHTML = "<div style='color:white; padding:20px;'>No photos available</div>";
                 }
             });
             
@@ -386,6 +409,6 @@
 
         function closeDetails() { document.getElementById('details-overlay').style.display = 'none'; }
     </script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAJFGE5OFfn-OhDNJ_rWO5oi2d2CHl2fXE&libraries=places,geometry&callback=initMap" async defer></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places,geometry&callback=initMap" async defer></script>
 </body>
 </html>
