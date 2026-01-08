@@ -159,34 +159,6 @@
 
         document.getElementById("title").innerText = SERVICE_MAP[serviceType].label;
 
-        document.querySelectorAll('.filter-chip[data-type]').forEach(chip => {
-            if(chip.dataset.type === serviceType) chip.classList.add('active');
-            chip.onclick = () => {
-                document.querySelectorAll('.filter-chip[data-type]').forEach(c => c.classList.remove('active'));
-                chip.classList.add('active');
-                serviceType = chip.dataset.type;
-                document.getElementById("title").innerText = SERVICE_MAP[serviceType].label;
-                executePlacesSearch();
-            };
-        });
-
-        function toggleLiveOnly() {
-            liveOnly = !liveOnly;
-            document.getElementById('toggleLive').classList.toggle('active', liveOnly);
-            applyLiveFilter();
-        }
-
-        function applyLiveFilter() {
-            const cards = document.querySelectorAll('.place-card');
-            let visibleCount = 0;
-            cards.forEach(card => {
-                const isLive = card.getAttribute('data-live') === 'true';
-                if (liveOnly && !isLive) card.classList.add('hidden');
-                else { card.classList.remove('hidden'); visibleCount++; }
-            });
-            document.getElementById("counter").innerText = `Showing ${visibleCount} results.`;
-        }
-
         function initMap() {
             if (locationQuery && locationQuery.trim() !== "" && locationQuery.toLowerCase() !== "near me") {
                 const geocoder = new google.maps.Geocoder();
@@ -219,41 +191,20 @@
         }
 
         function handleLocationError() {
-            userLocation = new google.maps.LatLng(17.3850, 78.4867); // Hyderabad Default
+            userLocation = new google.maps.LatLng(17.3850, 78.4867); 
             setupMap();
         }
 
         function setupMap() {
             if (!map) {
                 map = new google.maps.Map(document.getElementById("map"), { 
-                    center: userLocation, 
-                    zoom: 14, 
-                    disableDefaultUI: true,
-                    gestureHandling: "greedy" 
+                    center: userLocation, zoom: 14, disableDefaultUI: true, gestureHandling: "greedy" 
                 });
                 placesService = new google.maps.places.PlacesService(map);
-                map.addListener('dragend', () => { 
-                    document.getElementById('redo-search').style.display = 'flex'; 
-                });
+                map.addListener('dragend', () => { document.getElementById('redo-search').style.display = 'flex'; });
             } else {
                 map.setCenter(userLocation);
             }
-            executePlacesSearch();
-        }
-
-        function forceGPS() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition((pos) => {
-                    userLocation = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
-                    map.setCenter(userLocation);
-                    executePlacesSearch();
-                });
-            }
-        }
-
-        function redoSearch() {
-            document.getElementById('redo-search').style.display = 'none';
-            userLocation = map.getCenter();
             executePlacesSearch();
         }
 
@@ -261,22 +212,15 @@
             if(!placesService) return;
             markers.forEach(m => m.setMap(null));
             markers = [];
-            
             const config = SERVICE_MAP[serviceType];
             const finalKeyword = searchQuery ? `${searchQuery} ${config.keyword}` : config.keyword;
-
-            const request = {
-                location: userLocation,
-                radius: '3000',
-                keyword: finalKeyword
-            };
+            const request = { location: userLocation, radius: '3000', keyword: finalKeyword };
 
             placesService.nearbySearch(request, (results, status) => {
                 if (status === google.maps.places.PlacesServiceStatus.OK) {
                     renderList(results);
                 } else {
-                    document.getElementById("results").innerHTML = "<p style='padding:20px;'>No results found. Try another search.</p>";
-                    document.getElementById("counter").innerText = "0 results found.";
+                    document.getElementById("results").innerHTML = "<p style='padding:20px;'>No results found.</p>";
                 }
             });
         }
@@ -289,13 +233,10 @@
             results.forEach((place, i) => {
                 const rawDist = google.maps.geometry.spherical.computeDistanceBetween(userLocation, place.geometry.location);
                 const km = (rawDist / 1000).toFixed(1);
-                const driveTime = Math.round((km / 20) * 60) + 2; 
                 const thumb = place.photos ? place.photos[0].getUrl({maxWidth: 150}) : 'https://via.placeholder.com/150';
 
                 const marker = new google.maps.Marker({
-                    position: place.geometry.location, 
-                    map: map, 
-                    label: { text: (i+1).toString(), color: "white" }
+                    position: place.geometry.location, map: map, label: (i+1).toString()
                 });
                 markers.push(marker);
 
@@ -304,110 +245,105 @@
                 card.id = `card-${i}`;
                 card.setAttribute('data-live', 'false');
                 
-                // Fixed Directions Link
-                const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${place.geometry.location.lat()},${place.geometry.location.lng()}&destination_place_id=${place.place_id}`;
+                // Clean Directions Link
+                const destLat = place.geometry.location.lat();
+                const destLng = place.geometry.location.lng();
+                const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}&destination_place_id=${place.place_id}`;
 
                 card.innerHTML = `
-                    <div onclick="selectPlace(${i}, '${place.place_id}', ${place.geometry.location.lat()}, ${place.geometry.location.lng()})">
+                    <div onclick="selectPlace(${i}, '${place.place_id}', ${destLat}, ${destLng})">
                         <div class="card-top">
                             <img src="${thumb}" class="thumb">
                             <div style="flex:1">
                                 <strong style="font-size:0.95rem;">${place.name}</strong>
                                 <div class="info-tags">
                                     <span class="dist-tag">${km} km</span>
-                                    <span class="time-tag">🚗 ${driveTime} min drive</span>
+                                    <div id="status-${i}" class="q-badge q-offline">Off-platform</div>
                                 </div>
                                 <span style="font-size:0.75rem; color:var(--text-muted);">${place.vicinity}</span>
-                                <div id="status-${i}" class="q-badge q-offline">No Live Queue</div>
                                 <div id="est-${i}" class="est-box"></div>
                             </div>
                         </div>
                     </div>
                     <div class="action-row" id="actions-${i}">
                          <a href="${mapsUrl}" target="_blank" class="btn btn-sec">Directions</a>
-                         <button onclick="window.location.href='provider-signup.html'" class="btn btn-reg">BUSINESS OWNER?<br>REGISTER FREE</button>
+                         <button onclick="window.location.href='provider-signup.html'" class="btn btn-reg">CLAIM BUSINESS</button>
                     </div>
                 `;
                 container.appendChild(card);
 
-                // Find if this business is registered in skipQs
+                // Fetch real-time queue data
                 db.collection('providers').where('googlePlaceId', '==', place.place_id).get().then(snap => {
                     if (!snap.empty) {
                         const providerDoc = snap.docs[0];
-                        const d = providerDoc.data();
                         const providerId = providerDoc.id;
-                        
                         card.setAttribute('data-live', 'true');
-                        
-                        // REAL-TIME LISTENER FOR THE QUEUE
+
                         db.collection('queues')
                           .where('providerId', '==', providerId)
                           .where('status', '==', 'waiting')
                           .onSnapshot(qSnap => {
                               const count = qSnap.size;
-                              let totalWaitMins = 0;
-                              
-                              // Calculate wait based on real service durations of people in line
-                              qSnap.forEach(doc => {
-                                  totalWaitMins += (Number(doc.data().serviceDuration) || currentConfig.avgTime);
-                              });
+                              let totalWait = 0;
+                              qSnap.forEach(qDoc => totalWait += (Number(qDoc.data().serviceDuration) || currentConfig.avgTime));
 
-                              const statusDiv = document.getElementById(`status-${i}`);
-                              const estDiv = document.getElementById(`est-${i}`);
-                              const actionDiv = document.getElementById(`actions-${i}`);
-
-                              statusDiv.className = "q-badge q-online";
-                              statusDiv.innerText = `LIVE: ${count} in line`;
-                              
-                              const serviceTime = new Date(new Date().getTime() + totalWaitMins * 60000);
-                              const timeStr = serviceTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-                              if(totalWaitMins > 0 || count > 0) {
-                                  estDiv.innerHTML = `⌛ Wait: <b>~${totalWaitMins}m</b> • Seen by <b>${timeStr}</b>`;
-                              } else {
-                                  estDiv.innerHTML = `✅ <b>No wait!</b> Get seen immediately.`;
-                              }
-
-                              let whatsappHtml = d.phone ? `<a href="https://wa.me/${d.phone.toString().replace(/\D/g, '')}" target="_blank" class="btn btn-whatsapp"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" style="width:14px; margin-right:5px; filter: brightness(0) invert(1);"> Chat</a>` : "";
-
-                              actionDiv.innerHTML = `
+                              document.getElementById(`status-${i}`).className = "q-badge q-online";
+                              document.getElementById(`status-${i}`).innerText = `LIVE: ${count} in line`;
+                              document.getElementById(`est-${i}`).innerHTML = `⌛ Wait: ~${totalWait} mins`;
+                              document.getElementById(`actions-${i}`).innerHTML = `
                                   <a href="${mapsUrl}" target="_blank" class="btn btn-sec">Directions</a>
-                                  ${whatsappHtml}
                                   <button onclick="window.location.href='join-queue.html?id=${providerId}'" class="btn btn-join">JOIN QUEUE</button>
                               `;
                           });
                     }
-                    if(liveOnly) applyLiveFilter();
                 });
             });
-            document.getElementById("counter").innerText = `Found ${results.length} results in this area.`;
+            document.getElementById("counter").innerText = `Showing ${results.length} results.`;
         }
 
         function selectPlace(index, pid, lat, lng) {
             document.querySelectorAll('.place-card').forEach(c => c.classList.remove('active'));
             document.getElementById(`card-${index}`).classList.add('active');
             document.getElementById('details-overlay').style.display = 'flex';
-            
             placesService.getDetails({ placeId: pid, fields: ['photos'] }, (details) => {
                 const strip = document.getElementById('photo-strip');
                 if (details && details.photos) {
                     strip.innerHTML = details.photos.slice(0, 5).map(p => `<img src="${p.getUrl({maxWidth: 800})}">`).join('');
-                } else {
-                    strip.innerHTML = "<div style='color:white; padding:20px;'>No photos available</div>";
                 }
             });
-            
             setTimeout(() => {
                 new google.maps.StreetViewPanorama(document.getElementById("mini-pano"), {
-                    position: { lat, lng }, 
-                    pov: { heading: 165, pitch: 0 }, 
-                    zoom: 1, 
-                    addressControl: false
+                    position: { lat, lng }, pov: { heading: 165, pitch: 0 }, zoom: 1, addressControl: false
                 });
             }, 100);
         }
 
         function closeDetails() { document.getElementById('details-overlay').style.display = 'none'; }
+        function toggleLiveOnly() {
+            liveOnly = !liveOnly;
+            document.getElementById('toggleLive').classList.toggle('active', liveOnly);
+            applyLiveFilter();
+        }
+        function applyLiveFilter() {
+            document.querySelectorAll('.place-card').forEach(card => {
+                const isLive = card.getAttribute('data-live') === 'true';
+                card.classList.toggle('hidden', liveOnly && !isLive);
+            });
+        }
+        function redoSearch() {
+            document.getElementById('redo-search').style.display = 'none';
+            userLocation = map.getCenter();
+            executePlacesSearch();
+        }
+        function forceGPS() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    userLocation = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+                    map.setCenter(userLocation);
+                    executePlacesSearch();
+                });
+            }
+        }
     </script>
     <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places,geometry&callback=initMap" async defer></script>
 </body>
