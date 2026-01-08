@@ -304,7 +304,6 @@
                 card.id = `card-${i}`;
                 card.setAttribute('data-live', 'false');
                 
-                // FIXED DIRECTIONS LINK
                 const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${place.geometry.location.lat()},${place.geometry.location.lng()}&destination_place_id=${place.place_id}`;
 
                 card.innerHTML = `
@@ -330,23 +329,33 @@
                 `;
                 container.appendChild(card);
 
-                db.collection('providers').where('googlePlaceId', '==', place.place_id).get().then(snap => {
+                // REAL-TIME LISTENER FOR QUEUE UPDATES
+                db.collection('providers').where('googlePlaceId', '==', place.place_id).onSnapshot(snap => {
                     if (!snap.empty) {
-                        const d = snap.docs[0].data();
-                        const count = d.queueCount || 0;
-                        const providerId = snap.docs[0].id;
+                        const providerDoc = snap.docs[0];
+                        const providerId = providerDoc.id;
+                        const d = providerDoc.data();
+                        
                         const statusDiv = document.getElementById(`status-${i}`);
                         const estDiv = document.getElementById(`est-${i}`);
                         const actionDiv = document.getElementById(`actions-${i}`);
                         
                         card.setAttribute('data-live', 'true');
+                        
+                        // Calculate real-time count
+                        const count = d.queueCount || 0;
                         const waitMins = count * currentConfig.avgTime;
                         const serviceTime = new Date(new Date().getTime() + waitMins * 60000);
                         const timeStr = serviceTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
                         statusDiv.className = "q-badge q-online";
                         statusDiv.innerText = `LIVE: ${count} in line`;
-                        if(currentConfig.avgTime > 0) estDiv.innerHTML = `⌛ Wait: <b>~${waitMins}m</b> • Service at <b>${timeStr}</b>`;
+                        
+                        if(currentConfig.avgTime > 0) {
+                            estDiv.innerHTML = `⌛ Wait: <b>~${waitMins}m</b> • Service at <b>${timeStr}</b>`;
+                        } else {
+                            estDiv.innerHTML = `Open for walk-ins`;
+                        }
 
                         let whatsappHtml = d.phone ? `<a href="https://wa.me/${d.phone.toString().replace(/\D/g, '')}" target="_blank" class="btn btn-whatsapp"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"> Chat</a>` : "";
 
