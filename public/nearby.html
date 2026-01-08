@@ -11,7 +11,6 @@
             --primary: #2563eb; --border: #dfdfdf; --success: #059669;
         }
 
-        /* Layout Setup */
         body { font-family: 'Inter', sans-serif; background-color: var(--rm-bg); margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         
         .navbar { background: white; padding: 0.5rem 1.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); flex-shrink: 0; }
@@ -23,7 +22,6 @@
         .service-filter-bar { display: flex; gap: 8px; overflow-x: auto; padding: 10px 1.5rem; background: white; border-bottom: 1px solid var(--border); scrollbar-width: none; flex-shrink: 0; align-items: center; }
         .service-filter-bar::-webkit-scrollbar { display: none; }
         
-        /* Distance Dropdown */
         .dist-select { padding: 8px 12px; border-radius: 50px; border: 1px solid var(--border); background: #f8fafc; font-weight: 600; color: #64748b; font-size: 0.85rem; outline: none; cursor: pointer; }
 
         .filter-chip { white-space: nowrap; padding: 8px 18px; border-radius: 50px; background: #f1f5f9; border: 1px solid var(--border); font-size: 0.85rem; font-weight: 600; cursor: pointer; color: #64748b; transition: 0.2s; }
@@ -36,7 +34,6 @@
         .visual-panel { flex: 1.5; position: relative; border-left: 1px solid var(--border); background: #eee; }
         #map { width: 100%; height: 100%; }
 
-        /* Provider Cards */
         .place-card { background: white; margin-bottom: 1.5rem; border-radius: 4px; overflow: hidden; border-bottom: 4px solid var(--rm-teal); box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: transform 0.2s; cursor: pointer; }
         .card-body { display: flex; flex-direction: row; }
         .card-img-container { width: 40%; height: 180px; position: relative; background: #f0f0f0; flex-shrink: 0; }
@@ -55,17 +52,14 @@
         .footer-btn { flex: 1; padding: 12px; border: none; background: transparent; cursor: pointer; font-weight: 700; font-size: 0.8rem; border-right: 1px solid #eee; text-align: center; text-decoration: none; color: var(--rm-navy); display: flex; align-items: center; justify-content: center; gap: 6px; }
         .btn-join-main { background: var(--rm-navy) !important; color: white !important; }
 
-        /* Gallery Overlay */
         #details-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.95); display:none; flex-direction: column; z-index: 1000; }
         #photo-strip { flex: 1; display: flex; overflow-x: auto; scroll-snap-type: x mandatory; align-items: center; scrollbar-width: none; }
         #photo-strip img { max-height: 85vh; min-width: 100%; object-fit: contain; scroll-snap-align: start; }
         .close-btn { position:absolute; top:20px; right:20px; z-index:1100; background: white; border:none; border-radius:50%; width:44px; height:44px; cursor:pointer; font-weight: bold; }
 
-        /* Map UI Buttons */
         #redo-search { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); z-index: 100; background: white; border: none; padding: 12px 24px; border-radius: 50px; font-weight: 700; display: none; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
         #gps-btn { position: absolute; bottom: 30px; right: 20px; z-index: 100; background: white; border: none; width: 50px; height: 50px; border-radius: 50%; box-shadow: 0 4px 15px rgba(0,0,0,0.2); cursor: pointer; font-size: 1.5rem; }
 
-        /* MOBILE OPTIMIZATION: REMOVE MAP */
         @media (max-width: 768px) {
             .visual-panel { display: none !important; }
             .list-panel { max-width: 100%; flex: 1; width: 100%; }
@@ -85,15 +79,15 @@
     </nav>
 
     <div class="filter-strip">
-        <input type="text" id="locInput" class="search-input" placeholder="Search by area or postcode...">
+        <input type="text" id="locInput" class="search-input" placeholder="Search by area or zip...">
     </div>
 
     <div class="service-filter-bar">
         <select id="distFilter" class="dist-select" onchange="executePlacesSearch()">
-            <option value="2000">2 km</option>
-            <option value="5000" selected>5 km</option>
-            <option value="10000">10 km</option>
-            <option value="20000">20 km</option>
+            <option value="1">1 Mile</option>
+            <option value="5" selected>5 Miles</option>
+            <option value="10">10 Miles</option>
+            <option value="25">25 Miles</option>
         </select>
         <div class="filter-chip live-toggle" id="toggleLive" onclick="toggleLiveOnly()">⚡ Live Only</div>
         <div class="filter-chip active" data-type="salon">💇‍♀️ Salons</div>
@@ -137,7 +131,6 @@
             banking: { keyword: "bank finance atm", label: "Banking", avgTime: 10 }
         };
 
-        // DESKTOP LOAD FIX
         function initMap() {
             navigator.geolocation.getCurrentPosition(
                 (pos) => { 
@@ -147,7 +140,8 @@
                 () => { 
                     userLocation = { lat: 17.4065, lng: 78.4772 }; 
                     setupMap(); 
-                }
+                },
+                { enableHighAccuracy: true }
             );
 
             document.getElementById('locInput').addEventListener('keypress', (e) => {
@@ -198,20 +192,28 @@
         }
 
         function executePlacesSearch() {
-            if(!placesService) return;
+            if(!placesService || !userLocation) return;
+            
             markers.forEach(m => m.setMap(null));
             markers = [];
             
-            const radius = document.getElementById('distFilter').value;
+            // CONVERT MILES TO METERS (1 Mile = 1609.34 Meters)
+            const miles = document.getElementById('distFilter').value;
+            const radiusInMeters = miles * 1609.34;
             const config = SERVICE_MAP[serviceType];
 
-            placesService.nearbySearch({
+            const request = {
                 location: userLocation,
-                radius: radius,
+                radius: radiusInMeters,
                 keyword: config.keyword
-            }, (results, status) => {
+            };
+
+            placesService.nearbySearch(request, (results, status) => {
                 if (status === google.maps.places.PlacesServiceStatus.OK) {
                     renderList(results);
+                } else {
+                    document.getElementById("results").innerHTML = "<p style='text-align:center; padding:20px;'>No results found in this area. Try increasing the search radius.</p>";
+                    document.getElementById("counter").innerText = "0 results found.";
                 }
             });
         }
@@ -222,9 +224,15 @@
             const currentConfig = SERVICE_MAP[serviceType];
 
             results.forEach((place, i) => {
-                const dist = (google.maps.geometry.spherical.computeDistanceBetween(userLocation, place.geometry.location) / 1000).toFixed(1);
+                // CONVERT METERS TO MILES (dist / 1609.34)
+                const distMeters = google.maps.geometry.spherical.computeDistanceBetween(
+                    new google.maps.LatLng(userLocation.lat, (userLocation.lng.get ? userLocation.lng() : userLocation.lng)), 
+                    place.geometry.location
+                );
+                const distMiles = (distMeters / 1609.34).toFixed(1);
+                
                 const thumb = place.photos ? place.photos[0].getUrl({maxWidth: 400}) : 'https://via.placeholder.com/400x250';
-                const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${place.geometry.location.lat()},${place.geometry.location.lng()}&destination_place_id=${place.place_id}`;
+                const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${place.name}&destination_place_id=${place.place_id}`;
                 
                 const card = document.createElement('div');
                 card.className = 'place-card';
@@ -234,7 +242,7 @@
                         <div class="card-info">
                             <h3 class="place-name">${place.name}</h3>
                             <div class="address-text">${place.vicinity}</div>
-                            <div class="dist-tag">📍 ${dist} km away</div>
+                            <div class="dist-tag">📍 ${distMiles} miles away</div>
                             <div id="status-${i}" class="q-badge q-offline">Off-platform</div>
                             <div id="est-${i}" class="est-box"></div>
                         </div>
@@ -246,7 +254,6 @@
                 `;
                 container.appendChild(card);
 
-                // Firebase Check
                 db.collection('providers').where('googlePlaceId', '==', place.place_id).get().then(snap => {
                     if (!snap.empty) {
                         const d = snap.docs[0].data();
