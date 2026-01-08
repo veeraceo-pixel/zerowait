@@ -14,90 +14,63 @@
         /* Layout Setup */
         body { font-family: 'Inter', sans-serif; background-color: var(--rm-bg); margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         
-        /* Navbar */
         .navbar { background: white; padding: 0.5rem 1.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); flex-shrink: 0; }
         .logo { font-weight: 800; color: var(--primary); text-decoration: none; font-size: 1.4rem; }
 
-        /* Search & Filters */
         .filter-strip { background: var(--rm-navy); padding: 12px 1.5rem; display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
-        .search-box-wrapper { flex: 1; }
         .search-input { width: 100%; padding: 12px 15px; border-radius: 4px; border: none; font-size: 1rem; outline: none; box-sizing: border-box; }
         
-        .service-filter-bar { display: flex; gap: 8px; overflow-x: auto; padding: 10px 1.5rem; background: white; border-bottom: 1px solid var(--border); scrollbar-width: none; flex-shrink: 0; }
+        .service-filter-bar { display: flex; gap: 8px; overflow-x: auto; padding: 10px 1.5rem; background: white; border-bottom: 1px solid var(--border); scrollbar-width: none; flex-shrink: 0; align-items: center; }
         .service-filter-bar::-webkit-scrollbar { display: none; }
+        
+        /* Distance Dropdown */
+        .dist-select { padding: 8px 12px; border-radius: 50px; border: 1px solid var(--border); background: #f8fafc; font-weight: 600; color: #64748b; font-size: 0.85rem; outline: none; cursor: pointer; }
+
         .filter-chip { white-space: nowrap; padding: 8px 18px; border-radius: 50px; background: #f1f5f9; border: 1px solid var(--border); font-size: 0.85rem; font-weight: 600; cursor: pointer; color: #64748b; transition: 0.2s; }
         .filter-chip.active { background: var(--rm-teal); color: white; border-color: var(--rm-teal); }
         .live-toggle { background: #ecfdf5; color: var(--success); border: 1px solid #34d399; }
         .live-toggle.active { background: var(--success); color: white; }
 
-        /* Main Content Area */
         .main-layout { display: flex; flex: 1; overflow: hidden; }
         .list-panel { flex: 1; overflow-y: auto; padding: 1.5rem; max-width: 500px; background: white; }
         .visual-panel { flex: 1.5; position: relative; border-left: 1px solid var(--border); background: #eee; }
         #map { width: 100%; height: 100%; }
 
-        /* List Cards */
+        /* Provider Cards */
         .place-card { background: white; margin-bottom: 1.5rem; border-radius: 4px; overflow: hidden; border-bottom: 4px solid var(--rm-teal); box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: transform 0.2s; cursor: pointer; }
-        .place-card:hover { transform: translateY(-2px); }
         .card-body { display: flex; flex-direction: row; }
         .card-img-container { width: 40%; height: 180px; position: relative; background: #f0f0f0; flex-shrink: 0; }
         .card-img { width: 100%; height: 100%; object-fit: cover; }
         .card-info { padding: 15px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
-        
-        .place-name { font-size: 1.1rem; font-weight: 700; color: var(--rm-navy); margin: 0 0 5px 0; }
+        .place-name { font-size: 1.1rem; font-weight: 700; color: var(--rm-navy); margin: 0; }
         .address-text { color: #666; font-size: 0.85rem; line-height: 1.4; }
-        .dist-tag { font-size: 0.75rem; color: var(--rm-teal); font-weight: 800; margin-top: 5px; }
+        .dist-tag { font-size: 0.75rem; color: var(--rm-teal); font-weight: 800; }
+        .est-box { font-size: 0.75rem; color: var(--success); font-weight: 600; margin-top: 5px; }
         
-        .q-badge { font-size: 0.7rem; font-weight: 800; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 8px; }
+        .q-badge { font-size: 0.7rem; font-weight: 800; padding: 4px 8px; border-radius: 4px; display: inline-block; }
         .q-online { background: #d1fae5; color: #065f46; border: 1px solid #34d399; }
         .q-offline { background: #f1f5f9; color: #64748b; }
-        .est-box { font-size: 0.75rem; color: var(--success); font-weight: 600; margin-top: 5px; }
 
         .card-footer { display: flex; background: #fafafa; border-top: 1px solid #eee; }
         .footer-btn { flex: 1; padding: 12px; border: none; background: transparent; cursor: pointer; font-weight: 700; font-size: 0.8rem; border-right: 1px solid #eee; text-align: center; text-decoration: none; color: var(--rm-navy); display: flex; align-items: center; justify-content: center; gap: 6px; }
         .btn-join-main { background: var(--rm-navy) !important; color: white !important; }
-        .footer-btn img { width: 16px; height: 16px; }
 
-        /* REDESIGNED: Photo Gallery Overlay */
-        #details-overlay { 
-            position: absolute; top:0; left:0; width:100%; height:100%; 
-            background: rgba(0, 0, 0, 0.95); 
-            display:none; flex-direction: column; z-index: 1000; 
-        }
-        #photo-strip { 
-            flex: 1; display: flex; overflow-x: auto; 
-            scroll-snap-type: x mandatory; 
-            align-items: center;
-            scrollbar-width: none;
-        }
-        #photo-strip::-webkit-scrollbar { display: none; }
-        #photo-strip img { 
-            height: auto; 
-            max-height: 85vh; 
-            min-width: 100%; 
-            object-fit: contain; 
-            scroll-snap-align: start; 
-        }
-        .close-btn { 
-            position:absolute; top:20px; right:20px; z-index:1100; 
-            background: white; border:none; border-radius:50%; 
-            width:44px; height:44px; cursor:pointer; font-size: 20px; 
-            font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
-        .gallery-hint {
-            position: absolute; bottom: 20px; width: 100%; text-align: center;
-            color: rgba(255,255,255,0.7); font-size: 0.9rem; pointer-events: none;
-        }
+        /* Gallery Overlay */
+        #details-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.95); display:none; flex-direction: column; z-index: 1000; }
+        #photo-strip { flex: 1; display: flex; overflow-x: auto; scroll-snap-type: x mandatory; align-items: center; scrollbar-width: none; }
+        #photo-strip img { max-height: 85vh; min-width: 100%; object-fit: contain; scroll-snap-align: start; }
+        .close-btn { position:absolute; top:20px; right:20px; z-index:1100; background: white; border:none; border-radius:50%; width:44px; height:44px; cursor:pointer; font-weight: bold; }
 
-        /* Map Controls */
-        #redo-search { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); z-index: 100; background: white; border: none; padding: 12px 24px; border-radius: 50px; font-weight: 700; display: none; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2); color: var(--rm-navy); }
+        /* Map UI Buttons */
+        #redo-search { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); z-index: 100; background: white; border: none; padding: 12px 24px; border-radius: 50px; font-weight: 700; display: none; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
         #gps-btn { position: absolute; bottom: 30px; right: 20px; z-index: 100; background: white; border: none; width: 50px; height: 50px; border-radius: 50%; box-shadow: 0 4px 15px rgba(0,0,0,0.2); cursor: pointer; font-size: 1.5rem; }
 
+        /* MOBILE OPTIMIZATION: REMOVE MAP */
         @media (max-width: 768px) {
-            .main-layout { flex-direction: column-reverse; }
-            .list-panel { max-width: 100%; flex: 1; }
-            .visual-panel { height: 300px; flex: none; }
-            .card-img-container { width: 120px; height: auto; }
+            .visual-panel { display: none !important; }
+            .list-panel { max-width: 100%; flex: 1; width: 100%; }
+            .card-body { flex-direction: column; }
+            .card-img-container { width: 100%; height: 200px; }
         }
     </style>
 </head>
@@ -107,28 +80,31 @@
         <a href="index.html" class="logo">skipQs</a>
         <div>
             <a href="dashboard.html" style="text-decoration:none; color: #444; margin-right:20px; font-size:0.9rem;">My Visits</a>
-            <a href="login.html" style="text-decoration:none; color: white; font-weight:700; font-size:0.9rem; background: var(--primary); padding: 8px 16px; border-radius: 4px;">Login</a>
+            <a href="login.html" style="text-decoration:none; color: white; background: var(--primary); padding: 8px 16px; border-radius: 4px; font-weight:700;">Login</a>
         </div>
     </nav>
 
     <div class="filter-strip">
-        <div class="search-box-wrapper">
-            <input type="text" id="locInput" class="search-input" placeholder="Search by area or postcode (e.g. Nizampet or M3)">
-        </div>
+        <input type="text" id="locInput" class="search-input" placeholder="Search by area or postcode...">
     </div>
 
-    <div class="service-filter-bar" id="filterBar">
+    <div class="service-filter-bar">
+        <select id="distFilter" class="dist-select" onchange="executePlacesSearch()">
+            <option value="2000">2 km</option>
+            <option value="5000" selected>5 km</option>
+            <option value="10000">10 km</option>
+            <option value="20000">20 km</option>
+        </select>
         <div class="filter-chip live-toggle" id="toggleLive" onclick="toggleLiveOnly()">⚡ Live Only</div>
-        <div class="filter-chip" data-type="salon">💇‍♀️ Salons</div>
+        <div class="filter-chip active" data-type="salon">💇‍♀️ Salons</div>
         <div class="filter-chip" data-type="dining">🍽️ Dining</div>
         <div class="filter-chip" data-type="clinic">🏥 Clinics</div>
         <div class="filter-chip" data-type="banking">🏦 Banking</div>
-        <div class="filter-chip" data-type="gym">🏋️ Gyms</div>
     </div>
 
     <div class="main-layout">
         <div class="list-panel">
-            <h2 id="list-title" style="margin:0 0 5px 0; font-size:1.2rem; color: var(--rm-navy);">Nearby Services</h2>
+            <h2 id="list-title" style="margin:0; font-size:1.2rem; color: var(--rm-navy);">Nearby Services</h2>
             <p id="counter" style="font-size:0.85rem; color:#666; margin-bottom:1.5rem;">Ready to search...</p>
             <div id="results"></div>
         </div>
@@ -137,11 +113,9 @@
             <button id="redo-search" onclick="redoSearch()">🔄 Search this area</button>
             <button id="gps-btn" onclick="forceGPS()">🎯</button>
             <div id="map"></div>
-            
             <div id="details-overlay">
                 <button class="close-btn" onclick="closeDetails()">✕</button>
                 <div id="photo-strip"></div>
-                <div class="gallery-hint">← Swipe for more photos →</div>
             </div>
         </div>
     </div>
@@ -152,78 +126,40 @@
 
     <script>
         const db = firebase.firestore();
-        const params = new URLSearchParams(window.location.search);
-        let serviceType = params.get("type") || 'salon';
+        let serviceType = 'salon';
         let liveOnly = false;
         let map, placesService, userLocation, markers = [];
 
         const SERVICE_MAP = {
-            salon: { keyword: "salon barber hair beauty", label: "Salons & Barbers", avgTime: 20 },
-            dining: { keyword: "restaurant cafe food", label: "Restaurants & Dining", avgTime: 15 },
-            clinic: { keyword: "clinic doctor health", label: "Clinics & Health", avgTime: 25 },
-            banking: { keyword: "bank finance atm", label: "Banking & Finance", avgTime: 10 },
-            gym: { keyword: "gym fitness yoga", label: "Gyms & Fitness", avgTime: 0 }
+            salon: { keyword: "salon barber hair beauty", label: "Salons", avgTime: 20 },
+            dining: { keyword: "restaurant cafe food", label: "Dining", avgTime: 15 },
+            clinic: { keyword: "clinic doctor health", label: "Clinics", avgTime: 25 },
+            banking: { keyword: "bank finance atm", label: "Banking", avgTime: 10 }
         };
 
-        // UI Initialization
-        document.querySelectorAll('.filter-chip[data-type]').forEach(chip => {
-            if(chip.dataset.type === serviceType) chip.classList.add('active');
-            chip.onclick = () => {
-                document.querySelectorAll('.filter-chip[data-type]').forEach(c => c.classList.remove('active'));
-                chip.classList.add('active');
-                serviceType = chip.dataset.type;
-                document.getElementById('list-title').innerText = SERVICE_MAP[serviceType].label;
-                executePlacesSearch();
-            };
-        });
-
-        function toggleLiveOnly() {
-            liveOnly = !liveOnly;
-            document.getElementById('toggleLive').classList.toggle('active', liveOnly);
-            executePlacesSearch();
-        }
-
+        // DESKTOP LOAD FIX
         function initMap() {
-            const initialLoc = params.get("l");
-            if (initialLoc) {
-                geocodeAndSearch(initialLoc);
-            } else {
-                navigator.geolocation.getCurrentPosition(
-                    (pos) => { 
-                        userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude }; 
-                        setupMap(); 
-                    },
-                    () => { 
-                        userLocation = { lat: 17.4065, lng: 78.4772 }; 
-                        setupMap(); 
-                    }
-                );
-            }
+            navigator.geolocation.getCurrentPosition(
+                (pos) => { 
+                    userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude }; 
+                    setupMap(); 
+                },
+                () => { 
+                    userLocation = { lat: 17.4065, lng: 78.4772 }; 
+                    setupMap(); 
+                }
+            );
 
             document.getElementById('locInput').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') geocodeAndSearch(e.target.value);
-            });
-        }
-
-        function geocodeAndSearch(query) {
-            const geocoder = new google.maps.Geocoder();
-            geocoder.geocode({ address: query }, (results, status) => {
-                if (status === "OK") {
-                    userLocation = results[0].geometry.location;
-                    if (!map) setupMap();
-                    else {
-                        map.setCenter(userLocation);
-                        executePlacesSearch();
-                    }
-                }
+                if (e.key === 'Enter') geocodeSearch(e.target.value);
             });
         }
 
         function setupMap() {
-            map = new google.maps.Map(document.getElementById("map"), {
-                center: userLocation,
-                zoom: 14,
-                disableDefaultUI: true,
+            const mapEl = document.getElementById("map");
+            if(!mapEl) return;
+            map = new google.maps.Map(mapEl, {
+                center: userLocation, zoom: 14, disableDefaultUI: true,
                 styles: [{ featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] }]
             });
             placesService = new google.maps.places.PlacesService(map);
@@ -245,29 +181,37 @@
             executePlacesSearch();
         }
 
+        function toggleLiveOnly() {
+            liveOnly = !liveOnly;
+            document.getElementById('toggleLive').classList.toggle('active', liveOnly);
+            executePlacesSearch();
+        }
+
+        function geocodeSearch(query) {
+            new google.maps.Geocoder().geocode({ address: query }, (results, status) => {
+                if (status === "OK") {
+                    userLocation = results[0].geometry.location;
+                    if(map) map.setCenter(userLocation);
+                    executePlacesSearch();
+                }
+            });
+        }
+
         function executePlacesSearch() {
             if(!placesService) return;
             markers.forEach(m => m.setMap(null));
             markers = [];
             
+            const radius = document.getElementById('distFilter').value;
             const config = SERVICE_MAP[serviceType];
-            const request = {
-                location: userLocation,
-                radius: '4000',
-                keyword: config.keyword
-            };
 
-            placesService.nearbySearch(request, (results, status) => {
-                const container = document.getElementById("results");
+            placesService.nearbySearch({
+                location: userLocation,
+                radius: radius,
+                keyword: config.keyword
+            }, (results, status) => {
                 if (status === google.maps.places.PlacesServiceStatus.OK) {
-                    results.sort((a, b) => 
-                        google.maps.geometry.spherical.computeDistanceBetween(userLocation, a.geometry.location) - 
-                        google.maps.geometry.spherical.computeDistanceBetween(userLocation, b.geometry.location)
-                    );
                     renderList(results);
-                } else {
-                    container.innerHTML = `<div style="padding:20px; text-align:center; color:#666;">No ${config.label} found here.</div>`;
-                    document.getElementById("counter").innerText = "0 results found.";
                 }
             });
         }
@@ -279,42 +223,30 @@
 
             results.forEach((place, i) => {
                 const dist = (google.maps.geometry.spherical.computeDistanceBetween(userLocation, place.geometry.location) / 1000).toFixed(1);
-                const thumb = place.photos ? place.photos[0].getUrl({maxWidth: 400}) : 'https://via.placeholder.com/400x250?text=No+Image';
-                const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination_place_id=${place.place_id}`;
-
+                const thumb = place.photos ? place.photos[0].getUrl({maxWidth: 400}) : 'https://via.placeholder.com/400x250';
+                const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${place.geometry.location.lat()},${place.geometry.location.lng()}&destination_place_id=${place.place_id}`;
+                
                 const card = document.createElement('div');
                 card.className = 'place-card';
                 card.innerHTML = `
                     <div class="card-body" onclick="selectPlace('${place.place_id}')">
-                        <div class="card-img-container">
-                            <img src="${thumb}" class="card-img">
-                        </div>
+                        <div class="card-img-container"><img src="${thumb}" class="card-img"></div>
                         <div class="card-info">
-                            <div>
-                                <h3 class="place-name">${place.name}</h3>
-                                <div class="address-text">${place.vicinity}</div>
-                                <div class="dist-tag">📍 ${dist} km away</div>
-                            </div>
-                            <div>
-                                <div id="status-${i}" class="q-badge q-offline">No Live Queue</div>
-                                <div id="est-${i}" class="est-box"></div>
-                            </div>
+                            <h3 class="place-name">${place.name}</h3>
+                            <div class="address-text">${place.vicinity}</div>
+                            <div class="dist-tag">📍 ${dist} km away</div>
+                            <div id="status-${i}" class="q-badge q-offline">Off-platform</div>
+                            <div id="est-${i}" class="est-box"></div>
                         </div>
                     </div>
                     <div class="card-footer" id="actions-${i}">
                         <a href="${mapsUrl}" target="_blank" class="footer-btn">Directions</a>
-                        <a href="provider-signup.html" class="footer-btn">Register Business</a>
+                        <a href="provider-signup.html" class="footer-btn">Claim Business</a>
                     </div>
                 `;
                 container.appendChild(card);
 
-                const marker = new google.maps.Marker({
-                    position: place.geometry.location,
-                    map: map,
-                    label: { text: (i + 1).toString(), color: 'white', fontWeight: 'bold' }
-                });
-                markers.push(marker);
-
+                // Firebase Check
                 db.collection('providers').where('googlePlaceId', '==', place.place_id).get().then(snap => {
                     if (!snap.empty) {
                         const d = snap.docs[0].data();
@@ -324,7 +256,7 @@
 
                         document.getElementById(`status-${i}`).className = "q-badge q-online";
                         document.getElementById(`status-${i}`).innerText = `LIVE: ${count} in line`;
-                        if(currentConfig.avgTime > 0) document.getElementById(`est-${i}`).innerHTML = `⌛ ~${waitMins}m wait • Service at ${serviceTime}`;
+                        document.getElementById(`est-${i}`).innerText = `⌛ ~${waitMins}m wait • at ${serviceTime}`;
 
                         let whatsappHtml = d.phone ? `<a href="https://wa.me/${d.phone.toString().replace(/\D/g, '')}" target="_blank" class="footer-btn">Chat</a>` : "";
                         document.getElementById(`actions-${i}`).innerHTML = `
@@ -340,31 +272,28 @@
             document.getElementById("counter").innerText = `Found ${results.length} results.`;
         }
 
-        // Updated SelectPlace logic: Clean full-screen photo gallery
         function selectPlace(pid) {
             const overlay = document.getElementById('details-overlay');
             const strip = document.getElementById('photo-strip');
-            
-            strip.innerHTML = '<div style="color:white; padding:40px; text-align:center; width:100%;">Loading Gallery...</div>';
             overlay.style.display = 'flex';
-            
-            placesService.getDetails({ placeId: pid, fields: ['photos'] }, (details, status) => {
-                if (status === google.maps.places.PlacesServiceStatus.OK && details.photos) {
-                    strip.innerHTML = details.photos.map(p => 
-                        `<img src="${p.getUrl({maxWidth: 1600, maxHeight: 1200})}">`
-                    ).join('');
-                    strip.scrollLeft = 0;
-                } else {
-                    strip.innerHTML = '<div style="color:white; padding:40px; text-align:center; width:100%;">No photos available.</div>';
+            placesService.getDetails({ placeId: pid, fields: ['photos'] }, (details) => {
+                if (details && details.photos) {
+                    strip.innerHTML = details.photos.map(p => `<img src="${p.getUrl({maxWidth: 1200})}">`).join('');
                 }
             });
         }
 
-        function closeDetails() {
-            document.getElementById('details-overlay').style.display = 'none';
-        }
-    </script>
+        function closeDetails() { document.getElementById('details-overlay').style.display = 'none'; }
 
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAJFGE5OFfn-OhDNJ_rWO5oi2d2CHl2fXE&libraries=places,geometry&callback=initMap" async defer></script>
+        document.querySelectorAll('.filter-chip[data-type]').forEach(chip => {
+            chip.onclick = () => {
+                document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+                serviceType = chip.dataset.type;
+                executePlacesSearch();
+            };
+        });
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_KEY&libraries=places,geometry&callback=initMap" async defer></script>
 </body>
 </html>
