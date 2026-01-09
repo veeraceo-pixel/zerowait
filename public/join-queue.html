@@ -153,24 +153,25 @@
         }
 
         // UPDATED: Calculates wait time based on actual service times of people ahead
-        function previewQueue() {
-            db.collection('queues')
-                .where('providerId', '==', providerId)
-                .where('status', '==', 'waiting')
-                .onSnapshot(snap => {
-                    let totalBacklogTime = 0;
-                    
-                    // Sum up the service durations of every person currently in line
-                    snap.forEach(doc => {
-                        const data = doc.data();
-                        totalBacklogTime += (Number(data.serviceDuration) || 0);
-                    });
+function previewQueue() {
+    db.collection('queues')
+        .where('providerId', '==', providerId)
+        .where('status', 'in', ['waiting', 'serving']) // Include the person currently being served
+        .onSnapshot(snap => {
+            let totalBacklogTime = 0;
+            let waitingCount = 0;
 
-                    document.getElementById('aheadCount').innerText = snap.size;
-                    currentBacklog = totalBacklogTime; 
-                    calculateWait();
-                });
-        }
+            snap.forEach(doc => {
+                const data = doc.data();
+                totalBacklogTime += (Number(data.serviceDuration) || 0);
+                if(data.status === 'waiting') waitingCount++;
+            });
+
+            document.getElementById('aheadCount').innerText = waitingCount;
+            currentBacklog = totalBacklogTime; 
+            calculateWait();
+        });
+}
 
         // UPDATED: Wait time only depends on people ahead, not the current selection
         function calculateWait() {
