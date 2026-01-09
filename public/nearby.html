@@ -159,10 +159,8 @@
 
         let map, placesService, userLocation, markers = [];
 
-        // UI Initialization
         document.getElementById("title").innerText = SERVICE_MAP[serviceType].label;
 
-        // AUTH LISTENER: Fixes "Login" button showing when already logged in
         firebase.auth().onAuthStateChanged((user) => {
             const authBtn = document.getElementById('authBtn');
             if (user && !user.isAnonymous) {
@@ -222,7 +220,7 @@
                         executePlacesSearch(); 
                     } else { setupMap(); }
                 }, () => {
-                    userLocation = new google.maps.LatLng(53.4808, -2.2426); // Fallback Manchester
+                    userLocation = new google.maps.LatLng(53.4808, -2.2426);
                     if (map) { map.setCenter(userLocation); executePlacesSearch(); } 
                     else { setupMap(); }
                 }, { timeout: 5000 });
@@ -260,7 +258,6 @@
             markers.forEach(m => m.setMap(null));
             markers = [];
             
-            // Clear old Firebase listeners
             activeListeners.forEach(unsub => unsub());
             activeListeners = [];
             
@@ -282,110 +279,103 @@
             });
         }
 
-function renderList(results) {
-    const container = document.getElementById("results");
-    container.innerHTML = "";
-    
-    // 1. Clean up old listeners to prevent memory leaks/lag
-    if (activeListeners && activeListeners.length > 0) {
-        activeListeners.forEach(unsub => {
-            if (typeof unsub === 'function') unsub();
-        });
-    }
-    activeListeners = [];
+        function renderList(results) {
+            const container = document.getElementById("results");
+            container.innerHTML = "";
+            
+            activeListeners.forEach(unsub => unsub());
+            activeListeners = [];
 
-    results.forEach((place, i) => {
-        const rawDist = google.maps.geometry.spherical.computeDistanceBetween(userLocation, place.geometry.location);
-        const miles = (rawDist * 0.000621371).toFixed(1);
-        const driveTime = Math.round((miles / 12) * 60) + 2; 
-        const thumb = place.photos ? place.photos[0].getUrl({maxWidth: 150}) : 'https://via.placeholder.com/150';
+            results.forEach((place, i) => {
+                const rawDist = google.maps.geometry.spherical.computeDistanceBetween(userLocation, place.geometry.location);
+                const miles = (rawDist * 0.000621371).toFixed(1);
+                const driveTime = Math.round((miles / 12) * 60) + 2; 
+                const thumb = place.photos ? place.photos[0].getUrl({maxWidth: 150}) : 'https://via.placeholder.com/150';
 
-        const marker = new google.maps.Marker({
-            position: place.geometry.location, 
-            map: map, 
-            label: { text: (i+1).toString(), color: "white" }
-        });
-        markers.push(marker);
+                const marker = new google.maps.Marker({
+                    position: place.geometry.location, 
+                    map: map, 
+                    label: { text: (i+1).toString(), color: "white" }
+                });
+                markers.push(marker);
 
-        const card = document.createElement('div');
-        card.className = 'place-card';
-        card.id = `card-${i}`;
-        card.setAttribute('data-live', 'false');
-        
-        // 2. FIXED GOOGLE MAPS URL (Removed the '0' typo and fixed template syntax)
-        const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${place.geometry.location.lat()},${place.geometry.location.lng()}&destination_place_id=${place.place_id}`;
+                const card = document.createElement('div');
+                card.className = 'place-card';
+                card.id = `card-${i}`;
+                card.setAttribute('data-live', 'false');
+                
+                const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${place.geometry.location.lat()},${place.geometry.location.lng()}&destination_place_id=${place.place_id}`;
 
-        card.innerHTML = `
-            <div onclick="selectPlace(${i}, '${place.place_id}', ${place.geometry.location.lat()}, ${place.geometry.location.lng()})">
-                <div class="card-top">
-                    <img src="${thumb}" class="thumb">
-                    <div style="flex:1">
-                        <strong style="font-size:0.95rem;">${place.name}</strong>
-                        <div class="info-tags">
-                            <span class="dist-tag">${miles} mi</span>
-                            <span class="time-tag">🚗 ${driveTime} min drive</span>
+                card.innerHTML = `
+                    <div onclick="selectPlace(${i}, '${place.place_id}', ${place.geometry.location.lat()}, ${place.geometry.location.lng()})">
+                        <div class="card-top">
+                            <img src="${thumb}" class="thumb">
+                            <div style="flex:1">
+                                <strong style="font-size:0.95rem;">${place.name}</strong>
+                                <div class="info-tags">
+                                    <span class="dist-tag">${miles} mi</span>
+                                    <span class="time-tag">🚗 ${driveTime} min drive</span>
+                                </div>
+                                <span style="font-size:0.75rem; color:var(--text-muted);">${place.vicinity}</span>
+                                <div id="status-${i}" class="q-badge q-offline">No Live Queue</div>
+                                <div id="est-${i}" class="est-box"></div>
+                            </div>
                         </div>
-                        <span style="font-size:0.75rem; color:var(--text-muted);">${place.vicinity}</span>
-                        <div id="status-${i}" class="q-badge q-offline">No Live Queue</div>
-                        <div id="est-${i}" class="est-box"></div>
                     </div>
-                </div>
-            </div>
-            <div class="action-row" id="actions-${i}">
-                 <a href="${mapsUrl}" target="_blank" class="btn btn-sec">Directions</a>
-                 <button onclick="window.location.href='provider-signup.html'" class="btn btn-reg">BUSINESS OWNER?<br>REGISTER FREE</button>
-            </div>
-        `;
-        container.appendChild(card);
-
-        // 3. REVERSE APPROACH LISTENER
-        const unsub = db.collection('providers').where('googlePlaceId', '==', place.place_id)
-        .onSnapshot(snap => {
-            const statusDiv = document.getElementById(`status-${i}`);
-            const estDiv = document.getElementById(`est-${i}`);
-            const actionDiv = document.getElementById(`actions-${i}`);
-
-            if (!snap.empty) {
-                const d = snap.docs[0].data();
-                const providerId = snap.docs[0].id;
-                const count = d.queueCount || 0;
-
-                // Priority: 1. Provider's own time | 2. Category Avg | 3. 15min fallback
-                const providerTime = d.providedServiceTime || d.avgServiceTime || (SERVICE_MAP[serviceType] ? SERVICE_MAP[serviceType].avgTime : 15);
-                
-                card.setAttribute('data-live', 'true');
-                statusDiv.className = "q-badge q-online";
-                statusDiv.innerText = `LIVE: ${count} in line`;
-                
-                if (count > 0) {
-                    const waitMins = count * providerTime;
-                    const serviceTime = new Date(new Date().getTime() + waitMins * 60000);
-                    const timeStr = serviceTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    estDiv.innerHTML = `⌛ Wait: <b>~${waitMins}m</b> • Service at <b>${timeStr}</b>`;
-                } else {
-                    estDiv.innerHTML = `⌛ <b>No wait</b> • Join now!`;
-                }
-
-                let whatsappHtml = "";
-                if (d.phone) {
-                    const cleanPhone = d.phone.toString().replace(/\D/g, '');
-                    whatsappHtml = `<a href="https://wa.me/${cleanPhone}" target="_blank" class="btn btn-whatsapp"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"> Chat</a>`;
-                }
-
-                actionDiv.innerHTML = `
-                    <a href="${mapsUrl}" target="_blank" class="btn btn-sec">Directions</a>
-                    ${whatsappHtml}
-                    <button onclick="window.location.href='join-queue.html?id=${providerId}'" class="btn btn-join">JOIN QUEUE</button>
+                    <div class="action-row" id="actions-${i}">
+                         <a href="${mapsUrl}" target="_blank" class="btn btn-sec">Directions</a>
+                         <button onclick="window.location.href='provider-signup.html'" class="btn btn-reg">BUSINESS OWNER?<br>REGISTER FREE</button>
+                    </div>
                 `;
-                
-                // Refresh the "Live Only" filter if it's currently active
-                if (liveOnly) applyLiveFilter();
-            }
-        });
-        activeListeners.push(unsub);
-    });
-    document.getElementById("counter").innerText = `Found ${results.length} results nearby.`;
-}
+                container.appendChild(card);
+
+                const unsub = db.collection('providers').where('googlePlaceId', '==', place.place_id)
+                .onSnapshot(snap => {
+                    const statusDiv = document.getElementById(`status-${i}`);
+                    const estDiv = document.getElementById(`est-${i}`);
+                    const actionDiv = document.getElementById(`actions-${i}`);
+
+                    if (!snap.empty) {
+                        const d = snap.docs[0].data();
+                        const providerId = snap.docs[0].id;
+                        const count = d.queueCount || 0;
+
+                        // FIX: Ensure this logic matches join-queue.html logic
+                        const providerTime = d.providedServiceTime || d.avgServiceTime || (SERVICE_MAP[serviceType] ? SERVICE_MAP[serviceType].avgTime : 15);
+                        
+                        card.setAttribute('data-live', 'true');
+                        statusDiv.className = "q-badge q-online";
+                        statusDiv.innerText = `LIVE: ${count} in line`;
+                        
+                        if (count > 0) {
+                            const waitMins = count * providerTime;
+                            const serviceTime = new Date(new Date().getTime() + waitMins * 60000);
+                            const timeStr = serviceTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                            estDiv.innerHTML = `⌛ Wait: <b>~${waitMins}m</b> • Service at <b>${timeStr}</b>`;
+                        } else {
+                            estDiv.innerHTML = `⌛ <b>No wait</b> • Join now!`;
+                        }
+
+                        let whatsappHtml = "";
+                        if (d.phone) {
+                            const cleanPhone = d.phone.toString().replace(/\D/g, '');
+                            whatsappHtml = `<a href="https://wa.me/${cleanPhone}" target="_blank" class="btn btn-whatsapp"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"> Chat</a>`;
+                        }
+
+                        actionDiv.innerHTML = `
+                            <a href="${mapsUrl}" target="_blank" class="btn btn-sec">Directions</a>
+                            ${whatsappHtml}
+                            <button onclick="window.location.href='join-queue.html?id=${providerId}'" class="btn btn-join">JOIN QUEUE</button>
+                        `;
+                        
+                        if (liveOnly) applyLiveFilter();
+                    }
+                });
+                activeListeners.push(unsub);
+            });
+            document.getElementById("counter").innerText = `Found ${results.length} results nearby.`;
+        }
+
         function selectPlace(index, pid, lat, lng) {
             document.querySelectorAll('.place-card').forEach(c => c.classList.remove('active'));
             document.getElementById(`card-${index}`).classList.add('active');
