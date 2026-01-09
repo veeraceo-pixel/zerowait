@@ -101,7 +101,19 @@
         const urlParams = new URLSearchParams(window.location.search);
         const providerId = urlParams.get('id') || urlParams.get('provider');
         let currentBusinessName = "";
-        let currentBacklog = 0; // Global variable to track total time of people ahead
+        let providerDefaultTime = 15; // Fallback time per person
+
+        // 1. Auth State Listener
+        firebase.auth().onAuthStateChanged((user) => {
+            const authBtn = document.getElementById('authBtn');
+            if (user && !user.isAnonymous) {
+                authBtn.innerText = "Dashboard";
+                authBtn.href = "dashboard.html";
+            } else {
+                authBtn.innerText = "Login";
+                authBtn.href = "login.html";
+            }
+        });
 
         window.onload = () => {
             if (!providerId) return showError("No Business ID found.");
@@ -115,6 +127,10 @@
             if (doc.exists) {
                 const data = doc.data();
                 currentBusinessName = data.businessName;
+                
+                // REVERSE LOGIC: Prioritize provider's custom speed setting
+                providerDefaultTime = data.providedServiceTime || data.avgServiceTime || 15;
+                
                 document.getElementById('bizName').innerText = currentBusinessName;
                 if (data.menuImageUrl) {
                     const img = document.getElementById('menuImgPreview');
@@ -134,7 +150,7 @@
                     const item = document.createElement('div');
                     item.className = 'svc-item';
                     item.innerHTML = `
-                        <input type="checkbox" name="svc" value="${s.duration}" data-name="${s.name}" onchange="calculateWait()">
+                        <input type="checkbox" name="svc" value="${s.duration}" data-name="${s.name}">
                         <div class="svc-info">
                             <span class="svc-name">${s.name}</span>
                             <span class="svc-meta">$${s.price || 0} • ${s.duration} mins</span>
@@ -144,7 +160,6 @@
                         if (e.target.type !== 'checkbox') {
                             const cb = item.querySelector('input');
                             cb.checked = !cb.checked;
-                            calculateWait();
                         }
                     };
                     container.appendChild(item);
@@ -152,122 +167,103 @@
             });
         }
 
-        // UPDATED: Calculates wait time based on actual service times of people ahead
-function previewQueue() {
-    db.collection('queues')
-        .where('providerId', '==', providerId)
-        .where('status', 'in', ['waiting', 'serving']) // Include the person currently being served
-        .onSnapshot(snap => {
-            let totalBacklogTime = 0;
-            let waitingCount = 0;
-
-            snap.forEach(doc => {
-                const data = doc.data();
-                totalBacklogTime += (Number(data.serviceDuration) || 0);
-                if(data.status === 'waiting') waitingCount++;
-            });
-
-            document.getElementById('aheadCount').innerText = waitingCount;
-            currentBacklog = totalBacklogTime; 
-            calculateWait();
-        });
-}
-
-        // UPDATED: Wait time only depends on people ahead, not the current selection
-        function calculateWait() {
-            // The wait time for a new customer is the total time required for all previous visitors
-            document.getElementById('estWait').innerText = currentBacklog;
+        // 2. REVERSE APPROACH: Wait = People Ahead * Provider Speed
+        function previewQueue() {
+            db.collection('queues')
+                .where('providerId', '==', providerId)
+                .where('status', '==', 'waiting')
+                .onSnapshot(snap => {
+                    const countAhead = snap.size;
+                    document.getElementById('aheadCount').innerText = countAhead;
+                    
+                    const totalWait = countAhead * providerDefaultTime;
+                    document.getElementById('estWait').innerText = totalWait;
+                });
         }
 
-      async function handleCustomerJoin() {
-    const name = document.getElementById('custName').value.trim();
-    const phone = document.getElementById('custPhone').value.trim();
-    const selectedBoxes = document.querySelectorAll('input[name="svc"]:checked');
+        async function handleCustomerJoin() {
+            const name = document.getElementById('custName').value.trim();
+            const phone = document.getElementById('custPhone').value.trim();
+            const selectedBoxes = document.querySelectorAll('input[name="svc"]:checked');
 
-    if (selectedBoxes.length === 0) return alert("Please select at least one service.");
-    if (!name || !phone) return alert("Please enter your name and phone.");
+            if (selectedBoxes.length === 0) return alert("Please select at least one service.");
+            if (!name || !phone) return alert("Please enter your name and phone.");
 
-    const btn = document.getElementById('joinBtn');
-    btn.disabled = true;
+            const btn = document.getElementById('joinBtn');
+            btn.disabled = true;
 
-    try {
-        let user = firebase.auth().currentUser;
-        if (!user) user = (await firebase.auth().signInAnonymously()).user;
+            try {
+                let user = firebase.auth().currentUser;
+                // Sign in anonymously if not logged in to keep Firestore secure
+                if (!user) user = (await firebase.auth().signInAnonymously()).user;
 
-        const selectedSvcNames = Array.from(selectedBoxes).map(cb => cb.dataset.name);
-        let myTotalDuration = 0;
-        selectedBoxes.forEach(cb => myTotalDuration += Number(cb.value));
+                const selectedSvcNames = Array.from(selectedBoxes).map(cb => cb.dataset.name);
+                let myTotalDuration = 0;
+                selectedBoxes.forEach(cb => myTotalDuration += Number(cb.value));
 
-        const estTimeDate = new Date(Date.now() + currentBacklog * 60000);
+                const currentWaitMins = parseInt(document.getElementById('estWait').innerText);
+                const estTimeDate = new Date(Date.now() + currentWaitMins * 60000);
 
-        // 1. Create the Queue Entry
-        const newDoc = await db.collection('queues').add({
-            userId: user.uid,
-            customerName: name,
-            customerPhone: phone,
-            providerId: providerId,
-            businessName: currentBusinessName,
-            selectedService: selectedSvcNames.join(", "),
-            serviceDuration: myTotalDuration,
-            status: 'waiting',
-            joinedAt: firebase.firestore.FieldValue.serverTimestamp(),
-            estimatedTime: firebase.firestore.Timestamp.fromDate(estTimeDate)
-        });
+                // Add to Queue
+                const newDoc = await db.collection('queues').add({
+                    userId: user.uid,
+                    customerName: name,
+                    customerPhone: phone,
+                    providerId: providerId,
+                    businessName: currentBusinessName,
+                    selectedService: selectedSvcNames.join(", "),
+                    serviceDuration: myTotalDuration,
+                    status: 'waiting',
+                    joinedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    estimatedTime: firebase.firestore.Timestamp.fromDate(estTimeDate)
+                });
 
-        // 2. IMPORTANT FIX: Update the provider's total count 
-        // This ensures the Search Results page sees the new person immediately
-        await db.collection('providers').doc(providerId).update({
-            queueCount: firebase.firestore.FieldValue.increment(1)
-        });
+                // Update Provider's live count for the search results page
+                await db.collection('providers').doc(providerId).update({
+                    queueCount: firebase.firestore.FieldValue.increment(1)
+                });
 
-        startLiveTracking(newDoc.id, selectedSvcNames.join(", "));
-    } catch (err) { 
-        console.error(err);
-        alert("Error joining queue: " + err.message); 
-        btn.disabled = false; 
-    }
-}
-    function startLiveTracking(myQueueId, svcNames) {
-    document.getElementById('joinSection').classList.add('hidden');
-    document.getElementById('statusSection').classList.remove('hidden');
-    document.getElementById('selectedSvcLabel').innerText = "Services: " + svcNames;
+                startLiveTracking(newDoc.id, selectedSvcNames.join(", "));
+            } catch (err) { 
+                console.error(err);
+                alert("Error: " + err.message); 
+                btn.disabled = false; 
+            }
+        }
 
-    // Listen for real-time changes in the queue
-    db.collection('queues')
-        .where('providerId', '==', providerId)
-        .where('status', '==', 'waiting')
-        .orderBy('joinedAt', 'asc')
-        .onSnapshot(snap => {
-            const docs = snap.docs.map(d => ({id: d.id, ...d.data()}));
-            const myIndex = docs.findIndex(d => d.id === myQueueId);
-            
-            if (myIndex !== -1) {
-                // THE TIMER LOGIC:
-                // Sum up the specific service times for only the people positioned BEFORE you
-                let waitBeforeMe = 0;
-                for(let i = 0; i < myIndex; i++) {
-                    // Ensure duration is treated as a number
-                    waitBeforeMe += (Number(docs[i].serviceDuration) || 0);
-                }
-                
-                // Update the Customer's Live Timer and Position
-                document.getElementById('livePos').innerText = myIndex + 1;
-                document.getElementById('liveWait').innerText = waitBeforeMe;
-            } else {
-                // Logic for when status changes to 'serving' or 'completed'
-                db.collection('queues').doc(myQueueId).get().then(doc => {
-                    if(doc.exists && doc.data().status === 'serving') {
-                        document.getElementById('statusSection').innerHTML = `
-                            <div style="padding: 2rem;">
-                                <h2 style='color:#166534; font-size: 2rem;'>It's Your Turn!</h2>
-                                <p style="font-size: 1.1rem;">Please head to the counter now.</p>
-                                <button onclick="location.reload()" class="btn">Done</button>
-                            </div>`;
+        function startLiveTracking(myQueueId, svcNames) {
+            document.getElementById('joinSection').classList.add('hidden');
+            document.getElementById('statusSection').classList.remove('hidden');
+            document.getElementById('selectedSvcLabel').innerText = "Services: " + svcNames;
+
+            db.collection('queues')
+                .where('providerId', '==', providerId)
+                .where('status', '==', 'waiting')
+                .orderBy('joinedAt', 'asc')
+                .onSnapshot(snap => {
+                    const docs = snap.docs;
+                    const myIndex = docs.findIndex(d => d.id === myQueueId);
+                    
+                    if (myIndex !== -1) {
+                        // Position is index + 1
+                        document.getElementById('livePos').innerText = myIndex + 1;
+                        // Wait is people ahead (myIndex) * provider speed
+                        document.getElementById('liveWait').innerText = myIndex * providerDefaultTime;
+                    } else {
+                        // If no longer in "waiting" list, check if being served
+                        db.collection('queues').doc(myQueueId).get().then(doc => {
+                            if(doc.exists && doc.data().status === 'serving') {
+                                document.getElementById('statusSection').innerHTML = `
+                                    <div style="padding: 1rem; text-align:center;">
+                                        <h2 style='color:#059669; font-size: 2.2rem;'>Your Turn!</h2>
+                                        <p style="font-weight:600;">Please head to the counter/entrance now.</p>
+                                        <button onclick="location.reload()" class="btn">New Booking</button>
+                                    </div>`;
+                            }
+                        });
                     }
                 });
-            }
-        });
-}
+        }
 
         function showError(msg) {
             const errDiv = document.getElementById('errorMessage');
