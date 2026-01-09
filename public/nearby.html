@@ -286,8 +286,11 @@ function renderList(results) {
     const container = document.getElementById("results");
     container.innerHTML = "";
     
-    if (window.activeListeners) {
-        activeListeners.forEach(unsub => unsub());
+    // 1. Clean up old listeners to prevent memory leaks/lag
+    if (activeListeners && activeListeners.length > 0) {
+        activeListeners.forEach(unsub => {
+            if (typeof unsub === 'function') unsub();
+        });
     }
     activeListeners = [];
 
@@ -307,7 +310,9 @@ function renderList(results) {
         const card = document.createElement('div');
         card.className = 'place-card';
         card.id = `card-${i}`;
+        card.setAttribute('data-live', 'false');
         
+        // 2. FIXED GOOGLE MAPS URL (Removed the '0' typo and fixed template syntax)
         const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${place.geometry.location.lat()},${place.geometry.location.lng()}&destination_place_id=${place.place_id}`;
 
         card.innerHTML = `
@@ -333,7 +338,7 @@ function renderList(results) {
         `;
         container.appendChild(card);
 
-        // REAL-TIME LISTENER: No "avgTime" passed from our side
+        // 3. REVERSE APPROACH LISTENER
         const unsub = db.collection('providers').where('googlePlaceId', '==', place.place_id)
         .onSnapshot(snap => {
             const statusDiv = document.getElementById(`status-${i}`);
@@ -345,35 +350,41 @@ function renderList(results) {
                 const providerId = snap.docs[0].id;
                 const count = d.queueCount || 0;
 
-                // WE DO NOT PASS A NUMBER: 
-                // We use d.providedServiceTime (what they entered in their dashboard)
-                // If they haven't provided one, we show "Wait varies" instead of a fake number
-                const providerTime = d.providedServiceTime; 
+                // Priority: 1. Provider's own time | 2. Category Avg | 3. 15min fallback
+                const providerTime = d.providedServiceTime || d.avgServiceTime || (SERVICE_MAP[serviceType] ? SERVICE_MAP[serviceType].avgTime : 15);
                 
                 card.setAttribute('data-live', 'true');
                 statusDiv.className = "q-badge q-online";
                 statusDiv.innerText = `LIVE: ${count} in line`;
                 
-                if (providerTime && count > 0) {
+                if (count > 0) {
                     const waitMins = count * providerTime;
                     const serviceTime = new Date(new Date().getTime() + waitMins * 60000);
                     const timeStr = serviceTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                     estDiv.innerHTML = `⌛ Wait: <b>~${waitMins}m</b> • Service at <b>${timeStr}</b>`;
-                } else if (count > 0) {
-                    estDiv.innerHTML = `⌛ Wait: <b>Check inside</b>`;
+                } else {
+                    estDiv.innerHTML = `⌛ <b>No wait</b> • Join now!`;
                 }
 
-                let whatsappHtml = d.phone ? `<a href="https://wa.me/${d.phone.toString().replace(/\D/g, '')}" target="_blank" class="btn btn-whatsapp">Chat</a>` : "";
+                let whatsappHtml = "";
+                if (d.phone) {
+                    const cleanPhone = d.phone.toString().replace(/\D/g, '');
+                    whatsappHtml = `<a href="https://wa.me/${cleanPhone}" target="_blank" class="btn btn-whatsapp"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"> Chat</a>`;
+                }
 
                 actionDiv.innerHTML = `
                     <a href="${mapsUrl}" target="_blank" class="btn btn-sec">Directions</a>
                     ${whatsappHtml}
                     <button onclick="window.location.href='join-queue.html?id=${providerId}'" class="btn btn-join">JOIN QUEUE</button>
                 `;
+                
+                // Refresh the "Live Only" filter if it's currently active
+                if (liveOnly) applyLiveFilter();
             }
         });
         activeListeners.push(unsub);
     });
+    document.getElementById("counter").innerText = `Found ${results.length} results nearby.`;
 }
         function selectPlace(index, pid, lat, lng) {
             document.querySelectorAll('.place-card').forEach(c => c.classList.remove('active'));
