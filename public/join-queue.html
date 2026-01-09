@@ -178,48 +178,54 @@
             document.getElementById('estWait').innerText = currentBacklog;
         }
 
-        async function handleCustomerJoin() {
-            const name = document.getElementById('custName').value.trim();
-            const phone = document.getElementById('custPhone').value.trim();
-            const selectedBoxes = document.querySelectorAll('input[name="svc"]:checked');
+      async function handleCustomerJoin() {
+    const name = document.getElementById('custName').value.trim();
+    const phone = document.getElementById('custPhone').value.trim();
+    const selectedBoxes = document.querySelectorAll('input[name="svc"]:checked');
 
-            if (selectedBoxes.length === 0) return alert("Please select at least one service.");
-            if (!name || !phone) return alert("Please enter your name and phone.");
+    if (selectedBoxes.length === 0) return alert("Please select at least one service.");
+    if (!name || !phone) return alert("Please enter your name and phone.");
 
-            const btn = document.getElementById('joinBtn');
-            btn.disabled = true;
+    const btn = document.getElementById('joinBtn');
+    btn.disabled = true;
 
-            try {
-                let user = firebase.auth().currentUser;
-                if (!user) user = (await firebase.auth().signInAnonymously()).user;
+    try {
+        let user = firebase.auth().currentUser;
+        if (!user) user = (await firebase.auth().signInAnonymously()).user;
 
-                const selectedSvcNames = Array.from(selectedBoxes).map(cb => cb.dataset.name);
-                let myTotalDuration = 0;
-                selectedBoxes.forEach(cb => myTotalDuration += Number(cb.value));
+        const selectedSvcNames = Array.from(selectedBoxes).map(cb => cb.dataset.name);
+        let myTotalDuration = 0;
+        selectedBoxes.forEach(cb => myTotalDuration += Number(cb.value));
 
-                // The estimated time they will be seen is: Current Time + Backlog of others
-                const estTimeDate = new Date(Date.now() + currentBacklog * 60000);
+        const estTimeDate = new Date(Date.now() + currentBacklog * 60000);
 
-                const newDoc = await db.collection('queues').add({
-                    userId: user.uid,
-                    customerName: name,
-                    customerPhone: phone,
-                    providerId: providerId,
-                    businessName: currentBusinessName,
-                    selectedService: selectedSvcNames.join(", "),
-                    serviceDuration: myTotalDuration,
-                    status: 'waiting',
-                    joinedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    estimatedTime: firebase.firestore.Timestamp.fromDate(estTimeDate)
-                });
+        // 1. Create the Queue Entry
+        const newDoc = await db.collection('queues').add({
+            userId: user.uid,
+            customerName: name,
+            customerPhone: phone,
+            providerId: providerId,
+            businessName: currentBusinessName,
+            selectedService: selectedSvcNames.join(", "),
+            serviceDuration: myTotalDuration,
+            status: 'waiting',
+            joinedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            estimatedTime: firebase.firestore.Timestamp.fromDate(estTimeDate)
+        });
 
-                startLiveTracking(newDoc.id, selectedSvcNames.join(", "));
-            } catch (err) { 
-                alert(err.message); 
-                btn.disabled = false; 
-            }
-        }
+        // 2. IMPORTANT FIX: Update the provider's total count 
+        // This ensures the Search Results page sees the new person immediately
+        await db.collection('providers').doc(providerId).update({
+            queueCount: firebase.firestore.FieldValue.increment(1)
+        });
 
+        startLiveTracking(newDoc.id, selectedSvcNames.join(", "));
+    } catch (err) { 
+        console.error(err);
+        alert("Error joining queue: " + err.message); 
+        btn.disabled = false; 
+    }
+}
     function startLiveTracking(myQueueId, svcNames) {
     document.getElementById('joinSection').classList.add('hidden');
     document.getElementById('statusSection').classList.remove('hidden');
