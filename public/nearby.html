@@ -70,7 +70,7 @@
         .action-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
         .btn { flex: 1; min-width: 80px; padding: 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 700; text-align: center; cursor: pointer; border: none; text-decoration: none; display: flex; align-items: center; justify-content: center; }
         .btn-join { background: var(--primary); color: white; }
-        .btn-reg { background: #475569; color: white; line-height: 1.2; }
+        .btn-reg { background: #475569; color: white; line-height: 1.2; font-size: 0.6rem; }
         .btn-sec { background: #f1f5f9; color: var(--text-main); border: 1px solid var(--border); }
         
         .btn-whatsapp { background: #25D366 !important; color: white !important; gap: 5px; }
@@ -157,6 +157,8 @@
 
         let map, placesService, userLocation, markers = [];
 
+        document.getElementById("title").innerText = SERVICE_MAP[serviceType].label;
+
         document.querySelectorAll('.filter-chip[data-type]').forEach(chip => {
             if(chip.dataset.type === serviceType) chip.classList.add('active');
             chip.onclick = () => {
@@ -218,13 +220,10 @@
                 disableDefaultUI: true,
                 gestureHandling: "greedy" 
             });
-            
             placesService = new google.maps.places.PlacesService(map);
-
             map.addListener('dragend', () => { 
                 document.getElementById('redo-search').style.display = 'flex'; 
             });
-            
             executePlacesSearch();
         }
 
@@ -236,15 +235,13 @@
 
         function executePlacesSearch() {
             if(!placesService) return;
-
-            // FIX 1: Explicitly clear old markers so the search can refresh properly
             markers.forEach(m => m.setMap(null));
             markers = [];
             
             const config = SERVICE_MAP[serviceType];
             const request = {
                 location: userLocation,
-                rankBy: google.maps.places.RankBy.DISTANCE,
+                radius: '3000',
                 type: config.type,
                 keyword: searchQuery ? `${searchQuery} ${config.keyword}` : config.keyword
             };
@@ -253,8 +250,7 @@
                 if (status === google.maps.places.PlacesServiceStatus.OK) {
                     renderList(results);
                 } else {
-                    document.getElementById("results").innerHTML = "<p style='padding:20px;'>No results found in this area.</p>";
-                    document.getElementById("counter").innerText = "0 results found.";
+                    document.getElementById("results").innerHTML = "<p style='padding:20px;'>No results found.</p>";
                 }
             });
         }
@@ -282,7 +278,6 @@
                 card.id = `card-${i}`;
                 card.setAttribute('data-live', 'false');
                 
-                // FIX 2: Corrected the backtick syntax and removed the typo "0"
                 const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${place.geometry.location.lat()},${place.geometry.location.lng()}&destination_place_id=${place.place_id}`;
 
                 card.innerHTML = `
@@ -296,18 +291,21 @@
                                     <span class="time-tag">🚗 ${driveTime} min drive</span>
                                 </div>
                                 <span style="font-size:0.75rem; color:var(--text-muted);">${place.vicinity}</span>
-                                <div id="status-${i}" class="q-badge q-offline">Checking Status...</div>
+                                <div id="status-${i}" class="q-badge q-offline">No Live Queue</div>
                                 <div id="est-${i}" class="est-box"></div>
                             </div>
                         </div>
                     </div>
                     <div class="action-row" id="actions-${i}">
                          <a href="${mapsUrl}" target="_blank" class="btn btn-sec">Directions</a>
+                         <button onclick="window.location.href='provider-signup.html'" class="btn btn-reg">BUSINESS OWNER?<br>REGISTER FREE</button>
                     </div>
                 `;
                 container.appendChild(card);
 
-                db.collection('providers').where('googlePlaceId', '==', place.place_id).get().then(snap => {
+                // IMPORTANT: FIX HERE - Real-time listener for the Place ID
+                db.collection('providers').where('googlePlaceId', '==', place.place_id)
+                .onSnapshot(snap => {
                     const statusDiv = document.getElementById(`status-${i}`);
                     const estDiv = document.getElementById(`est-${i}`);
                     const actionDiv = document.getElementById(`actions-${i}`);
@@ -316,7 +314,6 @@
                         const d = snap.docs[0].data();
                         const count = d.queueCount || 0;
                         const providerId = snap.docs[0].id;
-                        const phoneRaw = d.phone; 
                         
                         card.setAttribute('data-live', 'true');
                         const waitMins = count * currentConfig.avgTime;
@@ -331,10 +328,9 @@
                         }
 
                         let whatsappHtml = "";
-                        if (phoneRaw) {
-                            const cleanPhone = phoneRaw.toString().replace(/\D/g, '');
-                            const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent("Hi " + place.name + ", I'm interested in joining your queue via skipQs.")}`;
-                            whatsappHtml = `<a href="${waUrl}" target="_blank" class="btn btn-whatsapp"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"> Chat</a>`;
+                        if (d.phone) {
+                            const cleanPhone = d.phone.toString().replace(/\D/g, '');
+                            whatsappHtml = `<a href="https://wa.me/${cleanPhone}" target="_blank" class="btn btn-whatsapp"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"> Chat</a>`;
                         }
 
                         actionDiv.innerHTML = `
@@ -342,11 +338,7 @@
                             ${whatsappHtml}
                             <button onclick="window.location.href='join-queue.html?id=${providerId}'" class="btn btn-join">JOIN QUEUE</button>
                         `;
-                    } else {
-                        statusDiv.innerText = "No Live Queue";
-                        actionDiv.innerHTML += `<button onclick="window.location.href='provider-signup.html'" class="btn btn-reg">BUSINESS OWNER?<br>REGISTER FREE</button>`;
                     }
-                    if(liveOnly) applyLiveFilter();
                 });
             });
             document.getElementById("counter").innerText = `Found ${results.length} results nearby.`;
@@ -366,16 +358,13 @@
             
             setTimeout(() => {
                 new google.maps.StreetViewPanorama(document.getElementById("mini-pano"), {
-                    position: { lat, lng }, 
-                    pov: { heading: 165, pitch: 0 }, 
-                    zoom: 1, 
-                    addressControl: false
+                    position: { lat, lng }, pov: { heading: 165, pitch: 0 }, zoom: 1, addressControl: false
                 });
             }, 100);
         }
 
         function closeDetails() { document.getElementById('details-overlay').style.display = 'none'; }
     </script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAJFGE5OFfn-OhDNJ_rWO5oi2d2CHl2fXE&libraries=places,geometry&callback=initMap" async defer></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_ACTUAL_KEY_HERE&libraries=places,geometry&callback=initMap" async defer></script>
 </body>
 </html>
