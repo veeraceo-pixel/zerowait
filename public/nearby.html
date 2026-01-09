@@ -95,7 +95,7 @@
         <a href="index.html" class="logo">skipQs</a>
         <div>
             <a href="dashboard.html" style="color:white; text-decoration:none; font-size:0.85rem; margin-right:15px;">My Visits</a>
-            <a href="login.html" style="color:white; text-decoration:none; font-size:0.85rem; font-weight:600; background:rgba(255,255,255,0.2); padding:6px 12px; border-radius:6px;">Login</a>
+            <a href="login.html" id="authBtn" style="color:white; text-decoration:none; font-size:0.85rem; font-weight:600; background:rgba(255,255,255,0.2); padding:6px 12px; border-radius:6px;">Login</a>
         </div>
     </nav>
 
@@ -132,6 +132,7 @@
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="firebase-config.js"></script>
 
@@ -143,6 +144,7 @@
         let searchQuery = params.get("q") || '';
         let locationQuery = params.get("l") || '';
         let liveOnly = false;
+        let activeListeners = [];
 
         const SERVICE_MAP = {
             salon: { type: "hair_care", keyword: "salon barber hair styling hairdresser beautician beauty parlor unisex haircut fade shave nail cut spa", label: "Salons & Barbers", avgTime: 20 },
@@ -157,7 +159,20 @@
 
         let map, placesService, userLocation, markers = [];
 
+        // UI Initialization
         document.getElementById("title").innerText = SERVICE_MAP[serviceType].label;
+
+        // AUTH LISTENER: Fixes "Login" button showing when already logged in
+        firebase.auth().onAuthStateChanged((user) => {
+            const authBtn = document.getElementById('authBtn');
+            if (user && !user.isAnonymous) {
+                authBtn.innerText = "Dashboard";
+                authBtn.href = "dashboard.html";
+            } else {
+                authBtn.innerText = "Login";
+                authBtn.href = "login.html";
+            }
+        });
 
         document.querySelectorAll('.filter-chip[data-type]').forEach(chip => {
             if(chip.dataset.type === serviceType) chip.classList.add('active');
@@ -207,9 +222,13 @@
                         executePlacesSearch(); 
                     } else { setupMap(); }
                 }, () => {
-                    userLocation = new google.maps.LatLng(53.4808, -2.2426); // Default Manchester
-                    setupMap();
-                });
+                    userLocation = new google.maps.LatLng(53.4808, -2.2426); // Fallback Manchester
+                    if (map) { map.setCenter(userLocation); executePlacesSearch(); } 
+                    else { setupMap(); }
+                }, { timeout: 5000 });
+            } else {
+                userLocation = new google.maps.LatLng(53.4808, -2.2426);
+                setupMap();
             }
         }
 
@@ -234,9 +253,16 @@
         }
 
         function executePlacesSearch() {
-            if(!placesService) return;
+            if(!placesService) {
+                setTimeout(executePlacesSearch, 300);
+                return;
+            }
             markers.forEach(m => m.setMap(null));
             markers = [];
+            
+            // Clear old Firebase listeners
+            activeListeners.forEach(unsub => unsub());
+            activeListeners = [];
             
             const config = SERVICE_MAP[serviceType];
             const request = {
@@ -251,6 +277,7 @@
                     renderList(results);
                 } else {
                     document.getElementById("results").innerHTML = "<p style='padding:20px;'>No results found.</p>";
+                    document.getElementById("counter").innerText = "0 results.";
                 }
             });
         }
@@ -278,6 +305,7 @@
                 card.id = `card-${i}`;
                 card.setAttribute('data-live', 'false');
                 
+                // Fixed maps URL template
                 const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${place.geometry.location.lat()},${place.geometry.location.lng()}&destination_place_id=${place.place_id}`;
 
                 card.innerHTML = `
@@ -303,8 +331,8 @@
                 `;
                 container.appendChild(card);
 
-                // IMPORTANT: FIX HERE - Real-time listener for the Place ID
-                db.collection('providers').where('googlePlaceId', '==', place.place_id)
+                // Real-time listener
+                const unsub = db.collection('providers').where('googlePlaceId', '==', place.place_id)
                 .onSnapshot(snap => {
                     const statusDiv = document.getElementById(`status-${i}`);
                     const estDiv = document.getElementById(`est-${i}`);
@@ -316,7 +344,7 @@
                         const providerId = snap.docs[0].id;
                         
                         card.setAttribute('data-live', 'true');
-                        const waitMins = count * currentConfig.avgTime;
+                        const waitMins = count * (currentConfig.avgTime || 15);
                         const serviceTime = new Date(new Date().getTime() + waitMins * 60000);
                         const timeStr = serviceTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
@@ -340,6 +368,7 @@
                         `;
                     }
                 });
+                activeListeners.push(unsub);
             });
             document.getElementById("counter").innerText = `Found ${results.length} results nearby.`;
         }
@@ -365,6 +394,6 @@
 
         function closeDetails() { document.getElementById('details-overlay').style.display = 'none'; }
     </script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_ACTUAL_KEY_HERE&libraries=places,geometry&callback=initMap" async defer></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAJFGE5OFfn-OhDNJ_rWO5oi2d2CHl2fXE&libraries=places,geometry&callback=initMap" async defer></script>
 </body>
 </html>
