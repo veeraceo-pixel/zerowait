@@ -279,20 +279,32 @@
             });
         }
 
- function renderList(results) {
+function renderList(results) {
     const container = document.getElementById("results");
     container.innerHTML = "";
     
-    // Clear old listeners to prevent memory leaks and double-counts
+    // 1. PRE-CALCULATE DISTANCES & SORT
+    // We calculate distance first so we can sort the array by the closest place
+    results.forEach(place => {
+        place.calculatedDistance = google.maps.geometry.spherical.computeDistanceBetween(
+            userLocation, 
+            place.geometry.location
+        );
+    });
+
+    results.sort((a, b) => a.calculatedDistance - b.calculatedDistance);
+
+    // 2. CLEAR OLD LISTENERS
     activeListeners.forEach(unsub => unsub());
     activeListeners = [];
 
+    // 3. RENDER SORTED RESULTS
     results.forEach((place, i) => {
-        const rawDist = google.maps.geometry.spherical.computeDistanceBetween(userLocation, place.geometry.location);
-        const miles = (rawDist * 0.000621371).toFixed(1);
+        const miles = (place.calculatedDistance * 0.000621371).toFixed(1);
         const driveTime = Math.round((miles / 12) * 60) + 2; 
         const thumb = place.photos ? place.photos[0].getUrl({maxWidth: 150}) : 'https://via.placeholder.com/150';
 
+        // Marker label will now match the distance order (1 = Closest)
         const marker = new google.maps.Marker({
             position: place.geometry.location, 
             map: map, 
@@ -330,7 +342,7 @@
         `;
         container.appendChild(card);
 
-        // SYNCED REAL-TIME LISTENER: Direct read from Provider Doc
+        // REAL-TIME LISTENER
         const unsub = db.collection('providers').where('googlePlaceId', '==', place.place_id)
         .onSnapshot(snap => {
             const statusDiv = document.getElementById(`status-${i}`);
@@ -340,8 +352,6 @@
             if (!snap.empty) {
                 const d = snap.docs[0].data();
                 const providerId = snap.docs[0].id;
-
-                // We use the fields calculated by the Provider Dashboard
                 const inLine = d.peopleInLine || 0;
                 const waitMins = d.currentWaitMins || 0;
 
