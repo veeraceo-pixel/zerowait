@@ -83,15 +83,34 @@
     spinner.style.display = "block";
 
     try {
+      // 1. Create the account
       const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
-      await firebase.firestore().collection('users').doc(userCredential.user.uid).set({
+      const user = userCredential.user;
+
+      // 2. FIX: Save the name to the Auth Profile so Home Page shows it
+      await user.updateProfile({
+        displayName: fullName
+      });
+
+      // 3. Save user data to Firestore
+      await firebase.firestore().collection('users').doc(user.uid).set({
         displayName: fullName,
         email: email,
         role: "customer",
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
+
       alert("Account created successfully!");
-      window.location.href = 'index.html'; 
+
+      // 4. FIX: Check if we need to go back to a specific queue
+      const pendingRedirect = sessionStorage.getItem('redirectAfterLogin');
+      if (pendingRedirect) {
+        sessionStorage.removeItem('redirectAfterLogin');
+        window.location.href = pendingRedirect;
+      } else {
+        window.location.href = 'index.html'; 
+      }
+
     } catch (error) {
       btn.disabled = false;
       spinner.style.display = "none";
