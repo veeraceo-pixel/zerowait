@@ -36,7 +36,6 @@
         .btn:disabled { background: #94a3b8; cursor: not-allowed; }
 
         #menuImgPreview { width: 100%; border-radius: 0.8rem; margin-top: 1rem; display: none; border: 1px solid #e2e8f0; }
-        
         .hidden { display: none; }
         .error-state { color: #dc2626; padding: 1rem; background: #fee2e2; border-radius: 0.5rem; margin-bottom: 1rem; font-size: 0.9rem; }
     </style>
@@ -63,7 +62,7 @@
             <div id="joinSection">
                 <div class="wait-preview">
                     <div><span class="label">People Ahead</span><span class="stat" id="aheadCount">0</span></div>
-                    <div><span class="label">Your Wait</span><span class="stat" id="estWait">0</span><span class="label">mins</span></div>
+                    <div><span class="label">Total Wait</span><span class="stat" id="estWait">0</span><span class="label">mins</span></div>
                 </div>
 
                 <p style="text-align: left; font-weight: 700; font-size: 0.9rem; margin-bottom: -10px; color: #475569;">Select Services:</p>
@@ -101,9 +100,8 @@
         const urlParams = new URLSearchParams(window.location.search);
         const providerId = urlParams.get('id') || urlParams.get('provider');
         let currentBusinessName = "";
-        let providerDefaultTime = 15; // Fallback time per person
 
-        // 1. Auth State Listener
+        // 1. Auth State
         firebase.auth().onAuthStateChanged((user) => {
             const authBtn = document.getElementById('authBtn');
             if (user && !user.isAnonymous) {
@@ -127,10 +125,6 @@
             if (doc.exists) {
                 const data = doc.data();
                 currentBusinessName = data.businessName;
-                
-                // REVERSE LOGIC: Prioritize provider's custom speed setting
-                providerDefaultTime = data.providedServiceTime || data.avgServiceTime || 15;
-                
                 document.getElementById('bizName').innerText = currentBusinessName;
                 if (data.menuImageUrl) {
                     const img = document.getElementById('menuImgPreview');
@@ -167,17 +161,18 @@
             });
         }
 
-        // 2. REVERSE APPROACH: Wait = People Ahead * Provider Speed
+        // DYNAMIC PREVIEW: Sums serviceDuration of everyone currently waiting
         function previewQueue() {
             db.collection('queues')
                 .where('providerId', '==', providerId)
                 .where('status', '==', 'waiting')
                 .onSnapshot(snap => {
-                    const countAhead = snap.size;
-                    document.getElementById('aheadCount').innerText = countAhead;
-                    
-                    const totalWait = countAhead * providerDefaultTime;
-                    document.getElementById('estWait').innerText = totalWait;
+                    let totalMins = 0;
+                    snap.forEach(doc => {
+                        totalMins += (Number(doc.data().serviceDuration) || 0);
+                    });
+                    document.getElementById('aheadCount').innerText = snap.size;
+                    document.getElementById('estWait').innerText = totalMins;
                 });
         }
 
@@ -194,17 +189,16 @@
 
             try {
                 let user = firebase.auth().currentUser;
-                // Sign in anonymously if not logged in to keep Firestore secure
                 if (!user) user = (await firebase.auth().signInAnonymously()).user;
 
                 const selectedSvcNames = Array.from(selectedBoxes).map(cb => cb.dataset.name);
                 let myTotalDuration = 0;
                 selectedBoxes.forEach(cb => myTotalDuration += Number(cb.value));
 
+                // Join based on current total wait
                 const currentWaitMins = parseInt(document.getElementById('estWait').innerText);
                 const estTimeDate = new Date(Date.now() + currentWaitMins * 60000);
 
-                // Add to Queue
                 const newDoc = await db.collection('queues').add({
                     userId: user.uid,
                     customerName: name,
@@ -218,7 +212,6 @@
                     estimatedTime: firebase.firestore.Timestamp.fromDate(estTimeDate)
                 });
 
-                // Update Provider's live count for the search results page
                 await db.collection('providers').doc(providerId).update({
                     queueCount: firebase.firestore.FieldValue.increment(1)
                 });
@@ -231,6 +224,7 @@
             }
         }
 
+        // LIVE TRACKING: Sums serviceDuration of only the people ahead of YOU
         function startLiveTracking(myQueueId, svcNames) {
             document.getElementById('joinSection').classList.add('hidden');
             document.getElementById('statusSection').classList.remove('hidden');
@@ -245,18 +239,20 @@
                     const myIndex = docs.findIndex(d => d.id === myQueueId);
                     
                     if (myIndex !== -1) {
-                        // Position is index + 1
+                        let minsAhead = 0;
+                        for (let i = 0; i < myIndex; i++) {
+                            minsAhead += (Number(docs[i].data().serviceDuration) || 0);
+                        }
                         document.getElementById('livePos').innerText = myIndex + 1;
-                        // Wait is people ahead (myIndex) * provider speed
-                        document.getElementById('liveWait').innerText = myIndex * providerDefaultTime;
+                        document.getElementById('liveWait').innerText = minsAhead;
                     } else {
-                        // If no longer in "waiting" list, check if being served
+                        // Check if serving
                         db.collection('queues').doc(myQueueId).get().then(doc => {
                             if(doc.exists && doc.data().status === 'serving') {
                                 document.getElementById('statusSection').innerHTML = `
                                     <div style="padding: 1rem; text-align:center;">
                                         <h2 style='color:#059669; font-size: 2.2rem;'>Your Turn!</h2>
-                                        <p style="font-weight:600;">Please head to the counter/entrance now.</p>
+                                        <p style="font-weight:600;">Please head to the counter now.</p>
                                         <button onclick="location.reload()" class="btn">New Booking</button>
                                     </div>`;
                             }
