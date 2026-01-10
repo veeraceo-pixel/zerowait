@@ -162,36 +162,24 @@
         }
 
         // DYNAMIC PREVIEW: Sums serviceDuration of everyone currently waiting
-async function previewQueue() {
-    // Listen to the provider's main document for synchronized stats
+function previewQueue() {
+    // Listen to the provider document for the "Sync" data from the dashboard
     db.collection('providers').doc(providerId).onSnapshot(doc => {
-        if (doc.exists) {
-            const data = doc.data();
-            
-            // 1. Update Wait Time (Ensure fallback to 0 if field doesn't exist yet)
-            const currentWait = data.currentWaitMins !== undefined ? data.currentWaitMins : 0;
-            document.getElementById('estWait').innerText = currentWait;
+        const data = doc.data();
+        if (doc.exists && data) {
+            // Get the live sync data that the Dashboard just calculated
+            const countAhead = data.peopleInLine || 0;
+            const liveWaitMins = data.currentWaitMins || 0;
 
-            // 2. Update People Count
-            const inLine = data.peopleInLine !== undefined ? data.peopleInLine : 0;
-            document.getElementById('aheadCount').innerText = inLine;
+            document.getElementById('aheadCount').innerText = countAhead;
+            document.getElementById('estWait').innerText = liveWaitMins;
             
-            // 3. Status Check
-            const btn = document.getElementById('joinBtn');
-            if (data.isOpen === false) {
-                btn.disabled = true;
-                btn.innerText = "Business Closed";
-            } else {
-                btn.disabled = btn.classList.contains('processing') ? true : false;
-                btn.innerText = "Confirm & Join Queue";
-            }
-        } else {
-            showError("Business record not found.");
+            // Store capacity globally for use in other functions
+            window.currentCapacity = data.capacity || 1; 
         }
-    }, err => {
-        console.error("Queue preview error:", err);
-    });
+    }, err => console.error("Preview sync failed:", err));
 }
+        
      async function handleCustomerJoin() {
     const name = document.getElementById('custName').value.trim();
     const phone = document.getElementById('custPhone').value.trim();
@@ -256,57 +244,62 @@ async function previewQueue() {
 }
 
         // LIVE TRACKING: Sums serviceDuration of only the people ahead of YOU
-async function startLiveTracking(myQueueId, svcNames) {
+function startLiveTracking(myQueueId, svcNames) {
     document.getElementById('joinSection').classList.add('hidden');
     document.getElementById('statusSection').classList.remove('hidden');
     document.getElementById('selectedSvcLabel').innerText = "Services: " + svcNames;
 
-    // 1. Get capacity once at the start (or listen to it)
-    const bizDoc = await db.collection('providers').doc(providerId).get();
-    const capacity = bizDoc.exists ? (bizDoc.data().capacity || 1) : 1;
+    // Listen to the provider doc so capacity updates LIVE
+    db.collection('providers').doc(providerId).onSnapshot(bizDoc => {
+        const capacity = bizDoc.exists ? (bizDoc.data().capacity || 1) : 1;
 
-    db.collection('queues')
-        .where('providerId', '==', providerId)
-        .where('status', 'in', ['waiting', 'serving'])
-        .orderBy('joinedAt', 'asc')
-        .onSnapshot(snap => {
-            const docs = snap.docs;
-            const myIndex = docs.findIndex(d => d.id === myQueueId);
-            
-            if (myIndex !== -1) {
-                // Position is 1-based (e.g., "1st in line")
-                document.getElementById('livePos').innerText = myIndex + 1;
+        db.collection('queues')
+            .where('providerId', '==', providerId)
+            .where('status', 'in', ['waiting', 'serving'])
+            .orderBy('joinedAt', 'asc')
+            .onSnapshot(snap => {
+                const docs = snap.docs;
+                const myIndex = docs.findIndex(d => d.id === myQueueId);
+                
+                if (myIndex !== -1) {
+                    const myData = docs[myIndex].data();
+                    document.getElementById('livePos').innerText = myIndex + 1;
 
-                if (myIndex < capacity) {
-                    // CUSTOMER IS IN A CHAIR: They are being served or are next
-                    document.getElementById('liveWait').innerText = "0";
-                    document.getElementById('liveWait').nextElementSibling.innerText = "You're up!";
+                    // CHECK IF CURRENTLY SERVING
+                    if (myData.status === 'serving') {
+                        document.getElementById('liveWait').innerText = "0";
+                        document.getElementById('liveWait').nextElementSibling.innerText = "You're up!";
+                    } 
+                    // CHECK IF WITHIN CAPACITY (Next in line)
+                    else if (myIndex < capacity) {
+                        document.getElementById('liveWait').innerText = "0";
+                        document.getElementById('liveWait').nextElementSibling.innerText = "You're next!";
+                    } 
+                    // CALCULATE PARALLEL WAIT
+                    else {
+                        let minsAheadOfMe = 0;
+                        for (let i = 0; i < myIndex; i++) {
+                            minsAheadOfMe += (Number(docs[i].data().serviceDuration) || 15);
+                        }
+                        const personalWait = Math.ceil(minsAheadOfMe / capacity);
+                        document.getElementById('liveWait').innerText = personalWait;
+                        document.getElementById('liveWait').nextElementSibling.innerText = "Estimated Minutes";
+                    }
                 } else {
-                    // CALCULATE PARALLEL WAIT:
-                    // Sum the duration of everyone ahead of the customer, then divide by capacity
-                    let minsAheadOfMe = 0;
-                    for (let i = 0; i < myIndex; i++) {
-                        minsAheadOfMe += (Number(docs[i].data().serviceDuration) || 0);
-                    }
-                    
-                    const personalWait = Math.ceil(minsAheadOfMe / capacity);
-                    document.getElementById('liveWait').innerText = personalWait;
-                    document.getElementById('liveWait').nextElementSibling.innerText = "Estimated Minutes";
+                    // Handle transition to Completed
+                    db.collection('queues').doc(myQueueId).get().then(doc => {
+                        if(doc.exists && doc.data().status === 'completed') {
+                            document.getElementById('statusSection').innerHTML = `
+                                <div style="padding: 1rem; text-align:center;">
+                                    <h2 style='color:#059669; font-size: 2.2rem;'>Finished!</h2>
+                                    <p style="font-weight:600;">Thank you for visiting.</p>
+                                    <button onclick="location.reload()" class="btn">New Booking</button>
+                                </div>`;
+                        }
+                    });
                 }
-            } else {
-                // Handle completion
-                db.collection('queues').doc(myQueueId).get().then(doc => {
-                    if(doc.exists && doc.data().status === 'completed') {
-                        document.getElementById('statusSection').innerHTML = `
-                            <div style="padding: 1rem; text-align:center;">
-                                <h2 style='color:#059669; font-size: 2.2rem;'>Finished!</h2>
-                                <p style="font-weight:600;">Thank you for visiting.</p>
-                                <button onclick="location.reload()" class="btn">New Booking</button>
-                            </div>`;
-                    }
-                });
-            }
-        });
+            });
+    });
 }
         function showError(msg) {
             const errDiv = document.getElementById('errorMessage');
