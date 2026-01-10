@@ -163,28 +163,33 @@
 
         // DYNAMIC PREVIEW: Sums serviceDuration of everyone currently waiting
 async function previewQueue() {
-    // We listen to the provider's main document to get the synchronized stats
+    // Listen to the provider's main document for synchronized stats
     db.collection('providers').doc(providerId).onSnapshot(doc => {
-        const data = doc.data();
-        if (data) {
-            // 1. Get synchronized wait time from Dashboard calculations
-            // This fixes the "--" or "0" issue by providing a fallback
-            const currentWait = data.currentWaitMins || 0;
+        if (doc.exists) {
+            const data = doc.data();
+            
+            // 1. Update Wait Time (Ensure fallback to 0 if field doesn't exist yet)
+            const currentWait = data.currentWaitMins !== undefined ? data.currentWaitMins : 0;
             document.getElementById('estWait').innerText = currentWait;
 
-            // 2. Get synchronized count of people in line
-            const inLine = data.peopleInLine || 0;
+            // 2. Update People Count
+            const inLine = data.peopleInLine !== undefined ? data.peopleInLine : 0;
             document.getElementById('aheadCount').innerText = inLine;
             
-            // 3. Optional: Business status check (Close the queue if business is closed)
+            // 3. Status Check
+            const btn = document.getElementById('joinBtn');
             if (data.isOpen === false) {
-                document.getElementById('joinBtn').disabled = true;
-                document.getElementById('joinBtn').innerText = "Business Closed";
+                btn.disabled = true;
+                btn.innerText = "Business Closed";
             } else {
-                document.getElementById('joinBtn').disabled = false;
-                document.getElementById('joinBtn').innerText = "Confirm & Join Queue";
+                btn.disabled = btn.classList.contains('processing') ? true : false;
+                btn.innerText = "Confirm & Join Queue";
             }
+        } else {
+            showError("Business record not found.");
         }
+    }, err => {
+        console.error("Queue preview error:", err);
     });
 }
      async function handleCustomerJoin() {
