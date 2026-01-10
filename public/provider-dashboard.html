@@ -212,49 +212,57 @@
             el.classList.add('active');
         }
 
-        function startLiveQ() {
-            if(qUnsub) qUnsub();
-            qUnsub = db.collection('queues')
-                .where('providerId', '==', pubId)
-                .where('status', 'in', ['waiting', 'serving'])
-                .orderBy('joinedAt', 'asc')
-                .onSnapshot(snap => {
-                    let totalBacklogMins = 0;
-                    let waitingCount = 0;
-                    const items = document.getElementById('qItems');
-                    items.innerHTML = "";
+  function startLiveQ() {
+    if(qUnsub) qUnsub();
+    qUnsub = db.collection('queues')
+        .where('providerId', '==', pubId)
+        .where('status', 'in', ['waiting', 'serving'])
+        .orderBy('joinedAt', 'asc')
+        .onSnapshot(snap => {
+            let totalBacklogMins = 0;
+            let waitingCount = 0;
+            const items = document.getElementById('qItems');
+            items.innerHTML = "";
 
-                    snap.forEach(doc => {
-                        const d = doc.data();
-                        if (d.status === 'serving') {
-                            const row = `
-                                <tr style="background: #f0fdf4; border-left: 4px solid #22c55e;">
-                                    <td><span class="status-badge open" style="font-size:0.6rem">NOW SERVING</span><br><strong>${d.customerName}</strong></td>
-                                    <td>${d.selectedService || '--'}</td>
-                                    <td><span style="color:#16a34a; font-weight:bold;">In Progress</span></td>
-                                    <td><button class="btn btn-primary" style="background:#16a34a;" onclick="completeService('${doc.id}')">Finish & Complete</button></td>
-                                </tr>`;
-                            items.innerHTML = row + items.innerHTML;
-                        } else {
-                            waitingCount++;
-                            totalBacklogMins += (Number(d.serviceDuration) || 0);
-                            items.innerHTML += `
-                                <tr>
-                                    <td><strong>${d.customerName}</strong><br><small>${d.customerPhone || ''}</small></td>
-                                    <td>${d.selectedService || '--'}</td>
-                                    <td>${d.serviceDuration || 0}m</td>
-                                    <td><button class="btn btn-primary btn-sm" onclick="startServing('${doc.id}')">Start Serving</button></td>
-                                </tr>`;
-                        }
-                    });
+            snap.forEach(doc => {
+                const d = doc.data();
+                
+                if (d.status === 'serving') {
+                    const row = `
+                        <tr style="background: #f0fdf4; border-left: 4px solid #22c55e;">
+                            <td><span class="status-badge open" style="font-size:0.6rem">NOW SERVING</span><br><strong>${d.customerName}</strong></td>
+                            <td>${d.selectedService || '--'}</td>
+                            <td><span style="color:#16a34a; font-weight:bold;">In Progress</span></td>
+                            <td><button class="btn btn-primary" style="background:#16a34a;" onclick="completeService('${doc.id}')">Finish & Complete</button></td>
+                        </tr>`;
+                    items.innerHTML = row + items.innerHTML;
+                } else {
+                    waitingCount++;
+                    totalBacklogMins += (Number(d.serviceDuration) || 0);
+                    items.innerHTML += `
+                        <tr>
+                            <td><strong>${d.customerName}</strong><br><small>${d.customerPhone || ''}</small></td>
+                            <td>${d.selectedService || '--'}</td>
+                            <td>${d.serviceDuration || 0}m</td>
+                            <td><button class="btn btn-primary btn-sm" onclick="startServing('${doc.id}')">Start Serving</button></td>
+                        </tr>`;
+                }
+            });
 
-                    // Logic: Parallelized wait time calculation
-                    const estWait = Math.ceil(totalBacklogMins / currentCapacity);
-                    document.getElementById('waitCount').innerText = waitingCount;
-                    document.getElementById('totalMins').innerHTML = estWait + '<small style="font-size:1rem">m</small>';
-                });
-        }
+            // 1. Calculate the synchronized wait time
+            const estWait = Math.ceil(totalBacklogMins / (currentCapacity || 1));
 
+            // 2. Update Dashboard UI
+            document.getElementById('waitCount').innerText = waitingCount;
+            document.getElementById('totalMins').innerHTML = estWait + '<small style="font-size:1rem">m</small>';
+
+            // 3. SYNC STEP: Update the provider document so customers see the same live data
+            db.collection('providers').doc(curUid).update({
+                currentWaitMins: estWait,
+                peopleInLine: waitingCount
+            }).catch(err => console.error("Sync error:", err));
+        });
+}
         async function startServing(id) {
             await db.collection('queues').doc(id).update({
                 status: 'serving',
