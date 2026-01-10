@@ -329,7 +329,7 @@
         `;
         container.appendChild(card);
 
-        // REAL-TIME LISTENER FOR PROVIDER AND THEIR QUEUE SUM
+        // SYNCED REAL-TIME LISTENER
         const unsub = db.collection('providers').where('googlePlaceId', '==', place.place_id)
         .onSnapshot(async snap => {
             const statusDiv = document.getElementById(`status-${i}`);
@@ -339,26 +339,30 @@
             if (!snap.empty) {
                 const d = snap.docs[0].data();
                 const providerId = snap.docs[0].id;
+                const capacity = d.capacity || 1; // Number of chairs/servers
 
-                // Fetch the actual queue documents to sum durations
+                // FIX: Look for both 'waiting' AND 'serving' to keep counts accurate
                 const queueSnap = await db.collection('queues')
                     .where('providerId', '==', providerId)
-                    .where('status', '==', 'waiting')
+                    .where('status', 'in', ['waiting', 'serving'])
                     .get();
 
+                const docs = queueSnap.docs;
+                const totalInLine = queueSnap.size;
                 let totalWaitMins = 0;
-                queueSnap.forEach(qDoc => {
-                    // This sums the exact serviceDuration saved in join-queue.html
-                    totalWaitMins += (Number(qDoc.data().serviceDuration) || 0);
-                });
 
-                const count = queueSnap.size;
+                // FIX: Logic matches join-queue.html. Only sum people NOT in chairs.
+                if (totalInLine > capacity) {
+                    for (let j = capacity; j < totalInLine; j++) {
+                        totalWaitMins += (Number(docs[j].data().serviceDuration) || 0);
+                    }
+                }
 
                 card.setAttribute('data-live', 'true');
                 statusDiv.className = "q-badge q-online";
-                statusDiv.innerText = `LIVE: ${count} in line`;
+                statusDiv.innerText = `LIVE: ${totalInLine} in line`;
                 
-                if (count > 0) {
+                if (totalWaitMins > 0) {
                     const serviceTime = new Date(new Date().getTime() + totalWaitMins * 60000);
                     const timeStr = serviceTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                     estDiv.innerHTML = `⌛ Wait: <b>~${totalWaitMins}m</b> • Service at <b>${timeStr}</b>`;
