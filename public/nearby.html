@@ -279,10 +279,11 @@
             });
         }
 
-  function renderList(results) {
+ function renderList(results) {
     const container = document.getElementById("results");
     container.innerHTML = "";
     
+    // Clear old listeners to prevent memory leaks and double-counts
     activeListeners.forEach(unsub => unsub());
     activeListeners = [];
 
@@ -329,9 +330,9 @@
         `;
         container.appendChild(card);
 
-        // SYNCED REAL-TIME LISTENER
+        // SYNCED REAL-TIME LISTENER: Direct read from Provider Doc
         const unsub = db.collection('providers').where('googlePlaceId', '==', place.place_id)
-        .onSnapshot(async snap => {
+        .onSnapshot(snap => {
             const statusDiv = document.getElementById(`status-${i}`);
             const estDiv = document.getElementById(`est-${i}`);
             const actionDiv = document.getElementById(`actions-${i}`);
@@ -339,33 +340,19 @@
             if (!snap.empty) {
                 const d = snap.docs[0].data();
                 const providerId = snap.docs[0].id;
-                const capacity = d.capacity || 1; // Number of chairs/servers
 
-                // FIX: Look for both 'waiting' AND 'serving' to keep counts accurate
-                const queueSnap = await db.collection('queues')
-                    .where('providerId', '==', providerId)
-                    .where('status', 'in', ['waiting', 'serving'])
-                    .get();
-
-                const docs = queueSnap.docs;
-                const totalInLine = queueSnap.size;
-                let totalWaitMins = 0;
-
-                // FIX: Logic matches join-queue.html. Only sum people NOT in chairs.
-                if (totalInLine > capacity) {
-                    for (let j = capacity; j < totalInLine; j++) {
-                        totalWaitMins += (Number(docs[j].data().serviceDuration) || 0);
-                    }
-                }
+                // We use the fields calculated by the Provider Dashboard
+                const inLine = d.peopleInLine || 0;
+                const waitMins = d.currentWaitMins || 0;
 
                 card.setAttribute('data-live', 'true');
                 statusDiv.className = "q-badge q-online";
-                statusDiv.innerText = `LIVE: ${totalInLine} in line`;
+                statusDiv.innerText = `LIVE: ${inLine} in line`;
                 
-                if (totalWaitMins > 0) {
-                    const serviceTime = new Date(new Date().getTime() + totalWaitMins * 60000);
+                if (waitMins > 0) {
+                    const serviceTime = new Date(Date.now() + waitMins * 60000);
                     const timeStr = serviceTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    estDiv.innerHTML = `⌛ Wait: <b>~${totalWaitMins}m</b> • Service at <b>${timeStr}</b>`;
+                    estDiv.innerHTML = `⌛ Wait: <b>~${waitMins}m</b> • Service at <b>${timeStr}</b>`;
                 } else {
                     estDiv.innerHTML = `⌛ <b>No wait</b> • Join now!`;
                 }
@@ -373,7 +360,7 @@
                 let whatsappHtml = "";
                 if (d.phone) {
                     const cleanPhone = d.phone.toString().replace(/\D/g, '');
-                    whatsappHtml = `<a href="https://wa.me/${cleanPhone}" target="_blank" class="btn btn-whatsapp"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"> Chat</a>`;
+                    whatsappHtml = `<a href="https://wa.me/${cleanPhone}" target="_blank" class="btn btn-whatsapp"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" style="width:14px; margin-right:5px; filter:brightness(0) invert(1);"> Chat</a>`;
                 }
 
                 actionDiv.innerHTML = `
