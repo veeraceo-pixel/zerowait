@@ -163,27 +163,30 @@
 
         // DYNAMIC PREVIEW: Sums serviceDuration of everyone currently waiting
 async function previewQueue() {
-    // First, get the business capacity (number of chairs)
+    // 1. Get the business capacity (number of chairs)
     const bizDoc = await db.collection('providers').doc(providerId).get();
     const capacity = bizDoc.exists ? (bizDoc.data().capacity || 1) : 1;
 
+    // 2. Listen to ALL active people (waiting AND serving) to stay in sync
     db.collection('queues')
         .where('providerId', '==', providerId)
-        .where('status', '==', 'waiting')
-        .orderBy('joinedAt', 'asc') // Order by oldest first
+        .where('status', 'in', ['waiting', 'serving']) 
+        .orderBy('joinedAt', 'asc') 
         .onSnapshot(snap => {
-            let totalMins = 0;
             const docs = snap.docs;
             
-            // Logic: Only sum durations for people who are NOT in a chair
-            // If capacity is 5, we skip the first 5 people.
-            if (docs.length >= capacity) {
+            // This ensures "People Ahead" matches the "8 in line" on your search page
+            document.getElementById('aheadCount').innerText = snap.size;
+
+            let totalMins = 0;
+            
+            // Logic: Wait time only starts for people AFTER the chairs are full
+            if (docs.length > capacity) {
                 for (let i = capacity; i < docs.length; i++) {
                     totalMins += (Number(docs[i].data().serviceDuration) || 0);
                 }
             }
 
-            document.getElementById('aheadCount').innerText = snap.size;
             document.getElementById('estWait').innerText = totalMins;
         });
 }
