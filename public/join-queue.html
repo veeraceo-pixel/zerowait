@@ -162,104 +162,140 @@
         }
 
         // DYNAMIC PREVIEW: Sums serviceDuration of everyone currently waiting
-        function previewQueue() {
-            db.collection('queues')
-                .where('providerId', '==', providerId)
-                .where('status', '==', 'waiting')
-                .onSnapshot(snap => {
-                    let totalMins = 0;
-                    snap.forEach(doc => {
-                        totalMins += (Number(doc.data().serviceDuration) || 0);
-                    });
-                    document.getElementById('aheadCount').innerText = snap.size;
-                    document.getElementById('estWait').innerText = totalMins;
-                });
-        }
+async function previewQueue() {
+    // First, get the business capacity (number of chairs)
+    const bizDoc = await db.collection('providers').doc(providerId).get();
+    const capacity = bizDoc.exists ? (bizDoc.data().capacity || 1) : 1;
 
-        async function handleCustomerJoin() {
-            const name = document.getElementById('custName').value.trim();
-            const phone = document.getElementById('custPhone').value.trim();
-            const selectedBoxes = document.querySelectorAll('input[name="svc"]:checked');
-
-            if (selectedBoxes.length === 0) return alert("Please select at least one service.");
-            if (!name || !phone) return alert("Please enter your name and phone.");
-
-            const btn = document.getElementById('joinBtn');
-            btn.disabled = true;
-
-            try {
-                let user = firebase.auth().currentUser;
-                if (!user) user = (await firebase.auth().signInAnonymously()).user;
-
-                const selectedSvcNames = Array.from(selectedBoxes).map(cb => cb.dataset.name);
-                let myTotalDuration = 0;
-                selectedBoxes.forEach(cb => myTotalDuration += Number(cb.value));
-
-                // Join based on current total wait
-                const currentWaitMins = parseInt(document.getElementById('estWait').innerText);
-                const estTimeDate = new Date(Date.now() + currentWaitMins * 60000);
-
-                const newDoc = await db.collection('queues').add({
-                    userId: user.uid,
-                    customerName: name,
-                    customerPhone: phone,
-                    providerId: providerId,
-                    businessName: currentBusinessName,
-                    selectedService: selectedSvcNames.join(", "),
-                    serviceDuration: myTotalDuration,
-                    status: 'waiting',
-                    joinedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    estimatedTime: firebase.firestore.Timestamp.fromDate(estTimeDate)
-                });
-
-                await db.collection('providers').doc(providerId).update({
-                    queueCount: firebase.firestore.FieldValue.increment(1)
-                });
-
-                startLiveTracking(newDoc.id, selectedSvcNames.join(", "));
-            } catch (err) { 
-                console.error(err);
-                alert("Error: " + err.message); 
-                btn.disabled = false; 
+    db.collection('queues')
+        .where('providerId', '==', providerId)
+        .where('status', '==', 'waiting')
+        .orderBy('joinedAt', 'asc') // Order by oldest first
+        .onSnapshot(snap => {
+            let totalMins = 0;
+            const docs = snap.docs;
+            
+            // Logic: Only sum durations for people who are NOT in a chair
+            // If capacity is 5, we skip the first 5 people.
+            if (docs.length >= capacity) {
+                for (let i = capacity; i < docs.length; i++) {
+                    totalMins += (Number(docs[i].data().serviceDuration) || 0);
+                }
             }
+
+            document.getElementById('aheadCount').innerText = snap.size;
+            document.getElementById('estWait').innerText = totalMins;
+        });
+}
+     async function handleCustomerJoin() {
+    const name = document.getElementById('custName').value.trim();
+    const phone = document.getElementById('custPhone').value.trim();
+    const selectedBoxes = document.querySelectorAll('input[name="svc"]:checked');
+
+    if (selectedBoxes.length === 0) return alert("Please select at least one service.");
+    if (!name || !phone) return alert("Please enter your name and phone.");
+
+    const btn = document.getElementById('joinBtn');
+    btn.disabled = true;
+    btn.innerText = "Checking status...";
+
+    try {
+        let user = firebase.auth().currentUser;
+        if (!user) user = (await firebase.auth().signInAnonymously()).user;
+
+        // --- HARD BLOCK START ---
+        const existing = await db.collection('queues')
+            .where('providerId', '==', providerId)
+            .where('userId', '==', user.uid)
+            .where('status', '==', 'waiting')
+            .get();
+
+        if (!existing.empty) {
+            alert("You are already in this queue! You cannot join twice.");
+            btn.disabled = false;
+            btn.innerText = "Confirm & Join Queue";
+            return;
         }
+        // --- HARD BLOCK END ---
+
+        const selectedSvcNames = Array.from(selectedBoxes).map(cb => cb.dataset.name);
+        let myTotalDuration = 0;
+        selectedBoxes.forEach(cb => myTotalDuration += Number(cb.value));
+
+        const currentWaitMins = parseInt(document.getElementById('estWait').innerText);
+        const estTimeDate = new Date(Date.now() + currentWaitMins * 60000);
+
+        const newDoc = await db.collection('queues').add({
+            userId: user.uid,
+            customerName: name,
+            customerPhone: phone,
+            providerId: providerId,
+            businessName: currentBusinessName,
+            selectedService: selectedSvcNames.join(", "),
+            serviceDuration: myTotalDuration,
+            status: 'waiting',
+            joinedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            estimatedTime: firebase.firestore.Timestamp.fromDate(estTimeDate)
+        });
+
+        await db.collection('providers').doc(providerId).update({
+            queueCount: firebase.firestore.FieldValue.increment(1)
+        });
+
+        startLiveTracking(newDoc.id, selectedSvcNames.join(", "));
+    } catch (err) { 
+        console.error(err);
+        alert("Error: " + err.message); 
+        btn.disabled = false; 
+    }
+}
 
         // LIVE TRACKING: Sums serviceDuration of only the people ahead of YOU
-        function startLiveTracking(myQueueId, svcNames) {
-            document.getElementById('joinSection').classList.add('hidden');
-            document.getElementById('statusSection').classList.remove('hidden');
-            document.getElementById('selectedSvcLabel').innerText = "Services: " + svcNames;
+   async function startLiveTracking(myQueueId, svcNames) {
+    document.getElementById('joinSection').classList.add('hidden');
+    document.getElementById('statusSection').classList.remove('hidden');
+    document.getElementById('selectedSvcLabel').innerText = "Services: " + svcNames;
 
-            db.collection('queues')
-                .where('providerId', '==', providerId)
-                .where('status', '==', 'waiting')
-                .orderBy('joinedAt', 'asc')
-                .onSnapshot(snap => {
-                    const docs = snap.docs;
-                    const myIndex = docs.findIndex(d => d.id === myQueueId);
-                    
-                    if (myIndex !== -1) {
-                        let minsAhead = 0;
-                        for (let i = 0; i < myIndex; i++) {
-                            minsAhead += (Number(docs[i].data().serviceDuration) || 0);
-                        }
-                        document.getElementById('livePos').innerText = myIndex + 1;
-                        document.getElementById('liveWait').innerText = minsAhead;
-                    } else {
-                        // Check if serving
-                        db.collection('queues').doc(myQueueId).get().then(doc => {
-                            if(doc.exists && doc.data().status === 'serving') {
-                                document.getElementById('statusSection').innerHTML = `
-                                    <div style="padding: 1rem; text-align:center;">
-                                        <h2 style='color:#059669; font-size: 2.2rem;'>Your Turn!</h2>
-                                        <p style="font-weight:600;">Please head to the counter now.</p>
-                                        <button onclick="location.reload()" class="btn">New Booking</button>
-                                    </div>`;
-                            }
-                        });
+    // Get capacity again for calculation
+    const bizDoc = await db.collection('providers').doc(providerId).get();
+    const capacity = bizDoc.exists ? (bizDoc.data().capacity || 1) : 1;
+
+    db.collection('queues')
+        .where('providerId', '==', providerId)
+        .where('status', '==', 'waiting')
+        .orderBy('joinedAt', 'asc')
+        .onSnapshot(snap => {
+            const docs = snap.docs;
+            const myIndex = docs.findIndex(d => d.id === myQueueId);
+            
+            if (myIndex !== -1) {
+                let minsAhead = 0;
+                
+                // If you are in one of the chairs (index < capacity), wait is 0
+                if (myIndex >= capacity) {
+                    // Sum everyone between the chairs and YOU
+                    for (let i = capacity; i < myIndex; i++) {
+                        minsAhead += (Number(docs[i].data().serviceDuration) || 0);
+                    }
+                }
+
+                document.getElementById('livePos').innerText = myIndex + 1;
+                document.getElementById('liveWait').innerText = minsAhead;
+            } else {
+                // ... (your existing 'serving' status check code)
+                db.collection('queues').doc(myQueueId).get().then(doc => {
+                    if(doc.exists && (doc.data().status === 'serving' || doc.data().status === 'completed')) {
+                         document.getElementById('statusSection').innerHTML = `
+                            <div style="padding: 1rem; text-align:center;">
+                                <h2 style='color:#059669; font-size: 2.2rem;'>Your Turn!</h2>
+                                <p style="font-weight:600;">Please head to the counter now.</p>
+                                <button onclick="location.reload()" class="btn">New Booking</button>
+                            </div>`;
                     }
                 });
-        }
+            }
+        });
+}
 
         function showError(msg) {
             const errDiv = document.getElementById('errorMessage');
