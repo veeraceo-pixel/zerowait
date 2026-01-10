@@ -212,8 +212,10 @@
             el.classList.add('active');
         }
 
-  function startLiveQ() {
+function startLiveQ() {
     if(qUnsub) qUnsub();
+    
+    // We listen to the queues where the providerId matches this business
     qUnsub = db.collection('queues')
         .where('providerId', '==', pubId)
         .where('status', 'in', ['waiting', 'serving'])
@@ -249,18 +251,26 @@
                 }
             });
 
-            // 1. Calculate the synchronized wait time
+            // Calculate the wait time (Total Backlog divided by business capacity)
             const estWait = Math.ceil(totalBacklogMins / (currentCapacity || 1));
 
-            // 2. Update Dashboard UI
+            // 1. Update Dashboard UI (The numbers you see)
             document.getElementById('waitCount').innerText = waitingCount;
             document.getElementById('totalMins').innerHTML = estWait + '<small style="font-size:1rem">m</small>';
 
-            // 3. SYNC STEP: Update the provider document so customers see the same live data
+            // 2. CRITICAL SYNC: Update the Provider document for the Customers
+            // We use 'curUid' because that is the document ID in the 'providers' collection
             db.collection('providers').doc(curUid).update({
                 currentWaitMins: estWait,
-                peopleInLine: waitingCount
-            }).catch(err => console.error("Sync error:", err));
+                peopleInLine: waitingCount,
+                lastSync: firebase.firestore.FieldValue.serverTimestamp() // Useful for debugging
+            }).then(() => {
+                console.log(`Sync complete: ${waitingCount} people, ${estWait} mins`);
+            }).catch(err => {
+                console.error("Sync error - Check Firestore Rules:", err);
+            });
+        }, err => {
+            console.error("Snapshot listener error:", err);
         });
 }
         async function startServing(id) {
