@@ -163,32 +163,29 @@
 
         // DYNAMIC PREVIEW: Sums serviceDuration of everyone currently waiting
 async function previewQueue() {
-    // 1. Get the business capacity (number of chairs)
-    const bizDoc = await db.collection('providers').doc(providerId).get();
-    const capacity = bizDoc.exists ? (bizDoc.data().capacity || 1) : 1;
+    // We listen to the provider's main document to get the synchronized stats
+    db.collection('providers').doc(providerId).onSnapshot(doc => {
+        const data = doc.data();
+        if (data) {
+            // 1. Get synchronized wait time from Dashboard calculations
+            // This fixes the "--" or "0" issue by providing a fallback
+            const currentWait = data.currentWaitMins || 0;
+            document.getElementById('estWait').innerText = currentWait;
 
-    // 2. Listen to ALL active people (waiting AND serving) to stay in sync
-    db.collection('queues')
-        .where('providerId', '==', providerId)
-        .where('status', 'in', ['waiting', 'serving']) 
-        .orderBy('joinedAt', 'asc') 
-        .onSnapshot(snap => {
-            const docs = snap.docs;
+            // 2. Get synchronized count of people in line
+            const inLine = data.peopleInLine || 0;
+            document.getElementById('aheadCount').innerText = inLine;
             
-            // This ensures "People Ahead" matches the "8 in line" on your search page
-            document.getElementById('aheadCount').innerText = snap.size;
-
-            let totalMins = 0;
-            
-            // Logic: Wait time only starts for people AFTER the chairs are full
-            if (docs.length > capacity) {
-                for (let i = capacity; i < docs.length; i++) {
-                    totalMins += (Number(docs[i].data().serviceDuration) || 0);
-                }
+            // 3. Optional: Business status check (Close the queue if business is closed)
+            if (data.isOpen === false) {
+                document.getElementById('joinBtn').disabled = true;
+                document.getElementById('joinBtn').innerText = "Business Closed";
+            } else {
+                document.getElementById('joinBtn').disabled = false;
+                document.getElementById('joinBtn').innerText = "Confirm & Join Queue";
             }
-
-            document.getElementById('estWait').innerText = totalMins;
-        });
+        }
+    });
 }
      async function handleCustomerJoin() {
     const name = document.getElementById('custName').value.trim();
@@ -259,39 +256,43 @@ async function startLiveTracking(myQueueId, svcNames) {
     document.getElementById('statusSection').classList.remove('hidden');
     document.getElementById('selectedSvcLabel').innerText = "Services: " + svcNames;
 
+    // 1. Get capacity once at the start (or listen to it)
     const bizDoc = await db.collection('providers').doc(providerId).get();
     const capacity = bizDoc.exists ? (bizDoc.data().capacity || 1) : 1;
 
-    // FIX: Match the 'waiting' AND 'serving' status to keep position accurate
     db.collection('queues')
         .where('providerId', '==', providerId)
-        .where('status', 'in', ['waiting', 'serving']) 
+        .where('status', 'in', ['waiting', 'serving'])
         .orderBy('joinedAt', 'asc')
         .onSnapshot(snap => {
             const docs = snap.docs;
             const myIndex = docs.findIndex(d => d.id === myQueueId);
             
             if (myIndex !== -1) {
-                let minsAhead = 0;
-                
-                // Position is now relative to EVERYONE in the shop
+                // Position is 1-based (e.g., "1st in line")
                 document.getElementById('livePos').innerText = myIndex + 1;
 
-                // Wait time logic: only count people ahead of you who are NOT in chairs
-                if (myIndex >= capacity) {
-                    for (let i = capacity; i < myIndex; i++) {
-                        minsAhead += (Number(docs[i].data().serviceDuration) || 0);
-                    }
-                    document.getElementById('liveWait').innerText = minsAhead;
-                } else {
-                    // You are in a chair! (or should be)
+                if (myIndex < capacity) {
+                    // CUSTOMER IS IN A CHAIR: They are being served or are next
                     document.getElementById('liveWait').innerText = "0";
+                    document.getElementById('liveWait').nextElementSibling.innerText = "You're up!";
+                } else {
+                    // CALCULATE PARALLEL WAIT:
+                    // Sum the duration of everyone ahead of the customer, then divide by capacity
+                    let minsAheadOfMe = 0;
+                    for (let i = 0; i < myIndex; i++) {
+                        minsAheadOfMe += (Number(docs[i].data().serviceDuration) || 0);
+                    }
+                    
+                    const personalWait = Math.ceil(minsAheadOfMe / capacity);
+                    document.getElementById('liveWait').innerText = personalWait;
+                    document.getElementById('liveWait').nextElementSibling.innerText = "Estimated Minutes";
                 }
             } else {
-                // If you aren't in 'waiting' or 'serving', you might be 'completed'
+                // Handle completion
                 db.collection('queues').doc(myQueueId).get().then(doc => {
                     if(doc.exists && doc.data().status === 'completed') {
-                         document.getElementById('statusSection').innerHTML = `
+                        document.getElementById('statusSection').innerHTML = `
                             <div style="padding: 1rem; text-align:center;">
                                 <h2 style='color:#059669; font-size: 2.2rem;'>Finished!</h2>
                                 <p style="font-weight:600;">Thank you for visiting.</p>
@@ -302,7 +303,6 @@ async function startLiveTracking(myQueueId, svcNames) {
             }
         });
 }
-
         function showError(msg) {
             const errDiv = document.getElementById('errorMessage');
             errDiv.innerText = msg; 
