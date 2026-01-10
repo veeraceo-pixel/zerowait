@@ -199,11 +199,16 @@
                     </select>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">WhatsApp Number</label>
-                    <input type="tel" id="phone" class="form-control" placeholder="e.g. 441612220420" required>
-                </div>
+<div class="form-group">
+    <label class="form-label">WhatsApp Number</label>
+    <input type="tel" id="phone" class="form-control" placeholder="e.g. 441612220420" required>
+</div>
 
+<div class="form-group">
+    <label class="form-label">Simultaneous Capacity (Chairs/Staff)</label>
+    <input type="number" id="bizCapacity" class="form-control" value="1" min="1" required>
+    <small style="color: var(--text-muted); font-size: 0.75rem;">How many customers can you serve at the same time?</small>
+</div>
                 <div class="form-group">
                     <label class="form-label">Work Email</label>
                     <input type="email" id="email" class="form-control" placeholder="admin@business.com" required>
@@ -355,7 +360,7 @@
             });
         }
 
-        signupForm.addEventListener('submit', async (e) => {
+   signupForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             if (!selectedPlace) return;
 
@@ -366,6 +371,10 @@
             const password = document.getElementById('password').value;
             const phone = document.getElementById('phone').value;
             const category = document.getElementById('bizCategory').value;
+            
+            // CAPTURE THE CAPACITY
+            const capacityInput = document.getElementById('bizCapacity');
+            const capacity = capacityInput ? Number(capacityInput.value) : 1;
 
             try {
                 const checkDuplicate = await db.collection('providers')
@@ -376,10 +385,15 @@
                 const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
                 createdUserId = userCredential.user.uid;
 
+                // SAVE CAPACITY TO FIRESTORE
                 await db.collection('providers').doc(createdUserId).set({
                     ...selectedPlace,
                     category: category,
-                    email, phone, role: 'provider', isOpen: false,
+                    capacity: capacity, // This tells the system how many people can be served at once
+                    email, 
+                    phone, 
+                    role: 'provider', 
+                    isOpen: false,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
