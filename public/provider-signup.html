@@ -409,26 +409,42 @@
             }
         });
 
-        async function performBatchOCR(event) {
-            const files = event.target.files;
-            const status = document.getElementById('ocrStatus');
-            if (!files.length) return;
+async function performBatchOCR(event) {
+    const files = event.target.files;
+    const status = document.getElementById('ocrStatus');
+    if (!files.length) return;
 
-            status.style.display = 'block';
-            for (let file of files) {
-                status.innerText = `Scanning ${file.name}...`;
-                const { data: { text } } = await Tesseract.recognize(file, 'eng');
-                const lines = text.split('\n');
-                lines.forEach(line => {
-                    const priceMatch = line.match(/(\d+[\.,]\d{2})|(\d{2,})/);
-                    const namePart = line.replace(/[0-9£$€\.,]/g, '').trim();
-                    if (priceMatch && namePart.length > 2) {
-                        addNewRow(namePart, priceMatch[0].replace(',', '.'));
-                    }
-                });
+    status.style.display = 'block';
+    
+    for (let file of files) {
+        status.innerText = `Scanning ${file.name}...`;
+        const { data: { text } } = await Tesseract.recognize(file, 'eng');
+        
+        // Split by line and process each one
+        const lines = text.split('\n');
+        
+        lines.forEach(line => {
+            // 1. CLEANING: Remove leading dashes, dots, or bullets (e.g., "- Haircut" becomes "Haircut")
+            const cleanLine = line.replace(/^[\-\.\s\d\*]+/, '').trim();
+            
+            // 2. PARSING: Find the price and the name
+            const priceMatch = line.match(/(\d+[\.,]\d{2})|(\d{2,})/);
+            const namePart = cleanLine.replace(/[0-9£$€\.,]/g, '').trim();
+
+            // 3. JUNK CHECK: Ensure the name isn't just a string of symbols (like "------")
+            const isSymbolOnly = /^[^a-zA-Z0-9]+$/.test(namePart);
+
+            // 4. VALIDATION: Only add if it has a price, a long enough name, and isn't just symbols
+            if (priceMatch && namePart.length > 2 && !isSymbolOnly) {
+                addNewRow(namePart, priceMatch[0].replace(',', '.'));
             }
-            status.innerText = "Scanning complete!";
-        }
+        });
+    }
+    
+    status.innerText = "Scanning complete!";
+    // Clear the input so you can re-upload the same image if needed
+    event.target.value = ''; 
+}
 
         function addNewRow(name = '', price = '') {
             const tbody = document.getElementById('servicesList');
