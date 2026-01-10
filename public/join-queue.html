@@ -77,7 +77,7 @@
 
             <div id="statusSection" class="hidden">
                 <div style="background: #dcfce7; color: #166534; padding: 0.4rem; border-radius: 2rem; font-size: 0.8rem; font-weight: bold; margin-bottom: 1.5rem;">YOU ARE IN LINE</div>
-                <div style="font-size: 4rem; font-weight: 800; color: var(--primary); line-height: 1;" id="liveWait">--</div>
+                <div style="font-size: 4rem; font-weight: 800; color: var(--primary); line-height: 1;" id="liveWait">0</div>
                 <p style="font-weight: 600; color: #64748b; margin-top: 0.5rem;">Estimated Minutes</p>
                 <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 1.5rem 0;">
                 <div style="display: flex; justify-content: space-between; padding: 0 10px;">
@@ -180,23 +180,30 @@ function previewQueue() {
     }, err => console.error("Preview sync failed:", err));
 }
         
-     async function handleCustomerJoin() {
+async function handleCustomerJoin() {
     const name = document.getElementById('custName').value.trim();
     const phone = document.getElementById('custPhone').value.trim();
     const selectedBoxes = document.querySelectorAll('input[name="svc"]:checked');
 
+    // Validation
     if (selectedBoxes.length === 0) return alert("Please select at least one service.");
     if (!name || !phone) return alert("Please enter your name and phone.");
 
+    // 1. REQUIRE LOGIN (Replaces Anonymous Auth)
+    let user = firebase.auth().currentUser;
+    if (!user || user.isAnonymous) {
+        alert("Please login to join the queue.");
+        sessionStorage.setItem('redirectAfterLogin', window.location.href);
+        window.location.href = "login.html";
+        return;
+    }
+
     const btn = document.getElementById('joinBtn');
     btn.disabled = true;
-    btn.innerText = "Checking status...";
+    btn.innerText = "Joining...";
 
     try {
-        let user = firebase.auth().currentUser;
-        if (!user) user = (await firebase.auth().signInAnonymously()).user;
-
-        // --- HARD BLOCK START ---
+        // 2. CHECK FOR EXISTING BOOKING
         const existing = await db.collection('queues')
             .where('providerId', '==', providerId)
             .where('userId', '==', user.uid)
@@ -204,20 +211,24 @@ function previewQueue() {
             .get();
 
         if (!existing.empty) {
-            alert("You are already in this queue! You cannot join twice.");
+            alert("You are already in this queue!");
             btn.disabled = false;
             btn.innerText = "Confirm & Join Queue";
             return;
         }
-        // --- HARD BLOCK END ---
 
         const selectedSvcNames = Array.from(selectedBoxes).map(cb => cb.dataset.name);
         let myTotalDuration = 0;
         selectedBoxes.forEach(cb => myTotalDuration += Number(cb.value));
 
-        const currentWaitMins = parseInt(document.getElementById('estWait').innerText);
+        // 3. FIX THE "--" ISSUE: Safely get the wait time
+        const waitText = document.getElementById('estWait').innerText;
+        // If the text is "--" or invalid, default to 0 for the calculation
+        const currentWaitMins = (waitText === "--" || isNaN(parseInt(waitText))) ? 0 : parseInt(waitText);
+        
         const estTimeDate = new Date(Date.now() + currentWaitMins * 60000);
 
+        // 4. ADD TO QUEUE
         const newDoc = await db.collection('queues').add({
             userId: user.uid,
             customerName: name,
@@ -240,9 +251,9 @@ function previewQueue() {
         console.error(err);
         alert("Error: " + err.message); 
         btn.disabled = false; 
+        btn.innerText = "Confirm & Join Queue";
     }
 }
-
         // LIVE TRACKING: Sums serviceDuration of only the people ahead of YOU
 function startLiveTracking(myQueueId, svcNames) {
     document.getElementById('joinSection').classList.add('hidden');
