@@ -249,10 +249,13 @@ function startLiveTracking(myQueueId, svcNames) {
     document.getElementById('statusSection').classList.remove('hidden');
     document.getElementById('selectedSvcLabel').innerText = "Services: " + svcNames;
 
-    // Listen to the provider doc so capacity updates LIVE
+    // 1. Listen to the provider doc to get the Capacity live
     db.collection('providers').doc(providerId).onSnapshot(bizDoc => {
-        const capacity = bizDoc.exists ? (bizDoc.data().capacity || 1) : 1;
+        // Force capacity to be a number. Default to 1 if it's missing or 0.
+        const capacity = (bizDoc.exists && bizDoc.data().capacity) ? Number(bizDoc.data().capacity) : 1;
+        const validCapacity = capacity > 0 ? capacity : 1;
 
+        // 2. Listen to the queue for this business
         db.collection('queues')
             .where('providerId', '==', providerId)
             .where('status', 'in', ['waiting', 'serving'])
@@ -265,40 +268,50 @@ function startLiveTracking(myQueueId, svcNames) {
                     const myData = docs[myIndex].data();
                     document.getElementById('livePos').innerText = myIndex + 1;
 
-                    // CHECK IF CURRENTLY SERVING
+                    // CASE A: You are currently being served
                     if (myData.status === 'serving') {
                         document.getElementById('liveWait').innerText = "0";
                         document.getElementById('liveWait').nextElementSibling.innerText = "You're up!";
                     } 
-                    // CHECK IF WITHIN CAPACITY (Next in line)
-                    else if (myIndex < capacity) {
+                    // CASE B: You are next in line (within the business capacity)
+                    else if (myIndex < validCapacity) {
                         document.getElementById('liveWait').innerText = "0";
                         document.getElementById('liveWait').nextElementSibling.innerText = "You're next!";
                     } 
-                    // CALCULATE PARALLEL WAIT
+                    // CASE C: Calculating wait time for those further back
                     else {
                         let minsAheadOfMe = 0;
                         for (let i = 0; i < myIndex; i++) {
-                            minsAheadOfMe += (Number(docs[i].data().serviceDuration) || 15);
+                            // Force duration to be a number. Fallback to 15 if invalid.
+                            const duration = Number(docs[i].data().serviceDuration);
+                            minsAheadOfMe += (!isNaN(duration) && duration > 0) ? duration : 15;
                         }
-                        const personalWait = Math.ceil(minsAheadOfMe / capacity);
-                        document.getElementById('liveWait').innerText = personalWait;
+
+                        // MATH: (Total Minutes Ahead) divided by (Number of Workers/Capacity)
+                        const personalWait = Math.ceil(minsAheadOfMe / validCapacity);
+                        
+                        // Display the result. If math somehow results in NaN, show a default.
+                        const displayWait = isNaN(personalWait) ? "10" : personalWait;
+                        document.getElementById('liveWait').innerText = displayWait;
                         document.getElementById('liveWait').nextElementSibling.innerText = "Estimated Minutes";
                     }
                 } else {
-                    // Handle transition to Completed
+                    // CASE D: Handle transition to 'completed'
                     db.collection('queues').doc(myQueueId).get().then(doc => {
                         if(doc.exists && doc.data().status === 'completed') {
                             document.getElementById('statusSection').innerHTML = `
-                                <div style="padding: 1rem; text-align:center;">
-                                    <h2 style='color:#059669; font-size: 2.2rem;'>Finished!</h2>
-                                    <p style="font-weight:600;">Thank you for visiting.</p>
+                                <div style="padding: 2rem; text-align:center;">
+                                    <h2 style='color:#059669; font-size: 2rem;'>Finished!</h2>
+                                    <p>Thank you for using skipQs.</p>
                                     <button onclick="location.reload()" class="btn">New Booking</button>
                                 </div>`;
                         }
                     });
                 }
             });
+    }, err => {
+        console.error("Critical: Could not sync with provider data.", err);
+        document.getElementById('liveWait').innerText = "15"; // Emergency fallback display
     });
 }
         function showError(msg) {
