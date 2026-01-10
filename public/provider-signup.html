@@ -415,34 +415,33 @@ async function performBatchOCR(event) {
     if (!files.length) return;
 
     status.style.display = 'block';
-    
     for (let file of files) {
         status.innerText = `Scanning ${file.name}...`;
         const { data: { text } } = await Tesseract.recognize(file, 'eng');
-        
-        // Split by line and process each one
         const lines = text.split('\n');
-        
+
         lines.forEach(line => {
-            // 1. CLEANING: Remove leading dashes, dots, or bullets (e.g., "- Haircut" becomes "Haircut")
-            const cleanLine = line.replace(/^[\-\.\s\d\*]+/, '').trim();
-            
-            // 2. PARSING: Find the price and the name
+            // 1. Identify the price first
             const priceMatch = line.match(/(\d+[\.,]\d{2})|(\d{2,})/);
-            const namePart = cleanLine.replace(/[0-9£$€\.,]/g, '').trim();
+            
+            // 2. Extract the name by removing numbers and currency symbols
+            let namePart = line.replace(/[0-9£$€\.,]/g, '').trim();
 
-            // 3. JUNK CHECK: Ensure the name isn't just a string of symbols (like "------")
-            const isSymbolOnly = /^[^a-zA-Z0-9]+$/.test(namePart);
+            // 3. STRICT CLEANING: Strip junk symbols (like «, », ), -, .) from start and end
+            // This specifically removes the noise seen in "Fade Inn Salon"
+            namePart = namePart.replace(/^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$/g, '').trim();
 
-            // 4. VALIDATION: Only add if it has a price, a long enough name, and isn't just symbols
-            if (priceMatch && namePart.length > 2 && !isSymbolOnly) {
-                addNewRow(namePart, priceMatch[0].replace(',', '.'));
+            // 4. JUNK CHECK: Ensure the remaining string isn't just symbols
+            const isJustSymbols = /^[^a-zA-Z0-9]+$/.test(namePart);
+
+            // 5. VALIDATION: Require a slightly longer name (>3) to ignore fragments like "RS"
+            if (priceMatch && namePart.length > 3 && !isJustSymbols) {
+                const cleanPrice = priceMatch[0].replace(',', '.');
+                addNewRow(namePart, cleanPrice);
             }
         });
     }
-    
     status.innerText = "Scanning complete!";
-    // Clear the input so you can re-upload the same image if needed
     event.target.value = ''; 
 }
 
