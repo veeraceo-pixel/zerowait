@@ -60,14 +60,28 @@
 
 <script>
   async function redirectUser(user) {
+    if (!user || user.isAnonymous) return;
+
     try {
-      const providerSnap = await firebase.firestore().collection('providers').doc(user.uid).get();
+      const db = firebase.firestore();
+      
+      // 1. Check if user is a Provider (Business owner)
+      const providerSnap = await db.collection('providers').doc(user.uid).get();
       if (providerSnap.exists) {
         window.location.replace('provider-dashboard.html');
+        return;
+      }
+
+      // 2. Check for a pending Queue join redirect
+      const pendingUrl = sessionStorage.getItem('redirectAfterLogin');
+      if (pendingUrl) {
+        sessionStorage.removeItem('redirectAfterLogin'); // Clear it so it doesn't loop
+        window.location.replace(pendingUrl);
       } else {
         window.location.replace('index.html'); 
       }
     } catch (err) {
+      console.error("Redirect error:", err);
       window.location.replace('index.html');
     }
   }
@@ -83,7 +97,7 @@
         document.getElementById('email').value, 
         document.getElementById('password').value
       );
-      await redirectUser(cred.user);
+      // redirectUser will be handled by the onAuthStateChanged listener below
     } catch (err) {
       btn.disabled = false;
       btn.innerText = 'Sign In';
@@ -91,8 +105,12 @@
     }
   };
 
+  // This listener handles the redirect whether they just logged in 
+  // or they were already logged in and visited the page.
   firebase.auth().onAuthStateChanged((user) => {
-    if (user) redirectUser(user);
+    if (user && !user.isAnonymous) {
+      redirectUser(user);
+    }
   });
 </script>
 </body>
