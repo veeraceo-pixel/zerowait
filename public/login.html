@@ -86,22 +86,33 @@
     }
   }
 
-  document.getElementById('loginForm').onsubmit = async (e) => {
+document.getElementById('loginForm').onsubmit = async (e) => {
     e.preventDefault();
     const btn = document.getElementById('submitBtn');
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+
     btn.disabled = true;
     btn.innerText = 'Signing in...';
 
     try {
-      const cred = await firebase.auth().signInWithEmailAndPassword(
-        document.getElementById('email').value, 
-        document.getElementById('password').value
-      );
-      // redirectUser will be handled by the onAuthStateChanged listener below
+      const cred = await firebase.auth().signInWithEmailAndPassword(email, password);
+      // Success: redirectUser will be triggered by onAuthStateChanged
     } catch (err) {
       btn.disabled = false;
       btn.innerText = 'Sign In';
-      alert(err.message);
+
+      // Check if the error is because the user doesn't exist
+      if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-login-credentials') {
+        const goToSignup = confirm("User not registered with us. Would you like to create an account now?");
+        if (goToSignup) {
+          window.location.href = "signup.html";
+        }
+      } else if (err.code === 'auth/wrong-password') {
+        alert("Incorrect password. Please try again.");
+      } else {
+        alert("Login Error: " + err.message);
+      }
     }
   };
 
