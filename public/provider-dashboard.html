@@ -179,7 +179,10 @@
                 if(!data) return;
                 
                 // CRITICAL: This ID must match what customers use to join
-                pubId = data.googlePlaceId || user.uid;
+                // pubId = data.googlePlaceId || user.uid;
+pubId = user.uid; 
+console.log("Dashboard is now using UID for sync:", pubId);
+                
                 currentCapacity = data.capacity || 1;
                 
                 document.getElementById('bizTitle').innerText = data.businessName;
