@@ -157,7 +157,7 @@
         </div>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
@@ -169,12 +169,16 @@
         const storage = firebase.storage();
         let curUid, pubId, qUnsub, currentCapacity = 1;
 
+        // 1. AUTH & INITIALIZATION
         firebase.auth().onAuthStateChanged(user => {
             if (!user) { window.location.href = 'login.html'; return; }
             curUid = user.uid;
+            
             db.collection('providers').doc(user.uid).onSnapshot(doc => {
                 const data = doc.data();
                 if(!data) return;
+                
+                // CRITICAL: This ID must match what customers use to join
                 pubId = data.googlePlaceId || user.uid;
                 currentCapacity = data.capacity || 1;
                 
@@ -189,90 +193,90 @@
 
                 if(data.menuImageUrl) renderMenuImage(data.menuImageUrl);
 
+                // Start active processes
                 startLiveQ();
                 loadServices();
                 updateServedToday();
-            });
-        });
-
-        async function updateCapacity(val) {
-            document.getElementById('capDisplay').innerText = val;
-            await db.collection('providers').doc(curUid).update({ capacity: Number(val) });
-        }
-
-        function setInputMode(mode) {
-            document.getElementById('form-manual').style.display = mode === 'manual' ? 'block' : 'none';
-            document.getElementById('form-upload').style.display = mode === 'upload' ? 'block' : 'none';
-        }
-
-        function showSection(id, el) {
-            document.querySelectorAll('section').forEach(s => s.style.display = 'none');
-            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-            document.getElementById('sec-' + id).style.display = 'block';
-            el.classList.add('active');
-        }
-
-function startLiveQ() {
-    if(qUnsub) qUnsub();
-    
-    // We listen to the queues where the providerId matches this business
-    qUnsub = db.collection('queues')
-        .where('providerId', '==', pubId)
-        .where('status', 'in', ['waiting', 'serving'])
-        .orderBy('joinedAt', 'asc')
-        .onSnapshot(snap => {
-            let totalBacklogMins = 0;
-            let waitingCount = 0;
-            const items = document.getElementById('qItems');
-            items.innerHTML = "";
-
-            snap.forEach(doc => {
-                const d = doc.data();
                 
-                if (d.status === 'serving') {
-                    const row = `
-                        <tr style="background: #f0fdf4; border-left: 4px solid #22c55e;">
-                            <td><span class="status-badge open" style="font-size:0.6rem">NOW SERVING</span><br><strong>${d.customerName}</strong></td>
-                            <td>${d.selectedService || '--'}</td>
-                            <td><span style="color:#16a34a; font-weight:bold;">In Progress</span></td>
-                            <td><button class="btn btn-primary" style="background:#16a34a;" onclick="completeService('${doc.id}')">Finish & Complete</button></td>
-                        </tr>`;
-                    items.innerHTML = row + items.innerHTML;
-                } else {
-                    waitingCount++;
-                    totalBacklogMins += (Number(d.serviceDuration) || 0);
-                    items.innerHTML += `
-                        <tr>
-                            <td><strong>${d.customerName}</strong><br><small>${d.customerPhone || ''}</small></td>
-                            <td>${d.selectedService || '--'}</td>
-                            <td>${d.serviceDuration || 0}m</td>
-                            <td><button class="btn btn-primary btn-sm" onclick="startServing('${doc.id}')">Start Serving</button></td>
-                        </tr>`;
-                }
+                // Set default date for history
+                document.getElementById('hDate').value = new Date().toISOString().split('T')[0];
             });
-
-            // Calculate the wait time (Total Backlog divided by business capacity)
-            const estWait = Math.ceil(totalBacklogMins / (currentCapacity || 1));
-
-            // 1. Update Dashboard UI (The numbers you see)
-            document.getElementById('waitCount').innerText = waitingCount;
-            document.getElementById('totalMins').innerHTML = estWait + '<small style="font-size:1rem">m</small>';
-
-            // 2. CRITICAL SYNC: Update the Provider document for the Customers
-            // We use 'curUid' because that is the document ID in the 'providers' collection
-            db.collection('providers').doc(curUid).update({
-                currentWaitMins: estWait,
-                peopleInLine: waitingCount,
-                lastSync: firebase.firestore.FieldValue.serverTimestamp() // Useful for debugging
-            }).then(() => {
-                console.log(`Sync complete: ${waitingCount} people, ${estWait} mins`);
-            }).catch(err => {
-                console.error("Sync error - Check Firestore Rules:", err);
-            });
-        }, err => {
-            console.error("Snapshot listener error:", err);
         });
-}
+
+        // 2. QUEUE MANAGEMENT (THE CORE LOGIC)
+        function startLiveQ() {
+            if(qUnsub) qUnsub();
+            
+            console.log("📡 Dashboard listening for providerId:", pubId);
+            
+            qUnsub = db.collection('queues')
+                .where('providerId', '==', pubId)
+                .where('status', 'in', ['waiting', 'serving'])
+                .orderBy('joinedAt', 'asc')
+                .onSnapshot(snap => {
+                    let totalBacklogMins = 0;
+                    let waitingCount = 0;
+                    const items = document.getElementById('qItems');
+                    
+                    if (snap.empty) {
+                        items.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:3rem; color:#94a3b8;">No active customers</td></tr>`;
+                    } else {
+                        items.innerHTML = "";
+                    }
+
+                    snap.forEach(doc => {
+                        const d = doc.data();
+                        
+                        if (d.status === 'serving') {
+                            const row = `
+                                <tr style="background: #f0fdf4; border-left: 4px solid #22c55e;">
+                                    <td><span class="status-badge open" style="font-size:0.6rem">NOW SERVING</span><br><strong>${d.customerName}</strong></td>
+                                    <td>${d.selectedService || '--'}</td>
+                                    <td><span style="color:#16a34a; font-weight:bold;">In Progress</span></td>
+                                    <td><button class="btn btn-primary" style="background:#16a34a;" onclick="completeService('${doc.id}')">Finish & Complete</button></td>
+                                </tr>`;
+                            items.innerHTML = row + items.innerHTML;
+                        } else {
+                            waitingCount++;
+                            const duration = Number(d.serviceDuration) || 0;
+                            totalBacklogMins += duration;
+                            
+                            items.innerHTML += `
+                                <tr>
+                                    <td><strong>${d.customerName}</strong><br><small>${d.customerPhone || ''}</small></td>
+                                    <td>${d.selectedService || '--'}</td>
+                                    <td>${duration}m</td>
+                                    <td><button class="btn btn-primary btn-sm" onclick="startServing('${doc.id}')">Start Serving</button></td>
+                                </tr>`;
+                        }
+                    });
+
+                    const estWait = Math.ceil(totalBacklogMins / (currentCapacity || 1));
+
+                    // Update UI Stats
+                    document.getElementById('waitCount').innerText = waitingCount;
+                    document.getElementById('totalMins').innerHTML = estWait + '<small style="font-size:1rem">m</small>';
+
+                    // SYNC DATA TO BOTH IDS TO PREVENT "0 WAIT" BUG
+                    const updateData = {
+                        currentWaitMins: estWait,
+                        peopleInLine: waitingCount,
+                        lastSync: firebase.firestore.FieldValue.serverTimestamp()
+                    };
+                    
+                    db.collection('providers').doc(curUid).update(updateData);
+                    if(pubId !== curUid) {
+                        db.collection('providers').doc(pubId).update(updateData).catch(() => {});
+                    }
+
+                }, err => {
+                    console.error("❌ Firestore Error:", err.message);
+                    if(err.message.includes("requires an index")) {
+                        console.error("Follow the link above to create the required database index.");
+                    }
+                });
+        }
+
         async function startServing(id) {
             await db.collection('queues').doc(id).update({
                 status: 'serving',
@@ -290,6 +294,7 @@ function startLiveQ() {
             updateServedToday();
         }
 
+        // 3. SERVICE & HISTORY MANAGEMENT
         function loadServices() {
             db.collection('providers').doc(curUid).collection('services').onSnapshot(snap => {
                 const list = document.getElementById('svcList');
@@ -304,6 +309,34 @@ function startLiveQ() {
                     </tr>`;
                 });
             });
+        }
+
+        async function loadHistory() {
+            const date = document.getElementById('hDate').value;
+            const snap = await db.collection('queues')
+                .where('providerId', '==', pubId)
+                .where('status', '==', 'completed')
+                .where('completedDate', '==', date)
+                .get();
+                
+            const list = document.getElementById('hItems');
+            list.innerHTML = snap.empty ? `<tr><td colspan="3" style="text-align:center; padding:2rem;">No history for this date</td></tr>` : "";
+            
+            snap.forEach(doc => {
+                const d = doc.data();
+                const time = d.completedAt ? d.completedAt.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Done';
+                list.innerHTML += `<tr>
+                    <td><strong>${d.customerName}</strong></td>
+                    <td>${d.selectedService || '--'}</td>
+                    <td>${time}</td>
+                </tr>`;
+            });
+        }
+
+        // 4. UTILITY FUNCTIONS
+        async function updateCapacity(val) {
+            document.getElementById('capDisplay').innerText = val;
+            await db.collection('providers').doc(curUid).update({ capacity: Number(val) });
         }
 
         async function addSvc() {
@@ -321,6 +354,45 @@ function startLiveQ() {
 
         async function delSvc(id) { if(confirm("Delete?")) await db.collection('providers').doc(curUid).collection('services').doc(id).delete(); }
 
+        function toggleQR() {
+            const overlay = document.getElementById('qrOverlay');
+            overlay.style.display = overlay.style.display === 'flex' ? 'none' : 'flex';
+            if(overlay.style.display === 'flex') {
+                const box = document.getElementById('qrcode-box');
+                box.innerHTML = "";
+                const url = `https://zerowait-c21fc.web.app/join-queue.html?id=${pubId}`;
+                new QRCode(box, { text: url, width: 250, height: 250 });
+            }
+        }
+
+        async function updateServedToday() {
+            const today = new Date().toISOString().split('T')[0];
+            const snap = await db.collection('queues').where('providerId','==',pubId).where('status','==','completed').where('completedDate','==',today).get();
+            document.getElementById('servedToday').innerText = snap.size;
+        }
+
+        // Navigation & Status
+        function setInputMode(mode) {
+            document.getElementById('form-manual').style.display = mode === 'manual' ? 'block' : 'none';
+            document.getElementById('form-upload').style.display = mode === 'upload' ? 'block' : 'none';
+        }
+
+        function showSection(id, el) {
+            document.querySelectorAll('section').forEach(s => s.style.display = 'none');
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            document.getElementById('sec-' + id).style.display = 'block';
+            el.classList.add('active');
+            if(id === 'history') loadHistory();
+        }
+
+        async function toggleStatus() {
+            const ref = db.collection('providers').doc(curUid);
+            const snap = await ref.get();
+            await ref.update({ isOpen: !snap.data().isOpen });
+        }
+
+        function handleLogout() { firebase.auth().signOut().then(() => window.location.href='index.html'); }
+        
         async function handleMenuUpload() {
             const file = document.getElementById('menuImgFile').files[0];
             if (!file) return;
@@ -334,30 +406,6 @@ function startLiveQ() {
         function renderMenuImage(url) {
             document.getElementById('menuImageArea').innerHTML = `<img src="${url}" id="menuPreviewImg">`;
         }
-
-        function toggleQR() {
-            const overlay = document.getElementById('qrOverlay');
-            overlay.style.display = overlay.style.display === 'flex' ? 'none' : 'flex';
-            if(overlay.style.display === 'flex') {
-                const box = document.getElementById('qrcode-box');
-                box.innerHTML = "";
-                new QRCode(box, { text: `https://zerowait-c21fc.web.app/join-queue.html?id=${pubId}`, width: 250, height: 250 });
-            }
-        }
-
-        async function toggleStatus() {
-            const ref = db.collection('providers').doc(curUid);
-            const snap = await ref.get();
-            await ref.update({ isOpen: !snap.data().isOpen });
-        }
-
-        async function updateServedToday() {
-            const today = new Date().toISOString().split('T')[0];
-            const snap = await db.collection('queues').where('providerId','==',pubId).where('status','==','completed').where('completedDate','==',today).get();
-            document.getElementById('servedToday').innerText = snap.size;
-        }
-
-        function handleLogout() { firebase.auth().signOut().then(() => window.location.href='index.html'); }
     </script>
 </body>
 </html>
