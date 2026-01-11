@@ -163,21 +163,29 @@
 
         // DYNAMIC PREVIEW: Sums serviceDuration of everyone currently waiting
 function previewQueue() {
-    // Listen to the provider document for the "Sync" data from the dashboard
-    db.collection('providers').doc(providerId).onSnapshot(doc => {
-        const data = doc.data();
-        if (doc.exists && data) {
-            // Get the live sync data that the Dashboard just calculated
-            const countAhead = data.peopleInLine || 0;
-            const liveWaitMins = data.currentWaitMins || 0;
+    // 1. Get the business capacity first
+    db.collection('providers').doc(providerId).onSnapshot(bizDoc => {
+        const capacity = bizDoc.data().capacity || 1;
+        
+        // 2. Now look at the actual live queue
+        db.collection('queues')
+            .where('providerId', '==', providerId)
+            .where('status', 'in', ['waiting', 'serving'])
+            .onSnapshot(snap => {
+                let totalMins = 0;
+                let peopleCount = snap.size;
 
-            document.getElementById('aheadCount').innerText = countAhead;
-            document.getElementById('estWait').innerText = liveWaitMins;
-            
-            // Store capacity globally for use in other functions
-            window.currentCapacity = data.capacity || 1; 
-        }
-    }, err => console.error("Preview sync failed:", err));
+                snap.forEach(doc => {
+                    totalMins += Number(doc.data().serviceDuration || 15);
+                });
+
+                // Calculate the wait based on how many "lanes" (capacity) are open
+                const calcWait = Math.ceil(totalMins / capacity);
+
+                document.getElementById('aheadCount').innerText = peopleCount;
+                document.getElementById('estWait').innerText = calcWait;
+            });
+    });
 }
         
 async function handleCustomerJoin() {
