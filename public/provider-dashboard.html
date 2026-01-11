@@ -261,16 +261,23 @@ console.log("Dashboard is now using UID for sync:", pubId);
                     document.getElementById('totalMins').innerHTML = estWait + '<small style="font-size:1rem">m</small>';
 
                     // SYNC DATA TO BOTH IDS TO PREVENT "0 WAIT" BUG
-                    const updateData = {
-                        currentWaitMins: estWait,
-                        peopleInLine: waitingCount,
-                        lastSync: firebase.firestore.FieldValue.serverTimestamp()
-                    };
-                    
-                    db.collection('providers').doc(curUid).update(updateData);
-                    if(pubId !== curUid) {
-                        db.collection('providers').doc(pubId).update(updateData).catch(() => {});
-                    }
+// SYNC DATA TO BOTH IDS (UID and Google Place ID)
+const updateData = {
+    currentWaitMins: estWait,
+    peopleInLine: waitingCount,
+    lastSync: firebase.firestore.FieldValue.serverTimestamp()
+};
+
+// 1. Always update the main account (UID)
+db.collection('providers').doc(curUid).update(updateData);
+
+// 2. Fetch and update the public search profile (Google ID) if it exists
+db.collection('providers').doc(curUid).get().then(snap => {
+    const gId = snap.data()?.googlePlaceId;
+    if (gId) {
+        db.collection('providers').doc(gId).set(updateData, { merge: true });
+    }
+});
 
                 }, err => {
                     console.error("❌ Firestore Error:", err.message);
