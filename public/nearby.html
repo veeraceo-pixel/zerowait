@@ -387,24 +387,36 @@ function renderList(results) {
     document.getElementById("counter").innerText = `Found ${results.length} results nearby.`;
 }
 
-        function selectPlace(index, pid, lat, lng) {
-            document.querySelectorAll('.place-card').forEach(c => c.classList.remove('active'));
-            document.getElementById(`card-${index}`).classList.add('active');
-            document.getElementById('details-overlay').style.display = 'flex';
-            
-            placesService.getDetails({ placeId: pid, fields: ['photos'] }, (details) => {
-                const strip = document.getElementById('photo-strip');
-                if (details && details.photos) {
-                    strip.innerHTML = details.photos.slice(0, 5).map(p => `<img src="${p.getUrl({maxWidth: 800})}">`).join('');
-                }
-            });
-            
-            setTimeout(() => {
-                new google.maps.StreetViewPanorama(document.getElementById("mini-pano"), {
-                    position: { lat, lng }, pov: { heading: 165, pitch: 0 }, zoom: 1, addressControl: false
-                });
-            }, 100);
-        }
+function selectPlace(index, pid, lat, lng) {
+    document.querySelectorAll('.place-card').forEach(c => c.classList.remove('active'));
+    const card = document.getElementById(`card-${index}`);
+    card.classList.add('active');
+    
+    // Check if it's a partner before spending money on 'Details'
+    const isLive = card.getAttribute('data-live') === 'true';
+    
+    document.getElementById('details-overlay').style.display = 'flex';
+    const strip = document.getElementById('photo-strip');
+    strip.innerHTML = '<p style="color:white; padding:20px;">Loading preview...</p>';
+
+    if (isLive) {
+        // Only call GetDetails for partners to save money
+        placesService.getDetails({ placeId: pid, fields: ['photos'] }, (details) => {
+            if (details && details.photos) {
+                strip.innerHTML = details.photos.slice(0, 5).map(p => `<img src="${p.getUrl({maxWidth: 800})}">`).join('');
+            }
+        });
+    } else {
+        strip.innerHTML = '<p style="color:white; padding:20px;">Photo previews available for skipQs Partners.</p>';
+    }
+    
+    // Street View is generally safer/cheaper than Place Details
+    setTimeout(() => {
+        new google.maps.StreetViewPanorama(document.getElementById("mini-pano"), {
+            position: { lat, lng }, pov: { heading: 165, pitch: 0 }, zoom: 1, addressControl: false
+        });
+    }, 100);
+}
 
         function closeDetails() { document.getElementById('details-overlay').style.display = 'none'; }
     </script>
