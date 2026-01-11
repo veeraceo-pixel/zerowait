@@ -199,18 +199,17 @@
                     </select>
                 </div>
 
-<div class="form-group">
-    <label class="form-label">WhatsApp Number</label>
-    <input type="tel" id="phone" class="form-control" placeholder="e.g. 441612220420" required>
-</div>
+                <div class="form-group">
+                    <label class="form-label">WhatsApp Number</label>
+                    <input type="tel" id="phone" class="form-control" placeholder="e.g. 441612220420" required>
+                </div>
 
-<div class="form-group">
-    <label class="form-label">Simultaneous Capacity (Chairs/Staff)</label>
-    <input type="number" id="bizCapacity" class="form-control" value="1" min="1" required>
-    <small style="color: var(--text-muted); font-size: 0.75rem;">How many customers can you serve at the same time?</small>
-</div>
+                <div class="form-group">
+                    <label class="form-label">Simultaneous Capacity (Chairs/Staff)</label>
+                    <input type="number" id="bizCapacity" class="form-control" value="1" min="1" required>
+                    <small style="color: var(--text-muted); font-size: 0.75rem;">How many customers can you serve at once?</small>
+                </div>
 
-                
                 <div class="form-group">
                     <label class="form-label">Work Email</label>
                     <input type="email" id="email" class="form-control" placeholder="admin@business.com" required>
@@ -231,7 +230,7 @@
             <div style="text-align: center; margin-bottom: 1rem;">
                 <div style="font-size: 2rem; margin-bottom: 0.5rem;">📸</div>
                 <h2 style="margin:0">Set Up Services</h2>
-                <p style="color: var(--text-muted); font-size: 0.85rem;">Upload your menu or add services manually below.</p>
+                <p style="color: var(--text-muted); font-size: 0.85rem;">Upload your menu or add services manually.</p>
             </div>
 
             <div class="scan-container">
@@ -245,8 +244,8 @@
                     <thead>
                         <tr>
                             <th>Service Name</th>
-                            <th style="width:50px;">Price</th>
-                            <th style="width:50px;">Mins</th>
+                            <th style="width:60px;">Price</th>
+                            <th style="width:60px;">Mins</th>
                             <th style="width:30px;"></th>
                         </tr>
                     </thead>
@@ -254,13 +253,13 @@
                 </table>
             </div>
 
-            <div style="display:flex; justify-content: space-between; align-items: center;">
+            <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                 <button type="button" onclick="addNewRow()" style="background:none; border:none; color:var(--primary); font-size:0.8rem; font-weight:bold; cursor:pointer;">+ Add Row Manually</button>
                 <button type="button" onclick="clearAllRows()" style="background:none; border:none; color:#ef4444; font-size:0.8rem; cursor:pointer;">Clear All</button>
             </div>
 
             <button type="button" onclick="saveAllServices()" id="finalBtn" class="btn-submit">Complete Registration</button>
-            <p id="loadingMsg" style="display:none; text-align:center; font-size:0.8rem; color:var(--primary);">Processing your services...</p>
+            <p id="loadingMsg" style="display:none; text-align:center; font-size:0.8rem; color:var(--primary);">Processing...</p>
         </div>
     </div>
 
@@ -268,7 +267,7 @@
         <div class="modal-content" style="padding: 3rem 2rem;">
             <div style="width: 80px; height: 80px; background: #dcfce7; color: #166534; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 3rem; margin: 0 auto 1.5rem;">✅</div>
             <h1 style="margin: 0 0 0.5rem 0; font-weight: 800;">All Set!</h1>
-            <p style="color: var(--text-muted); margin-bottom: 2rem; line-height: 1.5;">Your business is now registered. Please check your email to verify your account and go live.</p>
+            <p style="color: var(--text-muted); margin-bottom: 2rem; line-height: 1.5;">Your business is now registered. Please check your email to verify your account.</p>
             <button class="btn-submit" onclick="window.location.href='login.html'">Go to Dashboard</button>
         </div>
     </div>
@@ -288,88 +287,60 @@
         let selectedPlace = null;
         let createdUserId = null;
         let detectedCurrency = '$';
+        let sessionToken = null;
 
         const currencyMap = {
             'United Kingdom': '£', 'United States': '$', 'India': '₹',
             'United Arab Emirates': 'AED', 'Nigeria': '₦', 'Canada': 'CA$', 'Europe': '€'
         };
 
-        // Mapping for Auto-Select
-        const categoryMapping = {
-            'hair_care': 'Barber',
-            'beauty_salon': 'Salon',
-            'dentist': 'Clinic',
-            'doctor': 'Clinic',
-            'health': 'Clinic',
-            'restaurant': 'Restaurant',
-            'food': 'Restaurant',
-            'bank': 'Bank',
-            'finance': 'Bank',
-            'store': 'Retail',
-            'car_repair': 'Repair',
-            'local_government_office': 'Gov Office'
-        };
+        function initAutocomplete() {
+            sessionToken = new google.maps.places.AutocompleteSessionToken();
+            const input = document.getElementById('googleSearchInput');
+            const autocomplete = new google.maps.places.Autocomplete(input, {
+                types: ['establishment'],
+                fields: ['place_id', 'name', 'formatted_address', 'geometry', 'address_components'],
+                sessionToken: sessionToken
+            });
 
-     // 1. Declare a global variable for the session token
-let sessionToken = null;
+            autocomplete.addListener('place_changed', () => {
+                const place = autocomplete.getPlace();
+                if (!place.place_id) return;
 
-function initAutocomplete() {
-    // 2. Initialize the session token when the function runs
-    sessionToken = new google.maps.places.AutocompleteSessionToken();
+                const categorySelect = document.getElementById('bizCategory');
+                const bizNameLower = place.name.toLowerCase();
+                
+                if (bizNameLower.includes('barber')) categorySelect.value = "Barber";
+                else if (bizNameLower.includes('salon')) categorySelect.value = "Salon";
+                else if (bizNameLower.includes('clinic')) categorySelect.value = "Clinic";
+                else if (bizNameLower.includes('restaurant')) categorySelect.value = "Restaurant";
+                else categorySelect.value = "Other";
 
-    const input = document.getElementById('googleSearchInput');
-    const autocomplete = new google.maps.places.Autocomplete(input, {
-        types: ['establishment'],
-        // 3. REMOVED 'formatted_phone_number' and 'types' to drop to Basic tier
-        fields: ['place_id', 'name', 'formatted_address', 'geometry', 'address_components'],
-        sessionToken: sessionToken
-    });
+                const countryComponent = place.address_components.find(c => c.types.includes('country'));
+                const countryName = countryComponent ? countryComponent.long_name : 'United States';
+                detectedCurrency = currencyMap[countryName] || '$';
 
-    autocomplete.addListener('place_changed', () => {
-        const place = autocomplete.getPlace();
-        if (!place.place_id) return;
+                selectedPlace = {
+                    googlePlaceId: place.place_id,
+                    businessName: place.name,
+                    address: place.formatted_address,
+                    lat: place.geometry.location.lat(),
+                    lng: place.geometry.location.lng(),
+                    currencySymbol: detectedCurrency,
+                    country: countryName
+                };
 
-        // Auto-select Category Logic (Using the place name instead of types to save money)
-        const categorySelect = document.getElementById('bizCategory');
-        const bizNameLower = place.name.toLowerCase();
-        
-        // Simple keyword check to replace the expensive "types" data
-        if (bizNameLower.includes('barber')) categorySelect.value = "Barber";
-        else if (bizNameLower.includes('salon')) categorySelect.value = "Salon";
-        else if (bizNameLower.includes('clinic') || bizNameLower.includes('dentist')) categorySelect.value = "Clinic";
-        else if (bizNameLower.includes('restaurant') || bizNameLower.includes('food')) categorySelect.value = "Restaurant";
-        else categorySelect.value = "Other";
+                document.getElementById('bizPreview').style.display = 'block';
+                document.getElementById('selectedName').innerText = place.name;
+                document.getElementById('selectedAddress').innerText = place.formatted_address;
+                document.getElementById('detectedCurrencyText').innerText = "Detected Currency: " + detectedCurrency;
+                
+                submitBtn.disabled = false;
+                sessionToken = new google.maps.places.AutocompleteSessionToken();
+            });
+        }
 
-        // IMPORTANT: We no longer auto-fill phone number to save £££.
-        // Users will enter their WhatsApp number manually in the phone input below.
-
-        const countryComponent = place.address_components.find(c => c.types.includes('country'));
-        const countryName = countryComponent ? countryComponent.long_name : 'United States';
-        detectedCurrency = currencyMap[countryName] || '$';
-
-        selectedPlace = {
-            googlePlaceId: place.place_id,
-            businessName: place.name,
-            address: place.formatted_address,
-            lat: place.geometry.location.lat(),
-            lng: place.geometry.location.lng(),
-            currencySymbol: detectedCurrency,
-            country: countryName
-        };
-
-        document.getElementById('bizPreview').style.display = 'block';
-        document.getElementById('selectedName').innerText = place.name;
-        document.getElementById('selectedAddress').innerText = place.formatted_address;
-        document.getElementById('detectedCurrencyText').innerText = "Detected Currency: " + detectedCurrency;
-        
-        submitBtn.disabled = false;
-
-        // 4. Refresh the session token for the next search
-        sessionToken = new google.maps.places.AutocompleteSessionToken();
-    });
-}
-
-   signupForm.addEventListener('submit', async (e) => {
+        signupForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             if (!selectedPlace) return;
 
@@ -380,10 +351,7 @@ function initAutocomplete() {
             const password = document.getElementById('password').value;
             const phone = document.getElementById('phone').value;
             const category = document.getElementById('bizCategory').value;
-            
-            // CAPTURE THE CAPACITY
-            const capacityInput = document.getElementById('bizCapacity');
-            const capacity = capacityInput ? Number(capacityInput.value) : 1;
+            const capacity = Number(document.getElementById('bizCapacity').value) || 1;
 
             try {
                 const checkDuplicate = await db.collection('providers')
@@ -394,11 +362,10 @@ function initAutocomplete() {
                 const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
                 createdUserId = userCredential.user.uid;
 
-                // SAVE CAPACITY TO FIRESTORE
                 await db.collection('providers').doc(createdUserId).set({
                     ...selectedPlace,
-                    category: category,
-                    capacity: capacity, // This tells the system how many people can be served at once
+                    category,
+                    capacity,
                     email, 
                     phone, 
                     role: 'provider', 
@@ -408,7 +375,6 @@ function initAutocomplete() {
 
                 step2Modal.style.display = 'flex';
                 addNewRow(); 
-
             } catch (error) {
                 alert(error.message);
                 submitBtn.disabled = false;
@@ -416,68 +382,71 @@ function initAutocomplete() {
             }
         });
 
-async function performBatchOCR(event) {
-    const files = event.target.files;
-    const status = document.getElementById('ocrStatus');
-    if (!files.length) return;
+        async function performBatchOCR(event) {
+            const files = event.target.files;
+            const status = document.getElementById('ocrStatus');
+            if (!files.length) return;
 
-    status.style.display = 'block';
-    for (let file of files) {
-        status.innerText = `Scanning ${file.name}...`;
-        const { data: { text } } = await Tesseract.recognize(file, 'eng');
-        const lines = text.split('\n');
+            status.style.display = 'block';
+            for (let file of files) {
+                status.innerText = `Scanning ${file.name}...`;
+                const { data: { text } } = await Tesseract.recognize(file, 'eng');
+                const lines = text.split('\n');
 
-        lines.forEach(line => {
-            // 1. Identify the price first
-            const priceMatch = line.match(/(\d+[\.,]\d{2})|(\d{2,})/);
-            
-            // 2. Extract the name by removing numbers and currency symbols
-            let namePart = line.replace(/[0-9£$€\.,]/g, '').trim();
+                lines.forEach(line => {
+                    const priceMatch = line.match(/(\d+[\.,]\d{2})|(\d{2,})/);
+                    let namePart = line.replace(/[0-9£$€\.,]/g, '').trim();
+                    namePart = namePart.replace(/^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$/g, '').trim();
 
-            // 3. STRICT CLEANING: Strip junk symbols (like «, », ), -, .) from start and end
-            // This specifically removes the noise seen in "Fade Inn Salon"
-            namePart = namePart.replace(/^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$/g, '').trim();
-
-            // 4. JUNK CHECK: Ensure the remaining string isn't just symbols
-            const isJustSymbols = /^[^a-zA-Z0-9]+$/.test(namePart);
-
-            // 5. VALIDATION: Require a slightly longer name (>3) to ignore fragments like "RS"
-            if (priceMatch && namePart.length > 3 && !isJustSymbols) {
-                const cleanPrice = priceMatch[0].replace(',', '.');
-                addNewRow(namePart, cleanPrice);
+                    if (priceMatch && namePart.length > 3) {
+                        const cleanPrice = priceMatch[0].replace(',', '.');
+                        if (!/^[^a-zA-Z0-9]+$/.test(namePart)) {
+                            addNewRow(namePart, cleanPrice);
+                        }
+                    }
+                });
             }
-        });
-    }
-    status.innerText = "Scanning complete!";
-    event.target.value = ''; 
-}
+            status.innerText = "Scanning complete!";
+            event.target.value = ''; 
+        }
 
         function addNewRow(name = '', price = '') {
             const tbody = document.getElementById('servicesList');
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td><input type="text" class="form-control s-name" value="${name}" placeholder="Service name" style="padding:4px; font-size:0.8rem;"></td>
-                <td><input type="number" class="form-control s-price" value="${price}" placeholder="0" style="padding:4px; font-size:0.8rem;"></td>
-                <td><input type="number" class="form-control s-time" placeholder="Mins" style="padding:4px; font-size:0.8rem; border:1px solid var(--primary);"></td>
-                <td><button type="button" onclick="this.parentElement.parentElement.remove()" style="border:none; background:none; color:red; cursor:pointer;">&times;</button></td>
+                <td><input type="text" class="form-control s-name" value="${name}" required placeholder="Service name"></td>
+                <td><input type="number" class="form-control s-price" value="${price}" placeholder="0"></td>
+                <td><input type="number" class="form-control s-time" required min="1" placeholder="Mins" style="border:2px solid var(--primary); background:#f0f7ff;"></td>
+                <td><button type="button" onclick="this.parentElement.parentElement.remove()" style="color:red; background:none; border:none; cursor:pointer; font-size:1.2rem;">&times;</button></td>
             `;
             tbody.appendChild(tr);
         }
 
         function clearAllRows() {
-            if(confirm("Clear all items?")) document.getElementById('servicesList').innerHTML = '';
+            if(confirm("Clear all?")) document.getElementById('servicesList').innerHTML = '';
         }
 
         async function saveAllServices() {
             const rows = document.querySelectorAll('#servicesList tr');
             const services = [];
+            let hasError = false;
 
             rows.forEach(row => {
-                const name = row.querySelector('.s-name').value;
-                const price = row.querySelector('.s-price').value;
-                const time = row.querySelector('.s-time').value;
+                const nameInp = row.querySelector('.s-name');
+                const priceInp = row.querySelector('.s-price');
+                const timeInp = row.querySelector('.s-time');
 
-                if (name && time) {
+                const name = nameInp.value.trim();
+                const price = priceInp.value.trim();
+                const time = timeInp.value.trim();
+
+                if (!name && !price && !time) return;
+
+                if (name && !time) {
+                    timeInp.style.border = "2px solid #ef4444";
+                    hasError = true;
+                } else if (name && time) {
+                    timeInp.style.border = "2px solid var(--primary)";
                     services.push({
                         name,
                         price: Number(price) || 0,
@@ -487,33 +456,36 @@ async function performBatchOCR(event) {
                 }
             });
 
-            if (services.length === 0) {
-                alert("Please add at least one service and provide a duration (Mins).");
+            if (hasError) {
+                alert("Please provide the duration (Mins) for all services.");
                 return;
             }
 
-            document.getElementById('finalBtn').disabled = true;
+            if (services.length === 0) {
+                alert("Add at least one service.");
+                return;
+            }
+
+            const finalBtn = document.getElementById('finalBtn');
+            finalBtn.disabled = true;
             document.getElementById('loadingMsg').style.display = 'block';
 
             try {
                 const batch = db.batch();
-                services.forEach(service => {
-                    const sRef = db.collection('providers').doc(createdUserId).collection('services').doc();
-                    batch.set(sRef, service);
+                services.forEach(s => {
+                    const ref = db.collection('providers').doc(createdUserId).collection('services').doc();
+                    batch.set(ref, s);
                 });
-                
                 await batch.commit();
                 await firebase.auth().currentUser.sendEmailVerification();
-                
                 step2Modal.style.display = 'none';
                 successModal.style.display = 'flex';
-            } catch (error) {
-                alert("Error: " + error.message);
-                document.getElementById('finalBtn').disabled = false;
-                document.getElementById('loadingMsg').style.display = 'none';
+            } catch (e) {
+                alert(e.message);
+                finalBtn.disabled = false;
             }
         }
     </script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAJFGE5OFfn-OhDNJ_rWO5oi2d2CHl2fXE&libraries=places&callback=initAutocomplete" async defer></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY_HERE&libraries=places&callback=initAutocomplete" async defer></script>
 </body>
 </html>
