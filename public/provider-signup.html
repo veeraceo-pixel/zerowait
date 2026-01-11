@@ -310,57 +310,64 @@
             'local_government_office': 'Gov Office'
         };
 
-        function initAutocomplete() {
-            const input = document.getElementById('googleSearchInput');
-            const autocomplete = new google.maps.places.Autocomplete(input, {
-                types: ['establishment'],
-                fields: ['place_id', 'name', 'formatted_address', 'geometry', 'address_components', 'formatted_phone_number', 'types']
-            });
+     // 1. Declare a global variable for the session token
+let sessionToken = null;
 
-            autocomplete.addListener('place_changed', () => {
-                const place = autocomplete.getPlace();
-                if (!place.place_id) return;
+function initAutocomplete() {
+    // 2. Initialize the session token when the function runs
+    sessionToken = new google.maps.places.AutocompleteSessionToken();
 
-                // Auto-select Category Logic
-                const categorySelect = document.getElementById('bizCategory');
-                if (place.types) {
-                    let matchFound = false;
-                    for (const type of place.types) {
-                        if (categoryMapping[type]) {
-                            categorySelect.value = categoryMapping[type];
-                            matchFound = true;
-                            break;
-                        }
-                    }
-                    if (!matchFound) categorySelect.value = "Other";
-                }
+    const input = document.getElementById('googleSearchInput');
+    const autocomplete = new google.maps.places.Autocomplete(input, {
+        types: ['establishment'],
+        // 3. REMOVED 'formatted_phone_number' and 'types' to drop to Basic tier
+        fields: ['place_id', 'name', 'formatted_address', 'geometry', 'address_components'],
+        sessionToken: sessionToken
+    });
 
-                if (place.formatted_phone_number) {
-                    document.getElementById('phone').value = place.formatted_phone_number;
-                }
+    autocomplete.addListener('place_changed', () => {
+        const place = autocomplete.getPlace();
+        if (!place.place_id) return;
 
-                const countryComponent = place.address_components.find(c => c.types.includes('country'));
-                const countryName = countryComponent ? countryComponent.long_name : 'United States';
-                detectedCurrency = currencyMap[countryName] || '$';
+        // Auto-select Category Logic (Using the place name instead of types to save money)
+        const categorySelect = document.getElementById('bizCategory');
+        const bizNameLower = place.name.toLowerCase();
+        
+        // Simple keyword check to replace the expensive "types" data
+        if (bizNameLower.includes('barber')) categorySelect.value = "Barber";
+        else if (bizNameLower.includes('salon')) categorySelect.value = "Salon";
+        else if (bizNameLower.includes('clinic') || bizNameLower.includes('dentist')) categorySelect.value = "Clinic";
+        else if (bizNameLower.includes('restaurant') || bizNameLower.includes('food')) categorySelect.value = "Restaurant";
+        else categorySelect.value = "Other";
 
-                selectedPlace = {
-                    googlePlaceId: place.place_id,
-                    businessName: place.name,
-                    address: place.formatted_address,
-                    lat: place.geometry.location.lat(),
-                    lng: place.geometry.location.lng(),
-                    currencySymbol: detectedCurrency,
-                    country: countryName
-                };
+        // IMPORTANT: We no longer auto-fill phone number to save £££.
+        // Users will enter their WhatsApp number manually in the phone input below.
 
-                document.getElementById('bizPreview').style.display = 'block';
-                document.getElementById('selectedName').innerText = place.name;
-                document.getElementById('selectedAddress').innerText = place.formatted_address;
-                document.getElementById('detectedCurrencyText').innerText = "Detected Currency: " + detectedCurrency;
-                
-                submitBtn.disabled = false;
-            });
-        }
+        const countryComponent = place.address_components.find(c => c.types.includes('country'));
+        const countryName = countryComponent ? countryComponent.long_name : 'United States';
+        detectedCurrency = currencyMap[countryName] || '$';
+
+        selectedPlace = {
+            googlePlaceId: place.place_id,
+            businessName: place.name,
+            address: place.formatted_address,
+            lat: place.geometry.location.lat(),
+            lng: place.geometry.location.lng(),
+            currencySymbol: detectedCurrency,
+            country: countryName
+        };
+
+        document.getElementById('bizPreview').style.display = 'block';
+        document.getElementById('selectedName').innerText = place.name;
+        document.getElementById('selectedAddress').innerText = place.formatted_address;
+        document.getElementById('detectedCurrencyText').innerText = "Detected Currency: " + detectedCurrency;
+        
+        submitBtn.disabled = false;
+
+        // 4. Refresh the session token for the next search
+        sessionToken = new google.maps.places.AutocompleteSessionToken();
+    });
+}
 
    signupForm.addEventListener('submit', async (e) => {
             e.preventDefault();
