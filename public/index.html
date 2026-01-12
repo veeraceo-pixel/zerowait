@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>skipQs | Smart Queue Management</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <link href="https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.css" rel="stylesheet">
+  
   <style>
     :root {
       --primary: #2563eb; --primary-hover: #1d4ed8; --primary-soft: #eff6ff;
@@ -166,18 +169,15 @@
         </div>
       </section>
 
-<aside class="sidebar">
-  <h4 style="margin-top:0;">⚡ Shortest Waits</h4>
-  <div id="liveWaitList">
-    <p style="font-size: 0.85rem; color: var(--text-muted);">Finding fastest lines...</p>
-  </div>
-  
-  <hr style="border:0; border-top:1px solid var(--border); margin: 1.5rem 0;">
-  
-  <h4>🌟 Featured</h4>
-  <div id="featuredList">
-    </div>
-</aside>
+      <aside class="sidebar">
+        <h4 style="margin-top:0;">⚡ Shortest Waits</h4>
+        <div id="liveWaitList">
+          <p style="font-size: 0.85rem; color: var(--text-muted);">Finding fastest lines...</p>
+        </div>
+        <hr style="border:0; border-top:1px solid var(--border); margin: 1.5rem 0;">
+        <h4>🌟 Featured</h4>
+        <div id="featuredList"></div>
+      </aside>
     </div>
   </main>
 
@@ -227,79 +227,51 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="firebase-config.js"></script>
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAJFGE5OFfn-OhDNJ_rWO5oi2d2CHl2fXE&libraries=places"></script>
 
   <script>
     const db = firebase.firestore();
     let timerInt;
-
-// --- 1. INITIALIZE AUTOCOMPLETE (OPTIMIZED) ---
-let searchToken = null;
-let locationToken = null;
-
-function initSearch() {
-    // Generate tokens when the page loads
-    searchToken = new google.maps.places.AutocompleteSessionToken();
-    locationToken = new google.maps.places.AutocompleteSessionToken();
-
-    const queryInput = document.getElementById('queryInput');
-    const locationInput = document.getElementById('locationInput');
     
-    // Optimization: Request ONLY place_id and name (Basic category = $0)
-    const options = {
-        fields: ['place_id', 'name', 'geometry'],
-        types: ['establishment']
-    };
+    // --- 1. REPLACE GOOGLE WITH MAPBOX GEOCONFIG ---
+    // Get your FREE token from mapbox.com
+    const MAPBOX_TOKEN = 'pk.eyJ1IjoidmVlcmFjZW8iLCJhIjoiY21rYmw0OGU0MDJhdzNlc2F6eTNieHZtYiJ9.KRGL19uPsS5miVfALTuqiw';
 
-    // Initialize with session tokens
-    const queryAC = new google.maps.places.Autocomplete(queryInput, { ...options, sessionToken: searchToken });
-    const locationAC = new google.maps.places.Autocomplete(locationInput, { 
-        types: ['(regions)'], 
-        fields: ['formatted_address', 'geometry'],
-        sessionToken: locationToken 
-    });
-
-    // Reset tokens after a selection is made to start a new "billing session"
-    queryAC.addListener('place_changed', () => {
-        searchToken = new google.maps.places.AutocompleteSessionToken();
-    });
-    locationAC.addListener('place_changed', () => {
-        locationToken = new google.maps.places.AutocompleteSessionToken();
-    });
-}
-window.addEventListener('load', initSearch);
-
-// --- 2. GPS DETECTION (FREE) ---
-function detectMyLocation() {
-    const locInput = document.getElementById('locationInput');
-    locInput.value = "";
-    locInput.placeholder = "Locating...";
-    
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition((pos) => {
-            // Geocoding is a separate API, but it's much cheaper than "Places"
-            const geocoder = new google.maps.Geocoder();
-            geocoder.geocode({ location: { lat: pos.coords.latitude, lng: pos.coords.longitude } }, (results, status) => {
-                if (status === "OK" && results[0]) {
-                    // We only take the city/neighborhood to keep the search broad
-                    locInput.value = results[0].formatted_address;
-                }
-            });
-        }, () => {
+    // GPS Detection using Browser API (Free) + Mapbox Reverse Geocoding
+    async function detectMyLocation() {
+      const locInput = document.getElementById('locationInput');
+      locInput.value = "";
+      locInput.placeholder = "Locating...";
+      
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(async (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          
+          try {
+            const response = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${MAPBOX_TOKEN}`);
+            const data = await response.json();
+            if (data.features && data.features.length > 0) {
+              // Get the name of the place
+              locInput.value = data.features[0].place_name;
+            }
+          } catch (err) {
+            console.error("Mapbox Geocoding failed:", err);
             locInput.placeholder = "Location (Near me)";
-            alert("Please enable location services.");
+          }
+        }, () => {
+          locInput.placeholder = "Location (Near me)";
+          alert("Please enable location services.");
         });
+      }
     }
-}
 
-    // --- 3. SEARCH EXECUTION ---
+    // --- 2. SEARCH EXECUTION ---
     function executeSearch() {
       const q = document.getElementById('queryInput').value;
       const l = document.getElementById('locationInput').value;
       let params = [];
       if (q) params.push(`q=${encodeURIComponent(q)}`);
       
-      // Fixed: explicitly handle "Near me" or empty location to ensure Nearby page triggers GPS
       if (l && l.trim() !== "") {
         params.push(`l=${encodeURIComponent(l)}`);
       } else {
@@ -309,7 +281,7 @@ function detectMyLocation() {
       window.location.href = 'nearby.html' + (params.length > 0 ? '?' + params.join('&') : '');
     }
 
-    // --- 4. FIREBASE LOGIC ---
+    // --- 3. FIREBASE LOGIC (Login & Banner) ---
     firebase.auth().onAuthStateChanged(user => {
       if (user) {
         document.getElementById('loginLink').style.display = 'none';
@@ -350,12 +322,10 @@ function detectMyLocation() {
 
     function logoutUser() { firebase.auth().signOut().then(() => window.location.reload()); }
 
+    // --- 4. SIDEBAR LOGIC (FREE FIREBASE CALLS) ---
     async function loadSidebarQueues() {
-    const listContainer = document.getElementById('liveWaitList');
-    
-    try {
-        // We only fetch businesses that are actually OPEN
-        // We sort by 'currentWait' (a field you'll update in your DB)
+      const listContainer = document.getElementById('liveWaitList');
+      try {
         const snapshot = await db.collection('providers')
             .where('isOpen', '==', true)
             .orderBy('currentWait', 'asc')
@@ -381,20 +351,18 @@ function detectMyLocation() {
             `;
         });
         listContainer.innerHTML = html;
-    } catch (err) {
+      } catch (err) {
         console.error("Sidebar load failed:", err);
         listContainer.innerHTML = "<p style='font-size:0.8rem;'>Select a category to explore.</p>";
+      }
     }
-}
 
-// Simple helper for the icons
-function getEmoji(cat) {
-    const icons = { 'Barber': '✂️', 'Salon': '💅', 'Clinic': '🦷', 'Gym': '💪' };
-    return icons[cat] || '📍';
-}
+    function getEmoji(cat) {
+      const icons = { 'Barber': '✂️', 'Salon': '💅', 'Clinic': '🦷', 'Gym': '💪', 'Dining': '🍽️' };
+      return icons[cat] || '📍';
+    }
 
-// RUN THIS ON LOAD
-window.addEventListener('DOMContentLoaded', loadSidebarQueues);
+    window.addEventListener('DOMContentLoaded', loadSidebarQueues);
   </script>
 </body>
 </html>
