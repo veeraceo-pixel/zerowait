@@ -328,7 +328,7 @@
       try {
         const snapshot = await db.collection('providers')
             .where('isOpen', '==', true)
-            .orderBy('currentWait', 'asc')
+            .orderBy('currentWaitMins', 'asc')
             .limit(3)
             .get();
 
@@ -345,7 +345,7 @@
                     <div class="feat-img">${getEmoji(biz.category)}</div>
                     <div class="feat-info">
                         <h5>${biz.businessName}</h5>
-                        <div class="wait-mini">${biz.currentWait || 0} min wait</div>
+                        <div class="wait-mini">${biz.currentWaitMins || 0} min wait</div>
                     </div>
                 </a>
             `;
