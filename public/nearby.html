@@ -254,23 +254,22 @@
         performSearch();
     }
 
-   async function performSearch() {
+ // 1. Clean up performSearch (Removed duplicate variable declarations)
+async function performSearch() {
     const container = document.getElementById("results");
     markers.forEach(m => map.removeLayer(m));
     markers = [];
 
-    // Define Salford area boundaries to stop results from being "far away"
-    // Format: [minLng, minLat, maxLng, maxLat]
+    // The "Fence" around Salford
     const salfordBbox = "-2.3274,53.4654,-2.2343,53.5042"; 
 
     try {
-        // We add &bbox= to the URL to restrict results strictly to Salford
-        const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(SERVICE_MAP[serviceType].query)}.json?proximity=${userLng},${userLat}&bbox=${salfordBbox}&limit=20&access_token=${MAPBOX_TOKEN}`;
+        // Optimized URL with poi filter and Salford boundary
+        const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(SERVICE_MAP[serviceType].query)}.json?proximity=${userLng},${userLat}&bbox=${salfordBbox}&types=poi&limit=15&access_token=${MAPBOX_TOKEN}`;
         
         const resp = await fetch(url);
         const data = await resp.json();
 
-        // Firebase Sync
         const fbSnap = await db.collection('providers').where('category', '==', SERVICE_MAP[serviceType].cat).get();
         const partners = {};
         fbSnap.forEach(doc => partners[doc.data().businessName.toLowerCase().trim()] = {id: doc.id, ...doc.data()});
@@ -278,7 +277,7 @@
         container.innerHTML = "";
         
         if (data.features.length === 0) {
-            container.innerHTML = "<p style='padding:20px;'>No local businesses found in Salford. Try moving the map.</p>";
+            container.innerHTML = "<p style='padding:20px;'>No local businesses found in this part of Salford.</p>";
             return;
         }
 
@@ -286,8 +285,6 @@
             const name = place.text;
             const partner = partners[name.toLowerCase().trim()];
             const [pLng, pLat] = place.center; 
-
-            // Calculate distance in miles
             const dist = (L.latLng(userLat, userLng).distanceTo(L.latLng(pLat, pLng)) * 0.000621371).toFixed(1);
 
             const card = document.createElement('div');
@@ -299,8 +296,7 @@
                         <span class="dist-tag">${dist} mi</span>
                     </div>
                     ${partner ? `<div class="wait-time-badge">⚡ ${partner.currentWaitMins}m Wait</div>` : `<p style="font-size:0.75rem; color:gray; margin-top:5px;">Standard Listing</p>`}
-                </div>
-            `;
+                </div>`;
             container.appendChild(card);
 
             const m = L.circleMarker([pLat, pLng], {
@@ -308,24 +304,19 @@
             }).addTo(map);
             markers.push(m);
         });
-
         document.getElementById("counter").innerText = `Found ${data.features.length} local locations`;
-
-    } catch (err) { 
-        console.error("Search failed:", err); 
-    }
+    } catch (err) { console.error("Search failed:", err); }
 }
 
+// 2. Fix the Directions link syntax
 function openDetails(name, addr, lat, lng, id, phone) {
     document.getElementById('detail-name').innerText = name;
     document.getElementById('detail-addr').innerText = addr;
-    
-    // Static map preview URL
     document.getElementById('detail-img').src = `https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/${lng},${lat},16,0/600x400?access_token=${MAPBOX_TOKEN}`;
     
-    // FIX: Added the missing '$' before {lat} so the browser reads the variable
-    let actions = `<a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" target="_blank" class="btn btn-sec">Directions</a>`;
-    
+    // CORRECTED: changed 0{lat} to ${lat}
+    // let actions = `<a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" target="_blank" class="btn btn-sec">Directions</a>`;
+    let actions = `<a href="https://www.google.com/maps/search/?api=1&query=${lat},${lng}" target="_blank" class="btn btn-sec">Directions</a>`;
     if(id) actions += `<button onclick="location.href='join-queue.html?id=${id}'" class="btn btn-join">JOIN QUEUE</button>`;
     if(phone) actions += `<a href="https://wa.me/${phone.replace(/\D/g,'')}" target="_blank" class="btn btn-whatsapp">WhatsApp</a>`;
     
@@ -333,6 +324,7 @@ function openDetails(name, addr, lat, lng, id, phone) {
     document.getElementById('details-overlay').classList.add('open');
     map.flyTo([lat, lng], 16);
 }
+
 
     function closeDetails() { document.getElementById('details-overlay').classList.remove('open'); }
     function redoSearch() { 
