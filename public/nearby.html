@@ -252,64 +252,77 @@
         }
 
         async function performSearch() {
-            const container = document.getElementById("results");
-            markers.forEach(m => map.removeLayer(m));
-            markers = [];
+    const container = document.getElementById("results");
+    container.innerHTML = "<p style='padding:10px;'>Searching Salford...</p>";
+    
+    // Clear old markers
+    markers.forEach(m => map.removeLayer(m));
+    markers = [];
 
-            try {
-                const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(SERVICE_MAP[serviceType].query)}.json?proximity=${userLng},${userLat}&limit=25&access_token=${MAPBOX_TOKEN}`;
-                const resp = await fetch(url);
-                const data = await resp.json();
+    try {
+        // Updated construction for better reliability
+        const endpoint = "https://api.mapbox.com/geocoding/v5/mapbox.places";
+        const query = encodeURIComponent(SERVICE_MAP[serviceType].query);
+        const url = `${endpoint}/${query}.json?proximity=${userLng},${userLat}&limit=20&access_token=${MAPBOX_TOKEN}`;
 
-                const fbSnap = await db.collection('providers').where('category', '==', SERVICE_MAP[serviceType].cat).get();
-                const partners = {};
-                fbSnap.forEach(doc => {
-                    const d = doc.data();
-                    partners[d.businessName.toLowerCase().trim()] = {id: doc.id, ...d};
-                });
-
-                container.innerHTML = "";
-                
-                const sortedFeatures = data.features.sort((a, b) => {
-                    const isAPartner = partners[a.text.toLowerCase().trim()] ? 1 : 0;
-                    const isBPartner = partners[b.text.toLowerCase().trim()] ? 1 : 0;
-                    return isBPartner - isAPartner;
-                });
-
-                sortedFeatures.forEach((place) => {
-                    const name = place.text;
-                    const partner = partners[name.toLowerCase().trim()];
-                    const [pLng, pLat] = place.center;
-                    
-                    // Fixed Distance logic for Salford [Lat, Lng]
-                    const dist = (L.latLng(userLat, userLng).distanceTo(L.latLng(pLat, pLng)) * 0.000621371).toFixed(1);
-
-                    const card = document.createElement('div');
-                    card.className = `place-card ${partner ? 'active-partner' : ''}`;
-                    card.setAttribute('data-live', !!partner);
-                    card.innerHTML = `
-                        <div onclick="openDetails('${name.replace(/'/g, "\\'")}', '${place.place_name.replace(/'/g, "\\'")}', ${pLat}, ${pLng}, '${partner?.id || ''}', '${partner?.phone || ''}')">
-                            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                                <strong style="font-size:1.1rem; color:var(--text-main);">${name}</strong>
-                                <span class="dist-tag">${dist} mi</span>
-                            </div>
-                            <div style="margin-top:8px;">
-                                ${partner ? `<span class="wait-time-badge">⚡ ${partner.currentWaitMins || 0}m Wait</span>` : `<span style="font-size:0.75rem; color:var(--text-muted);">Standard Listing</span>`}
-                            </div>
-                        </div>
-                    `;
-                    container.appendChild(card);
-
-                    const m = L.circleMarker([pLat, pLng], {
-                        radius: 10, fillColor: partner ? "#2563eb" : "#64748b", color: "#fff", weight: 2, fillOpacity: 1
-                    }).addTo(map).on('click', () => {
-                        openDetails(name, place.place_name, pLat, pLng, partner?.id, partner?.phone);
-                    });
-                    markers.push(m);
-                });
-                document.getElementById("counter").innerText = `Found ${data.features.length} locations nearby`;
-            } catch (err) { console.error(err); }
+        const resp = await fetch(url);
+        
+        // Check if the response is okay
+        if (!resp.ok) {
+            throw new Error(`Mapbox Error: ${resp.status}`);
         }
+
+        const data = await resp.json();
+
+        // Fetch Firebase Live Partners
+        const fbSnap = await db.collection('providers').where('category', '==', SERVICE_MAP[serviceType].cat).get();
+        const partners = {};
+        fbSnap.forEach(doc => {
+            partners[doc.data().businessName.toLowerCase().trim()] = {id: doc.id, ...doc.data()};
+        });
+
+        container.innerHTML = "";
+        
+        if (data.features.length === 0) {
+            container.innerHTML = "<p style='padding:20px;'>No businesses found in this area.</p>";
+            return;
+        }
+
+        data.features.forEach((place) => {
+            const name = place.text;
+            const partner = partners[name.toLowerCase().trim()];
+            const [pLng, pLat] = place.center;
+            
+            // Calc distance
+            const dist = (L.latLng(userLat, userLng).distanceTo(L.latLng(pLat, pLng)) * 0.000621371).toFixed(1);
+
+            const card = document.createElement('div');
+            card.className = `place-card ${partner ? 'active-partner' : ''}`;
+            card.innerHTML = `
+                <div onclick="openDetails('${name.replace(/'/g, "\\'")}', '${place.place_name.replace(/'/g, "\\'")}', ${pLat}, ${pLng}, '${partner?.id || ''}', '${partner?.phone || ''}')">
+                    <div style="display:flex; justify-content:space-between;">
+                        <strong style="font-size:1.1rem;">${name}</strong>
+                        <span class="dist-tag">${dist} mi</span>
+                    </div>
+                    ${partner ? `<div class="wait-time-badge">⚡ ${partner.currentWaitMins}m Wait</div>` : `<p style="font-size:0.75rem; color:gray; margin-top:5px;">Standard Listing</p>`}
+                </div>
+            `;
+            container.appendChild(card);
+
+            // Add Circle Marker
+            const m = L.circleMarker([pLat, pLng], {
+                radius: 10, fillColor: partner ? "#2563eb" : "#64748b", color: "#fff", weight: 2, fillOpacity: 1
+            }).addTo(map);
+            markers.push(m);
+        });
+
+        document.getElementById("counter").innerText = `Found ${data.features.length} locations`;
+
+    } catch (err) {
+        console.error("Search Failed:", err);
+        container.innerHTML = `<p style='padding:20px; color:red;'>Search Error: ${err.message}. Check your Mapbox token permissions.</p>`;
+    }
+}
 
         function openDetails(name, addr, lat, lng, id, phone) {
             document.getElementById('detail-name').innerText = name;
