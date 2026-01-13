@@ -210,7 +210,7 @@
          * skipQs Core Logic
          * Uses Mapbox for POI search and Firebase for Live Queueing data.
          */
-        const db = firebase.firestore();
+        const db = const db = window.db || firebase.firestore();
         const MAPBOX_TOKEN = 'pk.eyJ1IjoidmVlcmFjZW8iLCJhIjoiY21rY2h5ZmQ2MDEzaTNlc2NqdTV0ZWowNiJ9.x8KNnadUqOuINdXV7g7Zbw';
         
         let map, userLat, userLng, markers = [], liveOnly = false;
