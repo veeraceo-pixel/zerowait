@@ -5,8 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>skipQs | Smart Queue Management</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link href="https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.css" rel="stylesheet">
-  
   <style>
     :root {
       --primary: #2563eb; --primary-hover: #1d4ed8; --primary-soft: #eff6ff;
@@ -142,7 +140,7 @@
         <div class="search-wrapper">
           <div class="search-group">
             <span>🔍</span>
-            <input type="text" id="queryInput" class="search-input" placeholder="Service (Salon, Dining, Clinic...)">
+            <input type="text" id="queryInput" class="search-input" placeholder="Service (Salon, Clinic...)">
           </div>
           <div class="search-group">
             <span onclick="detectMyLocation()" class="gps-trigger" title="Use current location">📍</span>
@@ -157,32 +155,35 @@
       <section>
         <h2 class="section-title">Quick Access</h2>
         <div class="quick-grid">
-          <a href="nearby.html?type=salon&l=near me" class="quick-card"><span>💇‍♀️</span><h3>Salons</h3></a>
-          <a href="nearby.html?type=dining&l=near me" class="quick-card"><span>🍽️</span><h3>Dining</h3></a>
-          <a href="nearby.html?type=clinic&l=near me" class="quick-card"><span>🏥</span><h3>Clinics</h3></a>
-          <a href="nearby.html?type=banking&l=near me" class="quick-card"><span>🏦</span><h3>Banking</h3></a>
-          <a href="nearby.html?type=gym&l=near me" class="quick-card"><span>🏋️</span><h3>Gyms</h3></a>
-          <a href="nearby.html?type=repair&l=near me" class="quick-card"><span>🛠️</span><h3>Repairs</h3></a>
-          <a href="nearby.html?type=gov&l=near me" class="quick-card"><span>🏛️</span><h3>Gov</h3></a>
-          <a href="nearby.html?type=wash&l=near me" class="quick-card"><span>🧼</span><h3>Wash</h3></a>
+          <a href="nearby.html?type=salon" class="quick-card"><span>💇‍♀️</span><h3>Salons</h3></a>
+          <a href="nearby.html?type=dining" class="quick-card"><span>🍽️</span><h3>Dining</h3></a>
+          <a href="nearby.html?type=clinic" class="quick-card"><span>🏥</span><h3>Clinics</h3></a>
+          <a href="nearby.html?type=banking" class="quick-card"><span>🏦</span><h3>Banking</h3></a>
+          <a href="nearby.html?type=gym" class="quick-card"><span>🏋️</span><h3>Gyms</h3></a>
+          <a href="nearby.html?type=repair" class="quick-card"><span>🛠️</span><h3>Repairs</h3></a>
+          <a href="nearby.html?type=gov" class="quick-card"><span>🏛️</span><h3>Gov</h3></a>
+          <a href="nearby.html?type=wash" class="quick-card"><span>🧼</span><h3>Wash</h3></a>
         </div>
       </section>
 
-      <aside class="sidebar">
-        <h4 style="margin-top:0;">⚡ Shortest Waits</h4>
-        <div id="liveWaitList">
-          <p style="font-size: 0.85rem; color: var(--text-muted);">Finding fastest lines...</p>
-        </div>
-        <hr style="border:0; border-top:1px solid var(--border); margin: 1.5rem 0;">
-        <h4>🌟 Featured</h4>
-        <div id="featuredList"></div>
-      </aside>
+<aside class="sidebar">
+  <h4 style="margin-top:0;">⚡ Shortest Waits</h4>
+  <div id="liveWaitList">
+    <p style="font-size: 0.85rem; color: var(--text-muted);">Finding fastest lines...</p>
+  </div>
+  
+  <hr style="border:0; border-top:1px solid var(--border); margin: 1.5rem 0;">
+  
+  <h4>🌟 Featured</h4>
+  <div id="featuredList">
+    </div>
+</aside>
     </div>
   </main>
 
   <nav class="mobile-nav">
     <a href="index.html" class="active"><span>🏠</span>Home</a>
-    <a href="nearby.html?l=near me"><span>🔍</span>Search</a>
+    <a href="nearby.html"><span>🔍</span>Search</a>
     <a href="dashboard.html"><span>📋</span>Queues</a>
     <a href="login.html"><span>👤</span>Profile</a>
   </nav>
@@ -226,66 +227,89 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="firebase-config.js"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAJFGE5OFfn-OhDNJ_rWO5oi2d2CHl2fXE&libraries=places"></script>
 
   <script>
     const db = firebase.firestore();
     let timerInt;
-    const MAPBOX_TOKEN = 'pk.eyJ1IjoidmVlcmFjZW8iLCJhIjoiY21rY2h5ZmQ2MDEzaTNlc2NqdTV0ZWowNiJ9.x8KNnadUqOuINdXV7g7Zbw';
 
-    // GPS Detection using Browser API + Mapbox Reverse Geocoding
-    async function detectMyLocation() {
-      const locInput = document.getElementById('locationInput');
-      locInput.value = "";
-      locInput.placeholder = "Locating...";
-      
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(async (pos) => {
-          const lat = pos.coords.latitude;
-          const lng = pos.coords.longitude;
-          
-          try {
-            const response = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${MAPBOX_TOKEN}`);
-            const data = await response.json();
-            if (data.features && data.features.length > 0) {
-              locInput.value = data.features[0].place_name;
-              locInput.style.color = "var(--primary)";
-              locInput.style.fontWeight = "600";
-            }
-          } catch (err) {
-            console.error("Mapbox Geocoding failed:", err);
-            locInput.placeholder = "Location (Near me)";
-          }
+// --- 1. INITIALIZE AUTOCOMPLETE (OPTIMIZED) ---
+let searchToken = null;
+let locationToken = null;
+
+function initSearch() {
+    // Generate tokens when the page loads
+    searchToken = new google.maps.places.AutocompleteSessionToken();
+    locationToken = new google.maps.places.AutocompleteSessionToken();
+
+    const queryInput = document.getElementById('queryInput');
+    const locationInput = document.getElementById('locationInput');
+    
+    // Optimization: Request ONLY place_id and name (Basic category = $0)
+    const options = {
+        fields: ['place_id', 'name', 'geometry'],
+        types: ['establishment']
+    };
+
+    // Initialize with session tokens
+    const queryAC = new google.maps.places.Autocomplete(queryInput, { ...options, sessionToken: searchToken });
+    const locationAC = new google.maps.places.Autocomplete(locationInput, { 
+        types: ['(regions)'], 
+        fields: ['formatted_address', 'geometry'],
+        sessionToken: locationToken 
+    });
+
+    // Reset tokens after a selection is made to start a new "billing session"
+    queryAC.addListener('place_changed', () => {
+        searchToken = new google.maps.places.AutocompleteSessionToken();
+    });
+    locationAC.addListener('place_changed', () => {
+        locationToken = new google.maps.places.AutocompleteSessionToken();
+    });
+}
+window.addEventListener('load', initSearch);
+
+// --- 2. GPS DETECTION (FREE) ---
+function detectMyLocation() {
+    const locInput = document.getElementById('locationInput');
+    locInput.value = "";
+    locInput.placeholder = "Locating...";
+    
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((pos) => {
+            // Geocoding is a separate API, but it's much cheaper than "Places"
+            const geocoder = new google.maps.Geocoder();
+            geocoder.geocode({ location: { lat: pos.coords.latitude, lng: pos.coords.longitude } }, (results, status) => {
+                if (status === "OK" && results[0]) {
+                    // We only take the city/neighborhood to keep the search broad
+                    locInput.value = results[0].formatted_address;
+                }
+            });
         }, () => {
-          locInput.placeholder = "Location (Near me)";
-          alert("Please enable location services.");
+            locInput.placeholder = "Location (Near me)";
+            alert("Please enable location services.");
         });
-      }
     }
+}
 
-    // UPDATED SEARCH EXECUTION: Maps text query to valid 'type' parameters
+    // --- 3. SEARCH EXECUTION ---
     function executeSearch() {
-      const q = document.getElementById('queryInput').value.toLowerCase().trim();
-      const l = document.getElementById('locationInput').value.trim();
-      
-      // Default type
-      let type = 'salon';
-      
-      // Basic Natural Language mapping
-      if (q.includes('eat') || q.includes('food') || q.includes('dining') || q.includes('rest')) type = 'dining';
-      if (q.includes('doc') || q.includes('clinic') || q.includes('med') || q.includes('dentist')) type = 'clinic';
-      if (q.includes('fix') || q.includes('repair') || q.includes('car') || q.includes('mechanic')) type = 'repair';
-      if (q.includes('bank') || q.includes('money')) type = 'banking';
-      if (q.includes('gym') || q.includes('workout') || q.includes('fit')) type = 'gym';
-      if (q.includes('hair') || q.includes('barber') || q.includes('salon')) type = 'salon';
-
+      const q = document.getElementById('queryInput').value;
+      const l = document.getElementById('locationInput').value;
       let params = [];
-      params.push(`type=${type}`);
-      params.push(`l=${l && l !== "" ? encodeURIComponent(l) : 'near me'}`);
+      if (q) params.push(`q=${encodeURIComponent(q)}`);
       
-      window.location.href = 'nearby.html?' + params.join('&');
+      // Fixed: explicitly handle "Near me" or empty location to ensure Nearby page triggers GPS
+      if (l && l.trim() !== "") {
+        params.push(`l=${encodeURIComponent(l)}`);
+      } else {
+        params.push(`l=near me`);
+      }
+      
+      window.location.href = 'nearby.html' + (params.length > 0 ? '?' + params.join('&') : '');
     }
 
-    // FIREBASE AUTH & LIVE BANNER
+    // --- 4. FIREBASE LOGIC ---
     firebase.auth().onAuthStateChanged(user => {
       if (user) {
         document.getElementById('loginLink').style.display = 'none';
@@ -326,13 +350,15 @@
 
     function logoutUser() { firebase.auth().signOut().then(() => window.location.reload()); }
 
-    // SIDEBAR QUEUES
     async function loadSidebarQueues() {
-      const listContainer = document.getElementById('liveWaitList');
-      try {
+    const listContainer = document.getElementById('liveWaitList');
+    
+    try {
+        // We only fetch businesses that are actually OPEN
+        // We sort by 'currentWait' (a field you'll update in your DB)
         const snapshot = await db.collection('providers')
             .where('isOpen', '==', true)
-            .orderBy('currentWaitMins', 'asc')
+            .orderBy('currentWait', 'asc')
             .limit(3)
             .get();
 
@@ -345,28 +371,30 @@
         snapshot.forEach(doc => {
             const biz = doc.data();
             html += `
-                <a href="nearby.html?type=${biz.category.toLowerCase()}&l=near me" class="feat-item">
+                <a href="nearby.html?id=${doc.id}" class="feat-item">
                     <div class="feat-img">${getEmoji(biz.category)}</div>
                     <div class="feat-info">
                         <h5>${biz.businessName}</h5>
-                        <div class="wait-mini">${biz.currentWaitMins || 0} min wait</div>
+                        <div class="wait-mini">${biz.currentWait || 0} min wait</div>
                     </div>
                 </a>
             `;
         });
         listContainer.innerHTML = html;
-      } catch (err) {
+    } catch (err) {
         console.error("Sidebar load failed:", err);
         listContainer.innerHTML = "<p style='font-size:0.8rem;'>Select a category to explore.</p>";
-      }
     }
+}
 
-    function getEmoji(cat) {
-      const icons = { 'Barber': '✂️', 'Salon': '💅', 'Clinic': '🦷', 'Gym': '💪', 'Dining': '🍽️' };
-      return icons[cat] || '📍';
-    }
+// Simple helper for the icons
+function getEmoji(cat) {
+    const icons = { 'Barber': '✂️', 'Salon': '💅', 'Clinic': '🦷', 'Gym': '💪' };
+    return icons[cat] || '📍';
+}
 
-    window.addEventListener('DOMContentLoaded', loadSidebarQueues);
+// RUN THIS ON LOAD
+window.addEventListener('DOMContentLoaded', loadSidebarQueues);
   </script>
 </body>
 </html>
