@@ -2,63 +2,157 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Find Nearby Services | skipQs</title>
+    <title>Nearby Services | skipQs - Real-time Queue Tracking</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Find salons, clinics, and restaurants nearby with real-time wait times.">
+    
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
     <style>
+        /* --- CSS VARIABLES & THEME --- */
         :root {
-            --primary: #2563eb; --bg-light: #f8fafc; --text-main: #1e293b;
-            --text-muted: #64748b; --border: #e2e8f0; --nav-bg: #2d1b4d;
-            --success: #059669; --whatsapp: #25D366;
+            --primary: #2563eb; 
+            --primary-dark: #1e40af;
+            --bg-light: #f8fafc; 
+            --text-main: #1e293b;
+            --text-muted: #64748b; 
+            --border: #e2e8f0; 
+            --nav-bg: #2d1b4d;
+            --success: #059669; 
+            --whatsapp: #25D366;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         }
 
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg-light); margin: 0; height: 100vh; overflow: hidden; }
-        .navbar { background: var(--nav-bg); padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; z-index: 1000; position: relative; }
-        .logo { font-weight: 800; color: white; text-decoration: none; font-size: 1.2rem; }
+        /* --- RESET & LAYOUT --- */
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-light); 
+            margin: 0; 
+            height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+        }
 
-        .service-filter-bar {
-            display: flex; gap: 8px; overflow-x: auto; padding: 10px 1.25rem;
-            background: white; border-bottom: 1px solid var(--border);
-            scrollbar-width: none; align-items: center;
+        /* --- NAVIGATION --- */
+        .navbar { 
+            background: var(--nav-bg); 
+            padding: 0.75rem 1.25rem; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            z-index: 1000; 
+            box-shadow: var(--shadow);
+        }
+        .logo { font-weight: 800; color: white; text-decoration: none; font-size: 1.3rem; letter-spacing: -0.5px; }
+
+        /* --- SEARCH & FILTER BAR --- */
+        .service-filter-bar { 
+            display: flex; 
+            gap: 10px; 
+            overflow-x: auto; 
+            padding: 12px 1.25rem; 
+            background: white; 
+            border-bottom: 1px solid var(--border); 
+            scrollbar-width: none; 
+            align-items: center; 
         }
         .service-filter-bar::-webkit-scrollbar { display: none; }
-        
-        .filter-chip {
-            white-space: nowrap; padding: 6px 16px; border-radius: 50px;
-            background: var(--bg-light); border: 1px solid var(--border);
-            font-size: 0.8rem; font-weight: 600; cursor: pointer; color: var(--text-muted);
+        .filter-chip { 
+            white-space: nowrap; 
+            padding: 8px 18px; 
+            border-radius: 50px; 
+            background: var(--bg-light); 
+            border: 1px solid var(--border); 
+            font-size: 0.85rem; 
+            font-weight: 600; 
+            cursor: pointer; 
+            color: var(--text-muted); 
+            transition: all 0.2s ease;
         }
+        .filter-chip:hover { border-color: var(--primary); color: var(--primary); }
         .filter-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
-        
         .live-toggle { background: #ecfdf5; color: var(--success); border: 1px solid #34d399; }
         .live-toggle.active { background: var(--success); color: white; }
 
-        .main-layout { display: flex; height: calc(100vh - 110px); flex-direction: column-reverse; }
-        .list-panel { flex: 1; overflow-y: auto; padding: 1.25rem; background: white; border-right: 1px solid var(--border); z-index: 10; }
-        .visual-panel { flex: 1.5; background: #e2e8f0; position: relative; display: flex; flex-direction: column; }
+        /* --- MAIN VIEWPORT --- */
+        .main-layout { display: flex; flex: 1; overflow: hidden; flex-direction: column-reverse; }
         
-        #map { position: absolute; top:0; left:0; width:100%; height:100%; z-index: 1; }
-        #redo-search { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); z-index: 20; background: white; color: var(--primary); border: none; padding: 10px 20px; border-radius: 50px; font-weight: 700; font-size: 0.85rem; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: none; cursor: pointer; }
-        #gps-btn { position: absolute; bottom: 30px; right: 20px; z-index: 20; background: white; border: none; width: 45px; height: 45px; border-radius: 50%; box-shadow: 0 4px 12px rgba(0,0,0,0.2); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        /* Sidebar */
+        .list-panel { 
+            flex: 1; 
+            overflow-y: auto; 
+            padding: 1.25rem; 
+            background: white; 
+            border-right: 1px solid var(--border); 
+            z-index: 10; 
+            position: relative;
+        }
+        
+        /* Map Area */
+        .visual-panel { flex: 1.5; background: #e2e8f0; position: relative; overflow: hidden; }
+        #map { width: 100%; height: 100%; z-index: 1; }
+        
+        #redo-search { 
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%); 
+            z-index: 20; background: white; color: var(--primary); border: none; 
+            padding: 12px 24px; border-radius: 50px; font-weight: 700; 
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); display: none; cursor: pointer; 
+        }
 
-        .place-card { padding: 1rem; margin-bottom: 1rem; border: 1px solid var(--border); border-radius: 12px; background: white; transition: 0.2s; position: relative; display: block; }
+        /* --- PLACE CARDS --- */
+        .place-card { 
+            padding: 1.25rem; 
+            margin-bottom: 1rem; 
+            border: 1px solid var(--border); 
+            border-radius: 16px; 
+            background: white; 
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            cursor: pointer; 
+            position: relative;
+        }
+        .place-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); border-color: var(--primary); }
+        .place-card.active-partner { border: 2px solid var(--primary); background: #f0f7ff; }
         .place-card.hidden { display: none; }
-        .place-card.active { border: 2.5px solid var(--primary); background: #f0f7ff; }
         
-        .dist-tag { font-size: 0.65rem; color: var(--primary); font-weight: 800; background: #eff6ff; padding: 2px 6px; border-radius: 4px; margin-right: 5px;}
-        .action-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-        .btn { flex: 1; min-width: 80px; padding: 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 700; text-align: center; cursor: pointer; border: none; text-decoration: none; display: flex; align-items: center; justify-content: center; }
+        .dist-tag { font-size: 0.7rem; color: var(--primary); font-weight: 800; background: #eff6ff; padding: 3px 8px; border-radius: 6px; }
+        .wait-time-badge { margin-top: 10px; display: inline-block; background: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.75rem; }
+
+        /* --- DETAIL OVERLAY --- */
+        #details-overlay { 
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 65%; 
+            background: white; z-index: 30; transform: translateY(100%); 
+            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 24px 24px 0 0; 
+            box-shadow: 0 -20px 25px -5px rgba(0,0,0,0.1); display: flex; flex-direction: column;
+        }
+        #details-overlay.open { transform: translateY(0); }
+        .details-handle { width: 45px; height: 6px; background: #e2e8f0; border-radius: 10px; margin: 15px auto; cursor: pointer; }
+        .pano-img { width: 100%; height: 220px; background: #1e293b; object-fit: cover; }
+
+        .btn { 
+            flex: 1; padding: 14px; border-radius: 10px; font-size: 0.85rem; font-weight: 700; 
+            text-align: center; cursor: pointer; border: none; text-decoration: none; 
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            transition: filter 0.2s;
+        }
+        .btn:active { filter: brightness(0.9); }
         .btn-join { background: var(--primary); color: white; }
-        .btn-reg { background: #475569; color: white; line-height: 1.2; font-size: 0.6rem; }
-        .btn-sec { background: #f1f5f9; color: var(--text-main); border: 1px solid var(--border); }
-        .btn-whatsapp { background: var(--whatsapp) !important; color: white !important; }
+        .btn-whatsapp { background: var(--whatsapp); color: white; }
+        .btn-sec { background: #f1f5f9; color: var(--text-main); }
 
-        .q-badge { font-size: 0.7rem; font-weight: 800; padding: 4px 8px; border-radius: 4px; margin-top: 5px; display: inline-block; }
-        .q-online { background: #d1fae5; color: #065f46; border: 1px solid #34d399; }
-        .est-box { font-size: 0.65rem; color: var(--success); margin-top: 4px; line-height: 1.4; }
+        /* --- LOADING SHIMMER --- */
+        .shimmer { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; height: 100px; border-radius: 12px; margin-bottom: 10px; }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-        @media (min-width: 769px) { .main-layout { flex-direction: row; } .list-panel { max-width: 400px; } }
+        /* --- DESKTOP OPTIMIZATION --- */
+        @media (min-width: 769px) { 
+            .main-layout { flex-direction: row; } 
+            .list-panel { width: 420px; flex: none; } 
+            #details-overlay { width: 400px; height: 100%; right: 0; left: auto; transform: translateX(100%); border-radius: 0; } 
+            #details-overlay.open { transform: translateX(0); } 
+        }
     </style>
 </head>
 <body>
@@ -66,192 +160,230 @@
     <nav class="navbar">
         <a href="index.html" class="logo">skipQs</a>
         <div>
-            <a href="dashboard.html" style="color:white; text-decoration:none; font-size:0.85rem; margin-right:15px;">My Visits</a>
-            <a href="login.html" id="authBtn" style="color:white; text-decoration:none; font-size:0.85rem; font-weight:600; background:rgba(255,255,255,0.2); padding:6px 12px; border-radius:6px;">Login</a>
+            <a href="dashboard.html" style="color:white; text-decoration:none; font-size:0.9rem; margin-right:20px; font-weight:500;">My Visits</a>
+            <a href="login.html" style="color:white; text-decoration:none; font-size:0.9rem; background:rgba(255,255,255,0.15); padding:8px 16px; border-radius:8px; font-weight:600;">Login</a>
         </div>
     </nav>
 
-    <div class="service-filter-bar" id="filterBar">
+    <div class="service-filter-bar">
         <div class="filter-chip live-toggle" id="toggleLive" onclick="toggleLiveOnly()">⚡ Live Only</div>
-        <div style="border-left: 1px solid #eee; height: 20px; margin: 0 5px;"></div>
         <div class="filter-chip" data-type="salon">💇‍♀️ Salons</div>
         <div class="filter-chip" data-type="dining">🍽️ Dining</div>
         <div class="filter-chip" data-type="clinic">🏥 Clinics</div>
-        <div class="filter-chip" data-type="banking">🏦 Banking</div>
         <div class="filter-chip" data-type="repair">🛠️ Repairs</div>
     </div>
 
     <div class="main-layout">
         <div class="list-panel">
-            <h2 id="title" style="margin:0; font-size:1.2rem;">Nearby Services</h2>
-            <p id="counter" style="font-size:0.7rem; color:var(--text-muted); margin-bottom:1rem;">Locating...</p>
-            <div id="results"></div>
+            <h2 id="title" style="margin:0; font-size:1.4rem; font-weight:800;">Finding Services</h2>
+            <p id="counter" style="font-size:0.8rem; color:var(--text-muted); margin: 5px 0 20px 0;">Searching your current location...</p>
+            <div id="results">
+                <div class="shimmer"></div>
+                <div class="shimmer"></div>
+                <div class="shimmer"></div>
+            </div>
         </div>
 
         <div class="visual-panel">
             <button id="redo-search" onclick="redoSearch()">🔄 Search this area</button>
-            <button id="gps-btn" onclick="getLocation()" title="Find my location">🎯</button>
             <div id="map"></div>
+            
+            <div id="details-overlay">
+                <div class="details-handle" onclick="closeDetails()"></div>
+                <img id="detail-img" class="pano-img" src="">
+                <div style="padding: 24px; flex: 1; overflow-y: auto;">
+                    <h3 id="detail-name" style="margin:0; font-size: 1.5rem; font-weight:800; color: var(--text-main);">Shop Name</h3>
+                    <p id="detail-addr" style="font-size:0.95rem; color:var(--text-muted); margin: 10px 0 25px 0; line-height:1.5;"></p>
+                    <div id="detail-actions" class="action-row" style="display:flex; gap:12px;"></div>
+                </div>
+            </div>
         </div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="firebase-config.js"></script>
 
     <script>
+        /**
+         * skipQs Core Logic
+         * Uses Mapbox for POI search and Firebase for Live Queueing data.
+         */
         const db = firebase.firestore();
-        const MAPBOX_TOKEN = 'pk.eyJ1IjoidmVlcmFjZW8iLCJhIjoiY21rYmw0OGU0MDJhdzNlc2F6eTNieHZtYiJ9.KRGL19uPsS5miVfALTuqiw';
+        const MAPBOX_TOKEN = 'pk.eyJ1IjoidmVlcmFjZW8iLCJhIjoiY21rY2h5ZmQ2MDEzaTNlc2NqdTV0ZWowNiJ9.x8KNnadUqOuINdXV7g7Zbw';
         
+        let map, userLat, userLng, markers = [], liveOnly = false;
         const params = new URLSearchParams(window.location.search);
         let serviceType = params.get("type") || 'salon';
-        let locationQuery = params.get("l") || 'near me';
-        let userLat, userLng, map, markers = [], liveOnly = false;
 
         const SERVICE_MAP = {
-            salon: { query: "hair salon barber", label: "Salons & Barbers", category: "Salon" },
-            dining: { query: "restaurant cafe", label: "Restaurants", category: "Dining" },
-            clinic: { query: "medical clinic hospital", label: "Clinics", category: "Clinic" },
-            banking: { query: "bank atm", label: "Banking", category: "Banking" },
-            repair: { query: "car repair mechanic", label: "Repairs", category: "Repair" }
+            salon: { query: "hair salon barber", label: "Salons & Barbers", cat: "Salon" },
+            dining: { query: "restaurant cafe food", label: "Dining & Drinks", cat: "Dining" },
+            clinic: { query: "medical clinic doctor dentist", label: "Clinics", cat: "Clinic" },
+            repair: { query: "car repair mechanic service", label: "Repairs", cat: "Repair" }
         };
 
-        document.getElementById("title").innerText = SERVICE_MAP[serviceType].label;
-        document.querySelectorAll('.filter-chip[data-type]').forEach(chip => {
-            if(chip.dataset.type === serviceType) chip.classList.add('active');
-            chip.onclick = () => {
-                location.href = `nearby.html?type=${chip.dataset.type}&l=${encodeURIComponent(locationQuery)}`;
-            };
-        });
+        // --- 1. INITIALIZATION ---
+        function init() {
+            document.getElementById("title").innerText = SERVICE_MAP[serviceType].label;
+            
+            // Set Filter States
+            document.querySelectorAll('.filter-chip[data-type]').forEach(chip => {
+                if(chip.dataset.type === serviceType) chip.classList.add('active');
+                chip.onclick = () => {
+                    location.href = `nearby.html?type=${chip.dataset.type}&l=${encodeURIComponent(params.get('l') || 'near me')}`;
+                };
+            });
 
-        function calculateDistance(lat1, lon1, lat2, lon2) {
-            const R = 3958.8; // Miles
-            const dLat = (lat2 - lat1) * Math.PI / 180;
-            const dLon = (lon2 - lon1) * Math.PI / 180;
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
-            return (R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))).toFixed(1);
+            const locQuery = params.get("l");
+            if (locQuery && locQuery !== "near me") {
+                geocode(locQuery);
+            } else if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    pos => {
+                        userLat = pos.coords.latitude; userLng = pos.coords.longitude;
+                        setupMap(userLat, userLng);
+                    }, 
+                    err => {
+                        console.warn("Location denied. Defaulting to City Center.");
+                        setupMap(17.3850, 78.4867); // Default
+                    }
+                );
+            } else { setupMap(17.3850, 78.4867); }
+        }
+
+        // --- 2. MAP SETUP ---
+        async function geocode(query) {
+            try {
+                const res = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${MAPBOX_TOKEN}`);
+                const data = await res.json();
+                if (data.features?.length > 0) {
+                    [userLng, userLat] = data.features[0].center;
+                    setupMap(userLat, userLng);
+                } else { setupMap(17.3850, 78.4867); }
+            } catch (e) { setupMap(17.3850, 78.4867); }
+        }
+
+        function setupMap(lat, lng) {
+            if (map) map.remove();
+            map = L.map('map', { zoomControl: false, attributionControl: false }).setView([lat, lng], 14);
+            
+            L.tileLayer(`https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${MAPBOX_TOKEN}`, {
+                tileSize: 512, zoomOffset: -1
+            }).addTo(map);
+
+            map.on('dragend', () => { document.getElementById('redo-search').style.display = 'block'; });
+            performSearch();
+        }
+
+        // --- 3. SEARCH ENGINE ---
+        async function performSearch() {
+            const container = document.getElementById("results");
+            markers.forEach(m => map.removeLayer(m));
+            markers = [];
+
+            try {
+                // Fetch Mapbox Results (POI Data)
+                const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(SERVICE_MAP[serviceType].query)}.json?proximity=${userLng},${userLat}&limit=25&access_token=${MAPBOX_TOKEN}`;
+                const resp = await fetch(url);
+                const data = await resp.json();
+
+                // Fetch Firebase Live Partners
+                const fbSnap = await db.collection('providers').where('category', '==', SERVICE_MAP[serviceType].cat).get();
+                const partners = {};
+                fbSnap.forEach(doc => {
+                    const d = doc.data();
+                    partners[d.businessName.toLowerCase().trim()] = {id: doc.id, ...d};
+                });
+
+                container.innerHTML = "";
+                
+                // Sort Logic: Partners first, then by distance
+                const sortedFeatures = data.features.sort((a, b) => {
+                    const isAPartner = partners[a.text.toLowerCase().trim()] ? 1 : 0;
+                    const isBPartner = partners[b.text.toLowerCase().trim()] ? 1 : 0;
+                    return isBPartner - isAPartner;
+                });
+
+                sortedFeatures.forEach((place) => {
+                    const name = place.text;
+                    const partner = partners[name.toLowerCase().trim()];
+                    const [pLng, pLat] = place.center;
+                    const dist = (L.latLng(userLat, userLng).distanceTo(L.latLng(pLat, pLng)) * 0.000621371).toFixed(1);
+
+                    const card = document.createElement('div');
+                    card.className = `place-card ${partner ? 'active-partner' : ''}`;
+                    card.setAttribute('data-live', !!partner);
+                    
+                    card.innerHTML = `
+                        <div onclick="openDetails('${name.replace(/'/g, "\\'")}', '${place.place_name.replace(/'/g, "\\'")}', ${pLat}, ${pLng}, '${partner?.id || ''}', '${partner?.phone || ''}')">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                <strong style="font-size:1.1rem; color:var(--text-main);">${name}</strong>
+                                <span class="dist-tag">${dist} mi</span>
+                            </div>
+                            <div style="margin-top:8px;">
+                                ${partner ? `
+                                    <span class="wait-time-badge">⚡ ${partner.currentWaitMins || 0}m Wait</span>
+                                    <div style="font-size:0.75rem; color:var(--success); margin-top:5px; font-weight:600;">Queueing Enabled</div>
+                                ` : `<span style="font-size:0.75rem; color:var(--text-muted);">Standard Listing</span>`}
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(card);
+
+                    // Add Custom Marker
+                    const markerColor = partner ? '#2563eb' : '#64748b';
+                    const marker = L.circleMarker([pLat, pLng], {
+                        radius: 8, fillColor: markerColor, color: '#fff', weight: 2, fillOpacity: 1
+                    }).addTo(map).on('click', () => {
+                        openDetails(name, place.place_name, pLat, pLng, partner?.id, partner?.phone);
+                    });
+                    markers.push(marker);
+                });
+
+                document.getElementById("counter").innerText = `Found ${data.features.length} locations nearby`;
+
+            } catch (err) {
+                console.error(err);
+                container.innerHTML = "<p style='padding:20px; color:red;'>Search Error. Check your connection or Mapbox Key.</p>";
+            }
+        }
+
+        // --- 4. DETAILS & OVERLAY ---
+        function openDetails(name, addr, lat, lng, id, phone) {
+            document.getElementById('detail-name').innerText = name;
+            document.getElementById('detail-addr').innerText = addr;
+            
+            // Mapbox Static Image
+            document.getElementById('detail-img').src = `https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/${lng},${lat},16,0/800x450?access_token=${MAPBOX_TOKEN}`;
+            
+            let actions = `<a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" target="_blank" class="btn btn-sec">Directions</a>`;
+            if(id) actions += `<button onclick="location.href='join-queue.html?id=${id}'" class="btn btn-join">JOIN QUEUE</button>`;
+            if(phone) actions += `<a href="https://wa.me/${phone.replace(/\D/g,'')}" target="_blank" class="btn btn-whatsapp">WhatsApp</a>`;
+            
+            document.getElementById('detail-actions').innerHTML = actions;
+            document.getElementById('details-overlay').classList.add('open');
+            map.flyTo([lat, lng], 15, { animate: true, duration: 1.5 });
+        }
+
+        function closeDetails() { document.getElementById('details-overlay').classList.remove('open'); }
+        
+        function redoSearch() { 
+            const center = map.getCenter(); userLat = center.lat; userLng = center.lng; 
+            document.getElementById('redo-search').style.display='none'; 
+            performSearch(); 
         }
 
         function toggleLiveOnly() {
             liveOnly = !liveOnly;
             document.getElementById('toggleLive').classList.toggle('active', liveOnly);
-            const cards = document.querySelectorAll('.place-card');
-            cards.forEach(card => {
-                const isLive = card.getAttribute('data-live') === 'true';
-                card.classList.toggle('hidden', liveOnly && !isLive);
+            document.querySelectorAll('.place-card').forEach(c => {
+                c.classList.toggle('hidden', liveOnly && c.getAttribute('data-live') !== 'true');
             });
         }
 
-        async function getLocation() {
-            if (locationQuery === 'near me' && navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    p => { userLat = p.coords.latitude; userLng = p.coords.longitude; initMap(userLat, userLng); },
-                    () => { userLat = 17.3850; userLng = 78.4867; initMap(userLat, userLng); }
-                );
-            } else {
-                const res = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(locationQuery)}.json?access_token=${MAPBOX_TOKEN}`);
-                const data = await res.json();
-                if (data.features && data.features.length > 0) {
-                    [userLng, userLat] = data.features[0].center;
-                    initMap(userLat, userLng);
-                } else {
-                    initMap(17.3850, 78.4867);
-                }
-            }
-        }
-
-        function initMap(lat, lng) {
-            if (map) map.remove();
-            map = L.map('map', { zoomControl: false }).setView([lat, lng], 14);
-            L.tileLayer(`https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${MAPBOX_TOKEN}`, {
-                tileSize: 512, zoomOffset: -1, attribution: '© Mapbox'
-            }).addTo(map);
-
-            map.on('dragend', () => document.getElementById('redo-search').style.display = 'block');
-            performHybridSearch(lat, lng);
-        }
-
-        async function performHybridSearch(lat, lng) {
-            const container = document.getElementById("results");
-            container.innerHTML = "<p style='padding:15px;'>Finding businesses...</p>";
-            markers.forEach(m => map.removeLayer(m));
-            markers = [];
-
-            try {
-                const mbUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(SERVICE_MAP[serviceType].query)}.json?proximity=${lng},${lat}&access_token=${MAPBOX_TOKEN}`;
-                const mbRes = await fetch(mbUrl);
-                const mbData = await mbRes.json();
-
-                const fbSnap = await db.collection('providers').where('category', '==', SERVICE_MAP[serviceType].category).get();
-                const partners = {};
-                fbSnap.forEach(doc => {
-                    const d = doc.data();
-                    partners[d.businessName.toLowerCase()] = { id: doc.id, ...d };
-                });
-
-                container.innerHTML = "";
-                mbData.features.forEach((place) => {
-                    const name = place.text;
-                    const partner = partners[name.toLowerCase()];
-                    const isLive = !!partner;
-                    const dist = calculateDistance(userLat, userLng, place.center[1], place.center[0]);
-
-                    const card = document.createElement('div');
-                    card.className = `place-card ${isLive ? 'active' : ''}`;
-                    card.setAttribute('data-live', isLive);
-                    
-                    let whatsappBtn = "";
-                    if(isLive && partner.phone) {
-                        const cleanPhone = partner.phone.toString().replace(/\D/g, '');
-                        whatsappBtn = `<a href="https://wa.me/${cleanPhone}" target="_blank" class="btn btn-whatsapp">Chat</a>`;
-                    }
-
-                    card.innerHTML = `
-                        <div class="card-top">
-                            <div style="flex:1">
-                                <strong style="font-size:0.95rem;">${name}</strong>
-                                <div class="info-tags">
-                                    <span class="dist-tag">${dist} mi</span>
-                                    <span class="dist-tag" style="background:${isLive ? '#eff6ff':'#f1f5f9'}; color:${isLive ? '#2563eb':'#64748b'};">
-                                        ${isLive ? '⚡ LIVE PARTNER' : 'Standard Listing'}
-                                    </span>
-                                </div>
-                                ${isLive ? `
-                                    <div class="q-badge q-online">LIVE: ${partner.peopleInLine || 0} in line</div>
-                                    <div class="est-box">⌛ Wait: <b>~${partner.currentWaitMins || 0}m</b></div>
-                                ` : `<p style="font-size:0.7rem; color:var(--text-muted); margin:5px 0;">Queue tracking not active.</p>`}
-                            </div>
-                        </div>
-                        <div class="action-row">
-                            ${isLive ? `<button onclick="location.href='join-queue.html?id=${partner.id}'" class="btn btn-join">JOIN QUEUE</button>` : 
-                                       `<button onclick="location.href='provider-signup.html?shop=${encodeURIComponent(name)}'" class="btn btn-reg">OWNER?<br>REGISTER</button>`}
-                            ${whatsappBtn}
-                            <a href="https://www.google.com/maps/dir/?api=1&destination=${place.center[1]},${place.center[0]}" target="_blank" class="btn btn-sec">Directions</a>
-                        </div>
-                    `;
-                    container.appendChild(card);
-
-                    const marker = L.marker([place.center[1], place.center[0]]).addTo(map)
-                        .bindPopup(`<b>${name}</b><br>${isLive ? 'Live Queue Active' : 'Not a partner'}`);
-                    markers.push(marker);
-                });
-                document.getElementById("counter").innerText = `Found ${mbData.features.length} results nearby.`;
-            } catch (err) {
-                container.innerHTML = "Error loading results.";
-            }
-        }
-
-        function redoSearch() {
-            const center = map.getCenter();
-            userLat = center.lat; userLng = center.lng;
-            document.getElementById('redo-search').style.display = 'none';
-            performHybridSearch(userLat, userLng);
-        }
-
-        window.onload = getLocation;
+        window.onload = init;
     </script>
 </body>
 </html>
