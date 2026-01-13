@@ -206,10 +206,6 @@
     <script src="firebase-config.js"></script>
 
     <script>
-        /**
-         * skipQs Core Logic
-         * Uses Mapbox for POI search and Firebase for Live Queueing data.
-         */
         const db = window.db || firebase.firestore();
         const MAPBOX_TOKEN = 'pk.eyJ1IjoidmVlcmFjZW8iLCJhIjoiY21rY2h5ZmQ2MDEzaTNlc2NqdTV0ZWowNiJ9.x8KNnadUqOuINdXV7g7Zbw';
         
@@ -224,11 +220,10 @@
             repair: { query: "car repair mechanic service", label: "Repairs", cat: "Repair" }
         };
 
-        // --- 1. INITIALIZATION ---
         function init() {
+            L.Icon.Default.imagePath = 'https://unpkg.com/leaflet@1.9.4/dist/images/';
             document.getElementById("title").innerText = SERVICE_MAP[serviceType].label;
             
-            // Set Filter States
             document.querySelectorAll('.filter-chip[data-type]').forEach(chip => {
                 if(chip.dataset.type === serviceType) chip.classList.add('active');
                 chip.onclick = () => {
@@ -236,39 +231,17 @@
                 };
             });
 
-            const locQuery = params.get("l");
-            if (locQuery && locQuery !== "near me") {
-                geocode(locQuery);
-            } else if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    pos => {
-                        userLat = pos.coords.latitude; userLng = pos.coords.longitude;
-                        setupMap(userLat, userLng);
-                    }, 
-                    err => {
-                        console.warn("Location denied. Defaulting to City Center.");
-                        setupMap(17.3850, 78.4867); // Default
-                    }
-                );
-            } else { setupMap(17.3850, 78.4867); }
-        }
-
-        // --- 2. MAP SETUP ---
-        async function geocode(query) {
-            try {
-                const res = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${MAPBOX_TOKEN}`);
-                const data = await res.json();
-                if (data.features?.length > 0) {
-                    [userLng, userLat] = data.features[0].center;
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(pos => {
+                    userLat = pos.coords.latitude; userLng = pos.coords.longitude;
                     setupMap(userLat, userLng);
-                } else { setupMap(17.3850, 78.4867); }
-            } catch (e) { setupMap(17.3850, 78.4867); }
+                }, () => setupMap(53.4808, -2.2426));
+            } else { setupMap(53.4808, -2.2426); }
         }
 
         function setupMap(lat, lng) {
             if (map) map.remove();
             map = L.map('map', { zoomControl: false, attributionControl: false }).setView([lat, lng], 14);
-            
             L.tileLayer(`https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${MAPBOX_TOKEN}`, {
                 tileSize: 512, zoomOffset: -1
             }).addTo(map);
@@ -277,19 +250,16 @@
             performSearch();
         }
 
-        // --- 3. SEARCH ENGINE ---
         async function performSearch() {
             const container = document.getElementById("results");
             markers.forEach(m => map.removeLayer(m));
             markers = [];
 
             try {
-                // Fetch Mapbox Results (POI Data)
                 const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(SERVICE_MAP[serviceType].query)}.json?proximity=${userLng},${userLat}&limit=25&access_token=${MAPBOX_TOKEN}`;
                 const resp = await fetch(url);
                 const data = await resp.json();
 
-                // Fetch Firebase Live Partners
                 const fbSnap = await db.collection('providers').where('category', '==', SERVICE_MAP[serviceType].cat).get();
                 const partners = {};
                 fbSnap.forEach(doc => {
@@ -299,7 +269,6 @@
 
                 container.innerHTML = "";
                 
-                // Sort Logic: Partners first, then by distance
                 const sortedFeatures = data.features.sort((a, b) => {
                     const isAPartner = partners[a.text.toLowerCase().trim()] ? 1 : 0;
                     const isBPartner = partners[b.text.toLowerCase().trim()] ? 1 : 0;
@@ -310,12 +279,13 @@
                     const name = place.text;
                     const partner = partners[name.toLowerCase().trim()];
                     const [pLng, pLat] = place.center;
+                    
+                    // Fixed Distance logic for Salford [Lat, Lng]
                     const dist = (L.latLng(userLat, userLng).distanceTo(L.latLng(pLat, pLng)) * 0.000621371).toFixed(1);
 
                     const card = document.createElement('div');
                     card.className = `place-card ${partner ? 'active-partner' : ''}`;
                     card.setAttribute('data-live', !!partner);
-                    
                     card.innerHTML = `
                         <div onclick="openDetails('${name.replace(/'/g, "\\'")}', '${place.place_name.replace(/'/g, "\\'")}', ${pLat}, ${pLng}, '${partner?.id || ''}', '${partner?.phone || ''}')">
                             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
@@ -323,39 +293,26 @@
                                 <span class="dist-tag">${dist} mi</span>
                             </div>
                             <div style="margin-top:8px;">
-                                ${partner ? `
-                                    <span class="wait-time-badge">⚡ ${partner.currentWaitMins || 0}m Wait</span>
-                                    <div style="font-size:0.75rem; color:var(--success); margin-top:5px; font-weight:600;">Queueing Enabled</div>
-                                ` : `<span style="font-size:0.75rem; color:var(--text-muted);">Standard Listing</span>`}
+                                ${partner ? `<span class="wait-time-badge">⚡ ${partner.currentWaitMins || 0}m Wait</span>` : `<span style="font-size:0.75rem; color:var(--text-muted);">Standard Listing</span>`}
                             </div>
                         </div>
                     `;
                     container.appendChild(card);
 
-                    // Add Custom Marker
-                    const markerColor = partner ? '#2563eb' : '#64748b';
-                    const marker = L.circleMarker([pLat, pLng], {
-                        radius: 8, fillColor: markerColor, color: '#fff', weight: 2, fillOpacity: 1
+                    const m = L.circleMarker([pLat, pLng], {
+                        radius: 10, fillColor: partner ? "#2563eb" : "#64748b", color: "#fff", weight: 2, fillOpacity: 1
                     }).addTo(map).on('click', () => {
                         openDetails(name, place.place_name, pLat, pLng, partner?.id, partner?.phone);
                     });
-                    markers.push(marker);
+                    markers.push(m);
                 });
-
                 document.getElementById("counter").innerText = `Found ${data.features.length} locations nearby`;
-
-            } catch (err) {
-                console.error(err);
-                container.innerHTML = "<p style='padding:20px; color:red;'>Search Error. Check your connection or Mapbox Key.</p>";
-            }
+            } catch (err) { console.error(err); }
         }
 
-        // --- 4. DETAILS & OVERLAY ---
         function openDetails(name, addr, lat, lng, id, phone) {
             document.getElementById('detail-name').innerText = name;
             document.getElementById('detail-addr').innerText = addr;
-            
-            // Mapbox Static Image
             document.getElementById('detail-img').src = `https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/${lng},${lat},16,0/800x450?access_token=${MAPBOX_TOKEN}`;
             
             let actions = `<a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" target="_blank" class="btn btn-sec">Directions</a>`;
@@ -368,13 +325,11 @@
         }
 
         function closeDetails() { document.getElementById('details-overlay').classList.remove('open'); }
-        
         function redoSearch() { 
             const center = map.getCenter(); userLat = center.lat; userLng = center.lng; 
             document.getElementById('redo-search').style.display='none'; 
             performSearch(); 
         }
-
         function toggleLiveOnly() {
             liveOnly = !liveOnly;
             document.getElementById('toggleLive').classList.toggle('active', liveOnly);
@@ -382,7 +337,6 @@
                 c.classList.toggle('hidden', liveOnly && c.getAttribute('data-live') !== 'true');
             });
         }
-
         window.onload = init;
     </script>
 </body>
