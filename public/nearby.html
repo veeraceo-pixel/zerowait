@@ -200,158 +200,139 @@
         </div>
     </div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 
-    <script>
-        const db = window.db || firebase.firestore();
-        const MAPBOX_TOKEN = 'pk.eyJ1IjoidmVlcmFjZW8iLCJhIjoiY21rY2h5ZmQ2MDEzaTNlc2NqdTV0ZWowNiJ9.x8KNnadUqOuINdXV7g7Zbw';
-        
-        let map, userLat, userLng, markers = [], liveOnly = false;
-        const params = new URLSearchParams(window.location.search);
-        let serviceType = params.get("type") || 'salon';
+<script>
+    // Use the DB from your config file
+    const db = window.db;
 
-        const SERVICE_MAP = {
-            salon: { query: "hair salon barber", label: "Salons & Barbers", cat: "Salon" },
-            dining: { query: "restaurant cafe food", label: "Dining & Drinks", cat: "Dining" },
-            clinic: { query: "medical clinic doctor dentist", label: "Clinics", cat: "Clinic" },
-            repair: { query: "car repair mechanic service", label: "Repairs", cat: "Repair" }
-        };
-
-        function init() {
-            L.Icon.Default.imagePath = 'https://unpkg.com/leaflet@1.9.4/dist/images/';
-            document.getElementById("title").innerText = SERVICE_MAP[serviceType].label;
-            
-            document.querySelectorAll('.filter-chip[data-type]').forEach(chip => {
-                if(chip.dataset.type === serviceType) chip.classList.add('active');
-                chip.onclick = () => {
-                    location.href = `nearby.html?type=${chip.dataset.type}&l=${encodeURIComponent(params.get('l') || 'near me')}`;
-                };
-            });
-
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(pos => {
-                    userLat = pos.coords.latitude; userLng = pos.coords.longitude;
-                    setupMap(userLat, userLng);
-                }, () => setupMap(53.4808, -2.2426));
-            } else { setupMap(53.4808, -2.2426); }
-        }
-
-        function setupMap(lat, lng) {
-            if (map) map.remove();
-            map = L.map('map', { zoomControl: false, attributionControl: false }).setView([lat, lng], 14);
-            L.tileLayer(`https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${MAPBOX_TOKEN}`, {
-                tileSize: 512, zoomOffset: -1
-            }).addTo(map);
-
-            map.on('dragend', () => { document.getElementById('redo-search').style.display = 'block'; });
-            performSearch();
-        }
-
-        async function performSearch() {
-    const container = document.getElementById("results");
-    container.innerHTML = "<p style='padding:10px;'>Searching Salford...</p>";
+    const MAPBOX_TOKEN = 'pk.eyJ1IjoidmVlcmFjZW8iLCJhIjoiY21rY2h5ZmQ2MDEzaTNlc2NqdTV0ZWowNiJ9.x8KNnadUqOuINdXV7g7Zbw';
     
-    // Clear old markers
-    markers.forEach(m => map.removeLayer(m));
-    markers = [];
+    let map, userLat, userLng, markers = [], liveOnly = false;
+    const params = new URLSearchParams(window.location.search);
+    let serviceType = params.get("type") || 'salon';
 
-    try {
-        // Updated construction for better reliability
-        const endpoint = "https://api.mapbox.com/geocoding/v5/mapbox.places";
-        const query = encodeURIComponent(SERVICE_MAP[serviceType].query);
-        const url = `${endpoint}/${query}.json?proximity=${userLng},${userLat}&limit=20&access_token=${MAPBOX_TOKEN}`;
+    const SERVICE_MAP = {
+        salon: { query: "hair salon barber", label: "Salons & Barbers", cat: "Salon" },
+        dining: { query: "restaurant cafe", label: "Dining", cat: "Dining" },
+        clinic: { query: "medical clinic", label: "Clinics", cat: "Clinic" },
+        repair: { query: "car repair mechanic", label: "Repairs", cat: "Repair" }
+    };
 
-        const resp = await fetch(url);
+    function init() {
+        document.getElementById("title").innerText = SERVICE_MAP[serviceType].label;
         
-        // Check if the response is okay
-        if (!resp.ok) {
-            throw new Error(`Mapbox Error: ${resp.status}`);
-        }
-
-        const data = await resp.json();
-
-        // Fetch Firebase Live Partners
-        const fbSnap = await db.collection('providers').where('category', '==', SERVICE_MAP[serviceType].cat).get();
-        const partners = {};
-        fbSnap.forEach(doc => {
-            partners[doc.data().businessName.toLowerCase().trim()] = {id: doc.id, ...doc.data()};
+        // Setup filter chips
+        document.querySelectorAll('.filter-chip[data-type]').forEach(chip => {
+            if(chip.dataset.type === serviceType) chip.classList.add('active');
+            chip.onclick = () => {
+                location.href = `nearby.html?type=${chip.dataset.type}&l=${encodeURIComponent(params.get('l') || 'near me')}`;
+            };
         });
 
-        container.innerHTML = "";
-        
-        if (data.features.length === 0) {
-            container.innerHTML = "<p style='padding:20px;'>No businesses found in this area.</p>";
-            return;
-        }
-
-        data.features.forEach((place) => {
-            const name = place.text;
-            const partner = partners[name.toLowerCase().trim()];
-            const [pLng, pLat] = place.center;
-            
-            // Calc distance
-            const dist = (L.latLng(userLat, userLng).distanceTo(L.latLng(pLat, pLng)) * 0.000621371).toFixed(1);
-
-            const card = document.createElement('div');
-            card.className = `place-card ${partner ? 'active-partner' : ''}`;
-            card.innerHTML = `
-                <div onclick="openDetails('${name.replace(/'/g, "\\'")}', '${place.place_name.replace(/'/g, "\\'")}', ${pLat}, ${pLng}, '${partner?.id || ''}', '${partner?.phone || ''}')">
-                    <div style="display:flex; justify-content:space-between;">
-                        <strong style="font-size:1.1rem;">${name}</strong>
-                        <span class="dist-tag">${dist} mi</span>
-                    </div>
-                    ${partner ? `<div class="wait-time-badge">⚡ ${partner.currentWaitMins}m Wait</div>` : `<p style="font-size:0.75rem; color:gray; margin-top:5px;">Standard Listing</p>`}
-                </div>
-            `;
-            container.appendChild(card);
-
-            // Add Circle Marker
-            const m = L.circleMarker([pLat, pLng], {
-                radius: 10, fillColor: partner ? "#2563eb" : "#64748b", color: "#fff", weight: 2, fillOpacity: 1
-            }).addTo(map);
-            markers.push(m);
-        });
-
-        document.getElementById("counter").innerText = `Found ${data.features.length} locations`;
-
-    } catch (err) {
-        console.error("Search Failed:", err);
-        container.innerHTML = `<p style='padding:20px; color:red;'>Search Error: ${err.message}. Check your Mapbox token permissions.</p>`;
+        // Set Salford as default if GPS fails
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(pos => {
+                userLat = pos.coords.latitude; userLng = pos.coords.longitude;
+                setupMap(userLat, userLng);
+            }, () => setupMap(53.4808, -2.2426)); 
+        } else { setupMap(53.4808, -2.2426); }
     }
+
+    function setupMap(lat, lng) {
+        if (map) map.remove();
+        map = L.map('map', { zoomControl: false }).setView([lat, lng], 14);
+        L.tileLayer(`https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${MAPBOX_TOKEN}`, {
+            tileSize: 512, zoomOffset: -1
+        }).addTo(map);
+
+        map.on('dragend', () => document.getElementById('redo-search').style.display = 'block');
+        performSearch();
+    }
+
+    async function performSearch() {
+        const container = document.getElementById("results");
+        markers.forEach(m => map.removeLayer(m));
+        markers = [];
+
+        try {
+            const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(SERVICE_MAP[serviceType].query)}.json?proximity=${userLng},${userLat}&limit=20&access_token=${MAPBOX_TOKEN}`;
+            const resp = await fetch(url);
+            const data = await resp.json();
+
+            // Match with Firebase Partners
+            const fbSnap = await db.collection('providers').where('category', '==', SERVICE_MAP[serviceType].cat).get();
+            const partners = {};
+            fbSnap.forEach(doc => partners[doc.data().businessName.toLowerCase().trim()] = {id: doc.id, ...doc.data()});
+
+            container.innerHTML = "";
+            
+            data.features.forEach((place) => {
+                const name = place.text;
+                const partner = partners[name.toLowerCase().trim()];
+                const [pLng, pLat] = place.center; 
+
+                // Correct distance math for local Salford scale
+                const businessLoc = L.latLng(pLat, pLng);
+                const userLoc = L.latLng(userLat, userLng);
+                const dist = (userLoc.distanceTo(businessLoc) * 0.000621371).toFixed(1);
+
+                const card = document.createElement('div');
+                card.className = `place-card ${partner ? 'active-partner' : ''}`;
+                card.innerHTML = `
+                    <div onclick="openDetails('${name.replace(/'/g, "\\'")}', '${place.place_name.replace(/'/g, "\\'")}', ${pLat}, ${pLng}, '${partner?.id || ''}', '${partner?.phone || ''}')">
+                        <div style="display:flex; justify-content:space-between;">
+                            <strong style="font-size:1.1rem;">${name}</strong>
+                            <span class="dist-tag">${dist} mi</span>
+                        </div>
+                        ${partner ? `<div class="wait-time-badge">⚡ ${partner.currentWaitMins}m Wait</div>` : `<p style="font-size:0.75rem; color:gray; margin-top:5px;">Standard Listing</p>`}
+                    </div>
+                `;
+                container.appendChild(card);
+
+                // Circle Markers (always work, no icon files needed)
+                const m = L.circleMarker([pLat, pLng], {
+                    radius: 10,
+                    fillColor: partner ? "#2563eb" : "#64748b",
+                    color: "#fff",
+                    weight: 2,
+                    fillOpacity: 1
+                }).addTo(map);
+                markers.push(m);
+            });
+            document.getElementById("counter").innerText = `Found ${data.features.length} locations`;
+        } catch (err) { console.error("Search failed:", err); }
+    }
+
+function openDetails(name, addr, lat, lng, id, phone) {
+    document.getElementById('detail-name').innerText = name;
+    document.getElementById('detail-addr').innerText = addr;
+    
+    // Static map preview URL
+    document.getElementById('detail-img').src = `https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/${lng},${lat},16,0/600x400?access_token=${MAPBOX_TOKEN}`;
+    
+    // FIX: Added the missing '$' before {lat} so the browser reads the variable
+    let actions = `<a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" target="_blank" class="btn btn-sec">Directions</a>`;
+    
+    if(id) actions += `<button onclick="location.href='join-queue.html?id=${id}'" class="btn btn-join">JOIN QUEUE</button>`;
+    if(phone) actions += `<a href="https://wa.me/${phone.replace(/\D/g,'')}" target="_blank" class="btn btn-whatsapp">WhatsApp</a>`;
+    
+    document.getElementById('detail-actions').innerHTML = actions;
+    document.getElementById('details-overlay').classList.add('open');
+    map.flyTo([lat, lng], 16);
 }
 
-        function openDetails(name, addr, lat, lng, id, phone) {
-            document.getElementById('detail-name').innerText = name;
-            document.getElementById('detail-addr').innerText = addr;
-            document.getElementById('detail-img').src = `https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/${lng},${lat},16,0/800x450?access_token=${MAPBOX_TOKEN}`;
-            
-            let actions = `<a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" target="_blank" class="btn btn-sec">Directions</a>`;
-            if(id) actions += `<button onclick="location.href='join-queue.html?id=${id}'" class="btn btn-join">JOIN QUEUE</button>`;
-            if(phone) actions += `<a href="https://wa.me/${phone.replace(/\D/g,'')}" target="_blank" class="btn btn-whatsapp">WhatsApp</a>`;
-            
-            document.getElementById('detail-actions').innerHTML = actions;
-            document.getElementById('details-overlay').classList.add('open');
-            map.flyTo([lat, lng], 15, { animate: true, duration: 1.5 });
-        }
-
-        function closeDetails() { document.getElementById('details-overlay').classList.remove('open'); }
-        function redoSearch() { 
-            const center = map.getCenter(); userLat = center.lat; userLng = center.lng; 
-            document.getElementById('redo-search').style.display='none'; 
-            performSearch(); 
-        }
-        function toggleLiveOnly() {
-            liveOnly = !liveOnly;
-            document.getElementById('toggleLive').classList.toggle('active', liveOnly);
-            document.querySelectorAll('.place-card').forEach(c => {
-                c.classList.toggle('hidden', liveOnly && c.getAttribute('data-live') !== 'true');
-            });
-        }
-        window.onload = init;
-    </script>
+    function closeDetails() { document.getElementById('details-overlay').classList.remove('open'); }
+    function redoSearch() { 
+        const center = map.getCenter(); userLat = center.lat; userLng = center.lng; 
+        document.getElementById('redo-search').style.display = 'none'; 
+        performSearch(); 
+    }
+    window.onload = init;
+</script>
 </body>
 </html>
