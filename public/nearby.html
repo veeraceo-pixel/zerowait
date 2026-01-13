@@ -223,25 +223,54 @@
         repair: { query: "car repair mechanic", label: "Repairs", cat: "Repair" }
     };
 
-    function init() {
-        document.getElementById("title").innerText = SERVICE_MAP[serviceType].label;
-        
-        // Setup filter chips
-        document.querySelectorAll('.filter-chip[data-type]').forEach(chip => {
-            if(chip.dataset.type === serviceType) chip.classList.add('active');
-            chip.onclick = () => {
-                location.href = `nearby.html?type=${chip.dataset.type}&l=${encodeURIComponent(params.get('l') || 'near me')}`;
-            };
-        });
+async function init() {
+    // 1. Set the UI Title based on service type (e.g., "Salons & Barbers")
+    document.getElementById("title").innerText = SERVICE_MAP[serviceType].label;
+    
+    // 2. Setup filter chips to keep the location context when switching categories
+    document.querySelectorAll('.filter-chip[data-type]').forEach(chip => {
+        if(chip.dataset.type === serviceType) chip.classList.add('active');
+        chip.onclick = () => {
+            location.href = `nearby.html?type=${chip.dataset.type}&l=${encodeURIComponent(params.get('l') || 'near me')}`;
+        };
+    });
 
-        // Set Salford as default if GPS fails
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(pos => {
-                userLat = pos.coords.latitude; userLng = pos.coords.longitude;
-                setupMap(userLat, userLng);
-            }, () => setupMap(53.4808, -2.2426)); 
-        } else { setupMap(53.4808, -2.2426); }
+    const urlLocation = params.get("l");
+
+    // 3. LOGIC: Search Specific Area vs. GPS "Near Me"
+    if (urlLocation && urlLocation !== "near me") {
+        try {
+            // Convert text location (from index page) to coordinates
+            const geoUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(urlLocation)}.json?access_token=${MAPBOX_TOKEN}&limit=1`;
+            const resp = await fetch(geoUrl);
+            const data = await resp.json();
+            
+            if (data.features && data.features.length > 0) {
+                const [lng, lat] = data.features[0].center;
+                userLat = lat; 
+                userLng = lng;
+                setupMap(lat, lng);
+                return; // Stop here if we found the searched location
+            }
+        } catch (err) {
+            console.error("Geocoding failed, falling back to GPS:", err);
+        }
     }
+
+    // 4. FALLBACK: Use GPS or Salford Default
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            pos => {
+                userLat = pos.coords.latitude; 
+                userLng = pos.coords.longitude;
+                setupMap(userLat, userLng);
+            }, 
+            () => setupMap(53.4808, -2.2426) // Default to Salford if user denies GPS
+        ); 
+    } else { 
+        setupMap(53.4808, -2.2426); 
+    }
+}
 
     function setupMap(lat, lng) {
         if (map) map.remove();
@@ -257,19 +286,24 @@
  // 1. Clean up performSearch (Removed duplicate variable declarations)
 async function performSearch() {
     const container = document.getElementById("results");
+    
+    // 1. Get current map center coordinates dynamically
+    const currentView = map.getCenter();
+    const searchLat = currentView.lat;
+    const searchLng = currentView.lng;
+
+    // Clear existing markers
     markers.forEach(m => map.removeLayer(m));
     markers = [];
 
-    // The "Fence" around Salford
-    const salfordBbox = "-2.3274,53.4654,-2.2343,53.5042"; 
-
     try {
-        // Optimized URL with poi filter and Salford boundary
-        const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(SERVICE_MAP[serviceType].query)}.json?proximity=${userLng},${userLat}&bbox=${salfordBbox}&types=poi&limit=15&access_token=${MAPBOX_TOKEN}`;
+        // 2. Dynamic URL: We removed &bbox= and use &proximity based on the map center
+        const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(SERVICE_MAP[serviceType].query)}.json?proximity=${searchLng},${searchLat}&types=poi&limit=20&access_token=${MAPBOX_TOKEN}`;
         
         const resp = await fetch(url);
         const data = await resp.json();
 
+        // Firebase Sync: Pull partners matching the current category
         const fbSnap = await db.collection('providers').where('category', '==', SERVICE_MAP[serviceType].cat).get();
         const partners = {};
         fbSnap.forEach(doc => partners[doc.data().businessName.toLowerCase().trim()] = {id: doc.id, ...doc.data()});
@@ -277,7 +311,7 @@ async function performSearch() {
         container.innerHTML = "";
         
         if (data.features.length === 0) {
-            container.innerHTML = "<p style='padding:20px;'>No local businesses found in this part of Salford.</p>";
+            container.innerHTML = "<p style='padding:20px;'>No local businesses found in this area. Try moving the map!</p>";
             return;
         }
 
@@ -285,7 +319,9 @@ async function performSearch() {
             const name = place.text;
             const partner = partners[name.toLowerCase().trim()];
             const [pLng, pLat] = place.center; 
-            const dist = (L.latLng(userLat, userLng).distanceTo(L.latLng(pLat, pLng)) * 0.000621371).toFixed(1);
+            
+            // Calculate distance based on the search center (dynamic)
+            const dist = (L.latLng(searchLat, searchLng).distanceTo(L.latLng(pLat, pLng)) * 0.000621371).toFixed(1);
 
             const card = document.createElement('div');
             card.className = `place-card ${partner ? 'active-partner' : ''}`;
@@ -304,8 +340,13 @@ async function performSearch() {
             }).addTo(map);
             markers.push(m);
         });
-        document.getElementById("counter").innerText = `Found ${data.features.length} local locations`;
-    } catch (err) { console.error("Search failed:", err); }
+
+        document.getElementById("counter").innerText = `Found ${data.features.length} locations near this area`;
+
+    } catch (err) { 
+        console.error("Search failed:", err); 
+        container.innerHTML = "<p style='padding:20px;'>Search failed. Please check your connection.</p>";
+    }
 }
 
 // 2. Fix the Directions link syntax
