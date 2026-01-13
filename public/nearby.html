@@ -5,11 +5,12 @@
     <title>Find Nearby Services | skipQs</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         :root {
             --primary: #2563eb; --bg-light: #f8fafc; --text-main: #1e293b;
             --text-muted: #64748b; --border: #e2e8f0; --nav-bg: #2d1b4d;
-            --success: #059669;
+            --success: #059669; --whatsapp: #25D366;
         }
 
         body { font-family: 'Inter', sans-serif; background-color: var(--bg-light); margin: 0; height: 100vh; overflow: hidden; }
@@ -35,56 +36,27 @@
 
         .main-layout { display: flex; height: calc(100vh - 110px); flex-direction: column-reverse; }
         .list-panel { flex: 1; overflow-y: auto; padding: 1.25rem; background: white; border-right: 1px solid var(--border); z-index: 10; }
-        .visual-panel { flex: 1.5; background: #0f172a; position: relative; display: flex; flex-direction: column; }
+        .visual-panel { flex: 1.5; background: #e2e8f0; position: relative; display: flex; flex-direction: column; }
         
-        #map { position: absolute; top:0; left:0; width:100%; height:100%; }
-        
-        #redo-search {
-            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
-            z-index: 20; background: white; color: var(--primary);
-            border: none; padding: 10px 20px; border-radius: 50px;
-            font-weight: 700; font-size: 0.85rem; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            display: none; cursor: pointer;
-        }
+        #map { position: absolute; top:0; left:0; width:100%; height:100%; z-index: 1; }
+        #redo-search { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); z-index: 20; background: white; color: var(--primary); border: none; padding: 10px 20px; border-radius: 50px; font-weight: 700; font-size: 0.85rem; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: none; cursor: pointer; }
+        #gps-btn { position: absolute; bottom: 30px; right: 20px; z-index: 20; background: white; border: none; width: 45px; height: 45px; border-radius: 50%; box-shadow: 0 4px 12px rgba(0,0,0,0.2); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
 
-        #gps-btn {
-            position: absolute; bottom: 30px; right: 20px;
-            z-index: 20; background: white; border: none;
-            width: 45px; height: 45px; border-radius: 50%;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
-        }
-
-        #details-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background:#0f172a; display:none; flex-direction: column; z-index: 30; }
-
-        .place-card { padding: 1rem; margin-bottom: 1rem; border: 1px solid var(--border); border-radius: 12px; background: white; cursor: pointer; transition: 0.2s; position: relative; }
+        .place-card { padding: 1rem; margin-bottom: 1rem; border: 1px solid var(--border); border-radius: 12px; background: white; transition: 0.2s; position: relative; display: block; }
         .place-card.hidden { display: none; }
         .place-card.active { border: 2.5px solid var(--primary); background: #f0f7ff; }
-
-        .card-top { display: flex; gap: 12px; margin-bottom: 12px; }
-        .thumb { width: 75px; height: 75px; border-radius: 8px; object-fit: cover; background: #eee; }
-        .info-tags { display: flex; gap: 8px; margin-top: 5px; align-items: center; }
-        .dist-tag { font-size: 0.65rem; color: var(--primary); font-weight: 800; background: #eff6ff; padding: 2px 6px; border-radius: 4px; }
-        .time-tag { font-size: 0.65rem; color: var(--success); font-weight: 700; }
-
+        
+        .dist-tag { font-size: 0.65rem; color: var(--primary); font-weight: 800; background: #eff6ff; padding: 2px 6px; border-radius: 4px; margin-right: 5px;}
         .action-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
         .btn { flex: 1; min-width: 80px; padding: 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 700; text-align: center; cursor: pointer; border: none; text-decoration: none; display: flex; align-items: center; justify-content: center; }
         .btn-join { background: var(--primary); color: white; }
         .btn-reg { background: #475569; color: white; line-height: 1.2; font-size: 0.6rem; }
         .btn-sec { background: #f1f5f9; color: var(--text-main); border: 1px solid var(--border); }
-        
-        .btn-whatsapp { background: #25D366 !important; color: white !important; gap: 5px; }
-        .btn-whatsapp img { width: 14px; height: 14px; filter: brightness(0) invert(1); }
+        .btn-whatsapp { background: var(--whatsapp) !important; color: white !important; }
 
         .q-badge { font-size: 0.7rem; font-weight: 800; padding: 4px 8px; border-radius: 4px; margin-top: 5px; display: inline-block; }
         .q-online { background: #d1fae5; color: #065f46; border: 1px solid #34d399; }
-        .q-offline { background: #f1f5f9; color: #64748b; }
-        
         .est-box { font-size: 0.65rem; color: var(--success); margin-top: 4px; line-height: 1.4; }
-
-        #photo-strip { flex: 1; display: flex; overflow-x: auto; scroll-snap-type: x mandatory; }
-        #photo-strip img { height: 100%; min-width: 100%; object-fit: cover; scroll-snap-align: start; }
-        #mini-pano { flex: 1; border-top: 2px solid #1e293b; }
 
         @media (min-width: 769px) { .main-layout { flex-direction: row; } .list-panel { max-width: 400px; } }
     </style>
@@ -106,31 +78,24 @@
         <div class="filter-chip" data-type="dining">🍽️ Dining</div>
         <div class="filter-chip" data-type="clinic">🏥 Clinics</div>
         <div class="filter-chip" data-type="banking">🏦 Banking</div>
-        <div class="filter-chip" data-type="gym">🏋️ Gyms</div>
         <div class="filter-chip" data-type="repair">🛠️ Repairs</div>
-        <div class="filter-chip" data-type="gov">🏛️ Gov</div>
-        <div class="filter-chip" data-type="wash">🧼 Wash</div>
     </div>
 
     <div class="main-layout">
         <div class="list-panel">
             <h2 id="title" style="margin:0; font-size:1.2rem;">Nearby Services</h2>
-            <p id="counter" style="font-size:0.7rem; color:var(--text-muted); margin-bottom:1rem;">Locating area...</p>
+            <p id="counter" style="font-size:0.7rem; color:var(--text-muted); margin-bottom:1rem;">Locating...</p>
             <div id="results"></div>
         </div>
 
         <div class="visual-panel">
             <button id="redo-search" onclick="redoSearch()">🔄 Search this area</button>
-            <button id="gps-btn" onclick="tryGPS()" title="Find my location">🎯</button>
+            <button id="gps-btn" onclick="getLocation()" title="Find my location">🎯</button>
             <div id="map"></div>
-            <div id="details-overlay">
-                <button onclick="closeDetails()" style="position:absolute; top:15px; right:15px; z-index:40; background:rgba(0,0,0,0.7); color:white; border:none; border-radius:50%; width:35px; height:35px; cursor:pointer;">✕</button>
-                <div id="photo-strip"></div>
-                <div id="mini-pano"></div>
-            </div>
         </div>
     </div>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -138,287 +103,155 @@
 
     <script>
         const db = firebase.firestore();
-        const params = new URLSearchParams(window.location.search);
+        const MAPBOX_TOKEN = 'pk.eyJ1IjoidmVlcmFjZW8iLCJhIjoiY21rYmw0OGU0MDJhdzNlc2F6eTNieHZtYiJ9.KRGL19uPsS5miVfALTuqiw';
         
+        const params = new URLSearchParams(window.location.search);
         let serviceType = params.get("type") || 'salon';
-        let searchQuery = params.get("q") || '';
-        let locationQuery = params.get("l") || '';
-        let liveOnly = false;
-        let activeListeners = [];
+        let locationQuery = params.get("l") || 'near me';
+        let userLat, userLng, map, markers = [], liveOnly = false;
 
         const SERVICE_MAP = {
-            salon: { type: "hair_care", keyword: "salon barber hair styling hairdresser beautician beauty parlor unisex haircut fade shave nail cut spa", label: "Salons & Barbers", avgTime: 20 },
-            dining: { type: "restaurant", keyword: "restaurant cafe eatery dining bistro food gastropub steakhouse pizzeria buffet takeaway grill kitchen", label: "Restaurants & Dining", avgTime: 15 },
-            clinic: { type: "health", keyword: "clinic doctor medical dental pharmacy surgery health center physician specialist dentist hospital", label: "Clinics & Health", avgTime: 25 },
-            banking: { type: "bank", keyword: "bank atm financial services credit union finance money transfer exchange", label: "Banking & Finance", avgTime: 10 },
-            gym: { type: "fitness_center", keyword: "gym fitness center workout yoga studio crossfit health club exercise pilates", label: "Gyms & Fitness", avgTime: 0 },
-            repair: { type: "car_repair", keyword: "auto repair mechanic electronics repair handyman phone repair plumber electrician garage", label: "Repairs & Services", avgTime: 45 },
-            gov: { type: "local_government_office", keyword: "government office post office town hall embassy court library municipal", label: "Gov & Public Services", avgTime: 20 },
-            wash: { type: "car_wash", keyword: "car wash laundry dry cleaning laundromat cleaning services detailer", label: "Wash & Laundry", avgTime: 15 }
+            salon: { query: "hair salon barber", label: "Salons & Barbers", category: "Salon" },
+            dining: { query: "restaurant cafe", label: "Restaurants", category: "Dining" },
+            clinic: { query: "medical clinic hospital", label: "Clinics", category: "Clinic" },
+            banking: { query: "bank atm", label: "Banking", category: "Banking" },
+            repair: { query: "car repair mechanic", label: "Repairs", category: "Repair" }
         };
 
-        let map, placesService, userLocation, markers = [];
-
         document.getElementById("title").innerText = SERVICE_MAP[serviceType].label;
-
-        firebase.auth().onAuthStateChanged((user) => {
-            const authBtn = document.getElementById('authBtn');
-            if (user && !user.isAnonymous) {
-                authBtn.innerText = "Dashboard";
-                authBtn.href = "dashboard.html";
-            } else {
-                authBtn.innerText = "Login";
-                authBtn.href = "login.html";
-            }
-        });
-
         document.querySelectorAll('.filter-chip[data-type]').forEach(chip => {
             if(chip.dataset.type === serviceType) chip.classList.add('active');
             chip.onclick = () => {
-                document.querySelectorAll('.filter-chip[data-type]').forEach(c => c.classList.remove('active'));
-                chip.classList.add('active');
-                serviceType = chip.dataset.type;
-                document.getElementById("title").innerText = SERVICE_MAP[serviceType].label;
-                executePlacesSearch();
+                location.href = `nearby.html?type=${chip.dataset.type}&l=${encodeURIComponent(locationQuery)}`;
             };
         });
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 3958.8; // Miles
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+            return (R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))).toFixed(1);
+        }
 
         function toggleLiveOnly() {
             liveOnly = !liveOnly;
             document.getElementById('toggleLive').classList.toggle('active', liveOnly);
-            applyLiveFilter();
-        }
-
-        function applyLiveFilter() {
             const cards = document.querySelectorAll('.place-card');
-            let visibleCount = 0;
             cards.forEach(card => {
                 const isLive = card.getAttribute('data-live') === 'true';
-                if (liveOnly && !isLive) card.classList.add('hidden');
-                else { card.classList.remove('hidden'); visibleCount++; }
+                card.classList.toggle('hidden', liveOnly && !isLive);
             });
-            document.getElementById("counter").innerText = `Showing ${visibleCount} results.`;
         }
 
-        function initMap() {
-            if (locationQuery && locationQuery.trim() !== "" && locationQuery.toLowerCase() !== "near me") {
-                new google.maps.Geocoder().geocode({ address: locationQuery }, (results, status) => {
-                    if (status === "OK") { 
-                        userLocation = results[0].geometry.location; 
-                        setupMap(); 
-                    } else { tryGPS(); }
-                });
-            } else { tryGPS(); }
-        }
-        function tryGPS() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition((pos) => {
-                    userLocation = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
-                    if (map) { 
-                        map.setCenter(userLocation); 
-                        executePlacesSearch(); 
-                    } else { setupMap(); }
-                }, () => {
-                    userLocation = new google.maps.LatLng(53.4808, -2.2426);
-                    if (map) { map.setCenter(userLocation); executePlacesSearch(); } 
-                    else { setupMap(); }
-                }, { timeout: 5000 });
+        async function getLocation() {
+            if (locationQuery === 'near me' && navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    p => { userLat = p.coords.latitude; userLng = p.coords.longitude; initMap(userLat, userLng); },
+                    () => { userLat = 17.3850; userLng = 78.4867; initMap(userLat, userLng); }
+                );
             } else {
-                userLocation = new google.maps.LatLng(53.4808, -2.2426);
-                setupMap();
+                const res = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(locationQuery)}.json?access_token=${MAPBOX_TOKEN}`);
+                const data = await res.json();
+                if (data.features && data.features.length > 0) {
+                    [userLng, userLat] = data.features[0].center;
+                    initMap(userLat, userLng);
+                } else {
+                    initMap(17.3850, 78.4867);
+                }
             }
         }
 
-        function setupMap() {
-            map = new google.maps.Map(document.getElementById("map"), { 
-                center: userLocation, 
-                zoom: 14, 
-                disableDefaultUI: true,
-                gestureHandling: "greedy" 
-            });
-            placesService = new google.maps.places.PlacesService(map);
-            map.addListener('dragend', () => { 
-                document.getElementById('redo-search').style.display = 'flex'; 
-            });
-            executePlacesSearch();
+        function initMap(lat, lng) {
+            if (map) map.remove();
+            map = L.map('map', { zoomControl: false }).setView([lat, lng], 14);
+            L.tileLayer(`https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${MAPBOX_TOKEN}`, {
+                tileSize: 512, zoomOffset: -1, attribution: '© Mapbox'
+            }).addTo(map);
+
+            map.on('dragend', () => document.getElementById('redo-search').style.display = 'block');
+            performHybridSearch(lat, lng);
+        }
+
+        async function performHybridSearch(lat, lng) {
+            const container = document.getElementById("results");
+            container.innerHTML = "<p style='padding:15px;'>Finding businesses...</p>";
+            markers.forEach(m => map.removeLayer(m));
+            markers = [];
+
+            try {
+                const mbUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(SERVICE_MAP[serviceType].query)}.json?proximity=${lng},${lat}&access_token=${MAPBOX_TOKEN}`;
+                const mbRes = await fetch(mbUrl);
+                const mbData = await mbRes.json();
+
+                const fbSnap = await db.collection('providers').where('category', '==', SERVICE_MAP[serviceType].category).get();
+                const partners = {};
+                fbSnap.forEach(doc => {
+                    const d = doc.data();
+                    partners[d.businessName.toLowerCase()] = { id: doc.id, ...d };
+                });
+
+                container.innerHTML = "";
+                mbData.features.forEach((place) => {
+                    const name = place.text;
+                    const partner = partners[name.toLowerCase()];
+                    const isLive = !!partner;
+                    const dist = calculateDistance(userLat, userLng, place.center[1], place.center[0]);
+
+                    const card = document.createElement('div');
+                    card.className = `place-card ${isLive ? 'active' : ''}`;
+                    card.setAttribute('data-live', isLive);
+                    
+                    let whatsappBtn = "";
+                    if(isLive && partner.phone) {
+                        const cleanPhone = partner.phone.toString().replace(/\D/g, '');
+                        whatsappBtn = `<a href="https://wa.me/${cleanPhone}" target="_blank" class="btn btn-whatsapp">Chat</a>`;
+                    }
+
+                    card.innerHTML = `
+                        <div class="card-top">
+                            <div style="flex:1">
+                                <strong style="font-size:0.95rem;">${name}</strong>
+                                <div class="info-tags">
+                                    <span class="dist-tag">${dist} mi</span>
+                                    <span class="dist-tag" style="background:${isLive ? '#eff6ff':'#f1f5f9'}; color:${isLive ? '#2563eb':'#64748b'};">
+                                        ${isLive ? '⚡ LIVE PARTNER' : 'Standard Listing'}
+                                    </span>
+                                </div>
+                                ${isLive ? `
+                                    <div class="q-badge q-online">LIVE: ${partner.peopleInLine || 0} in line</div>
+                                    <div class="est-box">⌛ Wait: <b>~${partner.currentWaitMins || 0}m</b></div>
+                                ` : `<p style="font-size:0.7rem; color:var(--text-muted); margin:5px 0;">Queue tracking not active.</p>`}
+                            </div>
+                        </div>
+                        <div class="action-row">
+                            ${isLive ? `<button onclick="location.href='join-queue.html?id=${partner.id}'" class="btn btn-join">JOIN QUEUE</button>` : 
+                                       `<button onclick="location.href='provider-signup.html?shop=${encodeURIComponent(name)}'" class="btn btn-reg">OWNER?<br>REGISTER</button>`}
+                            ${whatsappBtn}
+                            <a href="https://www.google.com/maps/dir/?api=1&destination=${place.center[1]},${place.center[0]}" target="_blank" class="btn btn-sec">Directions</a>
+                        </div>
+                    `;
+                    container.appendChild(card);
+
+                    const marker = L.marker([place.center[1], place.center[0]]).addTo(map)
+                        .bindPopup(`<b>${name}</b><br>${isLive ? 'Live Queue Active' : 'Not a partner'}`);
+                    markers.push(marker);
+                });
+                document.getElementById("counter").innerText = `Found ${mbData.features.length} results nearby.`;
+            } catch (err) {
+                container.innerHTML = "Error loading results.";
+            }
         }
 
         function redoSearch() {
+            const center = map.getCenter();
+            userLat = center.lat; userLng = center.lng;
             document.getElementById('redo-search').style.display = 'none';
-            userLocation = map.getCenter();
-            executePlacesSearch();
+            performHybridSearch(userLat, userLng);
         }
 
-        function executePlacesSearch() {
-            if(!placesService) {
-                setTimeout(executePlacesSearch, 300);
-                return;
-            }
-            markers.forEach(m => m.setMap(null));
-            markers = [];
-            
-            activeListeners.forEach(unsub => unsub());
-            activeListeners = [];
-            
-            const config = SERVICE_MAP[serviceType];
-            const request = {
-                location: userLocation,
-                radius: '3000',
-                type: config.type,
-                keyword: searchQuery ? `${searchQuery} ${config.keyword}` : config.keyword
-            };
-
-            placesService.nearbySearch(request, (results, status) => {
-                if (status === google.maps.places.PlacesServiceStatus.OK) {
-                    renderList(results);
-                } else {
-                    document.getElementById("results").innerHTML = "<p style='padding:20px;'>No results found.</p>";
-                    document.getElementById("counter").innerText = "0 results.";
-                }
-            });
-        }
-
-function renderList(results) {
-    const container = document.getElementById("results");
-    container.innerHTML = "";
-    
-    // 1. PRE-CALCULATE DISTANCES & SORT
-    // We calculate distance first so we can sort the array by the closest place
-    results.forEach(place => {
-        place.calculatedDistance = google.maps.geometry.spherical.computeDistanceBetween(
-            userLocation, 
-            place.geometry.location
-        );
-    });
-
-    results.sort((a, b) => a.calculatedDistance - b.calculatedDistance);
-
-    // 2. CLEAR OLD LISTENERS
-    activeListeners.forEach(unsub => unsub());
-    activeListeners = [];
-
-    // 3. RENDER SORTED RESULTS
-    results.forEach((place, i) => {
-        const miles = (place.calculatedDistance * 0.000621371).toFixed(1);
-        const driveTime = Math.round((miles / 12) * 60) + 2; 
-        const thumb = place.photos ? place.photos[0].getUrl({maxWidth: 150}) : 'https://via.placeholder.com/150';
-
-        // Marker label will now match the distance order (1 = Closest)
-        const marker = new google.maps.Marker({
-            position: place.geometry.location, 
-            map: map, 
-            label: { text: (i+1).toString(), color: "white" }
-        });
-        markers.push(marker);
-
-        const card = document.createElement('div');
-        card.className = 'place-card';
-        card.id = `card-${i}`;
-        card.setAttribute('data-live', 'false');
-        
-        const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${place.geometry.location.lat()},${place.geometry.location.lng()}&destination_place_id=${place.place_id}`;
-
-        card.innerHTML = `
-            <div onclick="selectPlace(${i}, '${place.place_id}', ${place.geometry.location.lat()}, ${place.geometry.location.lng()})">
-                <div class="card-top">
-                    <img src="${thumb}" class="thumb">
-                    <div style="flex:1">
-                        <strong style="font-size:0.95rem;">${place.name}</strong>
-                        <div class="info-tags">
-                            <span class="dist-tag">${miles} mi</span>
-                            <span class="time-tag">🚗 ${driveTime} min drive</span>
-                        </div>
-                        <span style="font-size:0.75rem; color:var(--text-muted);">${place.vicinity}</span>
-                        <div id="status-${i}" class="q-badge q-offline">No Live Queue</div>
-                        <div id="est-${i}" class="est-box"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="action-row" id="actions-${i}">
-                 <a href="${mapsUrl}" target="_blank" class="btn btn-sec">Directions</a>
-                 <button onclick="window.location.href='provider-signup.html'" class="btn btn-reg">BUSINESS OWNER?<br>REGISTER FREE</button>
-            </div>
-        `;
-        container.appendChild(card);
-
-        // REAL-TIME LISTENER
-        const unsub = db.collection('providers').where('googlePlaceId', '==', place.place_id)
-        .onSnapshot(snap => {
-            const statusDiv = document.getElementById(`status-${i}`);
-            const estDiv = document.getElementById(`est-${i}`);
-            const actionDiv = document.getElementById(`actions-${i}`);
-
-            if (!snap.empty) {
-                const d = snap.docs[0].data();
-                const providerId = snap.docs[0].id;
-                const inLine = d.peopleInLine || 0;
-                const waitMins = d.currentWaitMins || 0;
-
-                card.setAttribute('data-live', 'true');
-                statusDiv.className = "q-badge q-online";
-                statusDiv.innerText = `LIVE: ${inLine} in line`;
-                
-                if (waitMins > 0) {
-                    const serviceTime = new Date(Date.now() + waitMins * 60000);
-                    const timeStr = serviceTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    estDiv.innerHTML = `⌛ Wait: <b>~${waitMins}m</b> • Service at <b>${timeStr}</b>`;
-                } else {
-                    estDiv.innerHTML = `⌛ <b>No wait</b> • Join now!`;
-                }
-
-                let whatsappHtml = "";
-                if (d.phone) {
-                    const cleanPhone = d.phone.toString().replace(/\D/g, '');
-                    whatsappHtml = `<a href="https://wa.me/${cleanPhone}" target="_blank" class="btn btn-whatsapp"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" style="width:14px; margin-right:5px; filter:brightness(0) invert(1);"> Chat</a>`;
-                }
-
-                actionDiv.innerHTML = `
-                    <a href="${mapsUrl}" target="_blank" class="btn btn-sec">Directions</a>
-                    ${whatsappHtml}
-                    <button onclick="window.location.href='join-queue.html?id=${providerId}'" class="btn btn-join">JOIN QUEUE</button>
-                `;
-                
-                if (liveOnly) applyLiveFilter();
-            }
-        });
-        activeListeners.push(unsub);
-    });
-    document.getElementById("counter").innerText = `Found ${results.length} results nearby.`;
-}
-
-function selectPlace(index, pid, lat, lng) {
-    document.querySelectorAll('.place-card').forEach(c => c.classList.remove('active'));
-    const card = document.getElementById(`card-${index}`);
-    card.classList.add('active');
-    
-    // Check if it's a partner before spending money on 'Details'
-    const isLive = card.getAttribute('data-live') === 'true';
-    
-    document.getElementById('details-overlay').style.display = 'flex';
-    const strip = document.getElementById('photo-strip');
-    strip.innerHTML = '<p style="color:white; padding:20px;">Loading preview...</p>';
-
-    if (isLive) {
-        // Only call GetDetails for partners to save money
-        placesService.getDetails({ placeId: pid, fields: ['photos'] }, (details) => {
-            if (details && details.photos) {
-                strip.innerHTML = details.photos.slice(0, 5).map(p => `<img src="${p.getUrl({maxWidth: 800})}">`).join('');
-            }
-        });
-    } else {
-        strip.innerHTML = '<p style="color:white; padding:20px;">Photo previews available for skipQs Partners.</p>';
-    }
-    
-    // Street View is generally safer/cheaper than Place Details
-    setTimeout(() => {
-        new google.maps.StreetViewPanorama(document.getElementById("mini-pano"), {
-            position: { lat, lng }, pov: { heading: 165, pitch: 0 }, zoom: 1, addressControl: false
-        });
-    }, 100);
-}
-
-        function closeDetails() { document.getElementById('details-overlay').style.display = 'none'; }
+        window.onload = getLocation;
     </script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAJFGE5OFfn-OhDNJ_rWO5oi2d2CHl2fXE&libraries=places,geometry&callback=initMap" async defer></script>
 </body>
 </html>
