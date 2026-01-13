@@ -254,59 +254,67 @@
         performSearch();
     }
 
-    async function performSearch() {
-        const container = document.getElementById("results");
-        markers.forEach(m => map.removeLayer(m));
-        markers = [];
+   async function performSearch() {
+    const container = document.getElementById("results");
+    markers.forEach(m => map.removeLayer(m));
+    markers = [];
 
-        try {
-            const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(SERVICE_MAP[serviceType].query)}.json?proximity=${userLng},${userLat}&limit=20&access_token=${MAPBOX_TOKEN}`;
-            const resp = await fetch(url);
-            const data = await resp.json();
+    // Define Salford area boundaries to stop results from being "far away"
+    // Format: [minLng, minLat, maxLng, maxLat]
+    const salfordBbox = "-2.3274,53.4654,-2.2343,53.5042"; 
 
-            // Match with Firebase Partners
-            const fbSnap = await db.collection('providers').where('category', '==', SERVICE_MAP[serviceType].cat).get();
-            const partners = {};
-            fbSnap.forEach(doc => partners[doc.data().businessName.toLowerCase().trim()] = {id: doc.id, ...doc.data()});
+    try {
+        // We add &bbox= to the URL to restrict results strictly to Salford
+        const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(SERVICE_MAP[serviceType].query)}.json?proximity=${userLng},${userLat}&bbox=${salfordBbox}&limit=20&access_token=${MAPBOX_TOKEN}`;
+        
+        const resp = await fetch(url);
+        const data = await resp.json();
 
-            container.innerHTML = "";
-            
-            data.features.forEach((place) => {
-                const name = place.text;
-                const partner = partners[name.toLowerCase().trim()];
-                const [pLng, pLat] = place.center; 
+        // Firebase Sync
+        const fbSnap = await db.collection('providers').where('category', '==', SERVICE_MAP[serviceType].cat).get();
+        const partners = {};
+        fbSnap.forEach(doc => partners[doc.data().businessName.toLowerCase().trim()] = {id: doc.id, ...doc.data()});
 
-                // Correct distance math for local Salford scale
-                const businessLoc = L.latLng(pLat, pLng);
-                const userLoc = L.latLng(userLat, userLng);
-                const dist = (userLoc.distanceTo(businessLoc) * 0.000621371).toFixed(1);
+        container.innerHTML = "";
+        
+        if (data.features.length === 0) {
+            container.innerHTML = "<p style='padding:20px;'>No local businesses found in Salford. Try moving the map.</p>";
+            return;
+        }
 
-                const card = document.createElement('div');
-                card.className = `place-card ${partner ? 'active-partner' : ''}`;
-                card.innerHTML = `
-                    <div onclick="openDetails('${name.replace(/'/g, "\\'")}', '${place.place_name.replace(/'/g, "\\'")}', ${pLat}, ${pLng}, '${partner?.id || ''}', '${partner?.phone || ''}')">
-                        <div style="display:flex; justify-content:space-between;">
-                            <strong style="font-size:1.1rem;">${name}</strong>
-                            <span class="dist-tag">${dist} mi</span>
-                        </div>
-                        ${partner ? `<div class="wait-time-badge">⚡ ${partner.currentWaitMins}m Wait</div>` : `<p style="font-size:0.75rem; color:gray; margin-top:5px;">Standard Listing</p>`}
+        data.features.forEach((place) => {
+            const name = place.text;
+            const partner = partners[name.toLowerCase().trim()];
+            const [pLng, pLat] = place.center; 
+
+            // Calculate distance in miles
+            const dist = (L.latLng(userLat, userLng).distanceTo(L.latLng(pLat, pLng)) * 0.000621371).toFixed(1);
+
+            const card = document.createElement('div');
+            card.className = `place-card ${partner ? 'active-partner' : ''}`;
+            card.innerHTML = `
+                <div onclick="openDetails('${name.replace(/'/g, "\\'")}', '${place.place_name.replace(/'/g, "\\'")}', ${pLat}, ${pLng}, '${partner?.id || ''}', '${partner?.phone || ''}')">
+                    <div style="display:flex; justify-content:space-between;">
+                        <strong style="font-size:1.1rem;">${name}</strong>
+                        <span class="dist-tag">${dist} mi</span>
                     </div>
-                `;
-                container.appendChild(card);
+                    ${partner ? `<div class="wait-time-badge">⚡ ${partner.currentWaitMins}m Wait</div>` : `<p style="font-size:0.75rem; color:gray; margin-top:5px;">Standard Listing</p>`}
+                </div>
+            `;
+            container.appendChild(card);
 
-                // Circle Markers (always work, no icon files needed)
-                const m = L.circleMarker([pLat, pLng], {
-                    radius: 10,
-                    fillColor: partner ? "#2563eb" : "#64748b",
-                    color: "#fff",
-                    weight: 2,
-                    fillOpacity: 1
-                }).addTo(map);
-                markers.push(m);
-            });
-            document.getElementById("counter").innerText = `Found ${data.features.length} locations`;
-        } catch (err) { console.error("Search failed:", err); }
+            const m = L.circleMarker([pLat, pLng], {
+                radius: 10, fillColor: partner ? "#2563eb" : "#64748b", color: "#fff", weight: 2, fillOpacity: 1
+            }).addTo(map);
+            markers.push(m);
+        });
+
+        document.getElementById("counter").innerText = `Found ${data.features.length} local locations`;
+
+    } catch (err) { 
+        console.error("Search failed:", err); 
     }
+}
 
 function openDetails(name, addr, lat, lng, id, phone) {
     document.getElementById('detail-name').innerText = name;
