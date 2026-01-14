@@ -253,7 +253,8 @@
             
             const config = SERVICE_MAP[serviceType];
             const request = {
-                fields: ["displayName", "location", "id", "photos", "vicinity"],
+                // FIXED: Changed 'vicinity' to 'shortFormattedAddress'
+                fields: ["displayName", "location", "id", "photos", "shortFormattedAddress"],
                 locationRestriction: { center: userLocation, radius: 3000 },
                 includedPrimaryTypes: [config.type],
                 maxResultCount: 20
@@ -266,7 +267,7 @@
                         name: p.displayName,
                         place_id: p.id,
                         geometry: { location: p.location },
-                        vicinity: p.vicinity,
+                        vicinity: p.shortFormattedAddress || "Address nearby", // Map it back to original name
                         photos: p.photos
                     }));
                     renderList(legacyFormattedResults);
@@ -334,25 +335,30 @@
                 container.appendChild(card);
 
                 const unsub = db.collection('providers').where('googlePlaceId', '==', place.place_id).onSnapshot(snap => {
+                    const statusDiv = document.getElementById(`status-${i}`);
+                    const estDiv = document.getElementById(`est-${i}`);
+                    const actionDiv = document.getElementById(`actions-${i}`);
+
                     if (!snap.empty) {
                         const d = snap.docs[0].data();
                         const providerId = snap.docs[0].id;
                         card.setAttribute('data-live', 'true');
-                        document.getElementById(`status-${i}`).className = "q-badge q-online";
-                        document.getElementById(`status-${i}`).innerText = `LIVE: ${d.peopleInLine || 0} in line`;
+                        statusDiv.className = "q-badge q-online";
+                        statusDiv.innerText = `LIVE: ${d.peopleInLine || 0} in line`;
                         
                         if (d.currentWaitMins > 0) {
                             const timeStr = new Date(Date.now() + d.currentWaitMins * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                            document.getElementById(`est-${i}`).innerHTML = `⌛ Wait: <b>~${d.currentWaitMins}m</b> • Service at <b>${timeStr}</b>`;
-                        } else { document.getElementById(`est-${i}`).innerHTML = `⌛ <b>No wait</b> • Join now!`; }
+                            estDiv.innerHTML = `⌛ Wait: <b>~${d.currentWaitMins}m</b> • Service at <b>${timeStr}</b>`;
+                        } else { estDiv.innerHTML = `⌛ <b>No wait</b> • Join now!`; }
 
                         let whatsappHtml = d.phone ? `<a href="https://wa.me/${d.phone.toString().replace(/\D/g, '')}" target="_blank" class="btn btn-whatsapp"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" style="width:14px; margin-right:5px; filter:brightness(0) invert(1);"> Chat</a>` : "";
 
-                        document.getElementById(`actions-${i}`).innerHTML = `
+                        actionDiv.innerHTML = `
                             <a href="${mapsUrl}" target="_blank" class="btn btn-sec">Directions</a>
                             ${whatsappHtml}
                             <button onclick="window.location.href='join-queue.html?id=${providerId}'" class="btn btn-join">JOIN QUEUE</button>
                         `;
+                        if (liveOnly) applyLiveFilter();
                     }
                 });
                 activeListeners.push(unsub);
