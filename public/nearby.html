@@ -275,7 +275,6 @@
             container.innerHTML = "";
             const { AdvancedMarkerElement, PinElement } = await google.maps.importLibrary("marker");
             
-            // Sort by distance
             places.forEach(p => {
                 p.calculatedDistance = google.maps.geometry.spherical.computeDistanceBetween(userLocation, p.location);
             });
@@ -288,7 +287,9 @@
                 // FIXED: Use .getURI() instead of .getUrl() for New Places API
                 let thumb = 'https://via.placeholder.com/150';
                 if (place.photos && place.photos.length > 0) {
-                    thumb = place.photos[0].getURI({maxWidth: 150, maxHeight: 150});
+                    try {
+                        thumb = place.photos[0].getURI({maxWidth: 200, maxHeight: 200});
+                    } catch(e) { console.log("Photo URI error", e); }
                 }
 
                 const marker = new AdvancedMarkerElement({
@@ -334,21 +335,30 @@
                         const d = snap.docs[0].data();
                         const providerId = snap.docs[0].id;
                         card.setAttribute('data-live', 'true');
-                        document.getElementById(`status-${i}`).className = "q-badge q-online";
-                        document.getElementById(`status-${i}`).innerText = `LIVE: ${d.peopleInLine || 0} in line`;
+                        const statusDiv = document.getElementById(`status-${i}`);
+                        const estDiv = document.getElementById(`est-${i}`);
+                        const actionDiv = document.getElementById(`actions-${i}`);
+
+                        if(statusDiv) {
+                            statusDiv.className = "q-badge q-online";
+                            statusDiv.innerText = `LIVE: ${d.peopleInLine || 0} in line`;
+                        }
                         
-                        if (d.currentWaitMins > 0) {
-                            const timeStr = new Date(Date.now() + d.currentWaitMins * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                            document.getElementById(`est-${i}`).innerHTML = `⌛ Wait: <b>~${d.currentWaitMins}m</b> • Service at <b>${timeStr}</b>`;
-                        } else { document.getElementById(`est-${i}`).innerHTML = `⌛ <b>No wait</b> • Join now!`; }
+                        if (estDiv) {
+                            if (d.currentWaitMins > 0) {
+                                const timeStr = new Date(Date.now() + d.currentWaitMins * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                                estDiv.innerHTML = `⌛ Wait: <b>~${d.currentWaitMins}m</b> • Service at <b>${timeStr}</b>`;
+                            } else { estDiv.innerHTML = `⌛ <b>No wait</b> • Join now!`; }
+                        }
 
-                        let whatsappHtml = d.phone ? `<a href="https://wa.me/${d.phone.toString().replace(/\D/g, '')}" target="_blank" class="btn btn-whatsapp"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" style="width:14px; margin-right:5px; filter:brightness(0) invert(1);"> Chat</a>` : "";
-
-                        document.getElementById(`actions-${i}`).innerHTML = `
-                            <a href="${mapsUrl}" target="_blank" class="btn btn-sec">Directions</a>
-                            ${whatsappHtml}
-                            <button onclick="window.location.href='join-queue.html?id=${providerId}'" class="btn btn-join">JOIN QUEUE</button>
-                        `;
+                        if(actionDiv) {
+                            let whatsappHtml = d.phone ? `<a href="https://wa.me/${d.phone.toString().replace(/\D/g, '')}" target="_blank" class="btn btn-whatsapp"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" style="width:14px; margin-right:5px; filter:brightness(0) invert(1);"> Chat</a>` : "";
+                            actionDiv.innerHTML = `
+                                <a href="${mapsUrl}" target="_blank" class="btn btn-sec">Directions</a>
+                                ${whatsappHtml}
+                                <button onclick="window.location.href='join-queue.html?id=${providerId}'" class="btn btn-join">JOIN QUEUE</button>
+                            `;
+                        }
                     }
                 });
                 activeListeners.push(unsub);
@@ -358,7 +368,8 @@
 
         function selectPlace(index) {
             document.querySelectorAll('.place-card').forEach(c => c.classList.remove('active'));
-            document.getElementById(`card-${index}`).classList.add('active');
+            const card = document.getElementById(`card-${index}`);
+            if(card) card.classList.add('active');
         }
     </script>
     <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAJFGE5OFfn-OhDNJ_rWO5oi2d2CHl2fXE&loading=async&libraries=places,geometry,marker&callback=initMap"></script>
