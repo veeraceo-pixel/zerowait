@@ -253,7 +253,6 @@
             
             const config = SERVICE_MAP[serviceType];
             const request = {
-                // FIXED: Changed 'vicinity' to 'shortFormattedAddress'
                 fields: ["displayName", "location", "id", "photos", "shortFormattedAddress"],
                 locationRestriction: { center: userLocation, radius: 3000 },
                 includedPrimaryTypes: [config.type],
@@ -263,14 +262,7 @@
             try {
                 const { places } = await Place.searchNearby(request);
                 if (places && places.length > 0) {
-                    const legacyFormattedResults = places.map(p => ({
-                        name: p.displayName,
-                        place_id: p.id,
-                        geometry: { location: p.location },
-                        vicinity: p.shortFormattedAddress || "Address nearby", // Map it back to original name
-                        photos: p.photos
-                    }));
-                    renderList(legacyFormattedResults);
+                    renderList(places);
                 } else {
                     document.getElementById("results").innerHTML = "<p style='padding:20px;'>No results found.</p>";
                     document.getElementById("counter").innerText = "0 results.";
@@ -278,29 +270,32 @@
             } catch (error) { console.error("Places Search Error:", error); }
         }
 
-        async function renderList(results) {
+        async function renderList(places) {
             const container = document.getElementById("results");
             container.innerHTML = "";
             const { AdvancedMarkerElement, PinElement } = await google.maps.importLibrary("marker");
             
-            results.forEach(place => {
-                place.calculatedDistance = google.maps.geometry.spherical.computeDistanceBetween(userLocation, place.geometry.location);
+            // Sort by distance
+            places.forEach(p => {
+                p.calculatedDistance = google.maps.geometry.spherical.computeDistanceBetween(userLocation, p.location);
             });
-            results.sort((a, b) => a.calculatedDistance - b.calculatedDistance);
+            places.sort((a, b) => a.calculatedDistance - b.calculatedDistance);
 
-            activeListeners.forEach(unsub => unsub());
-            activeListeners = [];
-
-            results.forEach((place, i) => {
+            places.forEach((place, i) => {
                 const miles = (place.calculatedDistance * 0.000621371).toFixed(1);
                 const driveTime = Math.round((miles / 12) * 60) + 2; 
-                const thumb = place.photos ? place.photos[0].getUrl({maxWidth: 150}) : 'https://via.placeholder.com/150';
+                
+                // FIXED: Use .getURI() instead of .getUrl() for New Places API
+                let thumb = 'https://via.placeholder.com/150';
+                if (place.photos && place.photos.length > 0) {
+                    thumb = place.photos[0].getURI({maxWidth: 150, maxHeight: 150});
+                }
 
                 const marker = new AdvancedMarkerElement({
                     map: map,
-                    position: place.geometry.location,
+                    position: place.location,
                     content: new PinElement({ glyph: (i + 1).toString(), background: "#2563eb", glyphColor: "white" }).element,
-                    title: place.name
+                    title: place.displayName
                 });
                 markers.push(marker);
 
@@ -309,19 +304,19 @@
                 card.id = `card-${i}`;
                 card.setAttribute('data-live', 'false');
                 
-                const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${place.geometry.location.lat()},${place.geometry.location.lng()}&destination_place_id=${place.place_id}`;
+                const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${place.location.lat()},${place.location.lng()}&destination_place_id=${place.id}`;
 
                 card.innerHTML = `
                     <div onclick="selectPlace(${i})">
                         <div class="card-top">
                             <img src="${thumb}" class="thumb">
                             <div style="flex:1">
-                                <strong style="font-size:0.95rem;">${place.name}</strong>
+                                <strong style="font-size:0.95rem;">${place.displayName}</strong>
                                 <div class="info-tags">
                                     <span class="dist-tag">${miles} mi</span>
                                     <span class="time-tag">🚗 ${driveTime} min drive</span>
                                 </div>
-                                <span style="font-size:0.75rem; color:var(--text-muted);">${place.vicinity}</span>
+                                <span style="font-size:0.75rem; color:var(--text-muted);">${place.shortFormattedAddress || "Address nearby"}</span>
                                 <div id="status-${i}" class="q-badge q-offline">No Live Queue</div>
                                 <div id="est-${i}" class="est-box"></div>
                             </div>
@@ -334,36 +329,31 @@
                 `;
                 container.appendChild(card);
 
-                const unsub = db.collection('providers').where('googlePlaceId', '==', place.place_id).onSnapshot(snap => {
-                    const statusDiv = document.getElementById(`status-${i}`);
-                    const estDiv = document.getElementById(`est-${i}`);
-                    const actionDiv = document.getElementById(`actions-${i}`);
-
+                const unsub = db.collection('providers').where('googlePlaceId', '==', place.id).onSnapshot(snap => {
                     if (!snap.empty) {
                         const d = snap.docs[0].data();
                         const providerId = snap.docs[0].id;
                         card.setAttribute('data-live', 'true');
-                        statusDiv.className = "q-badge q-online";
-                        statusDiv.innerText = `LIVE: ${d.peopleInLine || 0} in line`;
+                        document.getElementById(`status-${i}`).className = "q-badge q-online";
+                        document.getElementById(`status-${i}`).innerText = `LIVE: ${d.peopleInLine || 0} in line`;
                         
                         if (d.currentWaitMins > 0) {
                             const timeStr = new Date(Date.now() + d.currentWaitMins * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                            estDiv.innerHTML = `⌛ Wait: <b>~${d.currentWaitMins}m</b> • Service at <b>${timeStr}</b>`;
-                        } else { estDiv.innerHTML = `⌛ <b>No wait</b> • Join now!`; }
+                            document.getElementById(`est-${i}`).innerHTML = `⌛ Wait: <b>~${d.currentWaitMins}m</b> • Service at <b>${timeStr}</b>`;
+                        } else { document.getElementById(`est-${i}`).innerHTML = `⌛ <b>No wait</b> • Join now!`; }
 
                         let whatsappHtml = d.phone ? `<a href="https://wa.me/${d.phone.toString().replace(/\D/g, '')}" target="_blank" class="btn btn-whatsapp"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" style="width:14px; margin-right:5px; filter:brightness(0) invert(1);"> Chat</a>` : "";
 
-                        actionDiv.innerHTML = `
+                        document.getElementById(`actions-${i}`).innerHTML = `
                             <a href="${mapsUrl}" target="_blank" class="btn btn-sec">Directions</a>
                             ${whatsappHtml}
                             <button onclick="window.location.href='join-queue.html?id=${providerId}'" class="btn btn-join">JOIN QUEUE</button>
                         `;
-                        if (liveOnly) applyLiveFilter();
                     }
                 });
                 activeListeners.push(unsub);
             });
-            document.getElementById("counter").innerText = `Found ${results.length} results nearby.`;
+            document.getElementById("counter").innerText = `Found ${places.length} results nearby.`;
         }
 
         function selectPlace(index) {
