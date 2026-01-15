@@ -35,25 +35,11 @@
 
         .main-layout { display: flex; height: calc(100vh - 110px); flex-direction: column; }
         .list-panel { flex: 1; overflow-y: auto; padding: 1.25rem; background: white; z-index: 10; width: 100%; }
-        .visual-panel { display: none; background: #0f172a; position: relative; flex-direction: column; }
         
-        #map { position: absolute; top:0; left:0; width:100%; height:100%; }
-        
-        #redo-search {
-            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
-            z-index: 20; background: white; color: var(--primary);
-            border: none; padding: 10px 20px; border-radius: 50px;
-            font-weight: 700; font-size: 0.85rem; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            display: none; cursor: pointer;
-        }
-
-        #gps-btn {
-            position: absolute; bottom: 30px; right: 20px;
-            z-index: 20; background: white; border: none;
-            width: 45px; height: 45px; border-radius: 50%;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
-        }
+        /* UPDATED VISUAL PANEL: No Map, just a detail placeholder */
+        .visual-panel { display: none; background: #f1f5f9; position: relative; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
+        .placeholder-box { max-width: 400px; color: var(--text-muted); }
+        .placeholder-icon { font-size: 3rem; margin-bottom: 1rem; display: block; }
 
         .place-card { padding: 1rem; margin-bottom: 1rem; border: 1px solid var(--border); border-radius: 12px; background: white; cursor: pointer; transition: 0.2s; position: relative; }
         .place-card.hidden { display: none; }
@@ -82,8 +68,8 @@
 
         @media (min-width: 769px) { 
             .main-layout { flex-direction: row; } 
-            .list-panel { max-width: 400px; border-right: 1px solid var(--border); } 
-            .visual-panel { display: flex; flex: 1.5; }
+            .list-panel { max-width: 450px; border-right: 1px solid var(--border); } 
+            .visual-panel { display: flex; flex: 1; }
         }
     </style>
 </head>
@@ -118,9 +104,11 @@
         </div>
 
         <div class="visual-panel">
-            <button id="redo-search" onclick="redoSearch()">🔄 Search this area</button>
-            <button id="gps-btn" onclick="tryGPS()" title="Find my location">🎯</button>
-            <div id="map"></div>
+            <div class="placeholder-box">
+                <span class="placeholder-icon">📍</span>
+                <h3>Select a service to see details</h3>
+                <p>Find the shortest queues and join live lines instantly.</p>
+            </div>
         </div>
     </div>
 
@@ -134,10 +122,9 @@
         const params = new URLSearchParams(window.location.search);
         
         let serviceType = params.get("type") || 'salon';
-        let searchQuery = params.get("q") || '';
-        let locationQuery = params.get("l") || '';
         let liveOnly = false;
         let activeListeners = [];
+        let userLocation;
 
         const SERVICE_MAP = {
             salon: { type: "hair_care", label: "Salons & Barbers" },
@@ -150,10 +137,9 @@
             wash: { type: "car_wash", label: "Wash & Laundry" }
         };
 
-        let map, userLocation, markers = [];
-
         document.getElementById("title").innerText = SERVICE_MAP[serviceType].label;
 
+        // AUTH Logic
         firebase.auth().onAuthStateChanged((user) => {
             const authBtn = document.getElementById('authBtn');
             if (user && !user.isAnonymous) {
@@ -165,6 +151,7 @@
             }
         });
 
+        // Filter Chip Logic
         document.querySelectorAll('.filter-chip[data-type]').forEach(chip => {
             if(chip.dataset.type === serviceType) chip.classList.add('active');
             chip.onclick = () => {
@@ -193,68 +180,32 @@
             document.getElementById("counter").innerText = `Showing ${visibleCount} results.`;
         }
 
+        // Initialize Location Search (No Map)
         function initMap() {
-            if (locationQuery && locationQuery.trim() !== "" && locationQuery.toLowerCase() !== "near me") {
-                new google.maps.Geocoder().geocode({ address: locationQuery }, (results, status) => {
-                    if (status === "OK") { 
-                        userLocation = results[0].geometry.location; 
-                        setupMap(); 
-                    } else { tryGPS(); }
-                });
-            } else { tryGPS(); }
-        }
-
-        function tryGPS() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition((pos) => {
                     userLocation = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
-                    if (map) { 
-                        map.setCenter(userLocation); 
-                        executePlacesSearch(); 
-                    } else { setupMap(); }
+                    executePlacesSearch();
                 }, () => {
+                    // Default fallback (Manchester)
                     userLocation = new google.maps.LatLng(53.4808, -2.2426);
-                    if (map) { map.setCenter(userLocation); executePlacesSearch(); } 
-                    else { setupMap(); }
-                }, { timeout: 5000 });
+                    executePlacesSearch();
+                });
             } else {
                 userLocation = new google.maps.LatLng(53.4808, -2.2426);
-                setupMap();
+                executePlacesSearch();
             }
-        }
-
-        function setupMap() {
-            map = new google.maps.Map(document.getElementById("map"), { 
-                center: userLocation, 
-                zoom: 14, 
-                mapId: "bf43b615f86aecf8702a6de3", 
-                disableDefaultUI: true,
-                gestureHandling: "greedy" 
-            });
-            
-            map.addListener('dragend', () => { 
-                document.getElementById('redo-search').style.display = 'flex'; 
-            });
-            executePlacesSearch();
-        }
-
-        function redoSearch() {
-            document.getElementById('redo-search').style.display = 'none';
-            userLocation = map.getCenter();
-            executePlacesSearch();
         }
 
         async function executePlacesSearch() {
             const { Place } = await google.maps.importLibrary("places");
-            markers.forEach(m => m.setMap(null));
-            markers = [];
             activeListeners.forEach(unsub => unsub());
             activeListeners = [];
             
             const config = SERVICE_MAP[serviceType];
             const request = {
                 fields: ["displayName", "location", "id", "photos", "shortFormattedAddress"],
-                locationRestriction: { center: userLocation, radius: 3000 },
+                locationRestriction: { center: userLocation, radius: 4000 },
                 includedPrimaryTypes: [config.type],
                 maxResultCount: 20
             };
@@ -273,8 +224,8 @@
         async function renderList(places) {
             const container = document.getElementById("results");
             container.innerHTML = "";
-            const { AdvancedMarkerElement, PinElement } = await google.maps.importLibrary("marker");
             
+            // Sort by distance
             places.forEach(p => {
                 p.calculatedDistance = google.maps.geometry.spherical.computeDistanceBetween(userLocation, p.location);
             });
@@ -284,28 +235,18 @@
                 const miles = (place.calculatedDistance * 0.000621371).toFixed(1);
                 const driveTime = Math.round((miles / 12) * 60) + 2; 
                 
-                // FIXED: Use .getURI() instead of .getUrl() for New Places API
                 let thumb = 'https://via.placeholder.com/150';
                 if (place.photos && place.photos.length > 0) {
-                    try {
-                        thumb = place.photos[0].getURI({maxWidth: 200, maxHeight: 200});
-                    } catch(e) { console.log("Photo URI error", e); }
+                    thumb = place.photos[0].getURI({maxWidth: 200, maxHeight: 200});
                 }
-
-                const marker = new AdvancedMarkerElement({
-                    map: map,
-                    position: place.location,
-                    content: new PinElement({ glyph: (i + 1).toString(), background: "#2563eb", glyphColor: "white" }).element,
-                    title: place.displayName
-                });
-                markers.push(marker);
 
                 const card = document.createElement('div');
                 card.className = 'place-card';
                 card.id = `card-${i}`;
                 card.setAttribute('data-live', 'false');
                 
-                const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${place.location.lat()},${place.location.lng()}&destination_place_id=${place.id}`;
+                // Native Maps URL (Free referral)
+                const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(place.displayName)}&destination_place_id=${place.id}`;
 
                 card.innerHTML = `
                     <div onclick="selectPlace(${i})">
@@ -330,6 +271,7 @@
                 `;
                 container.appendChild(card);
 
+                // Keep Firebase Real-time listeners active
                 const unsub = db.collection('providers').where('googlePlaceId', '==', place.id).onSnapshot(snap => {
                     if (!snap.empty) {
                         const d = snap.docs[0].data();
@@ -344,21 +286,20 @@
                             statusDiv.innerText = `LIVE: ${d.peopleInLine || 0} in line`;
                         }
                         
-                        if (estDiv) {
-                            if (d.currentWaitMins > 0) {
-                                const timeStr = new Date(Date.now() + d.currentWaitMins * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                                estDiv.innerHTML = `⌛ Wait: <b>~${d.currentWaitMins}m</b> • Service at <b>${timeStr}</b>`;
-                            } else { estDiv.innerHTML = `⌛ <b>No wait</b> • Join now!`; }
+                        if (estDiv && d.currentWaitMins > 0) {
+                            const timeStr = new Date(Date.now() + d.currentWaitMins * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                            estDiv.innerHTML = `⌛ Wait: <b>~${d.currentWaitMins}m</b> • Service at <b>${timeStr}</b>`;
                         }
 
                         if(actionDiv) {
-                            let whatsappHtml = d.phone ? `<a href="https://wa.me/${d.phone.toString().replace(/\D/g, '')}" target="_blank" class="btn btn-whatsapp"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" style="width:14px; margin-right:5px; filter:brightness(0) invert(1);"> Chat</a>` : "";
+                            let whatsappHtml = d.phone ? `<a href="https://wa.me/${d.phone.toString().replace(/\D/g, '')}" target="_blank" class="btn btn-whatsapp"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"> Chat</a>` : "";
                             actionDiv.innerHTML = `
                                 <a href="${mapsUrl}" target="_blank" class="btn btn-sec">Directions</a>
                                 ${whatsappHtml}
                                 <button onclick="window.location.href='join-queue.html?id=${providerId}'" class="btn btn-join">JOIN QUEUE</button>
                             `;
                         }
+                        if (liveOnly) applyLiveFilter();
                     }
                 });
                 activeListeners.push(unsub);
@@ -372,6 +313,6 @@
             if(card) card.classList.add('active');
         }
     </script>
-    <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAJFGE5OFfn-OhDNJ_rWO5oi2d2CHl2fXE&loading=async&libraries=places,geometry,marker&callback=initMap"></script>
+    <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAJFGE5OFfn-OhDNJ_rWO5oi2d2CHl2fXE&loading=async&libraries=places,geometry&callback=initMap"></script>
 </body>
 </html>
