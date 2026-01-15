@@ -36,30 +36,39 @@
         .main-layout { display: flex; height: calc(100vh - 110px); flex-direction: column; }
         .list-panel { flex: 1; overflow-y: auto; padding: 1.25rem; background: white; z-index: 10; width: 100%; }
         
+        /* UPDATED VISUAL PANEL: No Map, just a detail placeholder */
         .visual-panel { display: none; background: #f1f5f9; position: relative; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
         .placeholder-box { max-width: 400px; color: var(--text-muted); }
         .placeholder-icon { font-size: 3rem; margin-bottom: 1rem; display: block; }
 
         .place-card { padding: 1rem; margin-bottom: 1rem; border: 1px solid var(--border); border-radius: 12px; background: white; cursor: pointer; transition: 0.2s; position: relative; }
-        .place-card.active { border: 2.5px solid var(--primary); background: #f0f7ff; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1); }
+        .place-card.hidden { display: none; }
+        .place-card.active { border: 2.5px solid var(--primary); background: #f0f7ff; }
 
-        .card-top { display: flex; gap: 12px; }
+        .card-top { display: flex; gap: 12px; margin-bottom: 12px; }
         .thumb { width: 75px; height: 75px; border-radius: 8px; object-fit: cover; background: #eee; }
         .info-tags { display: flex; gap: 8px; margin-top: 5px; align-items: center; }
         .dist-tag { font-size: 0.65rem; color: var(--primary); font-weight: 800; background: #eff6ff; padding: 2px 6px; border-radius: 4px; }
+        .time-tag { font-size: 0.65rem; color: var(--success); font-weight: 700; }
 
-        .btn { width: 100%; padding: 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; text-align: center; cursor: pointer; border: none; text-decoration: none; display: flex; align-items: center; justify-content: center; margin-top: 10px; }
+        .action-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+        .btn { flex: 1; min-width: 80px; padding: 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 700; text-align: center; cursor: pointer; border: none; text-decoration: none; display: flex; align-items: center; justify-content: center; }
         .btn-join { background: var(--primary); color: white; }
-        .btn-reg { background: #475569; color: white; font-size: 0.75rem; }
+        .btn-reg { background: #475569; color: white; line-height: 1.2; font-size: 0.6rem; }
         .btn-sec { background: #f1f5f9; color: var(--text-main); border: 1px solid var(--border); }
+        
+        .btn-whatsapp { background: #25D366 !important; color: white !important; gap: 5px; }
+        .btn-whatsapp img { width: 14px; height: 14px; filter: brightness(0) invert(1); }
 
         .q-badge { font-size: 0.7rem; font-weight: 800; padding: 4px 8px; border-radius: 4px; margin-top: 5px; display: inline-block; }
         .q-online { background: #d1fae5; color: #065f46; border: 1px solid #34d399; }
         .q-offline { background: #f1f5f9; color: #64748b; }
+        
+        .est-box { font-size: 0.65rem; color: var(--success); margin-top: 4px; line-height: 1.4; }
 
         @media (min-width: 769px) { 
             .main-layout { flex-direction: row; } 
-            .list-panel { max-width: 420px; border-right: 1px solid var(--border); } 
+            .list-panel { max-width: 450px; border-right: 1px solid var(--border); } 
             .visual-panel { display: flex; flex: 1; }
         }
     </style>
@@ -93,7 +102,8 @@
             <p id="counter" style="font-size:0.7rem; color:var(--text-muted); margin-bottom:1rem;">Locating area...</p>
             <div id="results"></div>
         </div>
-        <div class="visual-panel" id="detailPanel">
+
+        <div class="visual-panel">
             <div class="placeholder-box">
                 <span class="placeholder-icon">📍</span>
                 <h3>Select a service to see details</h3>
@@ -110,12 +120,11 @@
     <script>
         const db = firebase.firestore();
         const params = new URLSearchParams(window.location.search);
+        
         let serviceType = params.get("type") || 'salon';
         let liveOnly = false;
         let activeListeners = [];
         let userLocation;
-        let currentPlaces = [];
-        let placesLibrary = null;
 
         const SERVICE_MAP = {
             salon: { type: "hair_care", label: "Salons & Barbers" },
@@ -128,7 +137,21 @@
             wash: { type: "car_wash", label: "Wash & Laundry" }
         };
 
-        // UI Initialization
+        document.getElementById("title").innerText = SERVICE_MAP[serviceType].label;
+
+        // AUTH Logic
+        firebase.auth().onAuthStateChanged((user) => {
+            const authBtn = document.getElementById('authBtn');
+            if (user && !user.isAnonymous) {
+                authBtn.innerText = "Dashboard";
+                authBtn.href = "dashboard.html";
+            } else {
+                authBtn.innerText = "Login";
+                authBtn.href = "login.html";
+            }
+        });
+
+        // Filter Chip Logic
         document.querySelectorAll('.filter-chip[data-type]').forEach(chip => {
             if(chip.dataset.type === serviceType) chip.classList.add('active');
             chip.onclick = () => {
@@ -140,49 +163,69 @@
             };
         });
 
-        function initMap() {
-            navigator.geolocation.getCurrentPosition((pos) => {
-                userLocation = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
-                executePlacesSearch();
-            }, () => {
-                userLocation = new google.maps.LatLng(53.4808, -2.2426);
-                executePlacesSearch();
-            });
+        function toggleLiveOnly() {
+            liveOnly = !liveOnly;
+            document.getElementById('toggleLive').classList.toggle('active', liveOnly);
+            applyLiveFilter();
         }
 
-        async function executePlacesSearch() {
-            document.getElementById("results").innerHTML = "<p style='padding:20px;'>Searching...</p>";
-            
-            // Cleanup Listeners correctly
-            activeListeners.forEach(unsub => unsub());
-            activeListeners = [];
+        function applyLiveFilter() {
+            const cards = document.querySelectorAll('.place-card');
+            let visibleCount = 0;
+            cards.forEach(card => {
+                const isLive = card.getAttribute('data-live') === 'true';
+                if (liveOnly && !isLive) card.classList.add('hidden');
+                else { card.classList.remove('hidden'); visibleCount++; }
+            });
+            document.getElementById("counter").innerText = `Showing ${visibleCount} results.`;
+        }
 
-            try {
-                if (!placesLibrary) {
-                    const { Place } = await google.maps.importLibrary("places");
-                    placesLibrary = Place;
-                }
-                
-                const config = SERVICE_MAP[serviceType];
-                const { places } = await placesLibrary.searchNearby({
-                    fields: ["displayName", "location", "id", "photos", "shortFormattedAddress"],
-                    locationRestriction: { center: userLocation, radius: 5000 },
-                    includedPrimaryTypes: [config.type],
-                    maxResultCount: 20
+        // Initialize Location Search (No Map)
+        function initMap() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    userLocation = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+                    executePlacesSearch();
+                }, () => {
+                    // Default fallback (Manchester)
+                    userLocation = new google.maps.LatLng(53.4808, -2.2426);
+                    executePlacesSearch();
                 });
-
-                currentPlaces = places || [];
-                renderList(currentPlaces);
-            } catch (error) { 
-                console.error("Search Error:", error);
-                document.getElementById("results").innerHTML = "<p style='padding:20px;'>Error fetching results.</p>";
+            } else {
+                userLocation = new google.maps.LatLng(53.4808, -2.2426);
+                executePlacesSearch();
             }
         }
 
-        function renderList(places) {
+        async function executePlacesSearch() {
+            const { Place } = await google.maps.importLibrary("places");
+            activeListeners.forEach(unsub => unsub());
+            activeListeners = [];
+            
+            const config = SERVICE_MAP[serviceType];
+            const request = {
+                fields: ["displayName", "location", "id", "photos", "shortFormattedAddress"],
+                locationRestriction: { center: userLocation, radius: 4000 },
+                includedPrimaryTypes: [config.type],
+                maxResultCount: 20
+            };
+
+            try {
+                const { places } = await Place.searchNearby(request);
+                if (places && places.length > 0) {
+                    renderList(places);
+                } else {
+                    document.getElementById("results").innerHTML = "<p style='padding:20px;'>No results found.</p>";
+                    document.getElementById("counter").innerText = "0 results.";
+                }
+            } catch (error) { console.error("Places Search Error:", error); }
+        }
+
+        async function renderList(places) {
             const container = document.getElementById("results");
             container.innerHTML = "";
             
+            // Sort by distance
             places.forEach(p => {
                 p.calculatedDistance = google.maps.geometry.spherical.computeDistanceBetween(userLocation, p.location);
             });
@@ -190,84 +233,84 @@
 
             places.forEach((place, i) => {
                 const miles = (place.calculatedDistance * 0.000621371).toFixed(1);
-                let thumb = place.photos && place.photos.length > 0 ? place.photos[0].getURI({maxWidth: 200}) : 'https://via.placeholder.com/150';
+                const driveTime = Math.round((miles / 12) * 60) + 2; 
+                
+                let thumb = 'https://via.placeholder.com/150';
+                if (place.photos && place.photos.length > 0) {
+                    thumb = place.photos[0].getURI({maxWidth: 200, maxHeight: 200});
+                }
 
                 const card = document.createElement('div');
                 card.className = 'place-card';
                 card.id = `card-${i}`;
-                card.onclick = () => selectPlace(i);
+                card.setAttribute('data-live', 'false');
                 
+                // Native Maps URL (Free referral)
+                const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(place.displayName)}&destination_place_id=${place.id}`;
+
                 card.innerHTML = `
-                    <div class="card-top">
-                        <img src="${thumb}" class="thumb">
-                        <div style="flex:1">
-                            <strong style="font-size:0.95rem;">${place.displayName}</strong>
-                            <div class="info-tags"><span class="dist-tag">${miles} mi</span></div>
-                            <div id="status-${i}" class="q-badge q-offline">No Live Queue</div>
+                    <div onclick="selectPlace(${i})">
+                        <div class="card-top">
+                            <img src="${thumb}" class="thumb">
+                            <div style="flex:1">
+                                <strong style="font-size:0.95rem;">${place.displayName}</strong>
+                                <div class="info-tags">
+                                    <span class="dist-tag">${miles} mi</span>
+                                    <span class="time-tag">🚗 ${driveTime} min drive</span>
+                                </div>
+                                <span style="font-size:0.75rem; color:var(--text-muted);">${place.shortFormattedAddress || "Address nearby"}</span>
+                                <div id="status-${i}" class="q-badge q-offline">No Live Queue</div>
+                                <div id="est-${i}" class="est-box"></div>
+                            </div>
                         </div>
+                    </div>
+                    <div class="action-row" id="actions-${i}">
+                         <a href="${mapsUrl}" target="_blank" class="btn btn-sec">Directions</a>
+                         <button onclick="window.location.href='provider-signup.html'" class="btn btn-reg">BUSINESS OWNER?<br>REGISTER FREE</button>
                     </div>
                 `;
                 container.appendChild(card);
 
+                // Keep Firebase Real-time listeners active
                 const unsub = db.collection('providers').where('googlePlaceId', '==', place.id).onSnapshot(snap => {
                     if (!snap.empty) {
                         const d = snap.docs[0].data();
-                        place.liveData = { ...d, id: snap.docs[0].id };
+                        const providerId = snap.docs[0].id;
                         card.setAttribute('data-live', 'true');
-                        const st = document.getElementById(`status-${i}`);
-                        if(st) {
-                            st.className = "q-badge q-online";
-                            st.innerText = `LIVE: ${d.peopleInLine || 0} in line`;
+                        const statusDiv = document.getElementById(`status-${i}`);
+                        const estDiv = document.getElementById(`est-${i}`);
+                        const actionDiv = document.getElementById(`actions-${i}`);
+
+                        if(statusDiv) {
+                            statusDiv.className = "q-badge q-online";
+                            statusDiv.innerText = `LIVE: ${d.peopleInLine || 0} in line`;
                         }
+                        
+                        if (estDiv && d.currentWaitMins > 0) {
+                            const timeStr = new Date(Date.now() + d.currentWaitMins * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                            estDiv.innerHTML = `⌛ Wait: <b>~${d.currentWaitMins}m</b> • Service at <b>${timeStr}</b>`;
+                        }
+
+                        if(actionDiv) {
+                            let whatsappHtml = d.phone ? `<a href="https://wa.me/${d.phone.toString().replace(/\D/g, '')}" target="_blank" class="btn btn-whatsapp"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"> Chat</a>` : "";
+                            actionDiv.innerHTML = `
+                                <a href="${mapsUrl}" target="_blank" class="btn btn-sec">Directions</a>
+                                ${whatsappHtml}
+                                <button onclick="window.location.href='join-queue.html?id=${providerId}'" class="btn btn-join">JOIN QUEUE</button>
+                            `;
+                        }
+                        if (liveOnly) applyLiveFilter();
                     }
                 });
                 activeListeners.push(unsub);
             });
-            document.getElementById("counter").innerText = `Found ${places.length} results.`;
+            document.getElementById("counter").innerText = `Found ${places.length} results nearby.`;
         }
 
         function selectPlace(index) {
-            const place = currentPlaces[index];
             document.querySelectorAll('.place-card').forEach(c => c.classList.remove('active'));
-            document.getElementById(`card-${index}`).classList.add('active');
-
-            const panel = document.getElementById('detailPanel');
-            let mainPhoto = place.photos && place.photos.length > 0 ? place.photos[0].getURI({maxWidth: 800}) : 'https://via.placeholder.com/600x400';
-            const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(place.displayName)}&destination_place_id=${place.id}`;
-
-            let liveSection = `
-                <div class="q-badge q-offline" style="margin-bottom:15px;">Live Queueing Unavailable</div>
-                <button onclick="window.location.href='provider-signup.html'" class="btn btn-reg">REGISTER BUSINESS FREE</button>
-            `;
-
-            if (place.liveData) {
-                liveSection = `
-                    <div class="q-badge q-online" style="font-size:1rem; padding:10px 20px; margin-bottom:15px;">
-                        ${place.liveData.peopleInLine || 0} People Waiting
-                    </div>
-                    <button onclick="window.location.href='join-queue.html?id=${place.liveData.id}'" class="btn btn-join" style="font-size:1.1rem; padding:15px;">JOIN LIVE QUEUE</button>
-                `;
-            }
-
-            panel.innerHTML = `
-                <div style="width:100%; max-width:480px; background:white; border-radius:20px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.1); text-align:left;">
-                    <img src="${mainPhoto}" style="width:100%; height:280px; object-fit:cover;">
-                    <div style="padding:25px;">
-                        <h2 style="margin:0 0 5px 0; font-size:1.5rem;">${place.displayName}</h2>
-                        <p style="color:var(--text-muted); margin-bottom:20px; font-size:0.9rem;">${place.shortFormattedAddress}</p>
-                        ${liveSection}
-                        <a href="${mapsUrl}" target="_blank" class="btn btn-sec" style="margin-top:15px;">Get Directions</a>
-                    </div>
-                </div>
-            `;
-        }
-
-        function toggleLiveOnly() {
-            liveOnly = !liveOnly;
-            document.getElementById('toggleLive').classList.toggle('active', liveOnly);
-            document.querySelectorAll('.place-card').forEach(card => {
-                card.style.display = (liveOnly && card.getAttribute('data-live') !== 'true') ? 'none' : 'block';
-            });
+            const card = document.getElementById(`card-${index}`);
+            if(card) card.classList.add('active');
         }
     </script>
     <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAJFGE5OFfn-OhDNJ_rWO5oi2d2CHl2fXE&loading=async&libraries=places,geometry&callback=initMap"></script>
