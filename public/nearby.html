@@ -124,8 +124,8 @@
         let liveOnly = false;
         let activeListeners = [];
         let userLocation;
-        let currentPlaces = []; // To keep data accessible for click
-        let placesLib = null; // To prevent reloading hang
+        let currentPlaces = []; 
+        let Place = null; // Global reference for the Library
 
         const SERVICE_MAP = {
             salon: { type: "hair_care", label: "Salons & Barbers" },
@@ -169,24 +169,25 @@
             document.getElementById("counter").innerText = `Showing ${visibleCount} results.`;
         }
 
-        function initMap() {
+        async function initMap() {
+            // Import the library ONCE at startup to prevent desktop hangs
+            const lib = await google.maps.importLibrary("places");
+            Place = lib.Place;
+
             navigator.geolocation.getCurrentPosition((pos) => {
                 userLocation = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
                 executePlacesSearch();
             }, () => {
-                userLocation = new google.maps.LatLng(53.4808, -2.2426);
+                userLocation = new google.maps.LatLng(53.4808, -2.2426); // Fallback
                 executePlacesSearch();
             });
         }
 
         async function executePlacesSearch() {
+            if (!Place || !userLocation) return;
+            
             document.getElementById("results").innerHTML = "<p style='padding:20px;'>Searching...</p>";
             
-            if (!placesLib) {
-                const { Place } = await google.maps.importLibrary("places");
-                placesLib = Place;
-            }
-
             activeListeners.forEach(unsub => unsub());
             activeListeners = [];
             
@@ -199,7 +200,7 @@
             };
 
             try {
-                const { places } = await placesLib.searchNearby(request);
+                const { places } = await Place.searchNearby(request);
                 if (places && places.length > 0) {
                     currentPlaces = places;
                     renderList(currentPlaces);
@@ -207,10 +208,13 @@
                     document.getElementById("results").innerHTML = "<p style='padding:20px;'>No results found.</p>";
                     document.getElementById("counter").innerText = "0 results.";
                 }
-            } catch (error) { console.error("Places Search Error:", error); }
+            } catch (error) { 
+                console.error("Places Search Error:", error); 
+                document.getElementById("results").innerHTML = "<p style='padding:20px; color:red;'>Search error. Please refresh.</p>";
+            }
         }
 
-        async function renderList(places) {
+        function renderList(places) {
             const container = document.getElementById("results");
             container.innerHTML = "";
             
@@ -233,7 +237,8 @@
                 card.id = `card-${i}`;
                 card.setAttribute('data-live', 'false');
                 
-                const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination_place_id=${place.id}`;
+                // Fixed URL template
+                const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.displayName)}&query_place_id=${place.id}`;
 
                 card.innerHTML = `
                     <div onclick="selectPlace(${i})">
@@ -262,7 +267,7 @@
                     if (!snap.empty) {
                         const d = snap.docs[0].data();
                         const providerId = snap.docs[0].id;
-                        place.liveData = { ...d, id: providerId }; // Save to place object
+                        place.liveData = { ...d, id: providerId }; 
                         card.setAttribute('data-live', 'true');
                         
                         const statusDiv = document.getElementById(`status-${i}`);
@@ -280,7 +285,7 @@
                         }
 
                         if(actionDiv) {
-                            let whatsappHtml = d.phone ? `<a href="https://wa.me/${d.phone.toString().replace(/\D/g, '')}" target="_blank" class="btn btn-whatsapp"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"> Chat</a>` : "";
+                            let whatsappHtml = d.phone ? `<a href="https://wa.me/${d.phone.toString().replace(/\D/g, '')}" target="_blank" class="btn btn-whatsapp"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" style="width:14px;"> Chat</a>` : "";
                             actionDiv.innerHTML = `
                                 <a href="${mapsUrl}" target="_blank" class="btn btn-sec">Directions</a>
                                 ${whatsappHtml}
@@ -299,10 +304,9 @@
             document.querySelectorAll('.place-card').forEach(c => c.classList.remove('active'));
             document.getElementById(`card-${index}`).classList.add('active');
 
-            // Update Desktop Panel
             const panel = document.getElementById('detailPanel');
             let mainPhoto = place.photos && place.photos.length > 0 ? place.photos[0].getURI({maxWidth: 800}) : 'https://via.placeholder.com/600x400';
-            const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination_place_id=${place.id}`;
+            const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.displayName)}&query_place_id=${place.id}`;
 
             let liveSection = `<div class="q-badge q-offline" style="margin-bottom:15px; font-size:1rem; padding:10px;">Queueing not enabled</div>`;
             if (place.liveData) {
@@ -310,7 +314,7 @@
                     <div class="q-badge q-online" style="font-size:1.1rem; padding:15px 25px; margin-bottom:15px;">
                         ${place.liveData.peopleInLine || 0} People Waiting
                     </div>
-                    <button onclick="window.location.href='join-queue.html?id=${place.liveData.id}'" class="btn btn-join" style="font-size:1rem; padding:15px;">JOIN LIVE QUEUE</button>
+                    <button onclick="window.location.href='join-queue.html?id=${place.liveData.id}'" class="btn btn-join" style="font-size:1rem; padding:15px; width:100%;">JOIN LIVE QUEUE</button>
                 `;
             }
 
@@ -321,7 +325,7 @@
                         <h2 style="margin:0 0 5px 0; font-size:1.5rem;">${place.displayName}</h2>
                         <p style="color:var(--text-muted); margin-bottom:20px; font-size:0.9rem;">${place.shortFormattedAddress}</p>
                         ${liveSection}
-                        <a href="${mapsUrl}" target="_blank" class="btn btn-sec" style="margin-top:15px;">Get Directions</a>
+                        <a href="${mapsUrl}" target="_blank" class="btn btn-sec" style="margin-top:15px; width:100%;">Get Directions</a>
                     </div>
                 </div>
             `;
