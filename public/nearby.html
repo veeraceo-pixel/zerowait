@@ -169,19 +169,35 @@
             document.getElementById("counter").innerText = `Showing ${visibleCount} results.`;
         }
 
-        async function initMap() {
-            // Import the library ONCE at startup to prevent desktop hangs
-            const lib = await google.maps.importLibrary("places");
-            Place = lib.Place;
+ async function initMap() {
+    try {
+        const lib = await google.maps.importLibrary("places");
+        Place = lib.Place;
 
-            navigator.geolocation.getCurrentPosition((pos) => {
+        // Set a 5-second timeout. If it takes longer, use the fallback.
+        const options = {
+            enableHighAccuracy: true,
+            timeout: 5000,
+            maximumAge: 0
+        };
+
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
                 userLocation = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
                 executePlacesSearch();
-            }, () => {
-                userLocation = new google.maps.LatLng(53.4808, -2.2426); // Fallback
+            },
+            (err) => {
+                console.warn(`Geolocation error (${err.code}): ${err.message}. Using fallback.`);
+                // Fallback to Manchester (or your preferred default city)
+                userLocation = new google.maps.LatLng(53.4808, -2.2426); 
                 executePlacesSearch();
-            });
-        }
+            },
+            options
+        );
+    } catch (e) {
+        console.error("Failed to load Places Library:", e);
+    }
+}
 
         async function executePlacesSearch() {
             if (!Place || !userLocation) return;
