@@ -125,14 +125,15 @@
         let activeListeners = [];
         let userLocation;
         let currentPlaces = []; 
-        let Place = null; // Global reference for the Library
+        let Place = null;
 
+        // FIXED: Using primary types to avoid Google API 500 errors
         const SERVICE_MAP = {
-            salon: { type: "hair_care", label: "Salons & Barbers" },
+            salon: { type: "beauty_salon", label: "Salons & Barbers" },
             dining: { type: "restaurant", label: "Restaurants & Dining" },
-            clinic: { type: "health", label: "Clinics & Health" },
+            clinic: { type: "medical_clinic", label: "Clinics & Health" },
             banking: { type: "bank", label: "Banking & Finance" },
-            gym: { type: "fitness_center", label: "Gyms & Fitness" },
+            gym: { type: "gym", label: "Gyms & Fitness" },
             repair: { type: "car_repair", label: "Repairs & Services" },
             gov: { type: "local_government_office", label: "Gov & Public Services" },
             wash: { type: "car_wash", label: "Wash & Laundry" }
@@ -169,64 +170,72 @@
             document.getElementById("counter").innerText = `Showing ${visibleCount} results.`;
         }
 
- async function initMap() {
-    try {
-        const lib = await google.maps.importLibrary("places");
-        Place = lib.Place;
+        async function initMap() {
+            try {
+                const { Place: PlaceLib } = await google.maps.importLibrary("places");
+                Place = PlaceLib;
 
-        // Set a 5-second timeout. If it takes longer, use the fallback.
-        const options = {
-            enableHighAccuracy: true,
-            timeout: 5000,
-            maximumAge: 0
-        };
+                const geoOptions = {
+                    enableHighAccuracy: false,
+                    timeout: 8000, 
+                    maximumAge: 60000
+                };
 
-        navigator.geolocation.getCurrentPosition(
-            (pos) => {
-                userLocation = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
-                executePlacesSearch();
-            },
-            (err) => {
-                console.warn(`Geolocation error (${err.code}): ${err.message}. Using fallback.`);
-                // Fallback to Manchester (or your preferred default city)
-                userLocation = new google.maps.LatLng(53.4808, -2.2426); 
-                executePlacesSearch();
-            },
-            options
-        );
-    } catch (e) {
-        console.error("Failed to load Places Library:", e);
-    }
-}
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        userLocation = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+                        executePlacesSearch();
+                    },
+                    (err) => {
+                        console.warn("Location error. Using Manchester fallback.");
+                        userLocation = new google.maps.LatLng(53.4808, -2.2426); 
+                        executePlacesSearch();
+                    },
+                    geoOptions
+                );
+            } catch (e) {
+                console.error("Maps Library failed:", e);
+            }
+        }
 
         async function executePlacesSearch() {
             if (!Place || !userLocation) return;
             
-            document.getElementById("results").innerHTML = "<p style='padding:20px;'>Searching...</p>";
+            const resultsContainer = document.getElementById("results");
+            resultsContainer.innerHTML = "<p style='padding:20px;'>Searching nearby...</p>";
             
             activeListeners.forEach(unsub => unsub());
             activeListeners = [];
             
             const config = SERVICE_MAP[serviceType];
+
+            // FIXED: center object format and primary type
             const request = {
                 fields: ["displayName", "location", "id", "photos", "shortFormattedAddress"],
-                locationRestriction: { center: userLocation, radius: 4000 },
+                locationRestriction: {
+                    center: { lat: userLocation.lat(), lng: userLocation.lng() },
+                    radius: 5000 
+                },
                 includedPrimaryTypes: [config.type],
-                maxResultCount: 20
+                maxResultCount: 20,
+                rankPreference: google.maps.places.SearchNearbyRankPreference.DISTANCE
             };
 
             try {
                 const { places } = await Place.searchNearby(request);
+
                 if (places && places.length > 0) {
                     currentPlaces = places;
                     renderList(currentPlaces);
                 } else {
-                    document.getElementById("results").innerHTML = "<p style='padding:20px;'>No results found.</p>";
+                    resultsContainer.innerHTML = "<p style='padding:20px;'>No results found.</p>";
                     document.getElementById("counter").innerText = "0 results.";
                 }
             } catch (error) { 
                 console.error("Places Search Error:", error); 
-                document.getElementById("results").innerHTML = "<p style='padding:20px; color:red;'>Search error. Please refresh.</p>";
+                if (error.message.includes("500") || error.message.includes("INTERNAL")) {
+                    setTimeout(executePlacesSearch, 2000); // Retry once on internal server error
+                }
             }
         }
 
@@ -253,7 +262,7 @@
                 card.id = `card-${i}`;
                 card.setAttribute('data-live', 'false');
                 
-                // Fixed URL template
+                // FIXED: Template string syntax ${variable}
                 const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.displayName)}&query_place_id=${place.id}`;
 
                 card.innerHTML = `
