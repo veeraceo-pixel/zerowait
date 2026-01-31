@@ -246,98 +246,110 @@
 <script src="firebase-config.js"></script>
 
 <script>
+// 1. FIXED AUTH LOGIC: Don't redirect if we are in the middle of signing up
 firebase.auth().onAuthStateChanged(user => {
-    // Hide the loader regardless of the result
     const loader = document.getElementById('initial-loader');
     if (loader) loader.style.display = 'none';
 
-    if (user) {
+    // Only redirect if a user is logged in AND we haven't just started Step 2
+    if (user && !createdUserId) {
         window.location.href = 'provider-dashboard.html';
     } else {
         document.querySelector('.auth-page-wrapper').style.display = 'flex';
     }
 });
 
-    const db = firebase.firestore();
-    const signupForm = document.getElementById('providerSignupForm');
-    const submitBtn = document.getElementById('submitBtn');
-    const mapsLinkInput = document.getElementById('googleMapsLink');
-    const step2Modal = document.getElementById('step2Modal');
-    const successModal = document.getElementById('successModal');
-    
-    let selectedPlace = null;
-    let createdUserId = null;
-    let detectedCurrency = '£'; 
+const db = firebase.firestore();
+const signupForm = document.getElementById('providerSignupForm');
+const submitBtn = document.getElementById('submitBtn');
+const mapsLinkInput = document.getElementById('googleMapsLink');
+const step2Modal = document.getElementById('step2Modal');
+const successModal = document.getElementById('successModal');
 
-    function getUniqueMapsId(url) {
-        try {
-            const decoded = decodeURIComponent(url);
-            const match = decoded.match(/cid=(\d+)/) || decoded.match(/!1s([^!]+)/);
-            if (match) return match[1];
-            return url.split('?')[0].replace(/\/$/, ""); 
-        } catch (e) { return url; }
+let selectedPlace = null;
+let createdUserId = null;
+let detectedCurrency = '£';
+
+// 2. TOGGLE OTHER CATEGORY LOGIC
+function toggleOtherCategory(value) {
+    const otherInput = document.getElementById('otherCategoryInput');
+    if (value === 'Other') {
+        otherInput.style.display = 'block';
+        otherInput.required = true;
+    } else {
+        otherInput.style.display = 'none';
+        otherInput.required = false;
+    }
+}
+
+function getUniqueMapsId(url) {
+    try {
+        const decoded = decodeURIComponent(url);
+        const match = decoded.match(/cid=(\d+)/) || decoded.match(/!1s([^!]+)/);
+        if (match) return match[1];
+        return url.split('?')[0].replace(/\/$/, "");
+    } catch (e) { return url; }
+}
+
+mapsLinkInput.addEventListener('input', async (e) => {
+    const url = e.target.value.trim();
+    if (!url.includes('http')) {
+        submitBtn.disabled = true;
+        document.getElementById('bizPreview').style.display = 'none';
+        return;
+    }
+    const uniqueId = getUniqueMapsId(url);
+    selectedPlace = { uniqueMapsId: uniqueId, mapsUrl: url, currencySymbol: detectedCurrency };
+    document.getElementById('bizPreview').style.display = 'block';
+    document.getElementById('selectedIdPreview').innerText = "ID: " + uniqueId;
+    submitBtn.disabled = false;
+});
+
+// 3. FIXED SIGNUP SUBMIT LOGIC
+signupForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    // Get correct category value
+    let category = document.getElementById('bizCategory').value;
+    if (category === 'Other') {
+        category = document.getElementById('otherCategoryInput').value.trim();
     }
 
-    mapsLinkInput.addEventListener('input', async (e) => {
-        const url = e.target.value.trim();
-        if (!url.includes('http') || (!url.includes('google') && !url.includes('goo.gl'))) {
-            submitBtn.disabled = true;
-            document.getElementById('bizPreview').style.display = 'none';
-            return;
-        }
+    submitBtn.disabled = true;
+    submitBtn.innerText = "Creating Account...";
 
-        const uniqueId = getUniqueMapsId(url);
-        
-        const dupCheck = await db.collection('providers').where('uniqueMapsId', '==', uniqueId).get();
-        if (!dupCheck.empty) {
-            alert("This business is already registered.");
-            mapsLinkInput.value = '';
-            submitBtn.disabled = true;
-            return;
-        }
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const bizName = document.getElementById('bizDisplayName').value;
+    const phone = document.getElementById('phone').value;
 
-        selectedPlace = { uniqueMapsId: uniqueId, mapsUrl: url, currencySymbol: detectedCurrency };
-        document.getElementById('bizPreview').style.display = 'block';
-        document.getElementById('selectedIdPreview').innerText = "ID: " + uniqueId;
+    try {
+        const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+        createdUserId = userCredential.user.uid; // Set this so Auth listener doesn't redirect
+
+        await db.collection('providers').doc(createdUserId).set({
+            ...selectedPlace,
+            businessName: bizName,
+            email: email,
+            phone: phone,
+            category: category,
+            role: 'provider',
+            isOpen: false,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // Hide signup card and show Step 2 Modal
+        document.querySelector('.auth-page-wrapper').style.display = 'none';
+        step2Modal.style.display = 'flex';
+        addNewRow(); 
+    } catch (error) {
+        alert(error.message);
         submitBtn.disabled = false;
-    });
+        submitBtn.innerText = "Continue to Service Setup";
+    }
+});
 
-    signupForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        submitBtn.disabled = true;
-        submitBtn.innerText = "Creating Account...";
-
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        const bizName = document.getElementById('bizDisplayName').value;
-        const phone = document.getElementById('phone').value;
-        const category = document.getElementById('bizCategory').value;
-
-        try {
-            const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
-            createdUserId = userCredential.user.uid;
-
-            await db.collection('providers').doc(createdUserId).set({
-                ...selectedPlace,
-                businessName: bizName,
-                email: email,
-                phone: phone,
-                category: category,
-                role: 'provider',
-                isOpen: false,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-
-            step2Modal.style.display = 'flex';
-            addNewRow(); 
-        } catch (error) {
-            alert(error.message);
-            submitBtn.disabled = false;
-            submitBtn.innerText = "Continue to Service Setup";
-        }
-    });
-
-    // UPDATED OCR LOGIC WITH VISUAL FEEDBACK
+// 4. OCR AND TABLE LOGIC (Keep as is, ensure addNewRow is available)
 async function performBatchOCR(event) {
     const files = event.target.files;
     const status = document.getElementById('ocrStatus');
@@ -348,8 +360,6 @@ async function performBatchOCR(event) {
     const visual = document.getElementById('ocrVisual');
 
     if (!files.length) return;
-    
-    // Show Loading UI
     progressContainer.style.display = 'block';
     btnSpinner.style.display = 'inline-block';
     btnText.innerText = "Scanning...";
@@ -360,24 +370,14 @@ async function performBatchOCR(event) {
             const file = files[i];
             status.innerText = `Reading ${file.name}...`;
 
-            // Initialize Tesseract Worker
-            const worker = await Tesseract.createWorker('eng', 1, {
-                logger: m => {
-                    if (m.status === 'recognizing text') {
-                        let progress = ((i + m.progress) / files.length) * 100;
-                        progressBar.style.width = progress + '%';
-                    }
-                }
-            });
-
+            const worker = await Tesseract.createWorker('eng', 1);
             const { data: { text } } = await worker.recognize(file);
-            console.log("Full OCR Output:", text); // Check Console (F12)
+            console.log("Full OCR Output:", text);
             
             const lines = text.split('\n');
             let foundAny = false;
 
             lines.forEach(line => {
-                // regex looks for numbers (price) and words (service name)
                 const priceMatch = line.match(/(\d+[\.,]\d{2})|(\b\d{1,3}\b)/);
                 let namePart = line.replace(/[0-9£$€\.,]/g, '').replace(/[^a-zA-Z\s]/g, '').trim();
                 
@@ -388,73 +388,64 @@ async function performBatchOCR(event) {
             });
 
             await worker.terminate();
-
-            if (!foundAny) {
-                alert("We read the text, but couldn't find clear Prices. Try a clearer photo or add manually.");
-            }
+            if (!foundAny) alert("Could not find clear prices in " + file.name);
         }
     } catch (err) {
         console.error("OCR Error:", err);
-        alert("OCR Failed to start. Check your internet or browser console.");
     } finally {
-        // Reset UI
-        progressBar.style.width = '100%';
-        status.innerText = "Complete!";
         btnSpinner.style.display = 'none';
         btnText.innerText = "+ Add More Photos";
+        status.innerText = "Complete!";
         visual.classList.remove('pulse');
-        setTimeout(() => { progressContainer.style.display = 'none'; }, 2000);
     }
 }
 
-    function addNewRow(name = '', price = '') {
-        const tbody = document.getElementById('servicesList');
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td><input type="text" class="form-control s-name" value="${name}" required placeholder="Service"></td>
-            <td><input type="number" class="form-control s-price" value="${price}" placeholder="0"></td>
-            <td><input type="number" class="form-control s-time" required min="1" placeholder="Mins"></td>
-            <td><button type="button" onclick="this.parentElement.parentElement.remove()" style="color:red; background:none; border:none; cursor:pointer; font-size:1.2rem;">×</button></td>
-        `;
-        tbody.appendChild(tr);
-    }
+function addNewRow(name = '', price = '') {
+    const tbody = document.getElementById('servicesList');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td><input type="text" class="form-control s-name" value="${name}" required placeholder="Service"></td>
+        <td><input type="number" class="form-control s-price" value="${price}" placeholder="0"></td>
+        <td><input type="number" class="form-control s-time" required min="1" placeholder="Mins"></td>
+        <td><button type="button" onclick="this.parentElement.parentElement.remove()" style="color:red; background:none; border:none; cursor:pointer; font-size:1.2rem;">×</button></td>
+    `;
+    tbody.appendChild(tr);
+}
 
-    async function saveAllServices() {
-        const rows = document.querySelectorAll('#servicesList tr');
-        const services = [];
-        rows.forEach(row => {
-            const name = row.querySelector('.s-name').value.trim();
-            const price = row.querySelector('.s-price').value.trim();
-            const time = row.querySelector('.s-time').value.trim();
-            if (name && time) {
-                services.push({ name, price: Number(price) || 0, duration: Number(time), currency: detectedCurrency });
-            }
-        });
-
-        if (services.length === 0) return alert("Please add at least one service.");
-
-        document.getElementById('finalBtn').disabled = true;
-        document.getElementById('loadingMsg').style.display = 'block';
-
-        try {
-            const batch = db.batch();
-            services.forEach(s => {
-                const ref = db.collection('providers').doc(createdUserId).collection('services').doc();
-                batch.set(ref, s);
-            });
-            await batch.commit();
-            step2Modal.style.display = 'none';
-            successModal.style.display = 'flex';
-        } catch (e) {
-            alert(e.message);
-            document.getElementById('finalBtn').disabled = false;
+async function saveAllServices() {
+    const rows = document.querySelectorAll('#servicesList tr');
+    const services = [];
+    rows.forEach(row => {
+        const name = row.querySelector('.s-name').value.trim();
+        const price = row.querySelector('.s-price').value.trim();
+        const time = row.querySelector('.s-time').value.trim();
+        if (name && time) {
+            services.push({ name, price: Number(price) || 0, duration: Number(time), currency: detectedCurrency });
         }
-    }
+    });
 
-    function clearAllRows() {
-        document.getElementById('servicesList').innerHTML = '';
-        addNewRow();
+    if (services.length === 0) return alert("Please add at least one service.");
+    document.getElementById('finalBtn').disabled = true;
+
+    try {
+        const batch = db.batch();
+        services.forEach(s => {
+            const ref = db.collection('providers').doc(createdUserId).collection('services').doc();
+            batch.set(ref, s);
+        });
+        await batch.commit();
+        step2Modal.style.display = 'none';
+        successModal.style.display = 'flex';
+    } catch (e) {
+        alert(e.message);
+        document.getElementById('finalBtn').disabled = false;
     }
+}
+
+function clearAllRows() {
+    document.getElementById('servicesList').innerHTML = '';
+    addNewRow();
+}    
 </script>
 </body>
 </html>
