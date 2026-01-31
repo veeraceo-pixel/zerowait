@@ -65,6 +65,25 @@
             border-color: var(--primary-dark);
         }
 
+        /* Loading & Progress Styles */
+        .spinner-icon {
+            width: 18px;
+            height: 18px;
+            border: 3px solid rgba(59, 130, 246, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .pulse { animation: pulse-animation 2s infinite; }
+        @keyframes pulse-animation {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
         /* Table Styling */
         .service-table-wrapper {
             max-height: 300px;
@@ -144,15 +163,25 @@
 <div id="step2Modal">
     <div class="modal-content" style="background:white; padding:2rem; border-radius:1rem; width:100%; max-width:600px;">
         <div style="text-align: center; margin-bottom: 1.5rem;">
-            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📸</div>
+            <div id="ocrVisual" style="font-size: 2.5rem; margin-bottom: 0.5rem;">📸</div>
             <h2 style="margin:0">Set Up Services</h2>
             <p style="color: var(--text-secondary); font-size: 0.85rem;">Upload a menu image to auto-fill your services.</p>
         </div>
 
         <div class="scan-box">
             <input type="file" id="menuUpload" accept="image/*" multiple style="display:none" onchange="performBatchOCR(event)">
-            <button type="button" class="btn-outline" onclick="document.getElementById('menuUpload').click()" style="cursor:pointer; padding: 10px 20px; border-radius: 6px; border: 1px solid var(--border); font-weight:600;">+ Upload Menu (Auto-Scan)</button>
-            <div id="ocrStatus" style="font-size:0.85rem; color:var(--primary); margin-top:15px; display:none; font-weight:700;">Scanning images...</div>
+            
+            <button type="button" id="scanBtn" class="btn-outline" onclick="document.getElementById('menuUpload').click()" style="cursor:pointer; padding: 10px 20px; border-radius: 6px; border: 1px solid var(--border); font-weight:600; display: flex; align-items: center; justify-content: center; margin: 0 auto; gap: 10px;">
+                <span id="btnSpinner" style="display:none;" class="spinner-icon"></span>
+                <span id="btnText">+ Upload Menu (Auto-Scan)</span>
+            </button>
+
+            <div id="progressContainer" style="display:none; margin-top: 15px;">
+                <div style="width: 100%; background: #e2e8f0; height: 8px; border-radius: 4px; overflow: hidden;">
+                    <div id="progressBar" style="width: 0%; background: var(--primary); height: 100%; transition: width 0.3s ease;"></div>
+                </div>
+                <div id="ocrStatus" style="font-size:0.75rem; color:var(--primary); margin-top:8px; font-weight:700;">Preparing...</div>
+            </div>
         </div>
 
         <div class="service-table-wrapper">
@@ -224,7 +253,6 @@
 
         const uniqueId = getUniqueMapsId(url);
         
-        // CHECK FOR DUPLICATES (Original Functionality)
         const dupCheck = await db.collection('providers').where('uniqueMapsId', '==', uniqueId).get();
         if (!dupCheck.empty) {
             alert("This business is already registered.");
@@ -274,16 +302,32 @@
         }
     });
 
-    // OCR Logic (Enhanced to catch non-decimal prices)
+    // UPDATED OCR LOGIC WITH VISUAL FEEDBACK
     async function performBatchOCR(event) {
         const files = event.target.files;
         const status = document.getElementById('ocrStatus');
+        const progressBar = document.getElementById('progressBar');
+        const progressContainer = document.getElementById('progressContainer');
+        const btnSpinner = document.getElementById('btnSpinner');
+        const btnText = document.getElementById('btnText');
+        const visual = document.getElementById('ocrVisual');
+
         if (!files.length) return;
         
-        status.style.display = 'block';
+        // Show Loading UI
+        progressContainer.style.display = 'block';
+        btnSpinner.style.display = 'inline-block';
+        btnText.innerText = "Scanning...";
+        visual.classList.add('pulse');
         
-        for (let file of files) {
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
             status.innerText = `Scanning ${file.name}...`;
+            
+            // Update progress bar
+            let percent = ((i) / files.length) * 100;
+            progressBar.style.width = percent + '%';
+
             try {
                 const { data: { text } } = await Tesseract.recognize(file, 'eng');
                 const lines = text.split('\n');
@@ -298,7 +342,15 @@
                 });
             } catch (err) { console.error(err); }
         }
+        
+        // Reset UI
+        progressBar.style.width = '100%';
         status.innerText = "Scanning complete!";
+        btnSpinner.style.display = 'none';
+        btnText.innerText = "+ Add More Photos";
+        visual.classList.remove('pulse');
+
+        setTimeout(() => { progressContainer.style.display = 'none'; }, 2000);
     }
 
     function addNewRow(name = '', price = '') {
