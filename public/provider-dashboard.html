@@ -1,111 +1,169 @@
-<header class="navbar">
-    <a href="index.html" class="logo">skipQs</a>
-    <a href="login.html" class="nav-link">Already a Partner? Log in</a>
-</header>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | skipQs Partner</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --sidebar-width: 260px;
+        }
+        body { background: #f8fafc; display: flex; min-height: 100vh; }
 
-<main class="auth-wrapper">
-    <div class="form-card" id="signupCard">
-        <div class="header-section">
-            <h1 style="margin:0; font-size: 1.75rem;">Register Business</h1>
-            <p style="color: var(--text-muted); margin-top: 0.5rem;">Step 1: Link your Google Business</p>
+        /* Sidebar Styling */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: #0f172a;
+            color: white;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+        }
+        .sidebar-nav { margin-top: 2rem; flex-grow: 1; }
+        .nav-item {
+            padding: 12px 16px;
+            color: #94a3b8;
+            text-decoration: none;
+            display: block;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            transition: all 0.2s;
+        }
+        .nav-item.active, .nav-item:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Main Content Styling */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex-grow: 1;
+            padding: 2rem;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .queue-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+        }
+
+        .queue-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-toggle {
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .status-open { background: #dcfce7; color: #166534; }
+        .status-closed { background: #fee2e2; color: #991b1b; }
+
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 1rem 1.5rem; background: #f8fafc; font-size: 0.8rem; color: #64748b; }
+        td { padding: 1rem 1.5rem; border-bottom: 1px solid #f1f5f9; }
+
+        .btn-action {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .btn-complete { background: var(--primary); color: white; }
+    </style>
+</head>
+<body>
+
+<aside class="sidebar">
+    <div class="logo" style="color: white; font-size: 1.5rem;">skipQs</div>
+    <nav class="sidebar-nav">
+        <a href="#" class="nav-item active">Live Queue</a>
+        <a href="services-manage.html" class="nav-item">Services</a>
+        <a href="analytics.html" class="nav-item">Analytics</a>
+        <a href="settings.html" class="nav-item">Business Profile</a>
+    </nav>
+    <button onclick="handleLogout()" class="nav-item" style="background:none; border:none; width:100%; text-align:left; cursor:pointer;">Logout</button>
+</aside>
+
+<main class="main-content">
+    <header class="dashboard-header">
+        <div>
+            <h1 id="welcomeName" style="margin:0;">Loading...</h1>
+            <p style="color: #64748b; margin: 0.2rem 0 0 0;">Manage your live bookings today.</p>
         </div>
+        <button id="shopStatusBtn" class="status-toggle status-closed" onclick="toggleShopStatus()">Shop is CLOSED</button>
+    </header>
 
-        <form id="providerSignupForm">
-            <div class="form-group">
-                <label class="form-label">Google Maps Business Link</label>
-                <input type="url" id="googleMapsLink" class="form-control" placeholder="Paste link (e.g. https://maps.app.goo.gl/...)" required>
-                <small style="color: var(--text-muted); font-size: 0.75rem;">Open your business on Maps > Share > Copy Link</small>
-                
-                <div id="bizPreview" class="selection-preview">
-                    <span id="selectedNamePreview" style="font-weight: 800; display: block;">Link Validated</span>
-                    <span id="selectedIdPreview" style="font-size: 0.75rem; color: var(--text-muted); word-break: break-all;"></span>
-                </div>
-            </div>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <small style="color:#64748b;">Waiting Now</small>
+            <h2 id="waitingCount" style="margin: 0.5rem 0 0 0;">0</h2>
+        </div>
+        <div class="stat-card">
+            <small style="color:#64748b;">Completed Today</small>
+            <h2 id="completedCount" style="margin: 0.5rem 0 0 0;">0</h2>
+        </div>
+        <div class="stat-card">
+            <small style="color:#64748b;">Estimated Wait</small>
+            <h2 id="estWaitTime" style="margin: 0.5rem 0 0 0;">0 mins</h2>
+        </div>
+    </div>
 
-            <div class="form-group">
-                <label class="form-label">Business Display Name</label>
-                <input type="text" id="bizDisplayName" class="form-control" placeholder="e.g. Central Barbershop" required>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">Business Category</label>
-                <select id="bizCategory" class="form-control" required>
-                    <option value="" disabled selected>Select your industry</option>
-                    <option value="Barber">Barber</option>
-                    <option value="Salon">Salon</option>
-                    <option value="Clinic">Clinic</option>
-                    <option value="Restaurant">Restaurant</option>
-                    <option value="Other">Other</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">WhatsApp Number</label>
-                <input type="tel" id="phone" class="form-control" placeholder="e.g. 441612220420" required>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">Simultaneous Capacity</label>
-                <input type="number" id="bizCapacity" class="form-control" value="1" min="1" required>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">Work Email</label>
-                <input type="email" id="email" class="form-control" placeholder="admin@business.com" required>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">Password</label>
-                <input type="password" id="password" class="form-control" placeholder="Min 6 characters" required minlength="6">
-            </div>
-
-            <button type="submit" id="submitBtn" class="btn-submit" disabled>Continue to Service Setup</button>
-        </form>
+    <div class="queue-container">
+        <div class="queue-header">
+            <h3 style="margin:0;">Current Queue</h3>
+            <span id="liveIndicator" style="color: #10b981; font-size: 0.8rem;">● Live Updates On</span>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Customer</th>
+                    <th>Service</th>
+                    <th>Booked At</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="queueList">
+                <tr>
+                    <td colspan="5" style="text-align:center; color:#94a3b8;">No customers in queue</td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 </main>
-
-<div id="step2Modal">
-    <div class="modal-content">
-        <div style="text-align: center; margin-bottom: 1rem;">
-            <div style="font-size: 2rem; margin-bottom: 0.5rem;">📸</div>
-            <h2 style="margin:0">Set Up Services</h2>
-            <p style="color: var(--text-muted); font-size: 0.85rem;">Upload your menu or add services manually.</p>
-        </div>
-        <div class="scan-container">
-            <input type="file" id="menuUpload" accept="image/*" multiple style="display:none" onchange="performBatchOCR(event)">
-            <button type="button" onclick="document.getElementById('menuUpload').click()" style="background:none; border:none; color:var(--primary); font-weight:bold; cursor:pointer;">+ Upload Menu (Auto-Scan)</button>
-            <div id="ocrStatus" style="font-size:0.7rem; color:var(--primary); margin-top:5px; display:none;">Scanning images...</div>
-        </div>
-        <div class="service-table-wrapper">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Service Name</th>
-                        <th style="width:60px;">Price</th>
-                        <th style="width:60px;">Mins</th>
-                        <th style="width:30px;"></th>
-                    </tr>
-                </thead>
-                <tbody id="servicesList"></tbody>
-            </table>
-        </div>
-        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-            <button type="button" onclick="addNewRow()" style="background:none; border:none; color:var(--primary); font-size:0.8rem; font-weight:bold; cursor:pointer;">+ Add Row Manually</button>
-            <button type="button" onclick="clearAllRows()" style="background:none; border:none; color:#ef4444; font-size:0.8rem; cursor:pointer;">Clear All</button>
-        </div>
-        <button type="button" onclick="saveAllServices()" id="finalBtn" class="btn-submit">Complete Registration</button>
-        <p id="loadingMsg" style="display:none; text-align:center; font-size:0.8rem; color:var(--primary);">Processing...</p>
-    </div>
-</div>
-
-<div id="successModal">
-    <div class="modal-content" style="padding: 3rem 2rem;">
-        <div style="width: 80px; height: 80px; background: #dcfce7; color: #166534; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 3rem; margin: 0 auto 1.5rem;">✅</div>
-        <h1 style="margin: 0 0 0.5rem 0; font-weight: 800;">All Set!</h1>
-        <p style="color: var(--text-muted); margin-bottom: 2rem; line-height: 1.5;">Your business is now registered.</p>
-        <button class="btn-submit" onclick="window.location.href='login.html'">Go to Dashboard</button>
-    </div>
-</div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -114,163 +172,103 @@
 
 <script>
     const db = firebase.firestore();
-    const signupForm = document.getElementById('providerSignupForm');
-    const submitBtn = document.getElementById('submitBtn');
-    const mapsLinkInput = document.getElementById('googleMapsLink');
-    const step2Modal = document.getElementById('step2Modal');
-    const successModal = document.getElementById('successModal');
-    
-    let selectedPlace = null;
-    let createdUserId = null;
-    let detectedCurrency = '£'; // Default currency
+    let currentUser = null;
 
-    // 1. Helper to extract Unique identifier from any Google Maps URL
-    function getUniqueMapsId(url) {
-        try {
-            const decoded = decodeURIComponent(url);
-            // Extracts CID or PlaceID patterns commonly found in Google URLs
-            const match = decoded.match(/cid=(\d+)/) || decoded.match(/!1s([^!]+)/);
-            if (match) return match[1];
-            return url.split('?')[0].replace(/\/$/, ""); 
-        } catch (e) { return url; }
+    // 1. Auth Check
+    firebase.auth().onAuthStateChanged(user => {
+        if (user) {
+            currentUser = user;
+            loadBusinessData();
+            initQueueListener();
+        } else {
+            window.location.href = 'login.html';
+        }
+    });
+
+    // 2. Load Business Name & Status
+    async function loadBusinessData() {
+        const doc = await db.collection('providers').doc(currentUser.uid).get();
+        if (doc.exists) {
+            const data = doc.data();
+            document.getElementById('welcomeName').innerText = data.businessName;
+            updateStatusUI(data.isOpen);
+        }
     }
 
-    // 2. Validate Link and Check Duplicates
-    mapsLinkInput.addEventListener('input', async (e) => {
-        const url = e.target.value.trim();
-        if (!url.includes('google.com/maps') && !url.includes('goo.gl/maps')) {
-            submitBtn.disabled = true;
-            document.getElementById('bizPreview').style.display = 'none';
-            return;
+    function updateStatusUI(isOpen) {
+        const btn = document.getElementById('shopStatusBtn');
+        if (isOpen) {
+            btn.innerText = "Shop is OPEN";
+            btn.className = "status-toggle status-open";
+        } else {
+            btn.innerText = "Shop is CLOSED";
+            btn.className = "status-toggle status-closed";
         }
+    }
 
-        const uniqueId = getUniqueMapsId(url);
+    // 3. Toggle Open/Closed Status
+    async function toggleShopStatus() {
+        const btn = document.getElementById('shopStatusBtn');
+        const newStatus = btn.classList.contains('status-closed');
         
-        // Query Firestore to see if this Unique ID exists
-        const duplicateCheck = await db.collection('providers')
-            .where('uniqueMapsId', '==', uniqueId).get();
-
-        if (!duplicateCheck.empty) {
-            alert("This business is already registered on skipQs.");
-            mapsLinkInput.value = '';
-            submitBtn.disabled = true;
-            return;
-        }
-
-        selectedPlace = {
-            uniqueMapsId: uniqueId,
-            mapsUrl: url,
-            currencySymbol: detectedCurrency
-        };
-
-        document.getElementById('bizPreview').style.display = 'block';
-        document.getElementById('selectedIdPreview').innerText = "Location ID: " + uniqueId;
-        submitBtn.disabled = false;
-    });
-
-    // 3. Step 1: Create Account
-    signupForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        if (!selectedPlace) return;
-
-        submitBtn.disabled = true;
-        submitBtn.innerText = "Creating Account...";
-
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        const phone = document.getElementById('phone').value;
-        const bizName = document.getElementById('bizDisplayName').value;
-        const category = document.getElementById('bizCategory').value;
-        const capacity = Number(document.getElementById('bizCapacity').value) || 1;
-
         try {
-            const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
-            createdUserId = userCredential.user.uid;
-
-            await db.collection('providers').doc(createdUserId).set({
-                ...selectedPlace,
-                businessName: bizName,
-                category,
-                capacity,
-                email, 
-                phone, 
-                role: 'provider', 
-                isOpen: false,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            await db.collection('providers').doc(currentUser.uid).update({
+                isOpen: newStatus
             });
+            updateStatusUI(newStatus);
+        } catch (e) { alert("Error updating status"); }
+    }
 
-            step2Modal.style.display = 'flex';
-            addNewRow(); 
-        } catch (error) {
-            alert(error.message);
-            submitBtn.disabled = false;
-            submitBtn.innerText = "Continue to Service Setup";
-        }
-    });
+    // 4. Live Queue Listener
+    function initQueueListener() {
+        db.collection('bookings')
+            .where('providerId', '==', currentUser.uid)
+            .where('status', '==', 'waiting')
+            .orderBy('timestamp', 'asc')
+            .onSnapshot(snapshot => {
+                const tbody = document.getElementById('queueList');
+                tbody.innerHTML = '';
+                
+                document.getElementById('waitingCount').innerText = snapshot.size;
 
-    // OCR and Service Logic (Kept from your original)
-    async function performBatchOCR(event) {
-        const files = event.target.files;
-        const status = document.getElementById('ocrStatus');
-        if (!files.length) return;
-        status.style.display = 'block';
-        for (let file of files) {
-            status.innerText = `Scanning ${file.name}...`;
-            const { data: { text } } = await Tesseract.recognize(file, 'eng');
-            text.split('\n').forEach(line => {
-                const priceMatch = line.match(/(\d+[\.,]\d{2})|(\d{2,})/);
-                let namePart = line.replace(/[0-9£$€\.,]/g, '').trim();
-                if (priceMatch && namePart.length > 3) {
-                    addNewRow(namePart, priceMatch[0].replace(',', '.'));
+                if (snapshot.empty) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No customers waiting</td></tr>';
+                    return;
                 }
+
+                snapshot.forEach(doc => {
+                    const b = doc.data();
+                    const time = b.timestamp?.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td style="font-weight:bold;">${b.customerName}</td>
+                        <td>${b.serviceName}</td>
+                        <td>${time || 'Just now'}</td>
+                        <td><span style="background:#fef3c7; color:#92400e; padding:4px 8px; border-radius:4px; font-size:0.75rem;">Waiting</span></td>
+                        <td>
+                            <button onclick="completeBooking('${doc.id}')" class="btn-action btn-complete">Complete</button>
+                            <button onclick="cancelBooking('${doc.id}')" style="background:none; border:none; color:red; cursor:pointer; margin-left:10px;">×</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
             });
-        }
-        status.innerText = "Scanning complete!";
     }
 
-    function addNewRow(name = '', price = '') {
-        const tbody = document.getElementById('servicesList');
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td><input type="text" class="form-control s-name" value="${name}" required placeholder="Service name"></td>
-            <td><input type="number" class="form-control s-price" value="${price}" placeholder="0"></td>
-            <td><input type="number" class="form-control s-time" required min="1" placeholder="Mins" style="border:2px solid var(--primary); background:#f0f7ff;"></td>
-            <td><button type="button" onclick="this.parentElement.parentElement.remove()" style="color:red; background:none; border:none; cursor:pointer; font-size:1.2rem;">&times;</button></td>
-        `;
-        tbody.appendChild(tr);
+    async function completeBooking(id) {
+        await db.collection('bookings').doc(id).update({ status: 'completed' });
     }
 
-    async function saveAllServices() {
-        const rows = document.querySelectorAll('#servicesList tr');
-        const services = [];
-        rows.forEach(row => {
-            const name = row.querySelector('.s-name').value.trim();
-            const price = row.querySelector('.s-price').value.trim();
-            const time = row.querySelector('.s-time').value.trim();
-            if (name && time) {
-                services.push({ name, price: Number(price) || 0, duration: Number(time), currency: detectedCurrency });
-            }
-        });
-
-        if (services.length === 0) return alert("Add at least one service.");
-
-        const finalBtn = document.getElementById('finalBtn');
-        finalBtn.disabled = true;
-        document.getElementById('loadingMsg').style.display = 'block';
-
-        try {
-            const batch = db.batch();
-            services.forEach(s => {
-                const ref = db.collection('providers').doc(createdUserId).collection('services').doc();
-                batch.set(ref, s);
-            });
-            await batch.commit();
-            await firebase.auth().currentUser.sendEmailVerification();
-            step2Modal.style.display = 'none';
-            successModal.style.display = 'flex';
-        } catch (e) {
-            alert(e.message);
-            finalBtn.disabled = false;
+    async function cancelBooking(id) {
+        if(confirm("Cancel this booking?")) {
+            await db.collection('bookings').doc(id).update({ status: 'cancelled' });
         }
+    }
+
+    function handleLogout() {
+        firebase.auth().signOut();
     }
 </script>
+</body>
+</html>
