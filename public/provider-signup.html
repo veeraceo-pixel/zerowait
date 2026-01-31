@@ -10,23 +10,22 @@
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     
     <style>
-.auth-page-wrapper {
-    display: none; /* Changed from flex to none */
-    justify-content: center;
-    align-items: center;
-    min-height: calc(100vh - 80px);
-    background-color: var(--bg-light);
-    padding: 20px;
-}
-        /* A simple centered spinner for the initial load */
-#initial-loader {
-    position: fixed;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    font-family: sans-serif;
-    color: var(--primary);
-    font-weight: bold;
-}
+        .auth-page-wrapper {
+            display: none; 
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - 80px);
+            background-color: var(--bg-light);
+            padding: 20px;
+        }
+        #initial-loader {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: sans-serif;
+            color: var(--primary);
+            font-weight: bold;
+        }
 
         #step2Modal, #successModal {
             display: none;
@@ -69,12 +68,6 @@
             transition: all 0.3s ease;
         }
 
-        .scan-box:hover {
-            background: #e0e7ff;
-            border-color: var(--primary-dark);
-        }
-
-        /* Loading & Progress Styles */
         .spinner-icon {
             width: 18px;
             height: 18px;
@@ -93,7 +86,6 @@
             100% { transform: scale(1); opacity: 1; }
         }
 
-        /* Table Styling */
         .service-table-wrapper {
             max-height: 300px;
             overflow-y: auto;
@@ -106,7 +98,6 @@
         th { background: #f8fafc; padding: 10px; text-align: left; font-size: 0.75rem; color: var(--text-secondary); position: sticky; top: 0; }
         td { padding: 8px; border-bottom: 1px solid var(--border); }
 
-        /* ADD THE NEW CODE BELOW THIS LINE */
         #ocrStatus {
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -118,7 +109,6 @@
             50% { opacity: 0.5; }
             100% { opacity: 1; }
         }
-        
     </style>
 </head>
 <body>
@@ -153,13 +143,16 @@
 
                 <div class="form-group">
                     <label class="form-label">Category</label>
-                    <select id="bizCategory" class="form-control" required>
+                    <select id="bizCategory" class="form-control" required onchange="toggleOtherCategory(this.value)">
                         <option value="" disabled selected>Select industry</option>
                         <option value="Barber">Barber</option>
                         <option value="Salon">Salon</option>
                         <option value="Clinic">Clinic</option>
                         <option value="Restaurant">Restaurant</option>
+                        <option value="Repairs">Repairs</option>
+                        <option value="Other">Other (Please specify)</option>
                     </select>
+                    <input type="text" id="otherCategoryInput" class="form-control" style="display:none; margin-top: 10px;" placeholder="Enter business type (e.g. Mobile Repair)">
                 </div>
 
                 <div class="form-group">
@@ -246,18 +239,10 @@
 <script src="firebase-config.js"></script>
 
 <script>
-// 1. FIXED AUTH LOGIC: Don't redirect if we are in the middle of signing up
-firebase.auth().onAuthStateChanged(user => {
-    const loader = document.getElementById('initial-loader');
-    if (loader) loader.style.display = 'none';
-
-    // Only redirect if a user is logged in AND we haven't just started Step 2
-    if (user && !createdUserId) {
-        window.location.href = 'provider-dashboard.html';
-    } else {
-        document.querySelector('.auth-page-wrapper').style.display = 'flex';
-    }
-});
+let createdUserId = null;
+let isCompletingSignup = false; // Prevents the Auth redirect during Step 2
+let selectedPlace = null;
+let detectedCurrency = '£';
 
 const db = firebase.firestore();
 const signupForm = document.getElementById('providerSignupForm');
@@ -266,11 +251,19 @@ const mapsLinkInput = document.getElementById('googleMapsLink');
 const step2Modal = document.getElementById('step2Modal');
 const successModal = document.getElementById('successModal');
 
-let selectedPlace = null;
-let createdUserId = null;
-let detectedCurrency = '£';
+// 1. Auth State Management
+firebase.auth().onAuthStateChanged(user => {
+    const loader = document.getElementById('initial-loader');
+    if (loader) loader.style.display = 'none';
 
-// 2. TOGGLE OTHER CATEGORY LOGIC
+    if (user && !isCompletingSignup) {
+        window.location.href = 'provider-dashboard.html';
+    } else {
+        document.querySelector('.auth-page-wrapper').style.display = 'flex';
+    }
+});
+
+// 2. Form UI Logic
 function toggleOtherCategory(value) {
     const otherInput = document.getElementById('otherCategoryInput');
     if (value === 'Other') {
@@ -305,11 +298,11 @@ mapsLinkInput.addEventListener('input', async (e) => {
     submitBtn.disabled = false;
 });
 
-// 3. FIXED SIGNUP SUBMIT LOGIC
+// 3. Signup Submission (Step 1 -> Step 2)
 signupForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
-    // Get correct category value
+    isCompletingSignup = true; // Lock the page so we don't redirect to dashboard yet
+
     let category = document.getElementById('bizCategory').value;
     if (category === 'Other') {
         category = document.getElementById('otherCategoryInput').value.trim();
@@ -325,7 +318,7 @@ signupForm.addEventListener('submit', async (e) => {
 
     try {
         const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
-        createdUserId = userCredential.user.uid; // Set this so Auth listener doesn't redirect
+        createdUserId = userCredential.user.uid;
 
         await db.collection('providers').doc(createdUserId).set({
             ...selectedPlace,
@@ -338,18 +331,21 @@ signupForm.addEventListener('submit', async (e) => {
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        // Hide signup card and show Step 2 Modal
+        // Show Modal
         document.querySelector('.auth-page-wrapper').style.display = 'none';
         step2Modal.style.display = 'flex';
-        addNewRow(); 
+        
+        // Populate initial rows
+        clearAllRows(); 
     } catch (error) {
+        isCompletingSignup = false;
         alert(error.message);
         submitBtn.disabled = false;
         submitBtn.innerText = "Continue to Service Setup";
     }
 });
 
-// 4. OCR AND TABLE LOGIC (Keep as is, ensure addNewRow is available)
+// 4. OCR Processing
 async function performBatchOCR(event) {
     const files = event.target.files;
     const status = document.getElementById('ocrStatus');
@@ -372,7 +368,6 @@ async function performBatchOCR(event) {
 
             const worker = await Tesseract.createWorker('eng', 1);
             const { data: { text } } = await worker.recognize(file);
-            console.log("Full OCR Output:", text);
             
             const lines = text.split('\n');
             let foundAny = false;
@@ -388,7 +383,6 @@ async function performBatchOCR(event) {
             });
 
             await worker.terminate();
-            if (!foundAny) alert("Could not find clear prices in " + file.name);
         }
     } catch (err) {
         console.error("OCR Error:", err);
@@ -397,6 +391,7 @@ async function performBatchOCR(event) {
         btnText.innerText = "+ Add More Photos";
         status.innerText = "Complete!";
         visual.classList.remove('pulse');
+        setTimeout(() => progressContainer.style.display = 'none', 2000);
     }
 }
 
@@ -404,12 +399,17 @@ function addNewRow(name = '', price = '') {
     const tbody = document.getElementById('servicesList');
     const tr = document.createElement('tr');
     tr.innerHTML = `
-        <td><input type="text" class="form-control s-name" value="${name}" required placeholder="Service"></td>
+        <td><input type="text" class="form-control s-name" value="${name}" required placeholder="e.g. Screen Replacement"></td>
         <td><input type="number" class="form-control s-price" value="${price}" placeholder="0"></td>
-        <td><input type="number" class="form-control s-time" required min="1" placeholder="Mins"></td>
+        <td><input type="number" class="form-control s-time" required min="1" value="30" placeholder="Mins"></td>
         <td><button type="button" onclick="this.parentElement.parentElement.remove()" style="color:red; background:none; border:none; cursor:pointer; font-size:1.2rem;">×</button></td>
     `;
     tbody.appendChild(tr);
+}
+
+function clearAllRows() {
+    document.getElementById('servicesList').innerHTML = '';
+    addNewRow();
 }
 
 async function saveAllServices() {
@@ -434,6 +434,7 @@ async function saveAllServices() {
             batch.set(ref, s);
         });
         await batch.commit();
+        isCompletingSignup = false; // Redirection allowed now
         step2Modal.style.display = 'none';
         successModal.style.display = 'flex';
     } catch (e) {
@@ -441,11 +442,6 @@ async function saveAllServices() {
         document.getElementById('finalBtn').disabled = false;
     }
 }
-
-function clearAllRows() {
-    document.getElementById('servicesList').innerHTML = '';
-    addNewRow();
-}    
 </script>
 </body>
 </html>
