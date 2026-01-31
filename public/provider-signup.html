@@ -8,6 +8,47 @@
     <link rel="stylesheet" href="style.css">
     
     <script src="https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js"></script>
+    <style>
+        /* This ensures the card is centered like the login page */
+        .auth-page-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - 80px);
+            background-color: var(--bg-light);
+            padding: 20px;
+        }
+
+        /* Initial state for modals: Hidden and centered */
+        #step2Modal, #successModal {
+            display: none; /* Hidden by default */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .form-card {
+            max-width: 500px;
+            width: 100%;
+        }
+
+        /* Prevents the preview from jumping around */
+        #bizPreview {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            background: #f0fdf4;
+            border-radius: 8px;
+            border: 1px solid #bbf7d0;
+        }
+    </style>
 </head>
 <body>
 
@@ -16,66 +57,68 @@
     <a href="login.html" class="nav-link">Already a Partner? Log in</a>
 </header>
 
-<main class="auth-wrapper">
-    <div class="form-card" id="signupCard">
-        <div class="header-section">
-            <h1 style="margin:0; font-size: 1.75rem;">Register Business</h1>
-            <p style="color: var(--text-muted); margin-top: 0.5rem;">Step 1: Link your Google Business</p>
-        </div>
+<div class="auth-page-wrapper">
+    <main class="auth-wrapper">
+        <div class="form-card" id="signupCard">
+            <div class="header-section">
+                <h1 style="margin:0; font-size: 1.75rem;">Register Business</h1>
+                <p style="color: var(--text-muted); margin-top: 0.5rem;">Step 1: Link your Google Business</p>
+            </div>
 
-        <form id="providerSignupForm">
-            <div class="form-group">
-                <label class="form-label">Google Maps Business Link</label>
-                <input type="url" id="googleMapsLink" class="form-control" placeholder="Paste link (e.g. https://maps.app.goo.gl/...)" required>
-                <small style="color: var(--text-muted); font-size: 0.75rem;">Open your business on Maps > Share > Copy Link</small>
-                
-                <div id="bizPreview" class="selection-preview">
-                    <span id="selectedNamePreview" style="font-weight: 800; display: block;">Link Validated</span>
-                    <span id="selectedIdPreview" style="font-size: 0.75rem; color: var(--text-muted); word-break: break-all;"></span>
+            <form id="providerSignupForm">
+                <div class="form-group">
+                    <label class="form-label">Google Maps Business Link</label>
+                    <input type="url" id="googleMapsLink" class="form-control" placeholder="Paste link (e.g. https://maps.app.goo.gl/...)" required>
+                    <small style="color: var(--text-muted); font-size: 0.75rem;">Open your business on Maps > Share > Copy Link</small>
+                    
+                    <div id="bizPreview" class="selection-preview">
+                        <span id="selectedNamePreview" style="font-weight: 800; display: block; color: #166534;">✓ Link Validated</span>
+                        <span id="selectedIdPreview" style="font-size: 0.75rem; color: var(--text-muted); word-break: break-all;"></span>
+                    </div>
                 </div>
-            </div>
 
-            <div class="form-group">
-                <label class="form-label">Business Display Name</label>
-                <input type="text" id="bizDisplayName" class="form-control" placeholder="e.g. Central Barbershop" required>
-            </div>
+                <div class="form-group">
+                    <label class="form-label">Business Display Name</label>
+                    <input type="text" id="bizDisplayName" class="form-control" placeholder="e.g. Central Barbershop" required>
+                </div>
 
-            <div class="form-group">
-                <label class="form-label">Business Category</label>
-                <select id="bizCategory" class="form-control" required>
-                    <option value="" disabled selected>Select your industry</option>
-                    <option value="Barber">Barber</option>
-                    <option value="Salon">Salon</option>
-                    <option value="Clinic">Clinic</option>
-                    <option value="Restaurant">Restaurant</option>
-                    <option value="Other">Other</option>
-                </select>
-            </div>
+                <div class="form-group">
+                    <label class="form-label">Business Category</label>
+                    <select id="bizCategory" class="form-control" required>
+                        <option value="" disabled selected>Select your industry</option>
+                        <option value="Barber">Barber</option>
+                        <option value="Salon">Salon</option>
+                        <option value="Clinic">Clinic</option>
+                        <option value="Restaurant">Restaurant</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
 
-            <div class="form-group">
-                <label class="form-label">WhatsApp Number</label>
-                <input type="tel" id="phone" class="form-control" placeholder="e.g. 441612220420" required>
-            </div>
+                <div class="form-group">
+                    <label class="form-label">WhatsApp Number</label>
+                    <input type="tel" id="phone" class="form-control" placeholder="e.g. 441612220420" required>
+                </div>
 
-            <div class="form-group">
-                <label class="form-label">Simultaneous Capacity</label>
-                <input type="number" id="bizCapacity" class="form-control" value="1" min="1" required>
-            </div>
+                <div class="form-group">
+                    <label class="form-label">Simultaneous Capacity</label>
+                    <input type="number" id="bizCapacity" class="form-control" value="1" min="1" required>
+                </div>
 
-            <div class="form-group">
-                <label class="form-label">Work Email</label>
-                <input type="email" id="email" class="form-control" placeholder="admin@business.com" required>
-            </div>
+                <div class="form-group">
+                    <label class="form-label">Work Email</label>
+                    <input type="email" id="email" class="form-control" placeholder="admin@business.com" required>
+                </div>
 
-            <div class="form-group">
-                <label class="form-label">Password</label>
-                <input type="password" id="password" class="form-control" placeholder="Min 6 characters" required minlength="6">
-            </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" id="password" class="form-control" placeholder="Min 6 characters" required minlength="6">
+                </div>
 
-            <button type="submit" id="submitBtn" class="btn-submit" disabled>Continue to Service Setup</button>
-        </form>
-    </div>
-</main>
+                <button type="submit" id="submitBtn" class="btn-submit" disabled>Continue to Service Setup</button>
+            </form>
+        </div>
+    </main>
+</div>
 
 <div id="step2Modal">
     <div class="modal-content">
@@ -114,8 +157,8 @@
 <div id="successModal">
     <div class="modal-content" style="padding: 3rem 2rem;">
         <div style="width: 80px; height: 80px; background: #dcfce7; color: #166534; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 3rem; margin: 0 auto 1.5rem;">✅</div>
-        <h1 style="margin: 0 0 0.5rem 0; font-weight: 800;">All Set!</h1>
-        <p style="color: var(--text-muted); margin-bottom: 2rem; line-height: 1.5;">Your business is now registered.</p>
+        <h1 style="margin: 0 0 0.5rem 0; font-weight: 800; text-align: center;">All Set!</h1>
+        <p style="color: var(--text-muted); margin-bottom: 2rem; line-height: 1.5; text-align: center;">Your business is now registered.</p>
         <button class="btn-submit" onclick="window.location.href='login.html'">Go to Dashboard</button>
     </div>
 </div>
@@ -135,20 +178,17 @@
     
     let selectedPlace = null;
     let createdUserId = null;
-    let detectedCurrency = '£'; // Default currency
+    let detectedCurrency = '£'; 
 
-    // 1. Helper to extract Unique identifier from any Google Maps URL
     function getUniqueMapsId(url) {
         try {
             const decoded = decodeURIComponent(url);
-            // Extracts CID or PlaceID patterns commonly found in Google URLs
             const match = decoded.match(/cid=(\d+)/) || decoded.match(/!1s([^!]+)/);
             if (match) return match[1];
             return url.split('?')[0].replace(/\/$/, ""); 
         } catch (e) { return url; }
     }
 
-    // 2. Validate Link and Check Duplicates
     mapsLinkInput.addEventListener('input', async (e) => {
         const url = e.target.value.trim();
         if (!url.includes('google.com/maps') && !url.includes('goo.gl/maps')) {
@@ -158,10 +198,7 @@
         }
 
         const uniqueId = getUniqueMapsId(url);
-        
-        // Query Firestore to see if this Unique ID exists
-        const duplicateCheck = await db.collection('providers')
-            .where('uniqueMapsId', '==', uniqueId).get();
+        const duplicateCheck = await db.collection('providers').where('uniqueMapsId', '==', uniqueId).get();
 
         if (!duplicateCheck.empty) {
             alert("This business is already registered on skipQs.");
@@ -170,18 +207,12 @@
             return;
         }
 
-        selectedPlace = {
-            uniqueMapsId: uniqueId,
-            mapsUrl: url,
-            currencySymbol: detectedCurrency
-        };
-
+        selectedPlace = { uniqueMapsId: uniqueId, mapsUrl: url, currencySymbol: detectedCurrency };
         document.getElementById('bizPreview').style.display = 'block';
         document.getElementById('selectedIdPreview').innerText = "Location ID: " + uniqueId;
         submitBtn.disabled = false;
     });
 
-    // 3. Step 1: Create Account
     signupForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         if (!selectedPlace) return;
@@ -212,7 +243,7 @@
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
 
-            step2Modal.style.display = 'flex';
+            step2Modal.style.display = 'flex'; // Triggers Step 2
             addNewRow(); 
         } catch (error) {
             alert(error.message);
@@ -221,7 +252,6 @@
         }
     });
 
-    // OCR and Service Logic (Kept from your original)
     async function performBatchOCR(event) {
         const files = event.target.files;
         const status = document.getElementById('ocrStatus');
@@ -248,7 +278,7 @@
             <td><input type="text" class="form-control s-name" value="${name}" required placeholder="Service name"></td>
             <td><input type="number" class="form-control s-price" value="${price}" placeholder="0"></td>
             <td><input type="number" class="form-control s-time" required min="1" placeholder="Mins" style="border:2px solid var(--primary); background:#f0f7ff;"></td>
-            <td><button type="button" onclick="this.parentElement.parentElement.remove()" style="color:red; background:none; border:none; cursor:pointer; font-size:1.2rem;">&times;</button></td>
+            <td><button type="button" onclick="this.parentElement.parentElement.remove()" style="color:red; background:none; border:none; cursor:pointer; font-size:1.2rem;">×</button></td>
         `;
         tbody.appendChild(tr);
     }
@@ -278,13 +308,17 @@
                 batch.set(ref, s);
             });
             await batch.commit();
-            await firebase.auth().currentUser.sendEmailVerification();
             step2Modal.style.display = 'none';
-            successModal.style.display = 'flex';
+            successModal.style.display = 'flex'; // Triggers Success
         } catch (e) {
             alert(e.message);
             finalBtn.disabled = false;
         }
+    }
+
+    function clearAllRows() {
+        document.getElementById('servicesList').innerHTML = '';
+        addNewRow();
     }
 </script>
 </body>
