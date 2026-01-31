@@ -59,28 +59,9 @@ body {
 .h4 { font-size: 1.5rem; }
 .h5 { font-size: 1.25rem; }
 .small { font-size: 0.875rem; }
-.uppercase { text-transform: uppercase; }
-.display-4 { font-size: 3.5rem; font-weight: 700; }
-
-/* Spacing */
-.mb-0 { margin-bottom: 0; }
-.mb-1 { margin-bottom: 0.25rem; }
-.mb-2 { margin-bottom: 0.5rem; }
-.mb-3 { margin-bottom: 1rem; }
-.mb-4 { margin-bottom: 1.5rem; }
-.mb-5 { margin-bottom: 3rem; }
-.mt-3 { margin-top: 1rem; }
-.mt-4 { margin-top: 1.5rem; }
-.mt-5 { margin-top: 3rem; }
-.py-3 { padding-top: 1rem; padding-bottom: 1rem; }
-.py-4 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
-.py-5 { padding-top: 3rem; padding-bottom: 3rem; }
-.py-6 { padding-top: 5rem; padding-bottom: 5rem; }
-.p-4 { padding: 1.5rem; }
-.p-5 { padding: 3rem; }
 
 /* Buttons */
-.btn {
+.btn, .btn-submit {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -92,47 +73,54 @@ body {
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     border: 1px solid transparent;
     font-size: 0.875rem;
+    width: 100%;
 }
 
-.btn-primary { 
+.btn-primary, .btn-submit { 
     background: var(--primary); 
     color: var(--white); 
     box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); 
 }
 
-.btn-primary:hover { 
+.btn-submit:disabled {
+    background: var(--text-muted);
+    cursor: not-allowed;
+}
+
+.btn-primary:hover, .btn-submit:not(:disabled):hover { 
     background: var(--primary-dark); 
     transform: translateY(-1px); 
     box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3); 
 }
 
-.btn-outline { 
-    border-color: var(--border); 
-    color: var(--text-main); 
-    background: var(--white); 
+/* Forms */
+.form-group { margin-bottom: 1.25rem; }
+.form-label { display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-main); }
+.form-control {
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    font-family: inherit;
+    font-size: 0.9375rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
-
-.btn-outline:hover { 
-    background: #f8fafc; 
-    border-color: var(--text-muted); 
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-soft);
 }
 
 /* Navbar */
 .navbar {
     background: var(--nav-bg);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    padding: 1rem 0;
+    padding: 1rem 1.5rem;
     position: sticky;
     top: 0;
     z-index: 1000;
-    border-bottom: 1px solid var(--border);
-}
-
-.nav-content { 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .logo {
@@ -143,102 +131,79 @@ body {
     letter-spacing: -0.05em;
 }
 
-.nav-links { 
-    display: flex; 
-    gap: 2rem; 
-    align-items: center; 
-}
-
-.nav-links a { 
-    text-decoration: none; 
-    color: var(--white); 
-    font-weight: 600; 
-    font-size: 0.9375rem; 
-    transition: color 0.2s; 
-}
-
-.nav-links a:hover { 
-    color: var(--primary-light); 
-}
-
-/* Footer */
-footer {
-    background: var(--footer-bg);
+.nav-link {
     color: var(--white);
-    padding: 3rem 0 1rem;
-    border-top: 3px solid var(--primary);
-}
-
-footer a {
-    color: #aaa;
     text-decoration: none;
+    font-weight: 600;
+    font-size: 0.875rem;
 }
 
-footer a:hover {
-    color: var(--white);
+/* --- NEW AUTH & MODAL STYLING --- */
+
+/* Centering Wrapper for Login and Provider Signup */
+.auth-page-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 70px);
+    padding: 2rem 1rem;
+    background: var(--bg-light);
 }
 
-footer p {
-    color: #aaa;
-    font-size: 0.95rem;
-    margin-bottom: 0.5rem;
+.form-card {
+    background: var(--bg-white);
+    padding: 2.5rem;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xl);
+    width: 100%;
+    max-width: 480px;
 }
 
-/* Cards, Badges, Hero, Forms etc. - Keep your existing CSS */
-.card { 
-    background: var(--bg-white); 
-    border: 1px solid var(--border); 
-    border-radius: var(--radius-lg); 
-    box-shadow: var(--shadow-sm); 
-    transition: all 0.3s; 
-}
-.card:hover { 
-    box-shadow: var(--shadow-md); 
-}
-.card.h-100 { 
-    height: 100%; 
+.header-section { text-align: center; margin-bottom: 2rem; }
+
+/* Modals */
+#step2Modal, #successModal {
+    display: none; /* Controlled by JS */
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(15, 23, 42, 0.7); /* Deep overlay */
+    backdrop-filter: blur(4px);
+    z-index: 2000;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
 }
 
-.badge { 
-    display: inline-flex; 
-    align-items: center; 
-    padding: 0.35rem 1rem; 
-    border-radius: 9999px; 
-    font-size: 0.75rem; 
-    font-weight: 700; 
-    text-transform: uppercase; 
-    letter-spacing: 0.05em; 
+.modal-content {
+    background: var(--bg-white);
+    padding: 2rem;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-xl);
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
 }
 
-.bg-primary-light { 
-    background: var(--primary-soft); 
-    color: var(--primary); 
+/* Business Link Preview */
+.selection-preview {
+    display: none;
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: var(--radius-md);
 }
 
-/* Hero section */
-.hero { 
-    padding: 10rem 0 8rem; 
-    text-align: center; 
-    background: radial-gradient(circle at top right, var(--primary-soft), transparent 40%), radial-gradient(circle at bottom left, #fff7ed, transparent 40%);
-}
+/* Table styling for services */
+.service-table-wrapper { margin: 1.5rem 0; overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); padding-bottom: 0.5rem; }
+td { padding: 0.25rem 0; }
 
 /* Responsive */
 @media (max-width: 768px) {
-    .nav-links {
-        display: none;
-        position: absolute;
-        top: 100%;
-        left: 0;
-        width: 100%;
-        background: var(--nav-bg);
-        flex-direction: column;
-        padding: 1.5rem;
-        gap: 1rem;
-        border-bottom: 1px solid var(--border);
-        box-shadow: var(--shadow-lg);
-        z-index: 999;
-    }
-    .nav-links.active { display: flex; }
-    .nav-links a { padding: 0.75rem 0; width: 100%; }
-    .nav-links .btn { width: 100%; margin-top: 0.5rem; }
-} fix this and give me whole code to paste
+    .h1 { font-size: 2.25rem; }
+    .form-card { padding: 1.5rem; }
+}
