@@ -331,9 +331,26 @@ mapsInput.addEventListener('input', (e) => {
     }
 });
 
-    signupForm.addEventListener('submit', async (e) => {
+signupForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
+    const googleMapsLink = mapsInput.value;
+
+    // --- STEP 1: CHECK FOR DUPLICATES (FREE) ---
+    try {
+        const duplicateCheck = await db.collection('providers')
+            .where('googleMapsLink', '==', googleMapsLink)
+            .get();
+
+        if (!duplicateCheck.empty) {
+            alert("This business is already registered! Please use a different link or log in.");
+            return; // Stops the function here
+        }
+    } catch (err) {
+        console.error("Check failed:", err);
+    }
+
+    // --- STEP 2: PROCEED WITH ACCOUNT CREATION ---
     submitBtn.disabled = true;
     submitBtn.innerText = "Creating Account...";
 
@@ -343,12 +360,9 @@ mapsInput.addEventListener('input', (e) => {
     const category = document.getElementById('bizCategory').value;
     const capacity = Number(document.getElementById('bizCapacity').value) || 1;
     const businessName = document.getElementById('selectedName').value;
-    const googleMapsLink = mapsInput.value;
     
-    // Pull the coordinates we extracted earlier
     const lat = parseFloat(mapsInput.getAttribute('data-lat'));
     const lng = parseFloat(mapsInput.getAttribute('data-lng'));
-
     detectedCurrency = document.getElementById('manualCurrency').value;
 
     try {
@@ -358,8 +372,8 @@ mapsInput.addEventListener('input', (e) => {
         await db.collection('providers').doc(createdUserId).set({
             businessName,
             googleMapsLink,
-            lat: lat, // Saved for free nearby search
-            lng: lng, // Saved for free nearby search
+            lat: lat,
+            lng: lng,
             currencySymbol: detectedCurrency,
             category,
             capacity,
@@ -372,6 +386,17 @@ mapsInput.addEventListener('input', (e) => {
         });
 
         step2Modal.style.display = 'flex';
+        // Add a blank row if none exist from OCR
+        if (document.getElementById('servicesList').children.length === 0) {
+            addNewRow(); 
+        }
+    } catch (error) {
+        alert(error.message);
+        submitBtn.disabled = false;
+        submitBtn.innerText = "Continue to Service Setup";
+    }
+});
+        step2Modal.style.display = 'flex';
         if(document.getElementById('servicesList').children.length === 0) {
             addNewRow(); 
         }
@@ -382,33 +407,55 @@ mapsInput.addEventListener('input', (e) => {
     }
 });
 
-        async function performBatchOCR(event) {
-            const files = event.target.files;
-            const status = document.getElementById('ocrStatus');
-            if (!files.length) return;
+async function performBatchOCR(event) {
+    const files = event.target.files;
+    const status = document.getElementById('ocrStatus');
+    if (!files.length) return;
 
-            status.style.display = 'block';
-            for (let file of files) {
-                status.innerText = `Scanning ${file.name}...`;
-                const { data: { text } } = await Tesseract.recognize(file, 'eng');
-                const lines = text.split('\n');
+    status.style.display = 'block';
+    for (let file of files) {
+        status.innerText = `Scanning ${file.name}...`;
+        
+        // 1. Run OCR
+        const { data: { text } } = await Tesseract.recognize(file, 'eng');
+        const lines = text.split('\n');
 
-                lines.forEach(line => {
-                    const priceMatch = line.match(/(\d+[\.,]\d{2})|(\d{2,})/);
-                    let namePart = line.replace(/[0-9£$€\.,]/g, '').trim();
-                    namePart = namePart.replace(/^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$/g, '').trim();
+        lines.forEach(line => {
+            // 2. Aggressive Cleaning
+            // Remove common menu "noise": dots (....), underscores (____), dashes (----)
+            let cleanLine = line.replace(/[\.\-_~]{2,}/g, ' '); 
+            
+            // Remove currency markers and symbols that confuse the name detection
+            cleanLine = cleanLine.replace(/(RS|Rs|rs|INR|PKR|\$|£|€)\.?\s?/gi, ''); 
 
-                    if (priceMatch && namePart.length > 3) {
-                        const cleanPrice = priceMatch[0].replace(',', '.');
-                        if (!/^[^a-zA-Z0-9]+$/.test(namePart)) {
-                            addNewRow(namePart, cleanPrice);
-                        }
-                    }
-                });
+            // 3. Extract Numbers
+            const numbers = cleanLine.match(/\d+/g);
+            
+            if (numbers && numbers.length > 0) {
+                // We assume the last number on the line is the price
+                const price = numbers[numbers.length - 1]; 
+                
+                // 4. Extract Name
+                // Get everything before the price and trim extra spaces
+                let namePart = cleanLine.split(price)[0].trim();
+                
+                // Remove trailing punctuation from the name (like : or -)
+                namePart = namePart.replace(/[:\-\s]+$/, '').trim();
+
+                // 5. Validation Logic
+                // Only add if the name is substantial and isn't a header like "MENU" or "SERVICE"
+                const forbidden = ["MENU", "SERVICE", "PRICE", "TOTAL", "OFFER"];
+                const isHeader = forbidden.some(word => namePart.toUpperCase().includes(word));
+
+                if (namePart.length > 3 && !isHeader) {
+                    addNewRow(namePart, price);
+                }
             }
-            status.innerText = "Scanning complete!";
-            event.target.value = ''; 
-        }
+        });
+    }
+    status.innerText = "Scanning complete!";
+    event.target.value = ''; 
+}
 
         function addNewRow(name = '', price = '') {
             const tbody = document.getElementById('servicesList');
