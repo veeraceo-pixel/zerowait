@@ -186,21 +186,18 @@ async function executePlacesSearch() {
     const resultsContainer = document.getElementById("results");
     resultsContainer.innerHTML = "<p style='padding:20px;'>Checking skipQs partners...</p>";
     
-    const categoryKeywords = {
-        salon: ['salon', 'barber', 'hair', 'beauty'],
-        clinic: ['clinic', 'medical', 'doctor', 'health'],
-        dining: ['restaurant', 'dining', 'food', 'cafe'],
-        banking: ['bank', 'finance'],
-        gym: ['gym', 'fitness'],
-        repair: ['repair', 'garage', 'mechanic'],
-        gov: ['gov', 'council', 'post'],
-        wash: ['wash', 'laundry']
-    };
-
     try {
-        // 1. FETCH FIREBASE FIRST (Saves Money)
+        // 1. FETCH FIREBASE PARTNERS FIRST
         const snapshot = await db.collection('providers').get();
         let firebasePlaces = [];
+        
+        // Define keywords based on your serviceType
+        const categoryKeywords = {
+            salon: ['salon', 'barber', 'hair', 'beauty'],
+            clinic: ['clinic', 'medical', 'doctor', 'health'],
+            dining: ['restaurant', 'dining', 'food', 'cafe'],
+            // ... add others as needed
+        };
         const activeKeywords = categoryKeywords[serviceType] || [serviceType];
 
         snapshot.forEach(doc => {
@@ -213,7 +210,7 @@ async function executePlacesSearch() {
             if (isMatch && (dist * 0.000621) < 25) {
                 firebasePlaces.push({
                     id: doc.id,
-                    displayName: data.businessName,
+                    displayName: data.businessName, // Firebase uses businessName
                     location: businessLoc,
                     calculatedDistance: dist,
                     shortFormattedAddress: data.address || "Verified Partner",
@@ -226,8 +223,9 @@ async function executePlacesSearch() {
 
         let googlePlaces = [];
 
-        // 2. ONLY CALL GOOGLE IF FIREBASE IS LOW (< 10)
+        // 2. THE MONEY SAVER: Only fetch Google if Firebase has < 10 results
         if (firebasePlaces.length < 10) {
+            console.log("Fetching Google results to fill the gap...");
             const { places } = await Place.searchNearby({
                 fields: ["displayName", "location", "id", "shortFormattedAddress", "photos"],
                 locationRestriction: { center: userLocation, radius: 5000 },
@@ -235,40 +233,35 @@ async function executePlacesSearch() {
                 maxResultCount: 15
             });
 
-            googlePlaces = (places || [])
-                .filter(gp => !firebasePlaces.some(fp => fp.displayName === gp.displayName?.text))
-                .map(gp => ({
-                    id: gp.id,
-                    displayName: gp.displayName?.text || "Unknown Service",
-                    location: gp.location,
-                    calculatedDistance: google.maps.geometry.spherical.computeDistanceBetween(userLocation, gp.location),
-                    shortFormattedAddress: gp.shortFormattedAddress,
-                    isRegistered: false,
-                    photos: gp.photos
-                }));
+            if (places) {
+                googlePlaces = places
+                    .filter(gp => !firebasePlaces.some(fp => fp.displayName === gp.displayName?.text))
+                    .map(gp => ({
+                        id: gp.id,
+                        // FIX: Accessing the .text property avoids "undefined"
+                        displayName: gp.displayName?.text || "Local Service", 
+                        location: gp.location,
+                        calculatedDistance: google.maps.geometry.spherical.computeDistanceBetween(userLocation, gp.location),
+                        shortFormattedAddress: gp.shortFormattedAddress,
+                        isRegistered: false,
+                        photos: gp.photos
+                    }));
+            }
         }
 
+        // Combine and Sort
         currentPlaces = [...firebasePlaces, ...googlePlaces].sort((a, b) => {
+            // Priority 1: Registered Partners always on top
             if (a.isRegistered && !b.isRegistered) return -1;
             if (!a.isRegistered && b.isRegistered) return 1;
+            // Priority 2: Closest distance
             return a.calculatedDistance - b.calculatedDistance;
         });
 
-        // 3. NO RESULTS VIEW
-        if (currentPlaces.length === 0) {
-            resultsContainer.innerHTML = `
-                <div style="padding:40px; text-align:center; color:var(--text-muted);">
-                    <p>No ${serviceType}s found in this area.</p>
-                    <button onclick="window.location.href='provider-signup.html'" class="btn btn-reg" style="margin:0 auto; display:block;">Register a Business</button>
-                </div>`;
-            document.getElementById("counter").innerText = "0 results found.";
-            return;
-        }
-
         renderList(currentPlaces);
     } catch (e) { 
-        resultsContainer.innerHTML = "<p style='padding:20px;'>Unable to load services. Please check your connection.</p>";
         console.error("Search Error:", e);
+        resultsContainer.innerHTML = "<p style='padding:20px;'>Error loading services.</p>";
     }
 }
 
