@@ -198,18 +198,45 @@
             }
         }
 
-        async function executePlacesSearch() {
-            if (!Place || !userLocation) return;
-            
-            const resultsContainer = document.getElementById("results");
-            resultsContainer.innerHTML = "<p style='padding:20px;'>Searching nearby...</p>";
-            
-            activeListeners.forEach(unsub => unsub());
-            activeListeners = [];
-            
-            const config = SERVICE_MAP[serviceType];
+async function executePlacesSearch() {
+    if (!userLocation) return;
+    
+    const resultsContainer = document.getElementById("results");
+    resultsContainer.innerHTML = "<p style='padding:20px;'>Fetching local businesses...</p>";
+    
+    // 1. Clear previous listeners
+    activeListeners.forEach(unsub => unsub());
+    activeListeners = [];
+    
+    try {
+        // 2. Map the UI serviceType to your Firebase Category Label
+        // This ensures 'salon' matches 'Barber' in your DB
+        const categoryToLookup = SERVICE_MAP[serviceType].label.split(' ')[0].replace('s', ''); 
+        
+        // 3. Fetch from Firebase (Dr James Aesthetics etc.)
+        // We use a case-insensitive check or a direct match depending on how you save it
+        const snapshot = await db.collection('providers')
+                                 .where('category', '==', categoryToLookup) 
+                                 .get();
 
-            // FIXED: center object format and primary type
+        let firebasePlaces = [];
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            firebasePlaces.push({
+                id: doc.id,
+                displayName: data.businessName,
+                location: new google.maps.LatLng(data.lat, data.lng),
+                shortFormattedAddress: data.address || "Registered skipQs Partner",
+                isRegistered: true,
+                liveData: { ...data, id: doc.id },
+                photos: data.imageUrl ? [{ getURI: () => data.imageUrl }] : null
+            });
+        });
+
+        // 4. Fetch Google Maps places as backup
+        let googlePlaces = [];
+        if (Place) {
+            const config = SERVICE_MAP[serviceType];
             const request = {
                 fields: ["displayName", "location", "id", "photos", "shortFormattedAddress"],
                 locationRestriction: {
@@ -217,27 +244,33 @@
                     radius: 5000 
                 },
                 includedPrimaryTypes: [config.type],
-                maxResultCount: 20,
-                rankPreference: google.maps.places.SearchNearbyRankPreference.DISTANCE
+                maxResultCount: 10
             };
-
-            try {
-                const { places } = await Place.searchNearby(request);
-
-                if (places && places.length > 0) {
-                    currentPlaces = places;
-                    renderList(currentPlaces);
-                } else {
-                    resultsContainer.innerHTML = "<p style='padding:20px;'>No results found.</p>";
-                    document.getElementById("counter").innerText = "0 results.";
-                }
-            } catch (error) { 
-                console.error("Places Search Error:", error); 
-                if (error.message.includes("500") || error.message.includes("INTERNAL")) {
-                    setTimeout(executePlacesSearch, 2000); // Retry once on internal server error
-                }
-            }
+            const { places } = await Place.searchNearby(request);
+            googlePlaces = places || [];
         }
+
+        // 5. Merge and prioritize Firebase
+        // We filter out any Google results that might already be in our Firebase
+        const registeredLinks = firebasePlaces.map(p => p.liveData.googleMapsLink);
+        const uniqueGooglePlaces = googlePlaces.filter(p => {
+            // Check if this Google place's ID or name is already in our Firebase list
+            return !firebasePlaces.some(fp => fp.displayName === p.displayName);
+        });
+
+        currentPlaces = [...firebasePlaces, ...uniqueGooglePlaces];
+
+        if (currentPlaces.length > 0) {
+            renderList(currentPlaces);
+        } else {
+            resultsContainer.innerHTML = "<p style='padding:20px;'>No services found in this area.</p>";
+        }
+
+    } catch (error) {
+        console.error("Search Error:", error);
+        resultsContainer.innerHTML = "<p style='padding:20px;'>Error loading services. Please try again.</p>";
+    }
+}
 
         function renderList(places) {
             const container = document.getElementById("results");
