@@ -298,69 +298,89 @@
         let detectedCurrency = '£';
 
         // LISTENER FOR THE LINK INPUT
-        mapsInput.addEventListener('input', (e) => {
-            const val = e.target.value;
-            const preview = document.getElementById('bizPreview');
-            
-            if(val.includes('google.com/maps') || val.includes('goo.gl/maps')) {
-                preview.style.display = 'block';
-                submitBtn.disabled = false;
-                
-                // Try to guess business name from URL if possible
-                if(val.includes('/place/')) {
-                    const parts = val.split('/place/')[1].split('/')[0].replace(/\+/g, ' ');
-                    document.getElementById('selectedName').value = decodeURIComponent(parts);
-                }
-            } else {
-                preview.style.display = 'none';
-                submitBtn.disabled = true;
-            }
+mapsInput.addEventListener('input', (e) => {
+    const val = e.target.value;
+    const preview = document.getElementById('bizPreview');
+    
+    // Pattern to find @lat,lng or !3dLat!4dLng in the URL
+    const coordPattern = /@(-?\d+\.\d+),(-?\d+\.\d+)|!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/;
+    const match = val.match(coordPattern);
+
+    if (match) {
+        // Extract lat/lng and save them to the input's data attributes
+        const lat = match[1] || match[3];
+        const lng = match[2] || match[4];
+        mapsInput.setAttribute('data-lat', lat);
+        mapsInput.setAttribute('data-lng', lng);
+
+        preview.style.display = 'block';
+        submitBtn.disabled = false;
+        
+        if(val.includes('/place/')) {
+            const parts = val.split('/place/')[1].split('/')[0].replace(/\+/g, ' ');
+            document.getElementById('selectedName').value = decodeURIComponent(parts);
+        }
+    } else if (val.includes('goo.gl/maps')) {
+        // Short links don't have coordinates. We must warn them.
+        alert("Please paste the FULL link from your browser's address bar (the one with the '@' symbol) so customers can find you!");
+        preview.style.display = 'none';
+        submitBtn.disabled = true;
+    } else {
+        preview.style.display = 'none';
+        submitBtn.disabled = true;
+    }
+});
+
+    signupForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    submitBtn.disabled = true;
+    submitBtn.innerText = "Creating Account...";
+
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const phone = document.getElementById('phone').value;
+    const category = document.getElementById('bizCategory').value;
+    const capacity = Number(document.getElementById('bizCapacity').value) || 1;
+    const businessName = document.getElementById('selectedName').value;
+    const googleMapsLink = mapsInput.value;
+    
+    // Pull the coordinates we extracted earlier
+    const lat = parseFloat(mapsInput.getAttribute('data-lat'));
+    const lng = parseFloat(mapsInput.getAttribute('data-lng'));
+
+    detectedCurrency = document.getElementById('manualCurrency').value;
+
+    try {
+        const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+        createdUserId = userCredential.user.uid;
+
+        await db.collection('providers').doc(createdUserId).set({
+            businessName,
+            googleMapsLink,
+            lat: lat, // Saved for free nearby search
+            lng: lng, // Saved for free nearby search
+            currencySymbol: detectedCurrency,
+            category,
+            capacity,
+            email, 
+            phone, 
+            role: 'provider', 
+            isOpen: false,
+            peopleInLine: 0,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        signupForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            submitBtn.disabled = true;
-            submitBtn.innerText = "Creating Account...";
-
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const phone = document.getElementById('phone').value;
-            const category = document.getElementById('bizCategory').value;
-            const capacity = Number(document.getElementById('bizCapacity').value) || 1;
-            
-            // Manual Values
-            const businessName = document.getElementById('selectedName').value;
-            const address = document.getElementById('selectedAddress').value;
-            const googleMapsLink = mapsInput.value;
-            detectedCurrency = document.getElementById('manualCurrency').value;
-
-            try {
-                const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
-                createdUserId = userCredential.user.uid;
-
-                await db.collection('providers').doc(createdUserId).set({
-                    businessName,
-                    address,
-                    googleMapsLink,
-                    currencySymbol: detectedCurrency,
-                    category,
-                    capacity,
-                    email, 
-                    phone, 
-                    role: 'provider', 
-                    isOpen: false,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-
-                step2Modal.style.display = 'flex';
-                addNewRow(); 
-            } catch (error) {
-                alert(error.message);
-                submitBtn.disabled = false;
-                submitBtn.innerText = "Continue to Service Setup";
-            }
-        });
+        step2Modal.style.display = 'flex';
+        if(document.getElementById('servicesList').children.length === 0) {
+            addNewRow(); 
+        }
+    } catch (error) {
+        alert(error.message);
+        submitBtn.disabled = false;
+        submitBtn.innerText = "Continue to Service Setup";
+    }
+});
 
         async function performBatchOCR(event) {
             const files = event.target.files;
