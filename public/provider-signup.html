@@ -288,26 +288,24 @@
 
     <script>
         const db = firebase.firestore();
-        const signupForm = document.getElementById('providerSignupForm');
-        const submitBtn = document.getElementById('submitBtn');
-        const step2Modal = document.getElementById('step2Modal');
-        const successModal = document.getElementById('successModal');
-        const mapsInput = document.getElementById('googleMapsLink');
-        
-        let createdUserId = null;
-        let detectedCurrency = '£';
+const signupForm = document.getElementById('providerSignupForm');
+const submitBtn = document.getElementById('submitBtn');
+const step2Modal = document.getElementById('step2Modal');
+const successModal = document.getElementById('successModal');
+const mapsInput = document.getElementById('googleMapsLink');
 
-        // LISTENER FOR THE LINK INPUT
+let createdUserId = null;
+
+// 1. DYNAMIC LINK & COORDINATE LISTENER
 mapsInput.addEventListener('input', (e) => {
     const val = e.target.value;
     const preview = document.getElementById('bizPreview');
     
-    // Pattern to find @lat,lng or !3dLat!4dLng in the URL
+    // Regex for both @lat,lng and !3d!4d formats
     const coordPattern = /@(-?\d+\.\d+),(-?\d+\.\d+)|!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/;
     const match = val.match(coordPattern);
 
     if (match) {
-        // Extract lat/lng and save them to the input's data attributes
         const lat = match[1] || match[3];
         const lng = match[2] || match[4];
         mapsInput.setAttribute('data-lat', lat);
@@ -321,8 +319,7 @@ mapsInput.addEventListener('input', (e) => {
             document.getElementById('selectedName').value = decodeURIComponent(parts);
         }
     } else if (val.includes('goo.gl/maps')) {
-        // Short links don't have coordinates. We must warn them.
-        alert("Please paste the FULL link from your browser's address bar (the one with the '@' symbol) so customers can find you!");
+        alert("Please paste the FULL link from your browser's address bar (the one with the '@' symbol).");
         preview.style.display = 'none';
         submitBtn.disabled = true;
     } else {
@@ -331,54 +328,47 @@ mapsInput.addEventListener('input', (e) => {
     }
 });
 
+// 2. PRIMARY SIGNUP LOGIC
 signupForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const googleMapsLink = mapsInput.value;
+    const latStr = mapsInput.getAttribute('data-lat');
+    const lngStr = mapsInput.getAttribute('data-lng');
 
-    // --- STEP 1: CHECK FOR DUPLICATES (FREE) ---
-    try {
-        const duplicateCheck = await db.collection('providers')
-            .where('googleMapsLink', '==', googleMapsLink)
-            .get();
-
-        if (!duplicateCheck.empty) {
-            alert("This business is already registered! Please use a different link or log in.");
-            return; // Stops the function here
-        }
-    } catch (err) {
-        console.error("Check failed:", err);
+    if (!latStr || !lngStr) {
+        alert("Location coordinates not found. Please use the full Google Maps URL.");
+        return;
     }
 
-    // --- STEP 2: PROCEED WITH ACCOUNT CREATION ---
     submitBtn.disabled = true;
     submitBtn.innerText = "Creating Account...";
 
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const phone = document.getElementById('phone').value;
-    const category = document.getElementById('bizCategory').value;
-    const capacity = Number(document.getElementById('bizCapacity').value) || 1;
-    const businessName = document.getElementById('selectedName').value;
-    
-    const lat = parseFloat(mapsInput.getAttribute('data-lat'));
-    const lng = parseFloat(mapsInput.getAttribute('data-lng'));
-    detectedCurrency = document.getElementById('manualCurrency').value;
-
     try {
+        // Duplicate Check
+        const dupCheck = await db.collection('providers').where('googleMapsLink', '==', googleMapsLink).get();
+        if (!dupCheck.empty) {
+            alert("This business is already registered!");
+            submitBtn.disabled = false;
+            return;
+        }
+
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        
         const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
         createdUserId = userCredential.user.uid;
 
         await db.collection('providers').doc(createdUserId).set({
-            businessName,
+            businessName: document.getElementById('selectedName').value,
             googleMapsLink,
-            lat: lat,
-            lng: lng,
-            currencySymbol: detectedCurrency,
-            category,
-            capacity,
+            lat: parseFloat(latStr),
+            lng: parseFloat(lngStr),
+            currencySymbol: document.getElementById('manualCurrency').value,
+            category: document.getElementById('bizCategory').value,
+            capacity: Number(document.getElementById('bizCapacity').value) || 1,
             email, 
-            phone, 
+            phone: document.getElementById('phone').value, 
             role: 'provider', 
             isOpen: false,
             peopleInLine: 0,
@@ -386,20 +376,8 @@ signupForm.addEventListener('submit', async (e) => {
         });
 
         step2Modal.style.display = 'flex';
-        // Add a blank row if none exist from OCR
-        if (document.getElementById('servicesList').children.length === 0) {
-            addNewRow(); 
-        }
-    } catch (error) {
-        alert(error.message);
-        submitBtn.disabled = false;
-        submitBtn.innerText = "Continue to Service Setup";
-    }
-});
-        step2Modal.style.display = 'flex';
-        if(document.getElementById('servicesList').children.length === 0) {
-            addNewRow(); 
-        }
+        if (document.getElementById('servicesList').children.length === 0) addNewRow();
+
     } catch (error) {
         alert(error.message);
         submitBtn.disabled = false;
@@ -407,6 +385,7 @@ signupForm.addEventListener('submit', async (e) => {
     }
 });
 
+// 3. OCR SCANNING (MENU UPLOAD)
 async function performBatchOCR(event) {
     const files = event.target.files;
     const status = document.getElementById('ocrStatus');
@@ -415,35 +394,20 @@ async function performBatchOCR(event) {
     status.style.display = 'block';
     for (let file of files) {
         status.innerText = `Scanning ${file.name}...`;
-        
-        // 1. Run OCR
         const { data: { text } } = await Tesseract.recognize(file, 'eng');
         const lines = text.split('\n');
 
         lines.forEach(line => {
-            // 2. Aggressive Cleaning
-            // Remove common menu "noise": dots (....), underscores (____), dashes (----)
+            // Aggressive cleaning of dots/dashes common in menus
             let cleanLine = line.replace(/[\.\-_~]{2,}/g, ' '); 
-            
-            // Remove currency markers and symbols that confuse the name detection
             cleanLine = cleanLine.replace(/(RS|Rs|rs|INR|PKR|\$|£|€)\.?\s?/gi, ''); 
 
-            // 3. Extract Numbers
             const numbers = cleanLine.match(/\d+/g);
-            
             if (numbers && numbers.length > 0) {
-                // We assume the last number on the line is the price
                 const price = numbers[numbers.length - 1]; 
-                
-                // 4. Extract Name
-                // Get everything before the price and trim extra spaces
                 let namePart = cleanLine.split(price)[0].trim();
-                
-                // Remove trailing punctuation from the name (like : or -)
                 namePart = namePart.replace(/[:\-\s]+$/, '').trim();
 
-                // 5. Validation Logic
-                // Only add if the name is substantial and isn't a header like "MENU" or "SERVICE"
                 const forbidden = ["MENU", "SERVICE", "PRICE", "TOTAL", "OFFER"];
                 const isHeader = forbidden.some(word => namePart.toUpperCase().includes(word));
 
@@ -457,81 +421,83 @@ async function performBatchOCR(event) {
     event.target.value = ''; 
 }
 
-        function addNewRow(name = '', price = '') {
-            const tbody = document.getElementById('servicesList');
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><input type="text" class="form-control s-name" value="${name}" required placeholder="Service name"></td>
-                <td><input type="number" class="form-control s-price" value="${price}" placeholder="0"></td>
-                <td><input type="number" class="form-control s-time" required min="1" placeholder="Mins" style="border:2px solid var(--primary); background:#f0f7ff;"></td>
-                <td><button type="button" onclick="this.parentElement.parentElement.remove()" style="color:red; background:none; border:none; cursor:pointer; font-size:1.2rem;">&times;</button></td>
-            `;
-            tbody.appendChild(tr);
-        }
+// 4. SERVICE TABLE MANAGEMENT
+function addNewRow(name = '', price = '') {
+    const tbody = document.getElementById('servicesList');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td><input type="text" class="form-control s-name" value="${name}" required placeholder="Service name"></td>
+        <td><input type="number" class="form-control s-price" value="${price}" placeholder="0"></td>
+        <td><input type="number" class="form-control s-time" required min="1" placeholder="Mins" style="border:2px solid var(--primary); background:#f0f7ff;"></td>
+        <td><button type="button" onclick="this.parentElement.parentElement.remove()" style="color:red; background:none; border:none; cursor:pointer; font-size:1.2rem;">&times;</button></td>
+    `;
+    tbody.appendChild(tr);
+}
 
-        function clearAllRows() {
-            if(confirm("Clear all?")) document.getElementById('servicesList').innerHTML = '';
-        }
+function clearAllRows() {
+    if(confirm("Are you sure you want to clear all services?")) {
+        document.getElementById('servicesList').innerHTML = '';
+    }
+}
 
-        async function saveAllServices() {
-            const rows = document.querySelectorAll('#servicesList tr');
-            const services = [];
-            let hasError = false;
+// 5. FINAL DATA SUBMISSION
+async function saveAllServices() {
+    const rows = document.querySelectorAll('#servicesList tr');
+    const services = [];
+    let hasError = false;
+    const currentCurrency = document.getElementById('manualCurrency').value;
 
-            rows.forEach(row => {
-                const nameInp = row.querySelector('.s-name');
-                const priceInp = row.querySelector('.s-price');
-                const timeInp = row.querySelector('.s-time');
+    rows.forEach(row => {
+        const name = row.querySelector('.s-name').value.trim();
+        const price = row.querySelector('.s-price').value.trim();
+        const timeInp = row.querySelector('.s-time');
+        const time = timeInp.value.trim();
 
-                const name = nameInp.value.trim();
-                const price = priceInp.value.trim();
-                const time = timeInp.value.trim();
+        if (!name && !time) return;
 
-                if (!name && !price && !time) return;
-
-                if (name && !time) {
-                    timeInp.style.border = "2px solid #ef4444";
-                    hasError = true;
-                } else if (name && time) {
-                    timeInp.style.border = "2px solid var(--primary)";
-                    services.push({
-                        name,
-                        price: Number(price) || 0,
-                        duration: Number(time),
-                        currency: detectedCurrency
-                    });
-                }
+        if (name && !time) {
+            timeInp.style.border = "2px solid #ef4444";
+            hasError = true;
+        } else {
+            services.push({
+                name,
+                price: Number(price) || 0,
+                duration: Number(time),
+                currency: currentCurrency
             });
-
-            if (hasError) {
-                alert("Please provide the duration (Mins) for all services.");
-                return;
-            }
-
-            if (services.length === 0) {
-                alert("Add at least one service.");
-                return;
-            }
-
-            const finalBtn = document.getElementById('finalBtn');
-            finalBtn.disabled = true;
-            document.getElementById('loadingMsg').style.display = 'block';
-
-            try {
-                const batch = db.batch();
-                services.forEach(s => {
-                    const ref = db.collection('providers').doc(createdUserId).collection('services').doc();
-                    batch.set(ref, s);
-                });
-                await batch.commit();
-                await firebase.auth().currentUser.sendEmailVerification();
-                step2Modal.style.display = 'none';
-                successModal.style.display = 'flex';
-            } catch (e) {
-                alert(e.message);
-                finalBtn.disabled = false;
-            }
         }
+    });
+
+    if (hasError) {
+        alert("Please provide the duration (Mins) for all services.");
+        return;
+    }
+
+    if (services.length === 0) {
+        alert("Please add at least one service.");
+        return;
+    }
+
+    const finalBtn = document.getElementById('finalBtn');
+    finalBtn.disabled = true;
+    document.getElementById('loadingMsg').style.display = 'block';
+
+    try {
+        const batch = db.batch();
+        services.forEach(s => {
+            const ref = db.collection('providers').doc(createdUserId).collection('services').doc();
+            batch.set(ref, s);
+        });
+        await batch.commit();
+        await firebase.auth().currentUser.sendEmailVerification();
+        step2Modal.style.display = 'none';
+        successModal.style.display = 'flex';
+    } catch (e) {
+        alert("Error saving services: " + e.message);
+        finalBtn.disabled = false;
+        document.getElementById('loadingMsg').style.display = 'none';
+    }
+}
     </script>
     </body>
 </html>
