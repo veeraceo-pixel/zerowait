@@ -181,128 +181,154 @@
             } catch (e) { console.error("Maps init failed", e); }
         }
 
-        async function executePlacesSearch() {
-            if (!userLocation) return;
-            const resultsContainer = document.getElementById("results");
-            resultsContainer.innerHTML = "<p style='padding:20px;'>Checking skipQs partners...</p>";
-            
-            const categoryKeywords = {
-                salon: ['salon', 'barber', 'hair', 'beauty'],
-                clinic: ['clinic', 'medical', 'doctor', 'health'],
-                dining: ['restaurant', 'dining', 'food', 'cafe'],
-                banking: ['bank', 'finance'],
-                gym: ['gym', 'fitness'],
-                repair: ['repair', 'garage', 'mechanic'],
-                gov: ['gov', 'council', 'post'],
-                wash: ['wash', 'laundry']
-            };
+async function executePlacesSearch() {
+    if (!userLocation) return;
+    const resultsContainer = document.getElementById("results");
+    resultsContainer.innerHTML = "<p style='padding:20px;'>Checking skipQs partners...</p>";
+    
+    const categoryKeywords = {
+        salon: ['salon', 'barber', 'hair', 'beauty'],
+        clinic: ['clinic', 'medical', 'doctor', 'health'],
+        dining: ['restaurant', 'dining', 'food', 'cafe'],
+        banking: ['bank', 'finance'],
+        gym: ['gym', 'fitness'],
+        repair: ['repair', 'garage', 'mechanic'],
+        gov: ['gov', 'council', 'post'],
+        wash: ['wash', 'laundry']
+    };
 
-            try {
-                const snapshot = await db.collection('providers').get();
-                let firebasePlaces = [];
-                const activeKeywords = categoryKeywords[serviceType] || [serviceType];
+    try {
+        // 1. FETCH FIREBASE FIRST (Saves Money)
+        const snapshot = await db.collection('providers').get();
+        let firebasePlaces = [];
+        const activeKeywords = categoryKeywords[serviceType] || [serviceType];
 
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    const businessLoc = new google.maps.LatLng(data.lat, data.lng);
-                    const dist = google.maps.geometry.spherical.computeDistanceBetween(userLocation, businessLoc);
-                    const providerCategory = (data.category || "").toLowerCase();
-                    const isMatch = activeKeywords.some(k => providerCategory.includes(k));
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const businessLoc = new google.maps.LatLng(data.lat, data.lng);
+            const dist = google.maps.geometry.spherical.computeDistanceBetween(userLocation, businessLoc);
+            const providerCategory = (data.category || "").toLowerCase();
+            const isMatch = activeKeywords.some(k => providerCategory.includes(k));
 
-                    if (isMatch && (dist * 0.000621) < 25) {
-                        firebasePlaces.push({
-                            id: doc.id,
-                            displayName: data.businessName,
-                            location: businessLoc,
-                            calculatedDistance: dist,
-                            shortFormattedAddress: data.address || "Verified Partner",
-                            isRegistered: true,
-                            liveData: { ...data, id: doc.id },
-                            imageUrl: data.imageUrl
-                        });
-                    }
+            if (isMatch && (dist * 0.000621) < 25) {
+                firebasePlaces.push({
+                    id: doc.id,
+                    displayName: data.businessName,
+                    location: businessLoc,
+                    calculatedDistance: dist,
+                    shortFormattedAddress: data.address || "Verified Partner",
+                    isRegistered: true,
+                    liveData: { ...data, id: doc.id },
+                    imageUrl: data.imageUrl
                 });
+            }
+        });
 
-                const { places } = await Place.searchNearby({
-                    fields: ["displayName", "location", "id", "shortFormattedAddress", "photos"],
-                    locationRestriction: { center: userLocation, radius: 5000 },
-                    includedPrimaryTypes: [SERVICE_MAP[serviceType].type],
-                    maxResultCount: 15
-                });
+        let googlePlaces = [];
 
-                let googlePlaces = (places || [])
-                    .filter(gp => !firebasePlaces.some(fp => fp.displayName === gp.displayName.text))
-                    .map(gp => ({
-                        id: gp.id,
-                        displayName: gp.displayName.text,
-                        location: gp.location,
-                        calculatedDistance: google.maps.geometry.spherical.computeDistanceBetween(userLocation, gp.location),
-                        shortFormattedAddress: gp.shortFormattedAddress,
-                        isRegistered: false,
-                        photos: gp.photos
-                    }));
-
-                currentPlaces = [...firebasePlaces, ...googlePlaces].sort((a, b) => a.calculatedDistance - b.calculatedDistance);
-                renderList(currentPlaces);
-            } catch (e) { resultsContainer.innerHTML = "Error loading services."; console.error(e); }
-        }
-
-        function renderList(places) {
-            const container = document.getElementById("results");
-            container.innerHTML = "";
-            places.forEach((place, i) => {
-                const miles = (place.calculatedDistance * 0.000621371).toFixed(1);
-                const driveTime = Math.round((miles / 12) * 60) + 2;
-                let thumb = place.imageUrl || (place.photos?.[0]?.getURI({maxWidth:200}) || 'https://via.placeholder.com/150');
-                
-                // FIXED URL LOGIC
-                const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.displayName)}&query_place_id=${place.id}`;
-
-                const card = document.createElement('div');
-                card.className = 'place-card';
-                card.id = `card-${i}`;
-                
-                if (place.isRegistered) {
-                    const d = place.liveData;
-                    card.setAttribute('data-live', 'true');
-                    card.innerHTML = `
-                        <div onclick="selectPlace(${i})">
-                            <div class="card-top">
-                                <img src="${thumb}" class="thumb">
-                                <div style="flex:1">
-                                    <strong style="color:var(--primary);">★ ${place.displayName}</strong>
-                                    <div class="info-tags"><span class="dist-tag">${miles} mi</span><span class="time-tag">🚗 ${driveTime}m</span></div>
-                                    <div class="q-badge q-online">LIVE: ${d.peopleInLine || 0} in line</div>
-                                    <div class="est-box">⌛ Wait: ~${d.currentWaitMins || 0}m</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="action-row">
-                            <a href="${d.googleMapsLink || mapsUrl}" target="_blank" class="btn btn-sec">Directions</a>
-                            <button onclick="window.location.href='join-queue.html?id=${place.id}'" class="btn btn-join">JOIN</button>
-                        </div>`;
-                } else {
-                    card.innerHTML = `
-                        <div onclick="selectPlace(${i})">
-                            <div class="card-top">
-                                <img src="${thumb}" class="thumb">
-                                <div style="flex:1">
-                                    <strong>${place.displayName}</strong>
-                                    <div class="info-tags"><span class="dist-tag">${miles} mi</span><span class="time-tag">🚗 ${driveTime}m</span></div>
-                                    <div class="q-badge q-offline">Queueing not enabled</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="action-row">
-                            <a href="${mapsUrl}" target="_blank" class="btn btn-sec">Directions</a>
-                            <button onclick="window.location.href='provider-signup.html'" class="btn btn-reg">REGISTER FREE</button>
-                        </div>`;
-                }
-                container.appendChild(card);
+        // 2. ONLY CALL GOOGLE IF FIREBASE IS LOW (< 10)
+        if (firebasePlaces.length < 10) {
+            const { places } = await Place.searchNearby({
+                fields: ["displayName", "location", "id", "shortFormattedAddress", "photos"],
+                locationRestriction: { center: userLocation, radius: 5000 },
+                includedPrimaryTypes: [SERVICE_MAP[serviceType].type],
+                maxResultCount: 15
             });
-            applyLiveFilter();
+
+            googlePlaces = (places || [])
+                .filter(gp => !firebasePlaces.some(fp => fp.displayName === gp.displayName?.text))
+                .map(gp => ({
+                    id: gp.id,
+                    displayName: gp.displayName?.text || "Unknown Service",
+                    location: gp.location,
+                    calculatedDistance: google.maps.geometry.spherical.computeDistanceBetween(userLocation, gp.location),
+                    shortFormattedAddress: gp.shortFormattedAddress,
+                    isRegistered: false,
+                    photos: gp.photos
+                }));
         }
 
+        currentPlaces = [...firebasePlaces, ...googlePlaces].sort((a, b) => {
+            if (a.isRegistered && !b.isRegistered) return -1;
+            if (!a.isRegistered && b.isRegistered) return 1;
+            return a.calculatedDistance - b.calculatedDistance;
+        });
+
+        // 3. NO RESULTS VIEW
+        if (currentPlaces.length === 0) {
+            resultsContainer.innerHTML = `
+                <div style="padding:40px; text-align:center; color:var(--text-muted);">
+                    <p>No ${serviceType}s found in this area.</p>
+                    <button onclick="window.location.href='provider-signup.html'" class="btn btn-reg" style="margin:0 auto; display:block;">Register a Business</button>
+                </div>`;
+            document.getElementById("counter").innerText = "0 results found.";
+            return;
+        }
+
+        renderList(currentPlaces);
+    } catch (e) { 
+        resultsContainer.innerHTML = "<p style='padding:20px;'>Unable to load services. Please check your connection.</p>";
+        console.error("Search Error:", e);
+    }
+}
+
+function renderList(places) {
+    const container = document.getElementById("results");
+    container.innerHTML = "";
+    places.forEach((place, i) => {
+        const miles = (place.calculatedDistance * 0.000621371).toFixed(1);
+        const driveTime = Math.round((miles / 12) * 60) + 2;
+        let thumb = place.imageUrl || (place.photos?.[0]?.getURI({maxWidth:200}) || 'https://via.placeholder.com/150');
+        
+        // Corrected URL Template
+        const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.displayName)}&query_place_id=${place.id}`;
+
+        const card = document.createElement('div');
+        card.className = 'place-card';
+        card.id = `card-${i}`;
+        
+        if (place.isRegistered) {
+            const d = place.liveData;
+            card.setAttribute('data-live', 'true');
+            card.innerHTML = `
+                <div onclick="selectPlace(${i})">
+                    <div class="card-top">
+                        <img src="${thumb}" class="thumb">
+                        <div style="flex:1">
+                            <strong style="color:var(--primary);">★ ${place.displayName}</strong>
+                            <div class="info-tags"><span class="dist-tag">${miles} mi</span><span class="time-tag">🚗 ${driveTime}m</span></div>
+                            <div class="q-badge q-online">LIVE: ${d.peopleInLine || 0} in line</div>
+                            <div class="est-box">⌛ Wait: ~${d.currentWaitMins || 0}m</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="action-row">
+                    <a href="${d.googleMapsLink || mapsUrl}" target="_blank" class="btn btn-sec">Directions</a>
+                    <button onclick="window.location.href='join-queue.html?id=${place.id}'" class="btn btn-join">JOIN</button>
+                </div>`;
+        } else {
+            card.innerHTML = `
+                <div onclick="selectPlace(${i})">
+                    <div class="card-top">
+                        <img src="${thumb}" class="thumb">
+                        <div style="flex:1">
+                            <strong>${place.displayName}</strong>
+                            <div class="info-tags"><span class="dist-tag">${miles} mi</span><span class="time-tag">🚗 ${driveTime}m</span></div>
+                            <div class="q-badge q-offline">Queueing not enabled</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="action-row">
+                    <a href="${mapsUrl}" target="_blank" class="btn btn-sec">Directions</a>
+                    <button onclick="window.location.href='provider-signup.html'" class="btn btn-reg">
+                        BUSINESS OWNER?<br>REGISTER HERE FREE
+                    </button>
+                </div>`;
+        }
+        container.appendChild(card);
+    });
+    applyLiveFilter();
+}
         function selectPlace(index) {
             const place = currentPlaces[index];
             document.querySelectorAll('.place-card').forEach(c => c.classList.remove('active'));
