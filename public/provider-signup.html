@@ -174,21 +174,22 @@
                     <label class="form-label">Google Maps Link</label>
                     <input type="url" id="googleMapsLink" class="form-control" placeholder="Paste your Google Maps link..." required>
                     
-                    <div id="bizPreview" class="selection-preview">
-                        <input type="text" id="selectedName" placeholder="Enter Business Name" style="font-weight: 800; border:none; background:transparent; width:100%; display:block; outline:none;" required>
-                        <input type="text" id="selectedAddress" placeholder="Enter Business Address" style="font-size: 0.75rem; color: var(--text-muted); border:none; background:transparent; width:100%; outline:none;" required>
-                        
-                        <div style="margin-top: 8px;">
-                            <label style="font-size: 0.7rem; font-weight: bold; color: var(--primary);">Currency:</label>
-                            <select id="manualCurrency" class="form-control" style="font-size: 0.75rem; padding: 2px; height: 28px;">
-                                <option value="£">£ (GBP)</option>
-                                <option value="$">$ (USD)</option>
-                                <option value="€">€ (EUR)</option>
-                                <option value="₹">₹ (INR)</option>
-                                <option value="₦">₦ (NGN)</option>
-                            </select>
-                        </div>
-                    </div>
+<div id="bizPreview" class="selection-preview" style="display:none; background:#f1f5f9; padding:15px; border-radius:10px; margin-top:10px;">
+    <div class="form-group" style="margin-bottom: 15px;">
+        <label class="form-label" style="color:var(--primary); font-weight:700;">Confirm Business Name</label>
+        <input type="text" id="selectedName" class="form-control" style="background:white; border:1px solid #cbd5e1;" required>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label" style="color:var(--primary); font-weight:700;">Business Currency</label>
+        <select id="manualCurrency" class="form-control" style="background:white; border:1px solid #cbd5e1;">
+            <option value="£">£ (GBP)</option>
+            <option value="$">$ (USD)</option>
+            <option value="€">€ (EUR)</option>
+            <option value="₹">₹ (INR)</option>
+        </select>
+    </div>
+</div>
                 </div>
 
                 <div class="form-group">
