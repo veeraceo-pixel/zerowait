@@ -204,17 +204,14 @@ async function executePlacesSearch() {
     const resultsContainer = document.getElementById("results");
     resultsContainer.innerHTML = "<p style='padding:20px;'>Fetching local businesses...</p>";
     
-    // 1. Clear previous listeners
     activeListeners.forEach(unsub => unsub());
     activeListeners = [];
     
     try {
-        // 2. Map the UI serviceType to your Firebase Category Label
-        // This ensures 'salon' matches 'Barber' in your DB
+        // 1. Map category for Firebase (e.g., 'salon' -> 'Barber')
         const categoryToLookup = SERVICE_MAP[serviceType].label.split(' ')[0].replace('s', ''); 
         
-        // 3. Fetch from Firebase (Dr James Aesthetics etc.)
-        // We use a case-insensitive check or a direct match depending on how you save it
+        // 2. Get Registered Providers from Firebase
         const snapshot = await db.collection('providers')
                                  .where('category', '==', categoryToLookup) 
                                  .get();
@@ -233,7 +230,7 @@ async function executePlacesSearch() {
             });
         });
 
-        // 4. Fetch Google Maps places as backup
+        // 3. Get Google Maps results as backup
         let googlePlaces = [];
         if (Place) {
             const config = SERVICE_MAP[serviceType];
@@ -250,12 +247,9 @@ async function executePlacesSearch() {
             googlePlaces = places || [];
         }
 
-        // 5. Merge and prioritize Firebase
-        // We filter out any Google results that might already be in our Firebase
-        const registeredLinks = firebasePlaces.map(p => p.liveData.googleMapsLink);
-        const uniqueGooglePlaces = googlePlaces.filter(p => {
-            // Check if this Google place's ID or name is already in our Firebase list
-            return !firebasePlaces.some(fp => fp.displayName === p.displayName);
+        // 4. Merge: Remove Google results if they already exist in Firebase by name
+        const uniqueGooglePlaces = googlePlaces.filter(gp => {
+            return !firebasePlaces.some(fp => fp.displayName.toLowerCase() === gp.displayName.toLowerCase());
         });
 
         currentPlaces = [...firebasePlaces, ...uniqueGooglePlaces];
@@ -268,94 +262,85 @@ async function executePlacesSearch() {
 
     } catch (error) {
         console.error("Search Error:", error);
-        resultsContainer.innerHTML = "<p style='padding:20px;'>Error loading services. Please try again.</p>";
+        resultsContainer.innerHTML = "<p style='padding:20px;'>Error loading services.</p>";
     }
 }
 
-        function renderList(places) {
-            const container = document.getElementById("results");
-            container.innerHTML = "";
+  function renderList(places) {
+    const container = document.getElementById("results");
+    container.innerHTML = "";
+    
+    places.forEach(p => {
+        p.calculatedDistance = google.maps.geometry.spherical.computeDistanceBetween(userLocation, p.location);
+    });
+    places.sort((a, b) => a.calculatedDistance - b.calculatedDistance);
+
+    places.forEach((place, i) => {
+        const miles = (place.calculatedDistance * 0.000621371).toFixed(1);
+        const driveTime = Math.round((miles / 12) * 60) + 2; 
+        
+        let thumb = 'https://via.placeholder.com/150';
+        if (place.photos && place.photos.length > 0) {
+            thumb = place.photos[0].getURI({maxWidth: 200, maxHeight: 200});
+        }
+
+        const card = document.createElement('div');
+        card.className = 'place-card';
+        card.id = `card-${i}`;
+        
+        // If it's a registered Firebase provider
+        if (place.isRegistered) {
+            const d = place.liveData;
+            card.setAttribute('data-live', 'true');
+            const timeStr = new Date(Date.now() + (d.currentWaitMins || 0) * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             
-            places.forEach(p => {
-                p.calculatedDistance = google.maps.geometry.spherical.computeDistanceBetween(userLocation, p.location);
-            });
-            places.sort((a, b) => a.calculatedDistance - b.calculatedDistance);
-
-            places.forEach((place, i) => {
-                const miles = (place.calculatedDistance * 0.000621371).toFixed(1);
-                const driveTime = Math.round((miles / 12) * 60) + 2; 
-                
-                let thumb = 'https://via.placeholder.com/150';
-                if (place.photos && place.photos.length > 0) {
-                    thumb = place.photos[0].getURI({maxWidth: 200, maxHeight: 200});
-                }
-
-                const card = document.createElement('div');
-                card.className = 'place-card';
-                card.id = `card-${i}`;
-                card.setAttribute('data-live', 'false');
-                
-                // FIXED: Template string syntax ${variable}
-                const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.displayName)}&query_place_id=${place.id}`;
-
-                card.innerHTML = `
-                    <div onclick="selectPlace(${i})">
-                        <div class="card-top">
-                            <img src="${thumb}" class="thumb">
-                            <div style="flex:1">
-                                <strong style="font-size:0.95rem;">${place.displayName}</strong>
-                                <div class="info-tags">
-                                    <span class="dist-tag">${miles} mi</span>
-                                    <span class="time-tag">🚗 ${driveTime} min drive</span>
-                                </div>
-                                <span style="font-size:0.75rem; color:var(--text-muted);">${place.shortFormattedAddress || "Address nearby"}</span>
-                                <div id="status-${i}" class="q-badge q-offline">No Live Queue</div>
-                                <div id="est-${i}" class="est-box"></div>
+            card.innerHTML = `
+                <div onclick="selectPlace(${i})">
+                    <div class="card-top">
+                        <img src="${thumb}" class="thumb">
+                        <div style="flex:1">
+                            <strong style="font-size:0.95rem; color:var(--primary);">★ ${place.displayName}</strong>
+                            <div class="info-tags">
+                                <span class="dist-tag">${miles} mi</span>
+                                <span class="time-tag">🚗 ${driveTime} min drive</span>
                             </div>
+                            <div class="q-badge q-online">LIVE: ${d.peopleInLine || 0} in line</div>
+                            <div class="est-box">⌛ Wait: <b>~${d.currentWaitMins || 0}m</b> • Service at <b>${timeStr}</b></div>
                         </div>
                     </div>
-                    <div class="action-row" id="actions-${i}">
-                         <a href="${mapsUrl}" target="_blank" class="btn btn-sec">Directions</a>
-                         <button onclick="window.location.href='provider-signup.html'" class="btn btn-reg">BUSINESS OWNER?<br>REGISTER FREE</button>
+                </div>
+                <div class="action-row">
+                     <a href="${d.googleMapsLink || '#'}" target="_blank" class="btn btn-sec">Directions</a>
+                     <button onclick="window.location.href='join-queue.html?id=${place.id}'" class="btn btn-join">JOIN QUEUE</button>
+                </div>
+            `;
+        } else {
+            // Standard Google Maps entry
+            const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.displayName)}&query_place_id=${place.id}`;
+            card.innerHTML = `
+                <div onclick="selectPlace(${i})">
+                    <div class="card-top">
+                        <img src="${thumb}" class="thumb">
+                        <div style="flex:1">
+                            <strong style="font-size:0.95rem;">${place.displayName}</strong>
+                            <div class="info-tags">
+                                <span class="dist-tag">${miles} mi</span>
+                                <span class="time-tag">🚗 ${driveTime} min drive</span>
+                            </div>
+                            <div class="q-badge q-offline">Queueing not enabled</div>
+                        </div>
                     </div>
-                `;
-                container.appendChild(card);
-
-                const unsub = db.collection('providers').where('googlePlaceId', '==', place.id).onSnapshot(snap => {
-                    if (!snap.empty) {
-                        const d = snap.docs[0].data();
-                        const providerId = snap.docs[0].id;
-                        place.liveData = { ...d, id: providerId }; 
-                        card.setAttribute('data-live', 'true');
-                        
-                        const statusDiv = document.getElementById(`status-${i}`);
-                        const estDiv = document.getElementById(`est-${i}`);
-                        const actionDiv = document.getElementById(`actions-${i}`);
-
-                        if(statusDiv) {
-                            statusDiv.className = "q-badge q-online";
-                            statusDiv.innerText = `LIVE: ${d.peopleInLine || 0} in line`;
-                        }
-                        
-                        if (estDiv && d.currentWaitMins > 0) {
-                            const timeStr = new Date(Date.now() + d.currentWaitMins * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                            estDiv.innerHTML = `⌛ Wait: <b>~${d.currentWaitMins}m</b> • Service at <b>${timeStr}</b>`;
-                        }
-
-                        if(actionDiv) {
-                            let whatsappHtml = d.phone ? `<a href="https://wa.me/${d.phone.toString().replace(/\D/g, '')}" target="_blank" class="btn btn-whatsapp"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" style="width:14px;"> Chat</a>` : "";
-                            actionDiv.innerHTML = `
-                                <a href="${mapsUrl}" target="_blank" class="btn btn-sec">Directions</a>
-                                ${whatsappHtml}
-                                <button onclick="window.location.href='join-queue.html?id=${providerId}'" class="btn btn-join">JOIN QUEUE</button>
-                            `;
-                        }
-                    }
-                });
-                activeListeners.push(unsub);
-            });
-            document.getElementById("counter").innerText = `Found ${places.length} results nearby.`;
+                </div>
+                <div class="action-row">
+                     <a href="${mapsUrl}" target="_blank" class="btn btn-sec">Directions</a>
+                     <button onclick="window.location.href='provider-signup.html'" class="btn btn-reg">BUSINESS OWNER?<br>REGISTER FREE</button>
+                </div>
+            `;
         }
+        container.appendChild(card);
+    });
+    document.getElementById("counter").innerText = `Found ${places.length} results nearby.`;
+}
 
         function selectPlace(index) {
             const place = currentPlaces[index];
