@@ -208,29 +208,31 @@ async function executePlacesSearch() {
     activeListeners = [];
     
     try {
-        // 1. Map category for Firebase (e.g., 'salon' -> 'Barber')
-        const categoryToLookup = SERVICE_MAP[serviceType].label.split(' ')[0].replace('s', ''); 
+        // 1. IMPROVED CATEGORY MATCHING
+        // This looks for "Barber" or "Salon" if you click "Salons"
+        const uiLabel = SERVICE_MAP[serviceType].label.split(' ')[0].replace('s', ''); // "Salon"
         
-        // 2. Get Registered Providers from Firebase
-        const snapshot = await db.collection('providers')
-                                 .where('category', '==', categoryToLookup) 
-                                 .get();
+        // 2. Fetch from Firebase
+        const snapshot = await db.collection('providers').get(); 
 
         let firebasePlaces = [];
         snapshot.forEach(doc => {
             const data = doc.data();
-            firebasePlaces.push({
-                id: doc.id,
-                displayName: data.businessName,
-                location: new google.maps.LatLng(data.lat, data.lng),
-                shortFormattedAddress: data.address || "Registered skipQs Partner",
-                isRegistered: true,
-                liveData: { ...data, id: doc.id },
-                photos: data.imageUrl ? [{ getURI: () => data.imageUrl }] : null
-            });
+            // Flexible check: if the database category contains our search term (e.g., "Barber Shop" contains "Barber")
+            if (data.category && data.category.toLowerCase().includes(uiLabel.toLowerCase())) {
+                firebasePlaces.push({
+                    id: doc.id,
+                    displayName: data.businessName,
+                    location: new google.maps.LatLng(data.lat, data.lng),
+                    shortFormattedAddress: data.address || "Registered skipQs Partner",
+                    isRegistered: true,
+                    liveData: { ...data, id: doc.id },
+                    photos: data.imageUrl ? [{ getURI: () => data.imageUrl }] : null
+                });
+            }
         });
 
-        // 3. Get Google Maps results as backup
+        // 3. Get Google Maps results
         let googlePlaces = [];
         if (Place) {
             const config = SERVICE_MAP[serviceType];
@@ -241,17 +243,22 @@ async function executePlacesSearch() {
                     radius: 5000 
                 },
                 includedPrimaryTypes: [config.type],
-                maxResultCount: 10
+                maxResultCount: 15 // Increased to ensure we find plenty of filler
             };
             const { places } = await Place.searchNearby(request);
             googlePlaces = places || [];
         }
 
-        // 4. Merge: Remove Google results if they already exist in Firebase by name
+        // 4. MERGE LOGIC (The "Anti-Ghosting" Filter)
+        // We only remove the Google version if the Firebase version exists.
         const uniqueGooglePlaces = googlePlaces.filter(gp => {
-            return !firebasePlaces.some(fp => fp.displayName.toLowerCase() === gp.displayName.toLowerCase());
+            const existsInFirebase = firebasePlaces.some(fp => 
+                fp.displayName.toLowerCase().trim() === gp.displayName.toLowerCase().trim()
+            );
+            return !existsInFirebase;
         });
 
+        // Combine: Firebase Results FIRST, then unique Google Results
         currentPlaces = [...firebasePlaces, ...uniqueGooglePlaces];
 
         if (currentPlaces.length > 0) {
@@ -262,10 +269,9 @@ async function executePlacesSearch() {
 
     } catch (error) {
         console.error("Search Error:", error);
-        resultsContainer.innerHTML = "<p style='padding:20px;'>Error loading services.</p>";
+        resultsContainer.innerHTML = "<p style='padding:20px;'>Error loading services. Please try again.</p>";
     }
 }
-
   function renderList(places) {
     const container = document.getElementById("results");
     container.innerHTML = "";
