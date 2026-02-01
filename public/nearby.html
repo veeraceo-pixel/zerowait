@@ -198,7 +198,82 @@
             }
         }
 
-executePlacesSearch
+async function executePlacesSearch() {
+    if (!userLocation) return;
+    
+    const resultsContainer = document.getElementById("results");
+    resultsContainer.innerHTML = "<p style='padding:20px;'>Checking skipQs partners...</p>";
+    
+    const categoryKeywords = {
+        salon: ['salon', 'barber', 'hair', 'beauty'],
+        clinic: ['clinic', 'medical', 'doctor', 'aesthetics', 'health'],
+        dining: ['restaurant', 'dining', 'food', 'cafe', 'eat'],
+        banking: ['bank', 'finance', 'atm'],
+        gym: ['gym', 'fitness', 'workout'],
+        repair: ['repair', 'garage', 'mechanic', 'fix'],
+        gov: ['gov', 'council', 'post'],
+        wash: ['wash', 'laundry', 'clean']
+    };
+
+    try {
+        // 1. Fetch from Firebase
+        const snapshot = await db.collection('providers').get();
+        let firebasePlaces = [];
+        const activeKeywords = categoryKeywords[serviceType] || [serviceType];
+
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const businessLoc = new google.maps.LatLng(data.lat, data.lng);
+            const dist = google.maps.geometry.spherical.computeDistanceBetween(userLocation, businessLoc);
+            const providerCategory = (data.category || "").toLowerCase();
+            const isMatch = activeKeywords.some(keyword => providerCategory.includes(keyword));
+
+            if (isMatch && (dist * 0.000621) < 25) {
+                firebasePlaces.push({
+                    id: doc.id,
+                    displayName: data.businessName,
+                    location: businessLoc,
+                    calculatedDistance: dist,
+                    shortFormattedAddress: data.address || "Verified Partner",
+                    isRegistered: true,
+                    liveData: { ...data, id: doc.id },
+                    imageUrl: data.imageUrl
+                });
+            }
+        });
+
+        // 2. Fetch from Google Maps (Filler)
+        const request = {
+            fields: ["displayName", "location", "id", "shortFormattedAddress", "photos"],
+            locationRestriction: { center: userLocation, radius: 5000 },
+            includedPrimaryTypes: [SERVICE_MAP[serviceType].type],
+            maxResultCount: 15
+        };
+
+        const { places } = await Place.searchNearby(request);
+        let googlePlaces = [];
+        
+        if (places) {
+            googlePlaces = places
+                .filter(gp => !firebasePlaces.some(fp => fp.displayName === gp.displayName.text))
+                .map(gp => ({
+                    id: gp.id,
+                    displayName: gp.displayName.text,
+                    location: gp.location,
+                    shortFormattedAddress: gp.shortFormattedAddress,
+                    isRegistered: false,
+                    photos: gp.photos
+                }));
+        }
+
+        currentPlaces = [...firebasePlaces, ...googlePlaces];
+        renderList(currentPlaces);
+
+    } catch (e) {
+        console.error("Search failed:", e);
+        resultsContainer.innerHTML = "<p>Error loading services. Please try again.</p>";
+    }
+}
 
         // ... (Rest of your Google Maps filler logic remains the same)
   function renderList(places) {
