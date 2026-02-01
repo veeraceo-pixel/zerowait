@@ -202,29 +202,27 @@ async function executePlacesSearch() {
     if (!userLocation) return;
     
     const resultsContainer = document.getElementById("results");
-    resultsContainer.innerHTML = "<p style='padding:20px;'>Fetching local businesses...</p>";
-    
-    activeListeners.forEach(unsub => unsub());
-    activeListeners = [];
+    resultsContainer.innerHTML = "<p style='padding:20px;'>Checking skipQs partners...</p>";
     
     try {
-        // 1. IMPROVED CATEGORY MATCHING
-        // This looks for "Barber" or "Salon" if you click "Salons"
-        const uiLabel = SERVICE_MAP[serviceType].label.split(' ')[0].replace('s', ''); // "Salon"
-        
-        // 2. Fetch from Firebase
-        const snapshot = await db.collection('providers').get(); 
-
+        // 1. Fetch from MASTER (Firebase)
+        const snapshot = await db.collection('providers').get();
         let firebasePlaces = [];
+        const searchKeyword = SERVICE_MAP[serviceType].label.split(' ')[0].replace('s', '').toLowerCase();
+
         snapshot.forEach(doc => {
             const data = doc.data();
-            // Flexible check: if the database category contains our search term (e.g., "Barber Shop" contains "Barber")
-            if (data.category && data.category.toLowerCase().includes(uiLabel.toLowerCase())) {
+            const businessLoc = new google.maps.LatLng(data.lat, data.lng);
+            const dist = google.maps.geometry.spherical.computeDistanceBetween(userLocation, businessLoc);
+            
+            // Limit Firebase results to 15 miles
+            if (data.category?.toLowerCase().includes(searchKeyword) && (dist * 0.000621) < 15) {
                 firebasePlaces.push({
                     id: doc.id,
                     displayName: data.businessName,
-                    location: new google.maps.LatLng(data.lat, data.lng),
-                    shortFormattedAddress: data.address || "Registered skipQs Partner",
+                    location: businessLoc,
+                    calculatedDistance: dist,
+                    shortFormattedAddress: data.address || "Verified Partner",
                     isRegistered: true,
                     liveData: { ...data, id: doc.id },
                     photos: data.imageUrl ? [{ getURI: () => data.imageUrl }] : null
@@ -232,44 +230,37 @@ async function executePlacesSearch() {
             }
         });
 
-        // 3. Get Google Maps results
+        // 2. FETCH GOOGLE (The "Filler") - Limited to 10 results to save $
         let googlePlaces = [];
         if (Place) {
-            const config = SERVICE_MAP[serviceType];
-            const request = {
+            const { places } = await Place.searchNearby({
                 fields: ["displayName", "location", "id", "photos", "shortFormattedAddress"],
                 locationRestriction: {
                     center: { lat: userLocation.lat(), lng: userLocation.lng() },
-                    radius: 5000 
+                    radius: 5000 // 5km
                 },
-                includedPrimaryTypes: [config.type],
-                maxResultCount: 15 // Increased to ensure we find plenty of filler
-            };
-            const { places } = await Place.searchNearby(request);
+                includedPrimaryTypes: [SERVICE_MAP[serviceType].type],
+                maxResultCount: 10 // STRICT LIMIT FOR COST CONTROL
+            });
             googlePlaces = places || [];
         }
 
-        // 4. MERGE LOGIC (The "Anti-Ghosting" Filter)
-        // We only remove the Google version if the Firebase version exists.
-        const uniqueGooglePlaces = googlePlaces.filter(gp => {
-            const existsInFirebase = firebasePlaces.some(fp => 
-                fp.displayName.toLowerCase().trim() === gp.displayName.toLowerCase().trim()
-            );
-            return !existsInFirebase;
-        });
+        // 3. MASTER OVERRIDE (Deduplication)
+        const filler = googlePlaces.filter(gp => 
+            !firebasePlaces.some(fp => fp.displayName.toLowerCase().trim() === gp.displayName.toLowerCase().trim())
+        );
 
-        // Combine: Firebase Results FIRST, then unique Google Results
-        currentPlaces = [...firebasePlaces, ...uniqueGooglePlaces];
+        // 4. FINAL MERGE
+        currentPlaces = [...firebasePlaces, ...filler];
+        
+        // Final Sort by Distance
+        currentPlaces.sort((a, b) => a.calculatedDistance - b.calculatedDistance);
 
-        if (currentPlaces.length > 0) {
-            renderList(currentPlaces);
-        } else {
-            resultsContainer.innerHTML = "<p style='padding:20px;'>No services found in this area.</p>";
-        }
+        renderList(currentPlaces);
 
     } catch (error) {
         console.error("Search Error:", error);
-        resultsContainer.innerHTML = "<p style='padding:20px;'>Error loading services. Please try again.</p>";
+        resultsContainer.innerHTML = "<p style='padding:20px;'>Error loading area.</p>";
     }
 }
   function renderList(places) {
