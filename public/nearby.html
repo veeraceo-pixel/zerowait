@@ -281,7 +281,7 @@ function renderList(places) {
         let thumb = place.imageUrl || (place.photos?.[0]?.getURI({maxWidth:200}) || 'https://via.placeholder.com/150');
         
         // Corrected URL Template
-        const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.displayName)}&query_place_id=${place.id}`;
+      const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.displayName)}&query_place_id=${place.id}`;
 
         const card = document.createElement('div');
         card.className = 'place-card';
