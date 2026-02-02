@@ -183,76 +183,111 @@
 async function executePlacesSearch() {
     if (!Place || !userLocation) return;
 
+    const MAX_RESULTS = 10;
     const resultsContainer = document.getElementById("results");
     resultsContainer.innerHTML = "<p style='padding:20px;'>Searching nearby services...</p>";
 
-    const MAX_RESULTS = 10;
+    /* -----------------------------
+       STRICT CATEGORY MAP
+    ------------------------------*/
+    const CATEGORY_MAP = {
+        salon: ['salon', 'barber'],
+        clinic: ['clinic', 'hospital', 'medical'],
+        dining: ['restaurant', 'cafe', 'food'],
+        banking: ['bank'],
+        gym: ['gym', 'fitness'],
+        repair: ['repair', 'mechanic'],
+        gov: ['government', 'council'],
+        wash: ['wash', 'laundry']
+    };
+
     const firebasePlaces = [];
 
-    // 🔥 1. FIREBASE FIRST (live)
+    /* -----------------------------
+       1️⃣ FIREBASE FIRST
+    ------------------------------*/
     const snapshot = await db.collection('providers').get();
 
     for (const doc of snapshot.docs) {
         const data = doc.data();
         if (!data.lat || !data.lng) continue;
 
+        // 🔥 strict category filter
+        const providerCategory = (data.category || "").toLowerCase();
+        const allowed = CATEGORY_MAP[serviceType] || [];
+        if (!allowed.some(k => providerCategory.includes(k))) continue;
+
+        // 🔥 distance filter (25 miles)
         const businessLoc = new google.maps.LatLng(data.lat, data.lng);
         const dist = google.maps.geometry.spherical.computeDistanceBetween(
             userLocation,
             businessLoc
         );
-
-        // 25 mile radius
         if ((dist * 0.000621371) > 25) continue;
 
-        // 🔥 category match
-        const providerCategory = (data.category || "").toLowerCase();
-        if (!providerCategory.includes(serviceType)) continue;
-
-        // 🔥 queue load
+        // 🔥 live queue
         const qSnap = await db.collection('queues')
             .where('providerId', '==', doc.id)
             .where('status', 'in', ['waiting', 'serving'])
             .get();
 
         let totalMins = 0;
+
         qSnap.forEach(q => {
-            const d = Number(q.data().serviceDuration);
-            totalMins += (!isNaN(d) && d > 0) ? d : 15;
+            let raw = q.data().serviceDuration;
+            let mins = parseInt(raw, 10);
+
+            if (isNaN(mins) || mins <= 0) {
+                mins = 15; // default per person
+            }
+            totalMins += mins;
         });
 
-        const capacity = Number(data.capacity) > 0 ? Number(data.capacity) : 1;
+        let capacity = parseInt(data.capacity, 10);
+        if (isNaN(capacity) || capacity <= 0) capacity = 1;
+
+        let queueLoadMins = 0;
+        if (qSnap.size > 0) {
+            queueLoadMins = Math.max(
+                5,
+                Math.ceil(totalMins / capacity)
+            );
+        }
 
         firebasePlaces.push({
             id: doc.id,
-            displayName: data.businessName,
+            displayName: data.businessName || "Local Partner",
             location: businessLoc,
             calculatedDistance: dist,
             shortFormattedAddress: data.address || "",
-            isRegistered: true,
+            isRegistered: true, // 🔥 ONLY Firebase = local
             liveData: {
                 peopleInLine: qSnap.size,
-                queueLoadMins: Math.ceil(totalMins / capacity)
+                queueLoadMins: queueLoadMins
             },
             imageUrl: data.imageUrl
         });
     }
 
-    // 🔥 Sort Firebase by distance
+    // sort Firebase by distance
     firebasePlaces.sort((a, b) => a.calculatedDistance - b.calculatedDistance);
 
-    // ✅ If we already have enough → STOP HERE (NO GOOGLE COST)
-    if (firebasePlaces.length >= MAX_RESULTS) {
-        renderList(firebasePlaces.slice(0, MAX_RESULTS));
+    const firebaseLimited = firebasePlaces.slice(0, MAX_RESULTS);
+
+    // ✅ enough Firebase → STOP (no Google cost)
+    if (firebaseLimited.length >= MAX_RESULTS) {
+        renderList(firebaseLimited);
         document.getElementById("counter").innerText =
-            `Found ${firebasePlaces.length} live providers nearby`;
+            `Found ${firebaseLimited.length} live providers nearby`;
         return;
     }
 
-    // 🔥 2. GOOGLE FALLBACK (only remaining slots)
-    const remaining = MAX_RESULTS - firebasePlaces.length;
+    /* -----------------------------
+       2️⃣ GOOGLE FALLBACK
+    ------------------------------*/
+    const remaining = MAX_RESULTS - firebaseLimited.length;
 
-    const typeMapping = {
+    const GOOGLE_TYPE_MAP = {
         salon: 'beauty_salon',
         clinic: 'medical_clinic',
         dining: 'restaurant',
@@ -269,35 +304,42 @@ async function executePlacesSearch() {
         const request = {
             fields: ["displayName", "location", "id", "photos", "shortFormattedAddress"],
             locationRestriction: {
-                center: { lat: userLocation.lat(), lng: userLocation.lng() },
+                center: {
+                    lat: userLocation.lat(),
+                    lng: userLocation.lng()
+                },
                 radius: 15000
             },
-            includedPrimaryTypes: [typeMapping[serviceType] || 'establishment'],
+            includedPrimaryTypes: [
+                GOOGLE_TYPE_MAP[serviceType] || 'establishment'
+            ],
             maxResultCount: remaining,
-            rankPreference: google.maps.places.SearchNearbyRankPreference.DISTANCE
+            rankPreference:
+                google.maps.places.SearchNearbyRankPreference.DISTANCE
         };
 
         const { places } = await Place.searchNearby(request);
 
         googlePlaces = (places || []).map(p => ({
             id: p.id,
-            displayName: p.displayName?.text || "Local Business",
+            displayName: p.displayName?.text || "Nearby Business",
             location: p.location,
             calculatedDistance: google.maps.geometry.spherical.computeDistanceBetween(
                 userLocation,
                 p.location
             ),
             shortFormattedAddress: p.shortFormattedAddress || "",
-            isRegistered: false,
+            isRegistered: false, // 🔥 Google = NOT local
             photos: p.photos
         }));
-
-    } catch (e) {
-        console.error("Google fallback failed", e);
+    } catch (err) {
+        console.error("Google fallback failed:", err);
     }
 
-    // 🔥 3. MERGE (Firebase always first)
-    const combined = [...firebasePlaces, ...googlePlaces]
+    /* -----------------------------
+       3️⃣ MERGE + RENDER
+    ------------------------------*/
+    const combined = [...firebaseLimited, ...googlePlaces]
         .sort((a, b) => {
             if (a.isRegistered && !b.isRegistered) return -1;
             if (!a.isRegistered && b.isRegistered) return 1;
@@ -306,6 +348,7 @@ async function executePlacesSearch() {
         .slice(0, MAX_RESULTS);
 
     renderList(combined);
+
     document.getElementById("counter").innerText =
         `Found ${combined.length} results nearby`;
 }
