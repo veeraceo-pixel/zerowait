@@ -336,35 +336,31 @@ function renderList(places) {
         let thumb = place.imageUrl || (place.photos?.[0]?.getURI({maxWidth:200}) || 'https://via.placeholder.com/150');
         
         // FIXED: Changed 0{ to ${ and fixed the URL structure
-        const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.displayName)}&query_place_id=${place.id}`;
+        const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.displayName)}\&query\_place\_id=${place.id}`;
 
         const card = document.createElement('div');
         card.className = 'place-card';
         card.id = `card-${i}`;
         
-if (place.isRegistered) {
-    const d = place.liveData;
-    card.setAttribute('data-live', 'true');
-    card.innerHTML = `
-        <div onclick="selectPlace(${i})">
-            <div class="card-top">
-                <img src="${thumb}" class="thumb">
-                <div style="flex:1">
-                    <strong style="color:var(--primary);">★ ${place.displayName}</strong>
-                    <div class="info-tags">
-                        <span class="dist-tag">${miles} mi</span>
-                        <span class="time-tag">🚗 ${driveTime}m</span>
+        if (place.isRegistered) {
+            const d = place.liveData;
+            card.setAttribute('data-live', 'true');
+            card.innerHTML = `
+                <div onclick="selectPlace(${i})">
+                    <div class="card-top">
+                        <img src="${thumb}" class="thumb">
+                        <div style="flex:1">
+                            <strong style="color:var(--primary);">★ ${place.displayName}</strong>
+                            <div class="info-tags"><span class="dist-tag">${miles} mi</span><span class="time-tag">🚗 ${driveTime}m</span></div>
+                            <div class="q-badge q-online">LIVE: ${d.peopleInLine || 0} in line</div>
+                            <div class="est-box">⌛ Wait: ~${d.currentWaitMins || 0}m</div>
+                        </div>
                     </div>
-                    <div class="q-badge q-online">LIVE: ${d.peopleInLine || 0} in line</div>
-                    <div class="est-box">⌛ Wait: ~${d.currentWaitMins || 0}m</div>
                 </div>
-            </div>
-        </div>
-        <div class="action-row">
-            <a href="${mapsUrl}" target="_blank" class="btn btn-sec">Directions</a>
-            <button onclick="window.location.href='join-queue.html?id=${place.id}'" class="btn btn-join">JOIN</button>
-        </div>`;
-}
+                <div class="action-row">
+                    <a href="${d.googleMapsLink || mapsUrl}" target="_blank" class="btn btn-sec">Directions</a>
+                    <button onclick="window.location.href='join-queue.html?id=${place.id}'" class="btn btn-join">JOIN</button>
+                </div>`;
         } else {
             card.setAttribute('data-live', 'false');
             card.innerHTML = `
@@ -395,7 +391,7 @@ function selectPlace(index) {
     document.getElementById(`card-${index}`).classList.add('active');
     
     // FIXED: Syntax for mapsUrl in the detail panel
-    const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.displayName)}&query_place_id=${place.id}`;
+    const mapsUrl = `https://www.google.com/search?q=https://www.google.com/maps/search/%3Fapi%3D1%26query%3D${encodeURIComponent(place.displayName)}&query_place_id=${place.id}`;
     let mainPhoto = place.imageUrl || (place.photos?.[0]?.getURI({maxWidth:800}) || 'https://via.placeholder.com/600x400');
 
     document.getElementById('detailPanel').innerHTML = `
