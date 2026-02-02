@@ -180,150 +180,134 @@
                 );
             } catch (e) { console.error("Maps init failed", e); }
         }
-
 async function executePlacesSearch() {
     if (!Place || !userLocation) return;
-    
+
     const resultsContainer = document.getElementById("results");
-    resultsContainer.innerHTML = "<p style='padding:20px;'>Syncing live queues...</p>";
-    
-    // Cleanup previous listeners to prevent memory leaks
-    if (typeof activeListeners !== 'undefined') {
-        activeListeners.forEach(unsub => unsub());
-        activeListeners = [];
-    } else {
-        window.activeListeners = [];
-    }
+    resultsContainer.innerHTML = "<p style='padding:20px;'>Searching nearby services...</p>";
 
-    try {
-        // --- 1. Fetch Firebase Partners with Live Queue Counts ---
-        // We use onSnapshot so the wait times update in real-time
-        const unsub = db.collection('providers').onSnapshot(async (snapshot) => {
-            const firebasePlaces = [];
-            
-            const categoryKeywords = {
-                salon: ['salon', 'barber', 'hair', 'beauty'],
-                clinic: ['clinic', 'medical', 'doctor', 'health'],
-                dining: ['restaurant', 'dining', 'food', 'cafe'],
-                banking: ['bank', 'finance', 'atm'],
-                gym: ['gym', 'fitness', 'workout'],
-                repair: ['repair', 'mechanic', 'car'],
-                gov: ['government', 'council', 'post'],
-                wash: ['wash', 'laundry', 'cleaning']
-            };
-            const activeKeywords = categoryKeywords[serviceType] || [serviceType];
+    const MAX_RESULTS = 10;
+    const firebasePlaces = [];
 
-            // Create a list of promises to fetch the actual count from the 'queues' collection
-            const providerDataPromises = [];
+    // 🔥 1. FIREBASE FIRST (live)
+    const snapshot = await db.collection('providers').get();
 
-            snapshot.forEach(doc => {
-                const data = doc.data();
-                if (data.lat && data.lng) {
-                    const businessLoc = new google.maps.LatLng(data.lat, data.lng);
-                    const dist = google.maps.geometry.spherical.computeDistanceBetween(userLocation, businessLoc);
-                    const providerCategory = (data.category || "").toLowerCase();
-                    const isMatch = activeKeywords.some(k => providerCategory.includes(k));
+    for (const doc of snapshot.docs) {
+        const data = doc.data();
+        if (!data.lat || !data.lng) continue;
 
-                    if (isMatch && (dist * 0.000621) < 25) {
-                        // For each partner, we query the 'queues' collection for live tickets
-                        const queuePromise = db.collection('queues')
-                            .where('providerId', '==', doc.id)
-                            .where('status', '==', 'waiting')
-                            .get()
-                            .then(qSnap => {
-                                let totalWaitMins = 0;
-                                qSnap.forEach(qDoc => {
-                                    // Sum up service durations or default to 10 mins per person
-                                    totalWaitMins += (qDoc.data().serviceDuration || 10);
-                                });
+        const businessLoc = new google.maps.LatLng(data.lat, data.lng);
+        const dist = google.maps.geometry.spherical.computeDistanceBetween(
+            userLocation,
+            businessLoc
+        );
 
-                                return {
-                                    id: doc.id,
-                                    displayName: data.businessName || "Verified Partner", 
-                                    location: businessLoc,
-                                    calculatedDistance: dist,
-                                    shortFormattedAddress: data.address || "Partner Location",
-                                    isRegistered: true,
-                                    liveData: { 
-                                        ...data, 
-                                        id: doc.id,
-                                        // Update the counts with actual data from the 'queues' collection
-                                        peopleInLine: qSnap.size, 
-                                        currentWaitMins: totalWaitMins 
-                                    },
-                                    imageUrl: data.imageUrl
-                                };
-                            });
-                        providerDataPromises.push(queuePromise);
-                    }
-                }
-            });
+        // 25 mile radius
+        if ((dist * 0.000621371) > 25) continue;
 
-            // Wait for all queue counts to finish fetching
-            const resolvedFirebasePlaces = await Promise.all(providerDataPromises);
+        // 🔥 category match
+        const providerCategory = (data.category || "").toLowerCase();
+        if (!providerCategory.includes(serviceType)) continue;
 
-            // --- 2. Fetch from Google Maps (Fallback) ---
-            let googlePlaces = [];
-            if (resolvedFirebasePlaces.length < 15) {
-                const typeMapping = {
-                    'salon': 'beauty_salon', 'clinic': 'medical_lab', 'dining': 'restaurant',
-                    'banking': 'bank', 'gym': 'gym', 'repair': 'car_repair',
-                    'gov': 'local_government_office', 'wash': 'car_wash'
-                };
-                const primaryType = typeMapping[serviceType] || 'establishment';
+        // 🔥 queue load
+        const qSnap = await db.collection('queues')
+            .where('providerId', '==', doc.id)
+            .where('status', 'in', ['waiting', 'serving'])
+            .get();
 
-                const request = {
-                    fields: ["displayName", "location", "id", "photos", "shortFormattedAddress"],
-                    locationRestriction: {
-                        center: { lat: userLocation.lat(), lng: userLocation.lng() },
-                        radius: 5000 
-                    },
-                    includedPrimaryTypes: [primaryType],
-                    maxResultCount: 20,
-                    rankPreference: google.maps.places.SearchNearbyRankPreference.DISTANCE
-                };
-
-                try {
-                    const { places } = await Place.searchNearby(request);
-                    if (places && places.length > 0) {
-                        googlePlaces = places
-                            .filter(gp => !resolvedFirebasePlaces.some(fp => fp.displayName === gp.displayName?.text))
-                            .map(gp => ({
-                                id: gp.id,
-                                displayName: gp.displayName.text, 
-                                location: gp.location,
-                                calculatedDistance: google.maps.geometry.spherical.computeDistanceBetween(userLocation, gp.location),
-                                shortFormattedAddress: gp.shortFormattedAddress || "Address Unavailable",
-                                isRegistered: false,
-                                photos: gp.photos
-                            }));
-                    }
-                } catch (gErr) {
-                    console.error("Google Maps API Error:", gErr);
-                }
-            }
-
-            // --- 3. Combine, Sort & Render ---
-            currentPlaces = [...resolvedFirebasePlaces, ...googlePlaces].sort((a, b) => {
-                if (a.isRegistered && !b.isRegistered) return -1;
-                if (!a.isRegistered && b.isRegistered) return 1;
-                return a.calculatedDistance - b.calculatedDistance;
-            });
-
-            if (currentPlaces.length > 0) {
-                renderList(currentPlaces);
-                document.getElementById("counter").innerText = `Found ${currentPlaces.length} results nearby.`;
-            } else {
-                resultsContainer.innerHTML = "<p style='padding:20px;'>No results found.</p>";
-            }
+        let totalMins = 0;
+        qSnap.forEach(q => {
+            const d = Number(q.data().serviceDuration);
+            totalMins += (!isNaN(d) && d > 0) ? d : 15;
         });
 
-        activeListeners.push(unsub);
+        const capacity = Number(data.capacity) > 0 ? Number(data.capacity) : 1;
 
-    } catch (error) { 
-        console.error("General Search Error:", error);
-        resultsContainer.innerHTML = "<p style='padding:20px;'>Error loading services.</p>";
+        firebasePlaces.push({
+            id: doc.id,
+            displayName: data.businessName,
+            location: businessLoc,
+            calculatedDistance: dist,
+            shortFormattedAddress: data.address || "",
+            isRegistered: true,
+            liveData: {
+                peopleInLine: qSnap.size,
+                queueLoadMins: Math.ceil(totalMins / capacity)
+            },
+            imageUrl: data.imageUrl
+        });
     }
+
+    // 🔥 Sort Firebase by distance
+    firebasePlaces.sort((a, b) => a.calculatedDistance - b.calculatedDistance);
+
+    // ✅ If we already have enough → STOP HERE (NO GOOGLE COST)
+    if (firebasePlaces.length >= MAX_RESULTS) {
+        renderList(firebasePlaces.slice(0, MAX_RESULTS));
+        document.getElementById("counter").innerText =
+            `Found ${firebasePlaces.length} live providers nearby`;
+        return;
+    }
+
+    // 🔥 2. GOOGLE FALLBACK (only remaining slots)
+    const remaining = MAX_RESULTS - firebasePlaces.length;
+
+    const typeMapping = {
+        salon: 'beauty_salon',
+        clinic: 'medical_clinic',
+        dining: 'restaurant',
+        banking: 'bank',
+        gym: 'gym',
+        repair: 'car_repair',
+        gov: 'local_government_office',
+        wash: 'car_wash'
+    };
+
+    let googlePlaces = [];
+
+    try {
+        const request = {
+            fields: ["displayName", "location", "id", "photos", "shortFormattedAddress"],
+            locationRestriction: {
+                center: { lat: userLocation.lat(), lng: userLocation.lng() },
+                radius: 15000
+            },
+            includedPrimaryTypes: [typeMapping[serviceType] || 'establishment'],
+            maxResultCount: remaining,
+            rankPreference: google.maps.places.SearchNearbyRankPreference.DISTANCE
+        };
+
+        const { places } = await Place.searchNearby(request);
+
+        googlePlaces = (places || []).map(p => ({
+            id: p.id,
+            displayName: p.displayName?.text || "Local Business",
+            location: p.location,
+            calculatedDistance: google.maps.geometry.spherical.computeDistanceBetween(
+                userLocation,
+                p.location
+            ),
+            shortFormattedAddress: p.shortFormattedAddress || "",
+            isRegistered: false,
+            photos: p.photos
+        }));
+
+    } catch (e) {
+        console.error("Google fallback failed", e);
+    }
+
+    // 🔥 3. MERGE (Firebase always first)
+    const combined = [...firebasePlaces, ...googlePlaces]
+        .sort((a, b) => {
+            if (a.isRegistered && !b.isRegistered) return -1;
+            if (!a.isRegistered && b.isRegistered) return 1;
+            return a.calculatedDistance - b.calculatedDistance;
+        })
+        .slice(0, MAX_RESULTS);
+
+    renderList(combined);
+    document.getElementById("counter").innerText =
+        `Found ${combined.length} results nearby`;
 }
 
 function renderList(places) {
