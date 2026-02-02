@@ -182,12 +182,17 @@
         }
 
 async function executePlacesSearch() {
-    if (!userLocation || !Place) return;
+    if (!Place || !userLocation) return;
+    
     const resultsContainer = document.getElementById("results");
     resultsContainer.innerHTML = "<p style='padding:20px;'>Checking skipQs partners...</p>";
     
+    // Cleanup previous listeners
+    activeListeners.forEach(unsub => unsub());
+    activeListeners = [];
+
     try {
-        // 1. Fetch skipQs Partners from Firebase
+        // --- STEP 1: Fetch from Firebase (skipQs Partners) ---
         const snapshot = await db.collection('providers').get();
         let firebasePlaces = [];
         
@@ -205,15 +210,12 @@ async function executePlacesSearch() {
 
         snapshot.forEach(doc => {
             const data = doc.data();
-            
-            // FIX: Ensure lat/lng exist before creating LatLng object
             if (data.lat && data.lng) {
                 const businessLoc = new google.maps.LatLng(data.lat, data.lng);
                 const dist = google.maps.geometry.spherical.computeDistanceBetween(userLocation, businessLoc);
                 const providerCategory = (data.category || "").toLowerCase();
                 const isMatch = activeKeywords.some(k => providerCategory.includes(k));
 
-                // Only include if category matches and is within 25 miles
                 if (isMatch && (dist * 0.000621) < 25) {
                     firebasePlaces.push({
                         id: doc.id,
@@ -229,55 +231,68 @@ async function executePlacesSearch() {
             }
         });
 
-        // 2. Conditional Fallback to Google Maps
+        // --- STEP 2: Conditional Fallback to Google Maps ---
         let googlePlaces = [];
 
         if (firebasePlaces.length < 10) {
-            const { places } = await Place.searchNearby({
-                // Ensure all necessary fields are requested
-                fields: ["displayName", "location", "id", "shortFormattedAddress", "photos"],
-                locationRestriction: { 
-                    center: userLocation,
+            const config = SERVICE_MAP[serviceType];
+            
+            // Using your working request format from previous version
+            const request = {
+                fields: ["displayName", "location", "id", "photos", "shortFormattedAddress"],
+                locationRestriction: {
+                    center: { lat: userLocation.lat(), lng: userLocation.lng() },
                     radius: 5000 
                 },
-                includedPrimaryTypes: [SERVICE_MAP[serviceType].type],
-                maxResultCount: 15
-            });
+                includedPrimaryTypes: [config.type],
+                maxResultCount: 20,
+                rankPreference: google.maps.places.SearchNearbyRankPreference.DISTANCE
+            };
 
-            // FIX: Added explicit check for places existence to avoid .filter errors
+            const { places } = await Place.searchNearby(request);
+
             if (places && places.length > 0) {
                 googlePlaces = places
                     .filter(gp => {
-                        const gName = gp.displayName?.text || "Local Service";
-                        // Avoid duplicates if a Firebase partner also appears in Google results
-                        return !firebasePlaces.some(fp => fp.displayName === gName);
+                        // FIX: Extract name safely to avoid "Local Service" placeholder
+                        const gName = gp.displayName?.text;
+                        return gName && !firebasePlaces.some(fp => fp.displayName === gName);
                     })
                     .map(gp => ({
                         id: gp.id,
-                        displayName: gp.displayName?.text || "Local Service", 
+                        displayName: gp.displayName?.text || "Nearby Service", 
                         location: gp.location,
                         calculatedDistance: google.maps.geometry.spherical.computeDistanceBetween(userLocation, gp.location),
-                        shortFormattedAddress: gp.shortFormattedAddress || "Nearby Location",
+                        shortFormattedAddress: gp.shortFormattedAddress || "Address Unavailable",
                         isRegistered: false,
                         photos: gp.photos
                     }));
             }
         }
 
-        // 3. Combine and Priority Sort
-        // Registered partners always stay at the top, followed by closest distance
+        // --- STEP 3: Combine & Render ---
         currentPlaces = [...firebasePlaces, ...googlePlaces].sort((a, b) => {
             if (a.isRegistered && !b.isRegistered) return -1;
             if (!a.isRegistered && b.isRegistered) return 1;
             return a.calculatedDistance - b.calculatedDistance;
         });
 
-        renderList(currentPlaces);
+        if (currentPlaces.length > 0) {
+            renderList(currentPlaces);
+            document.getElementById("counter").innerText = `${currentPlaces.length} results.`;
+        } else {
+            resultsContainer.innerHTML = "<p style='padding:20px;'>No results found.</p>";
+            document.getElementById("counter").innerText = "0 results.";
+        }
 
-    } catch (e) { 
-        console.error("Search Error:", e);
-        // FIX: Improved error message visibility
-        resultsContainer.innerHTML = `<p style='padding:20px; color:red;'>Error loading services: ${e.message}</p>`;
+    } catch (error) { 
+        console.error("Search Error:", error); 
+        // Retry logic from your previous version
+        if (error.message.includes("500") || error.message.includes("INTERNAL")) {
+            setTimeout(executePlacesSearch, 2000);
+        } else {
+            resultsContainer.innerHTML = "<p style='padding:20px;'>Error loading services.</p>";
+        }
     }
 }
 
