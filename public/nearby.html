@@ -187,12 +187,14 @@ async function executePlacesSearch() {
     const resultsContainer = document.getElementById("results");
     resultsContainer.innerHTML = "<p style='padding:20px;'>Checking skipQs partners...</p>";
     
-    // Cleanup previous listeners
-    activeListeners.forEach(unsub => unsub());
-    activeListeners = [];
+    // Cleanup any existing active listeners
+    if (typeof activeListeners !== 'undefined') {
+        activeListeners.forEach(unsub => unsub());
+        activeListeners = [];
+    }
 
     try {
-        // --- STEP 1: Fetch from Firebase (skipQs Partners) ---
+        // --- 1. PRIORITY: Fetch skipQs Partners from Firebase ---
         const snapshot = await db.collection('providers').get();
         let firebasePlaces = [];
         
@@ -231,13 +233,13 @@ async function executePlacesSearch() {
             }
         });
 
-        // --- STEP 2: Conditional Fallback to Google Maps ---
+        // --- 2. FALLBACK: Fetch from Google Maps if < 10 partners found ---
         let googlePlaces = [];
 
         if (firebasePlaces.length < 10) {
             const config = SERVICE_MAP[serviceType];
             
-            // Using your working request format from previous version
+            // This is your working request format from your previous version
             const request = {
                 fields: ["displayName", "location", "id", "photos", "shortFormattedAddress"],
                 locationRestriction: {
@@ -254,12 +256,13 @@ async function executePlacesSearch() {
             if (places && places.length > 0) {
                 googlePlaces = places
                     .filter(gp => {
-                        // FIX: Extract name safely to avoid "Local Service" placeholder
                         const gName = gp.displayName?.text;
+                        // Avoid duplicates if a partner is already in Firebase list
                         return gName && !firebasePlaces.some(fp => fp.displayName === gName);
                     })
                     .map(gp => ({
                         id: gp.id,
+                        // FIX: Specifically use .displayName.text to avoid "Local Service"
                         displayName: gp.displayName?.text || "Nearby Service", 
                         location: gp.location,
                         calculatedDistance: google.maps.geometry.spherical.computeDistanceBetween(userLocation, gp.location),
@@ -270,7 +273,7 @@ async function executePlacesSearch() {
             }
         }
 
-        // --- STEP 3: Combine & Render ---
+        // --- 3. COMBINE & SORT ---
         currentPlaces = [...firebasePlaces, ...googlePlaces].sort((a, b) => {
             if (a.isRegistered && !b.isRegistered) return -1;
             if (!a.isRegistered && b.isRegistered) return 1;
@@ -279,7 +282,7 @@ async function executePlacesSearch() {
 
         if (currentPlaces.length > 0) {
             renderList(currentPlaces);
-            document.getElementById("counter").innerText = `${currentPlaces.length} results.`;
+            document.getElementById("counter").innerText = `Found ${currentPlaces.length} results nearby.`;
         } else {
             resultsContainer.innerHTML = "<p style='padding:20px;'>No results found.</p>";
             document.getElementById("counter").innerText = "0 results.";
@@ -287,7 +290,7 @@ async function executePlacesSearch() {
 
     } catch (error) { 
         console.error("Search Error:", error); 
-        // Retry logic from your previous version
+        // Your previous retry logic
         if (error.message.includes("500") || error.message.includes("INTERNAL")) {
             setTimeout(executePlacesSearch, 2000);
         } else {
