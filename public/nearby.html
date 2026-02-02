@@ -187,14 +187,13 @@ async function executePlacesSearch() {
     const resultsContainer = document.getElementById("results");
     resultsContainer.innerHTML = "<p style='padding:20px;'>Checking skipQs partners...</p>";
     
-    // Cleanup any existing active listeners
     if (typeof activeListeners !== 'undefined') {
         activeListeners.forEach(unsub => unsub());
         activeListeners = [];
     }
 
     try {
-        // --- 1. PRIORITY: Fetch skipQs Partners from Firebase ---
+        // --- 1. Fetch Firebase Partners ---
         const snapshot = await db.collection('providers').get();
         let firebasePlaces = [];
         
@@ -233,50 +232,70 @@ async function executePlacesSearch() {
             }
         });
 
-        // --- 2. FALLBACK: Fetch from Google Maps if < 10 partners found ---
+        // --- 2. Fetch from Google Maps (Improved Fallback) ---
         let googlePlaces = [];
 
-        if (firebasePlaces.length < 10) {
+        // We run Google search if we have fewer than 15 results to ensure a full list
+        if (firebasePlaces.length < 15) {
             const config = SERVICE_MAP[serviceType];
             
-            // This is your working request format from your previous version
+            // Map common types to Google's strict Primary Type list
+            const typeMapping = {
+                'salon': 'beauty_salon',
+                'clinic': 'medical_lab',
+                'dining': 'restaurant',
+                'banking': 'bank',
+                'gym': 'gym',
+                'repair': 'car_repair',
+                'gov': 'local_government_office',
+                'wash': 'car_wash'
+            };
+
+            const primaryType = typeMapping[serviceType] || config.type;
+
             const request = {
-                fields: ["displayName", "location", "id", "photos", "shortFormattedAddress"],
+                fields: ["displayName", "location", "id", "photos", "shortFormattedAddress", "types"],
                 locationRestriction: {
                     center: { lat: userLocation.lat(), lng: userLocation.lng() },
                     radius: 5000 
                 },
-                includedPrimaryTypes: [config.type],
+                includedPrimaryTypes: [primaryType],
                 maxResultCount: 20,
                 rankPreference: google.maps.places.SearchNearbyRankPreference.DISTANCE
             };
 
-            const { places } = await Place.searchNearby(request);
+            try {
+                const { places } = await Place.searchNearby(request);
 
-            if (places && places.length > 0) {
-                googlePlaces = places
-                    .filter(gp => {
-                        const gName = gp.displayName?.text;
-                        // Avoid duplicates if a partner is already in Firebase list
-                        return gName && !firebasePlaces.some(fp => fp.displayName === gName);
-                    })
-                    .map(gp => ({
-                        id: gp.id,
-                        // FIX: Specifically use .displayName.text to avoid "Local Service"
-                        displayName: gp.displayName?.text || "Nearby Service", 
-                        location: gp.location,
-                        calculatedDistance: google.maps.geometry.spherical.computeDistanceBetween(userLocation, gp.location),
-                        shortFormattedAddress: gp.shortFormattedAddress || "Address Unavailable",
-                        isRegistered: false,
-                        photos: gp.photos
-                    }));
+                if (places && places.length > 0) {
+                    googlePlaces = places
+                        .filter(gp => {
+                            const nameText = gp.displayName?.text;
+                            // Filter out duplicates already in Firebase
+                            return nameText && !firebasePlaces.some(fp => fp.displayName === nameText);
+                        })
+                        .map(gp => ({
+                            id: gp.id,
+                            displayName: gp.displayName.text, 
+                            location: gp.location,
+                            calculatedDistance: google.maps.geometry.spherical.computeDistanceBetween(userLocation, gp.location),
+                            shortFormattedAddress: gp.shortFormattedAddress || "Address Unavailable",
+                            isRegistered: false,
+                            photos: gp.photos
+                        }));
+                }
+            } catch (gErr) {
+                console.error("Google Maps API Error:", gErr);
+                // Fail gracefully: if Google fails, we just show Firebase results
             }
         }
 
-        // --- 3. COMBINE & SORT ---
+        // --- 3. Combine & Sort ---
         currentPlaces = [...firebasePlaces, ...googlePlaces].sort((a, b) => {
+            // Priority 1: Registered Partners
             if (a.isRegistered && !b.isRegistered) return -1;
             if (!a.isRegistered && b.isRegistered) return 1;
+            // Priority 2: Distance
             return a.calculatedDistance - b.calculatedDistance;
         });
 
@@ -289,8 +308,7 @@ async function executePlacesSearch() {
         }
 
     } catch (error) { 
-        console.error("Search Error:", error); 
-        // Your previous retry logic
+        console.error("General Search Error:", error); 
         if (error.message.includes("500") || error.message.includes("INTERNAL")) {
             setTimeout(executePlacesSearch, 2000);
         } else {
