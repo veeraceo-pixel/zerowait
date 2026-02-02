@@ -187,7 +187,6 @@ async function executePlacesSearch() {
     resultsContainer.innerHTML = "<p style='padding:20px;'>Checking skipQs partners...</p>";
     
     try {
-        // 1. FETCH FIREBASE PARTNERS FIRST
         const snapshot = await db.collection('providers').get();
         let firebasePlaces = [];
         
@@ -226,13 +225,11 @@ async function executePlacesSearch() {
 
         let googlePlaces = [];
 
-        // 2. LOGIC FIX: Only fetch Google if Firebase has LESS than 10 results
         if (firebasePlaces.length < 10) {
-            console.log("Fewer than 10 partners found. Fetching Google results...");
             const { places } = await Place.searchNearby({
                 fields: ["displayName", "location", "id", "shortFormattedAddress", "photos"],
                 locationRestriction: { 
-                    center: { lat: userLocation.lat(), lng: userLocation.lng() }, 
+                    center: userLocation, // Simplified
                     radius: 5000 
                 },
                 includedPrimaryTypes: [SERVICE_MAP[serviceType].type],
@@ -241,23 +238,20 @@ async function executePlacesSearch() {
 
             if (places) {
                 googlePlaces = places
-                    .filter(gp => !firebasePlaces.some(fp => fp.displayName === gp.displayName?.text))
+                    .filter(gp => !firebasePlaces.some(fp => fp.displayName === (gp.displayName?.text || gp.name)))
                     .map(gp => ({
                         id: gp.id,
-                        // FIX: gp.displayName.text avoids "undefined"
-                        displayName: gp.displayName?.text || "Local Service", 
+                        // Fix: Fallback to gp.name if displayName.text is missing
+                        displayName: gp.displayName?.text || gp.name || "Local Service", 
                         location: gp.location,
                         calculatedDistance: google.maps.geometry.spherical.computeDistanceBetween(userLocation, gp.location),
-                        shortFormattedAddress: gp.shortFormattedAddress,
+                        shortFormattedAddress: gp.shortFormattedAddress || "Nearby Location",
                         isRegistered: false,
                         photos: gp.photos
                     }));
             }
-        } else {
-            console.log("10+ partners found. Skipping Google Maps fetch.");
         }
 
-        // Combine and Sort (Partners first, then distance)
         currentPlaces = [...firebasePlaces, ...googlePlaces].sort((a, b) => {
             if (a.isRegistered && !b.isRegistered) return -1;
             if (!a.isRegistered && b.isRegistered) return 1;
@@ -270,7 +264,6 @@ async function executePlacesSearch() {
         resultsContainer.innerHTML = "<p style='padding:20px;'>Error loading services.</p>";
     }
 }
-
 function renderList(places) {
     const container = document.getElementById("results");
     container.innerHTML = "";
@@ -282,7 +275,6 @@ function renderList(places) {
         
         // Corrected Template Literal for Maps URL
         const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.displayName)}&query_place_id=${place.id}`;
-
         const card = document.createElement('div');
         card.className = 'place-card';
         card.id = `card-${i}`;
