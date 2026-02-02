@@ -279,7 +279,7 @@ function renderList(places) {
         let thumb = place.imageUrl || (place.photos?.[0]?.getURI({maxWidth:200}) || 'https://via.placeholder.com/150');
         
         // FIXED: Changed 0{ to ${ and fixed the URL structure
-        const mapsUrl = `https://www.google.com/search?q=https://www.google.com/maps/search/%3Fapi%3D1%26query%3D${encodeURIComponent(place.displayName)}&query_place_id=${place.id}`;
+        const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.displayName)}\&query\_place\_id=${place.id}`;
 
         const card = document.createElement('div');
         card.className = 'place-card';
