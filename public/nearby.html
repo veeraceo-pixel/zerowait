@@ -187,9 +187,6 @@ async function executePlacesSearch() {
     const resultsContainer = document.getElementById("results");
     resultsContainer.innerHTML = "<p style='padding:20px;'>Searching nearby services...</p>";
 
-    /* -----------------------------
-       STRICT CATEGORY MAP
-    ------------------------------*/
     const CATEGORY_MAP = {
         salon: ['salon', 'barber'],
         clinic: ['clinic', 'hospital', 'medical'],
@@ -212,12 +209,10 @@ async function executePlacesSearch() {
         const data = doc.data();
         if (!data.lat || !data.lng) continue;
 
-        // 🔥 strict category filter
         const providerCategory = (data.category || "").toLowerCase();
         const allowed = CATEGORY_MAP[serviceType] || [];
         if (!allowed.some(k => providerCategory.includes(k))) continue;
 
-        // 🔥 distance filter (25 miles)
         const businessLoc = new google.maps.LatLng(data.lat, data.lng);
         const dist = google.maps.geometry.spherical.computeDistanceBetween(
             userLocation,
@@ -225,7 +220,6 @@ async function executePlacesSearch() {
         );
         if ((dist * 0.000621371) > 25) continue;
 
-        // 🔥 live queue
         const qSnap = await db.collection('queues')
             .where('providerId', '==', doc.id)
             .where('status', 'in', ['waiting', 'serving'])
@@ -236,10 +230,7 @@ async function executePlacesSearch() {
         qSnap.forEach(q => {
             let raw = q.data().serviceDuration;
             let mins = parseInt(raw, 10);
-
-            if (isNaN(mins) || mins <= 0) {
-                mins = 15; // default per person
-            }
+            if (isNaN(mins) || mins <= 0) mins = 15;
             totalMins += mins;
         });
 
@@ -248,39 +239,36 @@ async function executePlacesSearch() {
 
         let queueLoadMins = 0;
         if (qSnap.size > 0) {
-            queueLoadMins = Math.max(
-                5,
-                Math.ceil(totalMins / capacity)
-            );
+            queueLoadMins = Math.max(5, Math.ceil(totalMins / capacity));
         }
 
-firebasePlaces.push({
-    id: doc.id,
-    displayName: data.businessName || "Local Partner",
-    location: businessLoc,
-    calculatedDistance: dist,
-    shortFormattedAddress: data.address || "",
-    isRegistered: true,
+        firebasePlaces.push({
+            id: doc.id,
+            displayName: data.businessName || "Local Partner",
+            location: businessLoc,
+            calculatedDistance: dist,
+            shortFormattedAddress: data.address || "",
+            isRegistered: true,
 
-    // 🔥 ADD THESE TWO LINES
-    waitTime: queueLoadMins,              // UI usually reads this
-    peopleInQueue: qSnap.size,             // UI usually reads this
+            // 🔥 UI-safe fields
+            waitTime: queueLoadMins,
+            peopleInQueue: qSnap.size,
 
-    liveData: {
-        peopleInLine: qSnap.size,
-        queueLoadMins: queueLoadMins
-    },
+            liveData: {
+                peopleInLine: qSnap.size,
+                queueLoadMins: queueLoadMins
+            },
 
-    imageUrl: data.imageUrl
-});
+            imageUrl: data.imageUrl
+        });
+    } // ✅ THIS WAS MISSING — LOOP CLOSED HERE
 
-
-    // sort Firebase by distance
+    /* -----------------------------
+       SORT + LIMIT FIREBASE
+    ------------------------------*/
     firebasePlaces.sort((a, b) => a.calculatedDistance - b.calculatedDistance);
-
     const firebaseLimited = firebasePlaces.slice(0, MAX_RESULTS);
 
-    // ✅ enough Firebase → STOP (no Google cost)
     if (firebaseLimited.length >= MAX_RESULTS) {
         renderList(firebaseLimited);
         document.getElementById("counter").innerText =
@@ -335,7 +323,7 @@ firebasePlaces.push({
                 p.location
             ),
             shortFormattedAddress: p.shortFormattedAddress || "",
-            isRegistered: false, // 🔥 Google = NOT local
+            isRegistered: false,
             photos: p.photos
         }));
     } catch (err) {
@@ -354,11 +342,9 @@ firebasePlaces.push({
         .slice(0, MAX_RESULTS);
 
     renderList(combined);
-
     document.getElementById("counter").innerText =
         `Found ${combined.length} results nearby`;
 }
-
 function renderList(places) {
     const container = document.getElementById("results");
     container.innerHTML = "";
