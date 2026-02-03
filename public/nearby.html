@@ -254,20 +254,26 @@ async function executePlacesSearch() {
             );
         }
 
-        firebasePlaces.push({
-            id: doc.id,
-            displayName: data.businessName || "Local Partner",
-            location: businessLoc,
-            calculatedDistance: dist,
-            shortFormattedAddress: data.address || "",
-            isRegistered: true, // 🔥 ONLY Firebase = local
-            liveData: {
-                peopleInLine: qSnap.size,
-                queueLoadMins: queueLoadMins
-            },
-            imageUrl: data.imageUrl
-        });
-    }
+firebasePlaces.push({
+    id: doc.id,
+    displayName: data.businessName || "Local Partner",
+    location: businessLoc,
+    calculatedDistance: dist,
+    shortFormattedAddress: data.address || "",
+    isRegistered: true,
+
+    // 🔥 ADD THESE TWO LINES
+    waitTime: queueLoadMins,              // UI usually reads this
+    peopleInQueue: qSnap.size,             // UI usually reads this
+
+    liveData: {
+        peopleInLine: qSnap.size,
+        queueLoadMins: queueLoadMins
+    },
+
+    imageUrl: data.imageUrl
+});
+
 
     // sort Firebase by distance
     firebasePlaces.sort((a, b) => a.calculatedDistance - b.calculatedDistance);
