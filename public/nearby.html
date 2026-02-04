@@ -114,6 +114,22 @@
     <script src="firebase-config.js"></script>
 
     <script>
+        /* ===============================
+   CACHE HELPERS (ADD THIS)
+================================ */
+
+const CACHE_DAYS = 20;
+const CACHE_TTL_MS = CACHE_DAYS * 24 * 60 * 60 * 1000;
+
+function roundCoord(val) {
+    return Math.round(val * 100) / 100; // ~1km tile
+}
+
+function getCacheKey(serviceType, location) {
+    return `${serviceType}_${roundCoord(location.lat())}_${roundCoord(location.lng())}`;
+}
+
+        
         const db = firebase.firestore();
         const params = new URLSearchParams(window.location.search);
         
@@ -180,6 +196,64 @@
                 );
             } catch (e) { console.error("Maps init failed", e); }
         }
+
+
+        async function readPlacesCache(serviceType, userLocation) {
+    const key = getCacheKey(serviceType, userLocation);
+    const ref = db.collection('places_cache').doc(key);
+    const snap = await ref.get();
+
+    if (!snap.exists) return null;
+
+    const data = snap.data();
+    if (!data.expiresAt || data.expiresAt.toMillis() < Date.now()) {
+        return null; // expired
+    }
+
+return (data.results || [])
+    .slice(0, 10)
+    .map(p => {
+        const loc = new google.maps.LatLng(p.lat, p.lng);
+        return {
+            id: p.id,
+            displayName: p.displayName,
+            location: loc,
+            calculatedDistance: google.maps.geometry.spherical.computeDistanceBetween(
+                userLocation,
+                loc
+            ),
+            shortFormattedAddress: p.shortFormattedAddress || "",
+            isRegistered: false,
+            fromCache: true
+        };
+    });
+
+
+
+}
+
+  async function savePlacesCache(serviceType, userLocation, googlePlaces) {
+    const key = getCacheKey(serviceType, userLocation);
+
+    const results = googlePlaces.slice(0, 10).map(p => ({
+        id: p.id,
+        displayName: p.displayName,
+        lat: p.location.lat(),
+        lng: p.location.lng(),
+        shortFormattedAddress: p.shortFormattedAddress || ""
+    }));
+
+    await db.collection('places_cache').doc(key).set({
+        serviceType,
+        latRound: roundCoord(userLocation.lat()),
+        lngRound: roundCoord(userLocation.lng()),
+        source: "google",
+        results,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        expiresAt: firebase.firestore.Timestamp.fromMillis(Date.now() + CACHE_TTL_MS)
+    });
+}
+
 async function executePlacesSearch() {
     if (!Place || !userLocation) return;
 
@@ -254,10 +328,11 @@ async function executePlacesSearch() {
             waitTime: queueLoadMins,
             peopleInQueue: qSnap.size,
 
-            liveData: {
-                peopleInLine: qSnap.size,
-                queueLoadMins: queueLoadMins
-            },
+liveData: {
+    peopleInLine: qSnap.size,
+    queueLoadMins: queueLoadMins,
+    currentWaitMins: queueLoadMins
+},
 
             imageUrl: data.imageUrl
         });
@@ -279,38 +354,36 @@ async function executePlacesSearch() {
     /* -----------------------------
        2️⃣ GOOGLE FALLBACK
     ------------------------------*/
-    const remaining = MAX_RESULTS - firebaseLimited.length;
+/* -----------------------------
+   2️⃣ GOOGLE FALLBACK + CACHE
+------------------------------*/
+const remaining = MAX_RESULTS - firebaseLimited.length;
 
-    const GOOGLE_TYPE_MAP = {
-        salon: 'beauty_salon',
-        clinic: 'medical_clinic',
-        dining: 'restaurant',
-        banking: 'bank',
-        gym: 'gym',
-        repair: 'car_repair',
-        gov: 'local_government_office',
-        wash: 'car_wash'
-    };
+let googlePlaces = [];
 
-    let googlePlaces = [];
+// 1️⃣ TRY CACHE FIRST
+const cached = await readPlacesCache(serviceType, userLocation);
+if (cached && cached.length) {
+    googlePlaces = cached;
+}
 
+// 2️⃣ IF CACHE MISS → CALL GOOGLE
+if (!googlePlaces.length) {
     try {
-        const request = {
-            fields: ["displayName", "location", "id", "photos", "shortFormattedAddress"],
-            locationRestriction: {
-                center: {
-                    lat: userLocation.lat(),
-                    lng: userLocation.lng()
-                },
-                radius: 15000
-            },
-            includedPrimaryTypes: [
-                GOOGLE_TYPE_MAP[serviceType] || 'establishment'
-            ],
-            maxResultCount: remaining,
-            rankPreference:
-                google.maps.places.SearchNearbyRankPreference.DISTANCE
-        };
+const request = {
+    fields: ["displayName", "location", "id", "photos", "shortFormattedAddress"],
+    locationRestriction: {
+        center: {
+            lat: userLocation.lat(),
+            lng: userLocation.lng()
+        },
+        radius: 15000
+    },
+    maxResultCount: remaining,
+    rankPreference:
+        google.maps.places.SearchNearbyRankPreference.DISTANCE
+};
+
 
         const { places } = await Place.searchNearby(request);
 
@@ -326,9 +399,17 @@ async function executePlacesSearch() {
             isRegistered: false,
             photos: p.photos
         }));
+
+        // 🔥 SAVE CACHE FOR ALL FUTURE USERS
+if (googlePlaces.length && !cached) {
+    await savePlacesCache(serviceType, userLocation, googlePlaces);
+}
+
+
     } catch (err) {
         console.error("Google fallback failed:", err);
     }
+}
 
     /* -----------------------------
        3️⃣ MERGE + RENDER
@@ -340,6 +421,8 @@ async function executePlacesSearch() {
             return a.calculatedDistance - b.calculatedDistance;
         })
         .slice(0, MAX_RESULTS);
+    
+    currentPlaces = combined;
 
     renderList(combined);
     document.getElementById("counter").innerText =
@@ -355,7 +438,8 @@ function renderList(places) {
         let thumb = place.imageUrl || (place.photos?.[0]?.getURI({maxWidth:200}) || 'https://via.placeholder.com/150');
         
         // FIXED: Changed 0{ to ${ and fixed the URL structure
-        const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.displayName)}\&query\_place\_id=${place.id}`;
+        const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.displayName)}&query_place_id=${place.id}`;
+
 
         const card = document.createElement('div');
         card.className = 'place-card';
@@ -372,7 +456,8 @@ function renderList(places) {
                             <strong style="color:var(--primary);">★ ${place.displayName}</strong>
                             <div class="info-tags"><span class="dist-tag">${miles} mi</span><span class="time-tag">🚗 ${driveTime}m</span></div>
                             <div class="q-badge q-online">LIVE: ${d.peopleInLine || 0} in line</div>
-                            <div class="est-box">⌛ Wait: ~${d.currentWaitMins || 0}m</div>
+                            <div class="est-box">⌛ Wait: ~${d.queueLoadMins || 0}m</div>
+
                         </div>
                     </div>
                 </div>
@@ -389,7 +474,10 @@ function renderList(places) {
                         <div style="flex:1">
                             <strong>${place.displayName}</strong>
                             <div class="info-tags"><span class="dist-tag">${miles} mi</span><span class="time-tag">🚗 ${driveTime}m</span></div>
-                            <div class="q-badge q-offline">Queueing not enabled</div>
+                           <div class="q-badge q-offline">
+    ${place.fromCache ? "Cached result" : "Queueing not enabled"}
+</div>
+
                         </div>
                     </div>
                 </div>
