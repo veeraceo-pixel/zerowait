@@ -389,7 +389,7 @@ const request = {
 
         googlePlaces = (places || []).map(p => ({
             id: p.id,
-            displayName: p.displayName?.text || "Nearby Business",
+            displayName: p.displayName || "Nearby Business",
             location: p.location,
             calculatedDistance: google.maps.geometry.spherical.computeDistanceBetween(
                 userLocation,
