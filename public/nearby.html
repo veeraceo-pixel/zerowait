@@ -435,10 +435,10 @@ function renderList(places) {
     places.forEach((place, i) => {
         const miles = (place.calculatedDistance * 0.000621371).toFixed(1);
         const driveTime = Math.round((miles / 12) * 60) + 2;
-        let thumb =
-    place.imageUrl ||
-    getPlacePhoto(place.photos?.[0], 200) ||
-    '/images/no-image.png';
+let thumb = place.isRegistered
+    ? place.imageUrl
+    : '/images/skipqs-logo.png';
+
         
 
         
@@ -497,10 +497,10 @@ function renderList(places) {
     applyLiveFilter();
 }
 
-        function getPlacePhoto(photo, width = 400) {
-    if (!photo || !photo.name) return null;
-    return `https://places.googleapis.com/v1/${photo.name}/media?maxWidthPx=${width}&key=AIzaSyAJFGE5OFfn-OhDNJ_rWO5oi2d2CHl2fXE`;
+function getPlacePhoto() {
+    return null;
 }
+
 
 
 function selectPlace(index) {
@@ -510,10 +510,10 @@ function selectPlace(index) {
     
     // FIXED: Syntax for mapsUrl in the detail panel
     const mapsUrl = `https://www.google.com/search?q=https://www.google.com/maps/search/%3Fapi%3D1%26query%3D${encodeURIComponent(place.displayName)}&query_place_id=${place.id}`;
-    let mainPhoto =
-    place.imageUrl ||
-    getPlacePhoto(place.photos?.[0], 800) ||
-    '/images/no-image.png';
+let mainPhoto = place.isRegistered
+    ? place.imageUrl
+    : '/images/skipqs-logo.png';
+
 
 
     document.getElementById('detailPanel').innerHTML = `
