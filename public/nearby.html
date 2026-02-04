@@ -435,7 +435,7 @@ function renderList(places) {
     places.forEach((place, i) => {
         const miles = (place.calculatedDistance * 0.000621371).toFixed(1);
         const driveTime = Math.round((miles / 12) * 60) + 2;
-        let thumb = place.imageUrl || (place.photos?.[0]?.getURI({maxWidth:200}) || 'https://via.placeholder.com/150');
+        let thumb = place.imageUrl || (place.photos?.[0]?.getURI({maxWidth:200}) || 'https://dummyimage.com/150x150/cccccc/000000&text=No+Image');
         
         // FIXED: Changed 0{ to ${ and fixed the URL structure
         const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.displayName)}&query_place_id=${place.id}`;
