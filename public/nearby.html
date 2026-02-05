@@ -254,6 +254,22 @@ return (data.results || [])
     });
 }
 
+        function isDuplicatePlace(googlePlace, firebasePlaces) {
+    return firebasePlaces.some(fb => {
+        const nameMatch =
+            fb.displayName?.toLowerCase().trim() ===
+            googlePlace.displayName?.toLowerCase().trim();
+
+        const distMatch =
+            Math.abs(fb.calculatedDistance - googlePlace.calculatedDistance) < 80; 
+            // within 80 meters
+
+        return nameMatch && distMatch;
+    });
+}
+
+
+        
 async function executePlacesSearch() {
     if (!Place || !userLocation) return;
 
@@ -370,8 +386,13 @@ if (cached && cached.length) {
 // 2️⃣ IF CACHE MISS → CALL GOOGLE
 if (!googlePlaces.length) {
     try {
-const request = {
+
+        const request = {
     fields: ["displayName", "location", "id", "photos", "shortFormattedAddress"],
+
+    // ⭐ THIS LINE IS MISSING IN YOUR CODE
+    includedTypes: [SERVICE_MAP[serviceType].type],
+
     locationRestriction: {
         center: {
             lat: userLocation.lat(),
@@ -379,10 +400,11 @@ const request = {
         },
         radius: 15000
     },
+
     maxResultCount: remaining,
-    rankPreference:
-        google.maps.places.SearchNearbyRankPreference.DISTANCE
+    rankPreference: google.maps.places.SearchNearbyRankPreference.DISTANCE
 };
+
 
 
         const { places } = await Place.searchNearby(request);
@@ -414,13 +436,20 @@ if (googlePlaces.length && !cached) {
     /* -----------------------------
        3️⃣ MERGE + RENDER
     ------------------------------*/
-    const combined = [...firebaseLimited, ...googlePlaces]
-        .sort((a, b) => {
-            if (a.isRegistered && !b.isRegistered) return -1;
-            if (!a.isRegistered && b.isRegistered) return 1;
-            return a.calculatedDistance - b.calculatedDistance;
-        })
-        .slice(0, MAX_RESULTS);
+// ❌ remove duplicates from google list
+googlePlaces = googlePlaces.filter(g =>
+    !isDuplicatePlace(g, firebaseLimited)
+);
+
+const combined = [...firebaseLimited, ...googlePlaces]
+    .sort((a, b) => {
+        if (a.isRegistered && !b.isRegistered) return -1;
+        if (!a.isRegistered && b.isRegistered) return 1;
+        return a.calculatedDistance - b.calculatedDistance;
+    })
+    .slice(0, MAX_RESULTS);
+
+
     
     currentPlaces = combined;
 
