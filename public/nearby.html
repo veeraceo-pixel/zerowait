@@ -254,19 +254,28 @@ return (data.results || [])
     });
 }
 
-        function isDuplicatePlace(googlePlace, firebasePlaces) {
+function normalizeName(name) {
+    return (name || "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "")   // remove symbols
+        .replace(/\s+/g, "");        // remove spaces
+}
+
+function isDuplicatePlace(googlePlace, firebasePlaces) {
     return firebasePlaces.some(fb => {
-        const nameMatch =
-            fb.displayName?.toLowerCase().trim() ===
-            googlePlace.displayName?.toLowerCase().trim();
+
+        const fbName = normalizeName(fb.displayName);
+        const gName = normalizeName(googlePlace.displayName);
+
+        const nameMatch = fbName === gName;
 
         const distMatch =
-            Math.abs(fb.calculatedDistance - googlePlace.calculatedDistance) < 80; 
-            // within 80 meters
+            Math.abs(fb.calculatedDistance - googlePlace.calculatedDistance) < 150;
 
         return nameMatch && distMatch;
     });
 }
+
 
 
         
@@ -377,6 +386,9 @@ const remaining = MAX_RESULTS - firebaseLimited.length;
 
 let googlePlaces = [];
 
+    const shownIds = new Set(firebaseLimited.map(p => normalizeName(p.displayName)));
+
+
 // 1️⃣ TRY CACHE FIRST
 const cached = await readPlacesCache(serviceType, userLocation);
 if (cached && cached.length) {
@@ -437,9 +449,17 @@ if (googlePlaces.length && !cached) {
        3️⃣ MERGE + RENDER
     ------------------------------*/
 // ❌ remove duplicates from google list
-googlePlaces = googlePlaces.filter(g =>
-    !isDuplicatePlace(g, firebaseLimited)
-);
+googlePlaces = googlePlaces.filter(g => {
+    const gName = normalizeName(g.displayName);
+
+    if (shownIds.has(gName)) return false; // already shown
+
+    const dup = isDuplicatePlace(g, firebaseLimited);
+    if (!dup) shownIds.add(gName);
+
+    return !dup;
+});
+
 
 const combined = [...firebaseLimited, ...googlePlaces]
     .sort((a, b) => {
@@ -464,9 +484,18 @@ function renderList(places) {
     places.forEach((place, i) => {
         const miles = (place.calculatedDistance * 0.000621371).toFixed(1);
         const driveTime = Math.round((miles / 12) * 60) + 2;
-let thumb = place.isRegistered
-    ? place.imageUrl
-    : '/images/skipqs-logo.png';
+let thumb = '/images/skipqs-logo.png';
+
+if (place.isRegistered && place.imageUrl && place.imageUrl !== "") {
+    thumb = place.imageUrl;
+}
+
+if (!place.isRegistered && place.photos && place.photos.length > 0) {
+    try {
+        thumb = place.photos[0].getURI({maxHeight:300});
+    } catch {}
+}
+
 
         
 
