@@ -3,398 +3,489 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>skipQs | Smart Queue Management</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <title>skipQs - Join Virtual Queue Near You</title>
+  <meta name="description" content="Skip the line and save time - Find businesses with shortest wait times near you">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --primary: #2563eb; --primary-hover: #1d4ed8; --primary-soft: #eff6ff;
-      --bg-light: #f8fafc; --text-main: #1e293b; --text-muted: #64748b;
-      --white: #ffffff; --border: #e2e8f0; --accent: #f59e0b;
-      --dark-nav: #0f172a; --shadow-lg: 0 10px 25px rgba(0,0,0,0.05);
+      --primary: #002f34;
+      --accent: #23e5db;
+      --text-dark: #002f34;
+      --text-light: #406367;
+      --bg-gray: #f7f8f8;
+      --border: #c8d7dc;
+      --white: #ffffff;
+      --yellow: #ffce32;
     }
-    * { box-sizing: border-box; transition: all 0.2s ease-in-out; }
-    body { font-family: 'Inter', sans-serif; background-color: var(--bg-light); color: var(--text-main); margin: 0; line-height: 1.6; padding-bottom: 80px; }
-    .container { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Roboto', sans-serif; background: var(--bg-gray); color: var(--text-dark); line-height: 1.6; }
+    .container { max-width: 1280px; margin: 0 auto; padding: 0 20px; }
 
-    /* --- 1. LIVE QUEUE BANNER --- */
-    .wait-banner {
-      background: var(--dark-nav); color: white; padding: 0.75rem 0;
-      position: sticky; top: 0; z-index: 2000; border-bottom: 2px solid var(--accent);
-      display: none; 
-    }
-    .wait-banner.active { display: block; }
-    .banner-content { display: flex; justify-content: space-between; align-items: center; }
-    .timer-badge { background: var(--accent); color: #000; padding: 0.2rem 0.6rem; border-radius: 6px; font-weight: 800; font-size: 0.85rem; }
+    /* ============ HEADER ============ */
+    header { background: var(--bg-gray); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 1000; }
+    .top-bar { background: var(--primary); color: white; padding: 8px 0; font-size: 12px; }
+    .top-bar .container { display: flex; justify-content: space-between; align-items: center; }
+    .top-bar a { color: white; text-decoration: none; margin-left: 20px; }
+    
+    .main-header { background: white; padding: 12px 0; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+    .header-content { display: flex; align-items: center; gap: 20px; }
+    .logo { font-size: 32px; font-weight: 700; color: var(--primary); text-decoration: none; letter-spacing: -1px; }
+    .location-box { display: flex; align-items: center; gap: 8px; padding: 10px 16px; border: 2px solid var(--primary); border-radius: 4px; cursor: pointer; background: white; min-width: 240px; }
+    .location-box span { font-size: 14px; color: var(--text-dark); font-weight: 500; }
+    .location-icon { font-size: 20px; }
+    
+    /* Search Bar - OLX Style */
+    .search-wrapper { flex: 1; display: flex; border: 2px solid var(--primary); border-radius: 4px; overflow: hidden; }
+    .search-input { flex: 1; border: none; padding: 14px 16px; font-size: 16px; outline: none; }
+    .search-btn { background: var(--primary); color: white; border: none; padding: 0 32px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+    .search-btn:hover { background: #003d47; }
+    
+    .header-actions { display: flex; gap: 12px; align-items: center; }
+    .user-menu { position: relative; cursor: pointer; }
+    .user-icon { width: 40px; height: 40px; border-radius: 50%; background: var(--bg-gray); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .btn-post { background: var(--accent); color: var(--primary); border: none; padding: 12px 28px; border-radius: 24px; font-size: 16px; font-weight: 700; cursor: pointer; box-shadow: 0 2px 8px rgba(35,229,219,0.3); transition: 0.2s; }
+    .btn-post:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(35,229,219,0.4); }
 
-    /* --- 2. NAVBAR --- */
-    .navbar { background: var(--white); border-bottom: 1px solid var(--border); padding: 0.75rem 0; }
-    .nav-content { display: flex; justify-content: space-between; align-items: center; }
-    .logo { font-size: 1.8rem; font-weight: 800; color: var(--primary); text-decoration: none; letter-spacing: -1px; }
-    .nav-links { display: flex; align-items: center; gap: 2rem; }
-    .nav-links a { text-decoration: none; color: var(--text-muted); font-weight: 600; font-size: 0.95rem; }
-    .btn-business { color: var(--primary) !important; border: 1px solid var(--primary); padding: 0.5rem 1rem; border-radius: 8px; }
+    /* ============ CATEGORIES ============ */
+    .categories-section { background: white; padding: 16px 0; margin: 20px 0; border-radius: 4px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+    .categories-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; color: var(--text-dark); }
+    .categories-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 12px; }
+    .category-card { text-align: center; padding: 16px 8px; border-radius: 4px; text-decoration: none; color: var(--text-dark); transition: 0.2s; cursor: pointer; }
+    .category-card:hover { background: var(--bg-gray); }
+    .category-icon { font-size: 36px; display: block; margin-bottom: 8px; }
+    .category-name { font-size: 13px; font-weight: 500; }
 
-    /* --- 3. HERO & SEARCH --- */
-    .hero { padding: 3rem 0 2rem; text-align: center; background: radial-gradient(circle at top, #eff6ff 0%, #f8fafc 100%); }
-    .hero h1 { font-size: 3.5rem; font-weight: 800; margin: 0 0 0.5rem 0; letter-spacing: -2px; line-height: 1.1; }
-    .search-wrapper { 
-      max-width: 750px; margin: 1.5rem auto 0; display: flex; background: white; 
-      border-radius: 100px; padding: 8px; box-shadow: var(--shadow-lg); border: 1px solid var(--border);
-    }
-    .search-group { display: flex; align-items: center; flex: 1; padding: 0 20px; border-right: 1px solid var(--border); }
-    .search-group:last-of-type { border-right: none; }
-    .search-input { border: none; padding: 12px; width: 100%; outline: none; font-size: 1rem; }
-    .gps-trigger { cursor: pointer; color: var(--primary); padding: 5px; }
-    .btn-search { background: var(--primary); color: white; border: none; border-radius: 100px; padding: 12px 35px; font-weight: 700; cursor: pointer; }
+    /* ============ MAIN CONTENT ============ */
+    .content-wrapper { display: grid; grid-template-columns: 1fr; gap: 20px; margin: 20px 0; }
+    
+    /* Listings Section */
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .section-title { font-size: 22px; font-weight: 600; color: var(--text-dark); }
+    .view-all { color: var(--primary); text-decoration: none; font-weight: 500; font-size: 14px; }
+    
+    .listings-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .listing-card { background: white; border-radius: 4px; overflow: hidden; text-decoration: none; color: inherit; box-shadow: 0 1px 4px rgba(0,0,0,0.1); transition: 0.2s; cursor: pointer; position: relative; }
+    .listing-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.15); transform: translateY(-2px); }
+    
+    .listing-image { width: 100%; height: 180px; background: var(--bg-gray); display: flex; align-items: center; justify-content: center; font-size: 48px; position: relative; overflow: hidden; }
+    .listing-image img { width: 100%; height: 100%; object-fit: cover; }
+    .wait-badge { position: absolute; top: 8px; right: 8px; background: var(--yellow); color: var(--primary); padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 700; }
+    .featured-badge { position: absolute; top: 8px; left: 8px; background: var(--primary); color: white; padding: 4px 10px; border-radius: 3px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+    
+    .listing-info { padding: 12px; }
+    .listing-title { font-size: 16px; font-weight: 500; margin-bottom: 4px; color: var(--text-dark); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .listing-wait { font-size: 20px; font-weight: 700; color: var(--primary); margin: 4px 0; }
+    .listing-location { font-size: 13px; color: var(--text-light); display: flex; align-items: center; gap: 4px; }
+    .listing-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--bg-gray); }
+    .listing-category { font-size: 12px; color: var(--text-light); background: var(--bg-gray); padding: 4px 8px; border-radius: 3px; }
+    .listing-status { font-size: 12px; color: #3a9943; font-weight: 600; }
 
-    /* --- 4. MAIN LAYOUT --- */
-    .main-wrapper { display: grid; grid-template-columns: 1fr 340px; gap: 3rem; margin-top: 2rem; padding-bottom: 5rem; }
-    .section-title { font-size: 1.4rem; font-weight: 800; margin-bottom: 1.5rem; }
-    .quick-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; }
-    .quick-card { background: var(--white); padding: 2.5rem 1rem; border-radius: 1.8rem; border: 1px solid var(--border); text-align: center; text-decoration: none; color: inherit; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
-    .quick-card:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: var(--shadow-lg); }
-    .quick-card span { font-size: 2.8rem; display: block; margin-bottom: 1rem; }
-    .quick-card h3 { font-size: 1rem; margin: 0; font-weight: 700; }
+    /* Banner */
+    .promo-banner { background: linear-gradient(135deg, var(--primary) 0%, #004d57 100%); color: white; padding: 40px; border-radius: 8px; margin: 30px 0; text-align: center; }
+    .promo-banner h2 { font-size: 32px; margin-bottom: 12px; }
+    .promo-banner p { font-size: 16px; opacity: 0.9; margin-bottom: 20px; }
+    .promo-banner .btn-white { background: white; color: var(--primary); padding: 14px 32px; border: none; border-radius: 24px; font-size: 16px; font-weight: 700; cursor: pointer; }
 
-    /* --- 5. SIDEBAR --- */
-    .sidebar { background: var(--white); border-radius: 1.8rem; border: 1px solid var(--border); padding: 1.8rem; position: sticky; top: 110px; height: fit-content; }
-    .feat-item { display: flex; align-items: center; gap: 15px; margin-bottom: 1.5rem; text-decoration: none; color: inherit; }
-    .feat-img { width: 48px; height: 48px; border-radius: 12px; background: var(--bg-light); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; }
-    .feat-info h5 { margin: 0; font-size: 0.9rem; font-weight: 700; }
-    .wait-mini { font-size: 0.8rem; font-weight: 800; color: var(--primary); }
+    /* Skeleton Loader */
+    .skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: loading 1.5s infinite; }
+    @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    .skeleton-card { height: 300px; border-radius: 4px; }
 
-    /* --- 6. MOBILE NAVIGATION --- */
-    .mobile-nav { 
-      display: none; position: fixed; bottom: 0; left: 0; right: 0; 
-      background: var(--white); border-top: 1px solid var(--border); 
-      justify-content: space-around; padding: 0.8rem 0; z-index: 3000;
-      box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
-    }
-    .mobile-nav a { text-decoration: none; color: var(--text-muted); text-align: center; font-size: 0.75rem; font-weight: 600; }
-    .mobile-nav a span { display: block; font-size: 1.4rem; margin-bottom: 2px; }
-    .mobile-nav a.active { color: var(--primary); }
-
-    /* --- 7. FOOTER --- */
-    footer { background: var(--dark-nav); color: #94a3b8; padding: 4rem 0 2rem; }
-    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 3rem; }
-    .footer-logo { font-size: 1.5rem; font-weight: 800; color: white; text-decoration: none; display: block; margin-bottom: 1rem; }
-    .footer-col h5 { color: white; margin-bottom: 1.2rem; font-size: 1rem; }
-    .footer-col ul { list-style: none; padding: 0; margin: 0; }
-    .footer-col li { margin-bottom: 0.8rem; }
-    .footer-col a { color: inherit; text-decoration: none; font-size: 0.9rem; }
+    /* ============ FOOTER ============ */
+    footer { background: var(--primary); color: white; padding: 40px 0 20px; margin-top: 60px; }
+    .footer-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; margin-bottom: 30px; }
+    .footer-col h4 { font-size: 16px; margin-bottom: 16px; font-weight: 600; }
+    .footer-col ul { list-style: none; }
+    .footer-col li { margin-bottom: 10px; }
+    .footer-col a { color: rgba(255,255,255,0.8); text-decoration: none; font-size: 14px; }
     .footer-col a:hover { color: white; }
+    .footer-bottom { text-align: center; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 13px; opacity: 0.7; }
 
-    /* --- MOBILE VIEW --- */
-    @media (max-width: 900px) {
-      .navbar { padding: 0.5rem 0; }
-      .logo { font-size: 1.5rem; }
-      .nav-links { gap: 0.8rem; }
-      .nav-links a { font-size: 0.8rem; }
-      .btn-business { padding: 0.4rem 0.6rem; }
-      .hero { padding: 2rem 0; }
-      .hero h1 { font-size: 2.2rem; }
-      .search-wrapper { flex-direction: column; border-radius: 20px; margin: 1rem 1rem 0; padding: 10px; width: calc(100% - 2rem); }
-      .search-group { border: none; border-bottom: 1px solid var(--border); width: 100%; padding: 10px; }
-      .btn-search { width: 100%; border-radius: 12px; margin-top: 10px; padding: 15px; }
-      .main-wrapper { grid-template-columns: 1fr; margin-top: 1rem; padding: 0 1rem; }
-      .quick-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-      .footer-grid { grid-template-columns: 1fr 1fr; }
-      .mobile-nav { display: flex; }
-      .desktop-only { display: none; }
-      .sidebar { position: static; margin-top: 2rem; } 
+    /* ============ MOBILE ============ */
+    .mobile-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid var(--border); z-index: 1000; }
+    .mobile-nav-grid { display: flex; justify-content: space-around; padding: 8px 0; }
+    .mobile-nav-item { text-align: center; color: var(--text-light); text-decoration: none; padding: 4px; flex: 1; }
+    .mobile-nav-item.active { color: var(--primary); }
+    .mobile-nav-item span { display: block; font-size: 24px; margin-bottom: 2px; }
+    .mobile-nav-item p { font-size: 11px; margin: 0; }
+
+    @media (max-width: 1024px) {
+      .listings-grid { grid-template-columns: repeat(3, 1fr); }
+      .categories-grid { grid-template-columns: repeat(4, 1fr); }
     }
+
+    @media (max-width: 768px) {
+      .header-content { flex-wrap: wrap; }
+      .location-box { min-width: auto; flex: 1; }
+      .search-wrapper { width: 100%; margin-top: 10px; }
+      .btn-post { padding: 10px 20px; font-size: 14px; }
+      .listings-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .categories-grid { grid-template-columns: repeat(4, 1fr); gap: 8px; }
+      .category-icon { font-size: 28px; }
+      .category-name { font-size: 11px; }
+      .footer-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+      .mobile-nav { display: block; }
+      body { padding-bottom: 70px; }
+      .listing-image { height: 140px; }
+      .promo-banner h2 { font-size: 24px; }
+    }
+
+    @media (max-width: 480px) {
+      .listings-grid { grid-template-columns: 1fr; }
+      .logo { font-size: 24px; }
+    }
+
+    /* Empty State */
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--text-light); }
+    .empty-state-icon { font-size: 64px; margin-bottom: 16px; opacity: 0.5; }
   </style>
 </head>
 <body>
 
-  <div id="statusBanner" class="wait-banner">
-    <div class="container banner-content">
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <span style="height: 8px; width: 8px; background: #22c55e; border-radius: 50%;"></span>
-        <span style="font-weight: 600;">Live: <span id="activeQueueName">...</span> | <span id="peopleAhead">0</span> ahead</span>
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <div class="container">
+      <div>
+        <span>📍 <span id="currentCity">Your Location</span></span>
       </div>
-      <div style="display: flex; align-items: center; gap: 15px;">
-        <span class="timer-badge" id="activeTimer">--:--</span>
-        <a href="dashboard.html" style="color:white; font-weight:700; font-size:0.8rem; text-decoration:none; border:1px solid white; padding:2px 8px; border-radius:4px;">TRACK</a>
+      <div>
+        <a href="login.html" id="loginLink">Login</a>
+        <a href="#" id="logoutLink" style="display:none;" onclick="handleLogout()">Logout</a>
+        <a href="how-it-works.html">Help</a>
       </div>
     </div>
   </div>
 
-  <nav class="navbar">
-    <div class="container nav-content">
-      <a href="index.html" class="logo">skipQs</a>
-      <div class="nav-links">
-        <a href="how-it-works.html" class="desktop-only">How It Works</a>
-        <a href="provider-signup.html" class="btn-business">For Business</a>
-        <span id="userGreeting" style="display:none; font-weight:700;">Hi, <b id="userDisplayName"></b></span>
-        <a href="login.html" id="loginLink">Login</a>
-        <a href="#" id="logoutBtn" style="display:none;" onclick="logoutUser()">Logout</a>
+  <!-- Main Header -->
+  <header class="main-header">
+    <div class="container">
+      <div class="header-content">
+        <a href="index.html" class="logo">skipQs</a>
+        
+        <div class="location-box" onclick="detectLocation()">
+          <span class="location-icon">📍</span>
+          <div>
+            <div style="font-size: 12px; color: var(--text-light);">Location</div>
+            <span id="locationDisplay">Select location</span>
+          </div>
+        </div>
+
+        <div class="search-wrapper">
+          <input type="text" class="search-input" id="searchInput" placeholder="Find Salons, Clinics, Gyms near you...">
+          <button class="search-btn" onclick="performSearch()">Search</button>
+        </div>
+
+        <div class="header-actions">
+          <div class="user-menu" id="userMenu">
+            <div class="user-icon">👤</div>
+          </div>
+          <button class="btn-post" onclick="window.location.href='provider-signup.html'">
+            + Join Queue
+          </button>
+        </div>
       </div>
     </div>
-  </nav>
+  </header>
 
-  <main>
-    <section class="hero">
-      <div class="container">
-        <h1>Skip the Line.<br><span style="color: var(--primary);">Save Your Time.</span></h1>
-        <div class="search-wrapper">
-          <div class="search-group">
-            <span>🔍</span>
-            <input type="text" id="queryInput" class="search-input" placeholder="Service (Salon, Clinic...)">
-          </div>
-          <div class="search-group">
-            <span onclick="detectMyLocation()" class="gps-trigger" title="Use current location">📍</span>
-            <input type="text" id="locationInput" class="search-input" placeholder="Location (Near me)">
-          </div>
-          <button class="btn-search" onclick="executeSearch()">Search</button>
-        </div>
+  <!-- Categories -->
+  <section class="categories-section">
+    <div class="container">
+      <h2 class="categories-title">All Categories</h2>
+      <div class="categories-grid">
+        <a href="nearby.html?type=salon" class="category-card">
+          <span class="category-icon">💇‍♀️</span>
+          <div class="category-name">Salons</div>
+        </a>
+        <a href="nearby.html?type=clinic" class="category-card">
+          <span class="category-icon">🏥</span>
+          <div class="category-name">Clinics</div>
+        </a>
+        <a href="nearby.html?type=dining" class="category-card">
+          <span class="category-icon">🍽️</span>
+          <div class="category-name">Restaurants</div>
+        </a>
+        <a href="nearby.html?type=gym" class="category-card">
+          <span class="category-icon">🏋️</span>
+          <div class="category-name">Gyms</div>
+        </a>
+        <a href="nearby.html?type=banking" class="category-card">
+          <span class="category-icon">🏦</span>
+          <div class="category-name">Banks</div>
+        </a>
+        <a href="nearby.html?type=repair" class="category-card">
+          <span class="category-icon">🛠️</span>
+          <div class="category-name">Repairs</div>
+        </a>
+        <a href="nearby.html?type=gov" class="category-card">
+          <span class="category-icon">🏛️</span>
+          <div class="category-name">Government</div>
+        </a>
+        <a href="nearby.html?type=wash" class="category-card">
+          <span class="category-icon">🧼</span>
+          <div class="category-name">Car Wash</div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <div class="container content-wrapper">
+    
+    <!-- Fresh Recommendations -->
+    <section>
+      <div class="section-header">
+        <h2 class="section-title">⚡ Shortest Wait Times</h2>
+        <a href="nearby.html" class="view-all">View all →</a>
+      </div>
+      <div class="listings-grid" id="shortestWaitList">
+        <!-- Loading skeletons -->
+        <div class="skeleton skeleton-card"></div>
+        <div class="skeleton skeleton-card"></div>
+        <div class="skeleton skeleton-card"></div>
+        <div class="skeleton skeleton-card"></div>
       </div>
     </section>
 
-    <div class="container main-wrapper">
-      <section>
-        <h2 class="section-title">Quick Access</h2>
-        <div class="quick-grid">
-          <a href="nearby.html?type=salon" class="quick-card"><span>💇‍♀️</span><h3>Salons</h3></a>
-          <a href="nearby.html?type=dining" class="quick-card"><span>🍽️</span><h3>Dining</h3></a>
-          <a href="nearby.html?type=clinic" class="quick-card"><span>🏥</span><h3>Clinics</h3></a>
-          <a href="nearby.html?type=banking" class="quick-card"><span>🏦</span><h3>Banking</h3></a>
-          <a href="nearby.html?type=gym" class="quick-card"><span>🏋️</span><h3>Gyms</h3></a>
-          <a href="nearby.html?type=repair" class="quick-card"><span>🛠️</span><h3>Repairs</h3></a>
-          <a href="nearby.html?type=gov" class="quick-card"><span>🏛️</span><h3>Gov</h3></a>
-          <a href="nearby.html?type=wash" class="quick-card"><span>🧼</span><h3>Wash</h3></a>
-        </div>
-      </section>
+    <!-- Promo Banner -->
+    <div class="promo-banner">
+      <h2>Join Virtually, Save Time ⏰</h2>
+      <p>No more standing in line. Join queues from anywhere and get notified when it's your turn.</p>
+      <button class="btn-white" onclick="window.location.href='how-it-works.html'">Learn How It Works</button>
+    </div>
 
-<aside class="sidebar">
-  <h4 style="margin-top:0;">⚡ Shortest Waits</h4>
-  <div id="liveWaitList">
-    <p style="font-size: 0.85rem; color: var(--text-muted);">Finding fastest lines...</p>
+    <!-- Featured Listings -->
+    <section>
+      <div class="section-header">
+        <h2 class="section-title">🌟 Featured Near You</h2>
+        <a href="nearby.html" class="view-all">View all →</a>
+      </div>
+      <div class="listings-grid" id="featuredList">
+        <div class="skeleton skeleton-card"></div>
+        <div class="skeleton skeleton-card"></div>
+        <div class="skeleton skeleton-card"></div>
+        <div class="skeleton skeleton-card"></div>
+      </div>
+    </section>
+
   </div>
-  
-  <hr style="border:0; border-top:1px solid var(--border); margin: 1.5rem 0;">
-  
-  <h4>🌟 Featured</h4>
-  <div id="featuredList">
-    </div>
-</aside>
-    </div>
-  </main>
 
+  <!-- Mobile Navigation -->
   <nav class="mobile-nav">
-    <a href="index.html" class="active"><span>🏠</span>Home</a>
-    <a href="nearby.html"><span>🔍</span>Search</a>
-    <a href="dashboard.html"><span>📋</span>Queues</a>
-    <a href="login.html"><span>👤</span>Profile</a>
+    <div class="mobile-nav-grid">
+      <a href="index.html" class="mobile-nav-item active">
+        <span>🏠</span>
+        <p>Home</p>
+      </a>
+      <a href="nearby.html" class="mobile-nav-item">
+        <span>🔍</span>
+        <p>Search</p>
+      </a>
+      <a href="dashboard.html" class="mobile-nav-item">
+        <span>📋</span>
+        <p>My Queues</p>
+      </a>
+      <a href="login.html" class="mobile-nav-item">
+        <span>👤</span>
+        <p>Account</p>
+      </a>
+    </div>
   </nav>
 
+  <!-- Footer -->
   <footer>
     <div class="container">
       <div class="footer-grid">
         <div class="footer-col">
-          <a href="index.html" class="footer-logo">skipQs</a>
-          <p>The virtual queuing solution for a faster, smarter world.</p>
+          <h4>About skipQs</h4>
+          <ul>
+            <li><a href="#">About Us</a></li>
+            <li><a href="#">How it Works</a></li>
+            <li><a href="#">Careers</a></li>
+            <li><a href="#">Press</a></li>
+          </ul>
         </div>
         <div class="footer-col">
-          <h5>Product</h5>
+          <h4>For Users</h4>
           <ul>
-            <li><a href="how-it-works.html">How it Works</a></li>
             <li><a href="nearby.html">Find Services</a></li>
+            <li><a href="dashboard.html">My Queues</a></li>
+            <li><a href="#">Mobile App</a></li>
+            <li><a href="#">Support</a></li>
           </ul>
         </div>
         <div class="footer-col">
-          <h5>Business</h5>
+          <h4>For Business</h4>
           <ul>
-            <li><a href="provider-signup.html">Join skipQs</a></li>
-            <li><a href="login.html">Merchant Portal</a></li>
+            <li><a href="provider-signup.html">List Your Business</a></li>
+            <li><a href="login.html">Business Login</a></li>
+            <li><a href="#">Pricing</a></li>
+            <li><a href="#">Success Stories</a></li>
           </ul>
         </div>
         <div class="footer-col">
-          <h5>Legal</h5>
+          <h4>Legal</h4>
           <ul>
-            <li><a href="privacy.html">Privacy</a></li>
-            <li><a href="terms.html">Terms</a></li>
+            <li><a href="terms.html">Terms of Use</a></li>
+            <li><a href="privacy.html">Privacy Policy</a></li>
+            <li><a href="#">Cookie Policy</a></li>
+            <li><a href="#">Sitemap</a></li>
           </ul>
         </div>
       </div>
-      <div style="text-align:center; padding-top:3rem; font-size:0.85rem; border-top:1px solid #1e293b; margin-top:3rem;">
-        © 2026 skipQs Inc. All rights reserved.
+      <div class="footer-bottom">
+        © 2026 skipQs. All rights reserved. Made with ❤️ for people who value their time.
       </div>
     </div>
   </footer>
 
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="firebase-config.js"></script>
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAJFGE5OFfn-OhDNJ_rWO5oi2d2CHl2fXE&libraries=places"></script>
 
   <script>
     const db = firebase.firestore();
-    let timerInt;
 
-// --- 1. INITIALIZE AUTOCOMPLETE (OPTIMIZED) ---
-let searchToken = null;
-let locationToken = null;
-
-function initSearch() {
-    // Generate tokens when the page loads
-    searchToken = new google.maps.places.AutocompleteSessionToken();
-    locationToken = new google.maps.places.AutocompleteSessionToken();
-
-    const queryInput = document.getElementById('queryInput');
-    const locationInput = document.getElementById('locationInput');
-    
-    // Optimization: Request ONLY place_id and name (Basic category = $0)
-    const options = {
-        fields: ['place_id', 'name', 'geometry'],
-        types: ['establishment']
-    };
-
-    // Initialize with session tokens
-    const queryAC = new google.maps.places.Autocomplete(queryInput, { ...options, sessionToken: searchToken });
-    const locationAC = new google.maps.places.Autocomplete(locationInput, { 
-        types: ['(regions)'], 
-        fields: ['formatted_address', 'geometry'],
-        sessionToken: locationToken 
-    });
-
-    // Reset tokens after a selection is made to start a new "billing session"
-    queryAC.addListener('place_changed', () => {
-        searchToken = new google.maps.places.AutocompleteSessionToken();
-    });
-    locationAC.addListener('place_changed', () => {
-        locationToken = new google.maps.places.AutocompleteSessionToken();
-    });
-}
-window.addEventListener('load', initSearch);
-
-// --- 2. GPS DETECTION (FREE) ---
-function detectMyLocation() {
-    const locInput = document.getElementById('locationInput');
-    locInput.value = "";
-    locInput.placeholder = "Locating...";
-    
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition((pos) => {
-            // Geocoding is a separate API, but it's much cheaper than "Places"
-            const geocoder = new google.maps.Geocoder();
-            geocoder.geocode({ location: { lat: pos.coords.latitude, lng: pos.coords.longitude } }, (results, status) => {
-                if (status === "OK" && results[0]) {
-                    // We only take the city/neighborhood to keep the search broad
-                    locInput.value = results[0].formatted_address;
-                }
-            });
-        }, () => {
-            locInput.placeholder = "Location (Near me)";
-            alert("Please enable location services.");
-        });
-    }
-}
-
-    // --- 3. SEARCH EXECUTION ---
-    function executeSearch() {
-      const q = document.getElementById('queryInput').value;
-      const l = document.getElementById('locationInput').value;
-      let params = [];
-      if (q) params.push(`q=${encodeURIComponent(q)}`);
-      
-      // Fixed: explicitly handle "Near me" or empty location to ensure Nearby page triggers GPS
-      if (l && l.trim() !== "") {
-        params.push(`l=${encodeURIComponent(l)}`);
-      } else {
-        params.push(`l=near me`);
+    // Location Detection
+    function detectLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          position => {
+            document.getElementById('locationDisplay').textContent = 'Current Location';
+            document.getElementById('currentCity').textContent = 'Your Location';
+            // You can add geocoding here
+          },
+          error => {
+            alert('Please enable location access to find services near you');
+          }
+        );
       }
-      
-      window.location.href = 'nearby.html' + (params.length > 0 ? '?' + params.join('&') : '');
     }
 
-    // --- 4. FIREBASE LOGIC ---
+    // Search Function
+    function performSearch() {
+      const query = document.getElementById('searchInput').value.trim();
+      if (query) {
+        window.location.href = `nearby.html?q=${encodeURIComponent(query)}`;
+      } else {
+        window.location.href = 'nearby.html';
+      }
+    }
+
+    // Enter key search
+    document.getElementById('searchInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') performSearch();
+    });
+
+    // Auth State
     firebase.auth().onAuthStateChanged(user => {
       if (user) {
         document.getElementById('loginLink').style.display = 'none';
-        document.getElementById('logoutBtn').style.display = 'inline-block';
-        document.getElementById('userGreeting').style.display = 'inline-block';
-        document.getElementById('userDisplayName').textContent = user.displayName || user.email.split('@')[0];
-        checkLiveQueue(user.uid);
+        document.getElementById('logoutLink').style.display = 'inline';
+        document.querySelector('.user-icon').textContent = user.displayName?.charAt(0).toUpperCase() || '👤';
       }
     });
 
-    function checkLiveQueue(uid) {
-      db.collection('bookings').where('userId', '==', uid).where('status', '==', 'waiting').limit(1)
-        .onSnapshot(snap => {
-          if (!snap.empty) {
-            const data = snap.docs[0].data();
-            document.getElementById('statusBanner').classList.add('active');
-            document.getElementById('activeQueueName').innerText = data.businessName;
-            startTimer(data.estimatedWaitTime);
-            db.collection('bookings').where('businessId', '==', data.businessId).where('status', '==', 'waiting')
-              .where('createdAt', '<', data.createdAt).onSnapshot(q => {
-                document.getElementById('peopleAhead').innerText = q.size;
-              });
-          } else {
-            document.getElementById('statusBanner').classList.remove('active');
-          }
-        });
+    function handleLogout() {
+      firebase.auth().signOut().then(() => window.location.reload());
     }
 
-    function startTimer(m) {
-      clearInterval(timerInt);
-      let s = m * 60;
-      timerInt = setInterval(() => {
-        s--;
-        if(s <= 0) { document.getElementById('activeTimer').innerText = "00:00"; return; }
-        document.getElementById('activeTimer').innerText = `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`;
-      }, 1000);
-    }
-
-    function logoutUser() { firebase.auth().signOut().then(() => window.location.reload()); }
-
-    async function loadSidebarQueues() {
-    const listContainer = document.getElementById('liveWaitList');
-    
-    try {
-        // We only fetch businesses that are actually OPEN
-        // We sort by 'currentWait' (a field you'll update in your DB)
+    // Load Listings
+    async function loadListings() {
+      try {
         const snapshot = await db.collection('providers')
-            .where('isOpen', '==', true)
-            .orderBy('currentWait', 'asc')
-            .limit(3)
-            .get();
+          .where('isOpen', '==', true)
+          .orderBy('currentWait', 'asc')
+          .limit(8)
+          .get();
 
         if (snapshot.empty) {
-            listContainer.innerHTML = "<p style='font-size:0.8rem;'>No active queues right now.</p>";
-            return;
+          showDemoData();
+          return;
         }
 
-        let html = '';
-        snapshot.forEach(doc => {
-            const biz = doc.data();
-            html += `
-                <a href="nearby.html?id=${doc.id}" class="feat-item">
-                    <div class="feat-img">${getEmoji(biz.category)}</div>
-                    <div class="feat-info">
-                        <h5>${biz.businessName}</h5>
-                        <div class="wait-mini">${biz.currentWait || 0} min wait</div>
-                    </div>
-                </a>
-            `;
+        const shortestWait = [];
+        const featured = [];
+        
+        snapshot.forEach((doc, index) => {
+          const data = doc.data();
+          if (index < 4) {
+            shortestWait.push(createListingCard(data, doc.id, false));
+          } else {
+            featured.push(createListingCard(data, doc.id, true));
+          }
         });
-        listContainer.innerHTML = html;
-    } catch (err) {
-        console.error("Sidebar load failed:", err);
-        listContainer.innerHTML = "<p style='font-size:0.8rem;'>Select a category to explore.</p>";
+
+        document.getElementById('shortestWaitList').innerHTML = shortestWait.join('');
+        document.getElementById('featuredList').innerHTML = featured.join('');
+
+      } catch (error) {
+        console.error('Error loading listings:', error);
+        showDemoData();
+      }
     }
-}
 
-// Simple helper for the icons
-function getEmoji(cat) {
-    const icons = { 'Barber': '✂️', 'Salon': '💅', 'Clinic': '🦷', 'Gym': '💪' };
-    return icons[cat] || '📍';
-}
+    function createListingCard(data, id, isFeatured) {
+      return `
+        <a href="nearby.html?id=${id}" class="listing-card">
+          <div class="listing-image">
+            ${getEmojiForCategory(data.category)}
+            <div class="wait-badge">${data.currentWait || 0} min</div>
+            ${isFeatured ? '<div class="featured-badge">Featured</div>' : ''}
+          </div>
+          <div class="listing-info">
+            <div class="listing-title">${data.businessName}</div>
+            <div class="listing-wait">${data.currentWait || 0} min wait</div>
+            <div class="listing-location">📍 ${data.address || 'Location not specified'}</div>
+            <div class="listing-meta">
+              <div class="listing-category">${data.category}</div>
+              <div class="listing-status">● OPEN</div>
+            </div>
+          </div>
+        </a>
+      `;
+    }
 
-// RUN THIS ON LOAD
-window.addEventListener('DOMContentLoaded', loadSidebarQueues);
+    function showDemoData() {
+      const demoData = [
+        { businessName: 'QuickCuts Barber', category: 'Salon', currentWait: 5, address: '123 Main St' },
+        { businessName: 'City Dental Clinic', category: 'Clinic', currentWait: 12, address: '456 Oak Ave' },
+        { businessName: 'FastFit Gym', category: 'Gym', currentWait: 8, address: '789 Fitness Blvd' },
+        { businessName: 'Bella Salon & Spa', category: 'Salon', currentWait: 15, address: '321 Beauty Lane' },
+        { businessName: 'Metro Bank Downtown', category: 'Banking', currentWait: 10, address: '555 Finance St' },
+        { businessName: 'Golden Restaurant', category: 'Dining', currentWait: 20, address: '888 Food Court' },
+        { businessName: 'Auto Fix Garage', category: 'Repair', currentWait: 30, address: '999 Mechanic Rd' },
+        { businessName: 'Fresh Car Wash', category: 'Wash', currentWait: 7, address: '111 Clean Dr' }
+      ];
+
+      const shortestWait = demoData.slice(0, 4).map((d, i) => createListingCard(d, `demo${i}`, false)).join('');
+      const featured = demoData.slice(4, 8).map((d, i) => createListingCard(d, `demo${i+4}`, true)).join('');
+
+      document.getElementById('shortestWaitList').innerHTML = shortestWait;
+      document.getElementById('featuredList').innerHTML = featured;
+    }
+
+    function getEmojiForCategory(category) {
+      const emojis = {
+        'Salon': '💇‍♀️',
+        'Clinic': '🏥',
+        'Gym': '🏋️',
+        'Banking': '🏦',
+        'Dining': '🍽️',
+        'Repair': '🛠️',
+        'Wash': '🧼',
+        'Government': '🏛️'
+      };
+      return emojis[category] || '📍';
+    }
+
+    // Initialize
+    window.addEventListener('DOMContentLoaded', () => {
+      loadListings();
+      detectLocation();
+    });
   </script>
 </body>
 </html>
