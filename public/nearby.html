@@ -5,591 +5,393 @@
     <title>Find Nearby Services | skipQs</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Leaflet open-source maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         :root {
             --primary: #2563eb; --bg-light: #f8fafc; --text-main: #1e293b;
             --text-muted: #64748b; --border: #e2e8f0; --nav-bg: #2d1b4d;
             --success: #059669;
         }
-
         body { font-family: 'Inter', sans-serif; background-color: var(--bg-light); margin: 0; height: 100vh; overflow: hidden; }
         .navbar { background: var(--nav-bg); padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; z-index: 1000; position: relative; }
         .logo { font-weight: 800; color: white; text-decoration: none; font-size: 1.2rem; }
-
-        .service-filter-bar {
-            display: flex; gap: 8px; overflow-x: auto; padding: 10px 1.25rem;
-            background: white; border-bottom: 1px solid var(--border);
-            scrollbar-width: none; align-items: center;
-        }
+        .service-filter-bar { display: flex; gap: 8px; overflow-x: auto; padding: 10px 1.25rem; background: white; border-bottom: 1px solid var(--border); scrollbar-width: none; align-items: center; }
         .service-filter-bar::-webkit-scrollbar { display: none; }
-        
-        .filter-chip {
-            white-space: nowrap; padding: 6px 16px; border-radius: 50px;
-            background: var(--bg-light); border: 1px solid var(--border);
-            font-size: 0.8rem; font-weight: 600; cursor: pointer; color: var(--text-muted);
-        }
+        .filter-chip { white-space: nowrap; padding: 6px 16px; border-radius: 50px; background: var(--bg-light); border: 1px solid var(--border); font-size: 0.8rem; font-weight: 600; cursor: pointer; color: var(--text-muted); }
         .filter-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
-        
         .live-toggle { background: #ecfdf5; color: var(--success); border: 1px solid #34d399; }
         .live-toggle.active { background: var(--success); color: white; }
-
         .main-layout { display: flex; height: calc(100vh - 110px); flex-direction: column; }
         .list-panel { flex: 1; overflow-y: auto; padding: 1.25rem; background: white; z-index: 10; width: 100%; }
-        
-        .visual-panel { display: none; background: #f1f5f9; position: relative; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
-        .placeholder-box { max-width: 400px; color: var(--text-muted); }
-        .placeholder-icon { font-size: 3rem; margin-bottom: 1rem; display: block; }
-
+        .visual-panel { display: none; position: relative; flex: 1; overflow: hidden; }
+        #leaflet-map { width: 100%; height: 100%; z-index: 1; }
         .place-card { padding: 1rem; margin-bottom: 1rem; border: 1px solid var(--border); border-radius: 12px; background: white; cursor: pointer; transition: 0.2s; position: relative; }
         .place-card.hidden { display: none; }
         .place-card.active { border: 2.5px solid var(--primary); background: #f0f7ff; }
-
         .card-top { display: flex; gap: 12px; margin-bottom: 12px; }
         .thumb { width: 75px; height: 75px; border-radius: 8px; object-fit: cover; background: #eee; }
         .info-tags { display: flex; gap: 8px; margin-top: 5px; align-items: center; }
         .dist-tag { font-size: 0.65rem; color: var(--primary); font-weight: 800; background: #eff6ff; padding: 2px 6px; border-radius: 4px; }
         .time-tag { font-size: 0.65rem; color: var(--success); font-weight: 700; }
-
         .action-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
         .btn { flex: 1; min-width: 80px; padding: 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 700; text-align: center; cursor: pointer; border: none; text-decoration: none; display: flex; align-items: center; justify-content: center; }
         .btn-join { background: var(--primary); color: white; }
         .btn-reg { background: #475569; color: white; line-height: 1.2; font-size: 0.6rem; }
         .btn-sec { background: #f1f5f9; color: var(--text-main); border: 1px solid var(--border); }
-
         .q-badge { font-size: 0.7rem; font-weight: 800; padding: 4px 8px; border-radius: 4px; margin-top: 5px; display: inline-block; }
         .q-online { background: #d1fae5; color: #065f46; border: 1px solid #34d399; }
         .q-offline { background: #f1f5f9; color: #64748b; }
-        
         .est-box { font-size: 0.65rem; color: var(--success); margin-top: 4px; line-height: 1.4; }
-
-        @media (min-width: 769px) { 
-            .main-layout { flex-direction: row; } 
-            .list-panel { max-width: 450px; border-right: 1px solid var(--border); } 
+        @media (min-width: 769px) {
+            .main-layout { flex-direction: row; }
+            .list-panel { max-width: 450px; border-right: 1px solid var(--border); }
             .visual-panel { display: flex; flex: 1; }
         }
     </style>
 </head>
 <body>
 
-    <nav class="navbar">
-        <a href="index.html" class="logo">skipQs</a>
-        <div>
-            <a href="dashboard.html" style="color:white; text-decoration:none; font-size:0.85rem; margin-right:15px;">My Visits</a>
-            <a href="login.html" id="authBtn" style="color:white; text-decoration:none; font-size:0.85rem; font-weight:600; background:rgba(255,255,255,0.2); padding:6px 12px; border-radius:6px;">Login</a>
-        </div>
-    </nav>
-
-    <div class="service-filter-bar" id="filterBar">
-        <div class="filter-chip live-toggle" id="toggleLive" onclick="toggleLiveOnly()">⚡ Live Only</div>
-        <div style="border-left: 1px solid #eee; height: 20px; margin: 0 5px;"></div>
-        <div class="filter-chip" data-type="salon">💇‍♀️ Salons</div>
-        <div class="filter-chip" data-type="dining">🍽️ Dining</div>
-        <div class="filter-chip" data-type="clinic">🏥 Clinics</div>
-        <div class="filter-chip" data-type="banking">🏦 Banking</div>
-        <div class="filter-chip" data-type="gym">🏋️ Gyms</div>
-        <div class="filter-chip" data-type="repair">🛠️ Repairs</div>
-        <div class="filter-chip" data-type="gov">🏛️ Gov</div>
-        <div class="filter-chip" data-type="wash">🧼 Wash</div>
+<nav class="navbar">
+    <a href="index.html" class="logo">skipQs</a>
+    <div>
+        <a href="dashboard.html" style="color:white;text-decoration:none;font-size:0.85rem;margin-right:15px;">My Visits</a>
+        <a href="login.html" id="authBtn" style="color:white;text-decoration:none;font-size:0.85rem;font-weight:600;background:rgba(255,255,255,0.2);padding:6px 12px;border-radius:6px;">Login</a>
     </div>
+</nav>
 
-    <div class="main-layout">
-        <div class="list-panel">
-            <h2 id="title" style="margin:0; font-size:1.2rem;">Nearby Services</h2>
-            <p id="counter" style="font-size:0.7rem; color:var(--text-muted); margin-bottom:1rem;">Locating area...</p>
-            <div id="results"></div>
-        </div>
+<div class="service-filter-bar">
+    <div class="filter-chip live-toggle" id="toggleLive" onclick="toggleLiveOnly()">⚡ Live Only</div>
+    <div style="border-left:1px solid #eee;height:20px;margin:0 5px;"></div>
+    <div class="filter-chip" data-type="salon">💇‍♀️ Salons</div>
+    <div class="filter-chip" data-type="dining">🍽️ Dining</div>
+    <div class="filter-chip" data-type="clinic">🏥 Clinics</div>
+    <div class="filter-chip" data-type="banking">🏦 Banking</div>
+    <div class="filter-chip" data-type="gym">🏋️ Gyms</div>
+    <div class="filter-chip" data-type="repair">🛠️ Repairs</div>
+    <div class="filter-chip" data-type="gov">🏛️ Gov</div>
+    <div class="filter-chip" data-type="wash">🧼 Wash</div>
+</div>
 
-        <div class="visual-panel" id="detailPanel">
-            <div class="placeholder-box">
-                <span class="placeholder-icon">📍</span>
-                <h3>Select a service to see details</h3>
-                <p>Find the shortest queues and join live lines instantly.</p>
-            </div>
-        </div>
+<div class="main-layout">
+    <div class="list-panel">
+        <h2 id="title" style="margin:0;font-size:1.2rem;">Nearby Services</h2>
+        <p id="counter" style="font-size:0.7rem;color:var(--text-muted);margin-bottom:1rem;">Locating area...</p>
+        <div id="results"></div>
     </div>
+    <div class="visual-panel" id="mapPanel">
+        <div id="leaflet-map"></div>
+    </div>
+</div>
 
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <script src="firebase-config.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
 
-    <script>
-        /* ===============================
-   CACHE HELPERS (ADD THIS)
-================================ */
+/* ===== LEAFLET MAP (OpenStreetMap tiles — free & open source) ===== */
+let leafletMap = null, placeMarkers = [];
+let userLat = 53.4808, userLng = -2.2426; // Manchester fallback
 
-const CACHE_DAYS = 20;
-const CACHE_TTL_MS = CACHE_DAYS * 24 * 60 * 60 * 1000;
-
-function roundCoord(val) {
-    return Math.round(val * 100) / 100; // ~1km tile
+function initLeafletMap(lat, lng) {
+    if (window.innerWidth < 769) return;
+    leafletMap = L.map('leaflet-map').setView([lat, lng], 14);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19
+    }).addTo(leafletMap);
+    const userIcon = L.divIcon({
+        html: '<div style="background:#2563eb;width:14px;height:14px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.4);"></div>',
+        iconSize: [20,20], iconAnchor: [10,10], className: ''
+    });
+    L.marker([lat, lng], { icon: userIcon }).addTo(leafletMap).bindPopup('📍 You are here');
 }
 
-function getCacheKey(serviceType, location) {
-    return `${serviceType}_${roundCoord(location.lat())}_${roundCoord(location.lng())}`;
-}
-
-        
-        const db = firebase.firestore();
-        const params = new URLSearchParams(window.location.search);
-        
-        let serviceType = params.get("type") || 'salon';
-        let liveOnly = false;
-        let userLocation;
-        let currentPlaces = []; 
-        let Place = null;
-
-        const SERVICE_MAP = {
-            salon: { type: "beauty_salon", label: "Salons & Barbers" },
-            dining: { type: "restaurant", label: "Restaurants & Dining" },
-            clinic: { type: "medical_clinic", label: "Clinics & Health" },
-            banking: { type: "bank", label: "Banking & Finance" },
-            gym: { type: "gym", label: "Gyms & Fitness" },
-            repair: { type: "car_repair", label: "Repairs & Services" },
-            gov: { type: "local_government_office", label: "Gov & Public Services" },
-            wash: { type: "car_wash", label: "Wash & Laundry" }
-        };
-
-        document.getElementById("title").innerText = SERVICE_MAP[serviceType].label;
-
-        document.querySelectorAll('.filter-chip[data-type]').forEach(chip => {
-            if(chip.dataset.type === serviceType) chip.classList.add('active');
-            chip.onclick = () => {
-                document.querySelectorAll('.filter-chip[data-type]').forEach(c => c.classList.remove('active'));
-                chip.classList.add('active');
-                serviceType = chip.dataset.type;
-                document.getElementById("title").innerText = SERVICE_MAP[serviceType].label;
-                executePlacesSearch();
-            };
+function addMapMarkers(places) {
+    if (!leafletMap) return;
+    placeMarkers.forEach(m => leafletMap.removeLayer(m));
+    placeMarkers = [];
+    places.forEach((place, i) => {
+        if (!place.location || !place.location.lat) return;
+        const isLive = place.isRegistered;
+        const icon = L.divIcon({
+            html: '<div style="background:' + (isLive ? '#059669' : '#64748b') + ';color:white;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.3);">' + (isLive ? '⚡ ' : '📍 ') + place.displayName.substring(0,20) + '</div>',
+            iconAnchor: [0,0], className: ''
         });
+        const marker = L.marker([place.location.lat, place.location.lng], { icon }).addTo(leafletMap).on('click', () => selectPlace(i));
+        placeMarkers.push(marker);
+    });
+}
 
-        function toggleLiveOnly() {
-            liveOnly = !liveOnly;
-            document.getElementById('toggleLive').classList.toggle('active', liveOnly);
-            applyLiveFilter();
+function panMapToPlace(place) {
+    if (!leafletMap || !place.location) return;
+    leafletMap.setView([place.location.lat, place.location.lng], 16);
+}
+
+/* ===== HAVERSINE DISTANCE (replaces Google Maps geometry) ===== */
+function haversineDistance(lat1, lng1, lat2, lng2) {
+    const R = 6371000;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+/* ===== OVERPASS API (OpenStreetMap POI search — replaces Google Places) ===== */
+const OVERPASS_TAGS = {
+    salon:   [['amenity','hairdresser'],['shop','beauty'],['shop','hairdresser']],
+    dining:  [['amenity','restaurant'],['amenity','cafe'],['amenity','fast_food']],
+    clinic:  [['amenity','clinic'],['amenity','doctors'],['amenity','hospital']],
+    banking: [['amenity','bank']],
+    gym:     [['leisure','fitness_centre'],['amenity','gym']],
+    repair:  [['shop','car_repair'],['amenity','car_repair']],
+    gov:     [['office','government'],['amenity','townhall'],['office','council']],
+    wash:    [['amenity','car_wash'],['shop','laundry'],['shop','dry_cleaning']]
+};
+
+async function searchOverpass(svcType, lat, lng, limit) {
+    const tags = OVERPASS_TAGS[svcType] || [['amenity','hairdresser']];
+    const nodeQueries = tags.map(([k,v]) => 'node["'+k+'"="'+v+'"](around:15000,'+lat+','+lng+');').join('');
+    const query = '[out:json][timeout:15];(' + nodeQueries + ');out body ' + limit + ';';
+    const res = await fetch('https://overpass-api.de/api/interpreter?data=' + encodeURIComponent(query));
+    if (!res.ok) throw new Error('Overpass: ' + res.status);
+    const data = await res.json();
+    return (data.elements || []).map(el => {
+        const t = el.tags || {};
+        let address = '';
+        if (t['addr:street']) {
+            address = ((t['addr:housenumber'] || '') + ' ' + t['addr:street']).trim();
+            if (t['addr:city']) address += ', ' + t['addr:city'];
         }
-
-        function applyLiveFilter() {
-            const cards = document.querySelectorAll('.place-card');
-            let visibleCount = 0;
-            cards.forEach(card => {
-                const isLive = card.getAttribute('data-live') === 'true';
-                if (liveOnly && !isLive) card.classList.add('hidden');
-                else { card.classList.remove('hidden'); visibleCount++; }
-            });
-            document.getElementById("counter").innerText = `Showing ${visibleCount} results.`;
-        }
-
-        async function initMap() {
-            try {
-                const { Place: PlaceLib } = await google.maps.importLibrary("places");
-                Place = PlaceLib;
-                navigator.geolocation.getCurrentPosition(
-                    (pos) => {
-                        userLocation = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
-                        executePlacesSearch();
-                    },
-                    () => {
-                        userLocation = new google.maps.LatLng(53.4808, -2.2426); // Manchester fallback
-                        executePlacesSearch();
-                    }
-                );
-            } catch (e) { console.error("Maps init failed", e); }
-        }
-
-
-        async function readPlacesCache(serviceType, userLocation) {
-    const key = getCacheKey(serviceType, userLocation);
-    const ref = db.collection('places_cache').doc(key);
-    const snap = await ref.get();
-
-    if (!snap.exists) return null;
-
-    const data = snap.data();
-    if (!data.expiresAt || data.expiresAt.toMillis() < Date.now()) {
-        return null; // expired
-    }
-
-return (data.results || [])
-    .slice(0, 10)
-    .map(p => {
-        const loc = new google.maps.LatLng(p.lat, p.lng);
         return {
-            id: p.id,
-            displayName: p.displayName,
-            location: loc,
-            calculatedDistance: google.maps.geometry.spherical.computeDistanceBetween(
-                userLocation,
-                loc
-            ),
-            shortFormattedAddress: p.shortFormattedAddress || "",
-            isRegistered: false,
-            fromCache: true
+            id: 'osm_' + el.id,
+            displayName: t.name || '',
+            location: { lat: el.lat, lng: el.lon },
+            calculatedDistance: haversineDistance(lat, lng, el.lat, el.lon),
+            shortFormattedAddress: address,
+            isRegistered: false
         };
+    }).filter(p => p.displayName !== '').sort((a,b) => a.calculatedDistance - b.calculatedDistance);
+}
+
+/* ===== FIRESTORE CACHE (uses plain lat/lng, no Google deps) ===== */
+const CACHE_TTL_MS = 20 * 24 * 60 * 60 * 1000;
+function roundCoord(v) { return Math.round(v * 100) / 100; }
+function getCacheKey(svcType, lat, lng) { return svcType + '_' + roundCoord(lat) + '_' + roundCoord(lng); }
+
+async function readPlacesCache(svcType, lat, lng) {
+    try {
+        const snap = await db.collection('places_cache').doc(getCacheKey(svcType, lat, lng)).get();
+        if (!snap.exists) return null;
+        const data = snap.data();
+        if (!data.expiresAt || data.expiresAt.toMillis() < Date.now()) return null;
+        return (data.results || []).map(p => ({
+            id: p.id, displayName: p.displayName,
+            location: { lat: p.lat, lng: p.lng },
+            calculatedDistance: haversineDistance(lat, lng, p.lat, p.lng),
+            shortFormattedAddress: p.shortFormattedAddress || '',
+            isRegistered: false, fromCache: true
+        }));
+    } catch(e) { return null; }
+}
+
+async function savePlacesCache(svcType, lat, lng, places) {
+    try {
+        await db.collection('places_cache').doc(getCacheKey(svcType, lat, lng)).set({
+            serviceType: svcType, source: 'openstreetmap',
+            latRound: roundCoord(lat), lngRound: roundCoord(lng),
+            results: places.slice(0,10).map(p => ({ id: p.id, displayName: p.displayName, lat: p.location.lat, lng: p.location.lng, shortFormattedAddress: p.shortFormattedAddress || '' })),
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            expiresAt: firebase.firestore.Timestamp.fromMillis(Date.now() + CACHE_TTL_MS)
+        });
+    } catch(e) { console.warn('Cache write failed:', e); }
+}
+
+function normalizeName(name) { return (name||'').toLowerCase().replace(/[^a-z0-9]/g,''); }
+
+/* ===== APP STATE ===== */
+const db = firebase.firestore();
+const params = new URLSearchParams(window.location.search);
+let serviceType = params.get('type') || 'salon';
+let liveOnly = false;
+let currentPlaces = [];
+
+const SERVICE_LABELS = {
+    salon:'Salons & Barbers', dining:'Restaurants & Dining', clinic:'Clinics & Health',
+    banking:'Banking & Finance', gym:'Gyms & Fitness', repair:'Repairs & Services',
+    gov:'Gov & Public Services', wash:'Wash & Laundry'
+};
+document.getElementById('title').innerText = SERVICE_LABELS[serviceType] || 'Nearby Services';
+
+firebase.auth().onAuthStateChanged(user => {
+    const btn = document.getElementById('authBtn');
+    if (user && !user.isAnonymous) { btn.innerText = 'Dashboard'; btn.href = 'dashboard.html'; }
+});
+
+document.querySelectorAll('.filter-chip[data-type]').forEach(chip => {
+    if (chip.dataset.type === serviceType) chip.classList.add('active');
+    chip.onclick = () => {
+        document.querySelectorAll('.filter-chip[data-type]').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        serviceType = chip.dataset.type;
+        document.getElementById('title').innerText = SERVICE_LABELS[serviceType];
+        executePlacesSearch();
+    };
+});
+
+function toggleLiveOnly() {
+    liveOnly = !liveOnly;
+    document.getElementById('toggleLive').classList.toggle('active', liveOnly);
+    applyLiveFilter();
+}
+function applyLiveFilter() {
+    let count = 0;
+    document.querySelectorAll('.place-card').forEach(card => {
+        const isLive = card.getAttribute('data-live') === 'true';
+        if (liveOnly && !isLive) card.classList.add('hidden');
+        else { card.classList.remove('hidden'); count++; }
     });
-
-
-
+    document.getElementById('counter').innerText = 'Showing ' + count + ' results.';
 }
 
-  async function savePlacesCache(serviceType, userLocation, googlePlaces) {
-    const key = getCacheKey(serviceType, userLocation);
-
-    const results = googlePlaces.slice(0, 10).map(p => ({
-        id: p.id,
-        displayName: p.displayName,
-        lat: p.location.lat(),
-        lng: p.location.lng(),
-        shortFormattedAddress: p.shortFormattedAddress || ""
-    }));
-
-    await db.collection('places_cache').doc(key).set({
-        serviceType,
-        latRound: roundCoord(userLocation.lat()),
-        lngRound: roundCoord(userLocation.lng()),
-        source: "google",
-        results,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        expiresAt: firebase.firestore.Timestamp.fromMillis(Date.now() + CACHE_TTL_MS)
-    });
+/* ===== INIT ===== */
+function init() {
+    navigator.geolocation.getCurrentPosition(
+        pos => { userLat = pos.coords.latitude; userLng = pos.coords.longitude; initLeafletMap(userLat, userLng); executePlacesSearch(); },
+        ()  => { initLeafletMap(userLat, userLng); executePlacesSearch(); }
+    );
 }
 
-function normalizeName(name) {
-    return (name || "")
-        .toLowerCase()
-        .replace(/[^a-z0-9]/g, "")   // remove symbols
-        .replace(/\s+/g, "");        // remove spaces
-}
-
-function isDuplicatePlace(googlePlace, firebasePlaces) {
-    return firebasePlaces.some(fb => {
-
-        const fbName = normalizeName(fb.displayName);
-        const gName = normalizeName(googlePlace.displayName);
-
-        const nameMatch = fbName === gName;
-
-        const distMatch =
-            Math.abs(fb.calculatedDistance - googlePlace.calculatedDistance) < 150;
-
-        return nameMatch && distMatch;
-    });
-}
-
-
-
-        
+/* ===== MAIN SEARCH ===== */
 async function executePlacesSearch() {
-    if (!Place || !userLocation) return;
-
-    const MAX_RESULTS = 10;
-    const resultsContainer = document.getElementById("results");
-    resultsContainer.innerHTML = "<p style='padding:20px;'>Searching nearby services...</p>";
+    const MAX = 10;
+    const container = document.getElementById('results');
+    container.innerHTML = "<p style='padding:20px;color:#64748b;'>Searching nearby services...</p>";
 
     const CATEGORY_MAP = {
-        salon: ['salon', 'barber'],
-        clinic: ['clinic', 'hospital', 'medical'],
-        dining: ['restaurant', 'cafe', 'food'],
-        banking: ['bank'],
-        gym: ['gym', 'fitness'],
-        repair: ['repair', 'mechanic'],
-        gov: ['government', 'council'],
-        wash: ['wash', 'laundry']
+        salon:['salon','barber','beauty'], clinic:['clinic','hospital','medical','doctor'],
+        dining:['restaurant','cafe','food','dining'], banking:['bank'],
+        gym:['gym','fitness'], repair:['repair','mechanic'],
+        gov:['government','council'], wash:['wash','laundry']
     };
 
+    /* 1. Firebase registered providers */
     const firebasePlaces = [];
-
-    /* -----------------------------
-       1️⃣ FIREBASE FIRST
-    ------------------------------*/
-    const snapshot = await db.collection('providers').get();
-
-    for (const doc of snapshot.docs) {
-        const data = doc.data();
-        if (!data.lat || !data.lng) continue;
-
-        const providerCategory = (data.category || "").toLowerCase();
-        const allowed = CATEGORY_MAP[serviceType] || [];
-        if (!allowed.some(k => providerCategory.includes(k))) continue;
-
-        const businessLoc = new google.maps.LatLng(data.lat, data.lng);
-        const dist = google.maps.geometry.spherical.computeDistanceBetween(
-            userLocation,
-            businessLoc
-        );
-        if ((dist * 0.000621371) > 25) continue;
-
-        const qSnap = await db.collection('queues')
-            .where('providerId', '==', doc.id)
-            .where('status', 'in', ['waiting', 'serving'])
-            .get();
-
-        let totalMins = 0;
-
-        qSnap.forEach(q => {
-            let raw = q.data().serviceDuration;
-            let mins = parseInt(raw, 10);
-            if (isNaN(mins) || mins <= 0) mins = 15;
-            totalMins += mins;
-        });
-
-        let capacity = parseInt(data.capacity, 10);
-        if (isNaN(capacity) || capacity <= 0) capacity = 1;
-
-        let queueLoadMins = 0;
-        if (qSnap.size > 0) {
-            queueLoadMins = Math.max(5, Math.ceil(totalMins / capacity));
+    try {
+        const snapshot = await db.collection('providers').get();
+        for (const doc of snapshot.docs) {
+            const data = doc.data();
+            if (!data.lat || !data.lng) continue;
+            const providerCategory = (data.category || '').toLowerCase();
+            const allowed = CATEGORY_MAP[serviceType] || [];
+            if (!allowed.some(k => providerCategory.includes(k))) continue;
+            const dist = haversineDistance(userLat, userLng, data.lat, data.lng);
+            if (dist * 0.000621371 > 25) continue;
+            const qSnap = await db.collection('queues').where('providerId','==',doc.id).where('status','in',['waiting','serving']).get();
+            let totalMins = 0;
+            qSnap.forEach(q => { let m = parseInt(q.data().serviceDuration,10); if(isNaN(m)||m<=0) m=15; totalMins+=m; });
+            let capacity = parseInt(data.capacity,10); if(isNaN(capacity)||capacity<=0) capacity=1;
+            const queueLoadMins = qSnap.size > 0 ? Math.max(5, Math.ceil(totalMins/capacity)) : 0;
+            firebasePlaces.push({
+                id: doc.id, displayName: data.businessName || 'Local Partner',
+                location: { lat: data.lat, lng: data.lng },
+                calculatedDistance: dist, shortFormattedAddress: data.address || '',
+                isRegistered: true, waitTime: queueLoadMins, peopleInQueue: qSnap.size,
+                liveData: { peopleInLine: qSnap.size, queueLoadMins, currentWaitMins: queueLoadMins },
+                imageUrl: data.imageUrl
+            });
         }
+    } catch(e) { console.error('Firebase error:', e); }
 
-        firebasePlaces.push({
-            id: doc.id,
-            displayName: data.businessName || "Local Partner",
-            location: businessLoc,
-            calculatedDistance: dist,
-            shortFormattedAddress: data.address || "",
-            isRegistered: true,
+    firebasePlaces.sort((a,b) => a.calculatedDistance - b.calculatedDistance);
+    const firebaseLimited = firebasePlaces.slice(0, MAX);
 
-            // 🔥 UI-safe fields
-            waitTime: queueLoadMins,
-            peopleInQueue: qSnap.size,
-
-liveData: {
-    peopleInLine: qSnap.size,
-    queueLoadMins: queueLoadMins,
-    currentWaitMins: queueLoadMins
-},
-
-            imageUrl: data.imageUrl
-        });
-    } // ✅ THIS WAS MISSING — LOOP CLOSED HERE
-
-    /* -----------------------------
-       SORT + LIMIT FIREBASE
-    ------------------------------*/
-    firebasePlaces.sort((a, b) => a.calculatedDistance - b.calculatedDistance);
-    const firebaseLimited = firebasePlaces.slice(0, MAX_RESULTS);
-
-    if (firebaseLimited.length >= MAX_RESULTS) {
+    if (firebaseLimited.length >= MAX) {
+        currentPlaces = firebaseLimited;
         renderList(firebaseLimited);
-        document.getElementById("counter").innerText =
-            `Found ${firebaseLimited.length} live providers nearby`;
+        addMapMarkers(firebaseLimited);
         return;
     }
 
-    /* -----------------------------
-       2️⃣ GOOGLE FALLBACK
-    ------------------------------*/
-/* -----------------------------
-   2️⃣ GOOGLE FALLBACK + CACHE
-------------------------------*/
-const remaining = MAX_RESULTS - firebaseLimited.length;
-
-let googlePlaces = [];
-
+    /* 2. OpenStreetMap (Overpass API) fallback */
     const shownIds = new Set(firebaseLimited.map(p => normalizeName(p.displayName)));
-
-
-// 1️⃣ TRY CACHE FIRST
-const cached = await readPlacesCache(serviceType, userLocation);
-if (cached && cached.length) {
-    googlePlaces = cached;
-}
-
-// 2️⃣ IF CACHE MISS → CALL GOOGLE
-if (!googlePlaces.length) {
-    try {
-
-        const request = {
-    fields: ["displayName", "location", "id", "photos", "shortFormattedAddress"],
-
-    // ⭐ THIS LINE IS MISSING IN YOUR CODE
-    includedTypes: [SERVICE_MAP[serviceType].type],
-
-    locationRestriction: {
-        center: {
-            lat: userLocation.lat(),
-            lng: userLocation.lng()
-        },
-        radius: 15000
-    },
-
-    maxResultCount: remaining,
-    rankPreference: google.maps.places.SearchNearbyRankPreference.DISTANCE
-};
-
-
-
-        const { places } = await Place.searchNearby(request);
-
-        googlePlaces = (places || []).map(p => ({
-            id: p.id,
-            displayName: p.displayName || "Nearby Business",
-            location: p.location,
-            calculatedDistance: google.maps.geometry.spherical.computeDistanceBetween(
-                userLocation,
-                p.location
-            ),
-            shortFormattedAddress: p.shortFormattedAddress || "",
-            isRegistered: false,
-            photos: p.photos
-        }));
-
-        // 🔥 SAVE CACHE FOR ALL FUTURE USERS
-if (googlePlaces.length && !cached) {
-    await savePlacesCache(serviceType, userLocation, googlePlaces);
-}
-
-
-    } catch (err) {
-        console.error("Google fallback failed:", err);
+    let osmPlaces = [];
+    const cached = await readPlacesCache(serviceType, userLat, userLng);
+    if (cached && cached.length) {
+        osmPlaces = cached;
+    } else {
+        try {
+            osmPlaces = await searchOverpass(serviceType, userLat, userLng, MAX - firebaseLimited.length);
+            if (osmPlaces.length) await savePlacesCache(serviceType, userLat, userLng, osmPlaces);
+        } catch(err) {
+            console.warn('Overpass error:', err);
+            container.innerHTML += "<p style='color:#ef4444;font-size:0.8rem;padding:0 1rem;'>⚠️ Map data unavailable. Check connection.</p>";
+        }
     }
-}
 
-    /* -----------------------------
-       3️⃣ MERGE + RENDER
-    ------------------------------*/
-// ❌ remove duplicates from google list
-googlePlaces = googlePlaces.filter(g => {
-    const gName = normalizeName(g.displayName);
+    osmPlaces = osmPlaces.filter(g => { const n = normalizeName(g.displayName); if(shownIds.has(n)) return false; shownIds.add(n); return true; });
 
-    if (shownIds.has(gName)) return false; // already shown
+    const combined = [...firebaseLimited, ...osmPlaces]
+        .sort((a,b) => { if(a.isRegistered&&!b.isRegistered) return -1; if(!a.isRegistered&&b.isRegistered) return 1; return a.calculatedDistance-b.calculatedDistance; })
+        .slice(0, MAX);
 
-    const dup = isDuplicatePlace(g, firebaseLimited);
-    if (!dup) shownIds.add(gName);
-
-    return !dup;
-});
-
-
-const combined = [...firebaseLimited, ...googlePlaces]
-    .sort((a, b) => {
-        if (a.isRegistered && !b.isRegistered) return -1;
-        if (!a.isRegistered && b.isRegistered) return 1;
-        return a.calculatedDistance - b.calculatedDistance;
-    })
-    .slice(0, MAX_RESULTS);
-
-
-    
     currentPlaces = combined;
-
     renderList(combined);
-    document.getElementById("counter").innerText =
-        `Found ${combined.length} results nearby`;
+    addMapMarkers(combined);
 }
+
+/* ===== RENDER CARDS ===== */
 function renderList(places) {
-    const container = document.getElementById("results");
-    container.innerHTML = "";
-    
+    const container = document.getElementById('results');
+    container.innerHTML = '';
+    if (!places.length) {
+        container.innerHTML = '<div style="text-align:center;padding:40px 20px;color:#94a3b8;"><div style="font-size:2.5rem;margin-bottom:12px;">🔍</div><p>No services found nearby.</p><p style="font-size:0.8rem;">Try a different category or allow location access.</p></div>';
+        document.getElementById('counter').innerText = 'No results found.';
+        return;
+    }
     places.forEach((place, i) => {
         const miles = (place.calculatedDistance * 0.000621371).toFixed(1);
-        const driveTime = Math.round((miles / 12) * 60) + 2;
-let thumb = '/images/skipqs-logo.png';
-
-if (place.isRegistered && place.imageUrl && place.imageUrl !== "") {
-    thumb = place.imageUrl;
-}
-
-if (!place.isRegistered && place.photos && place.photos.length > 0) {
-    try {
-        thumb = place.photos[0].getURI({maxHeight:300});
-    } catch {}
-}
-
-
-        
-
-        
-        // FIXED: Changed 0{ to ${ and fixed the URL structure
-        const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.displayName)}&query_place_id=${place.id}`;
-
-
+        const driveTime = Math.round((parseFloat(miles)/12)*60)+2;
+        const osmDir = 'https://www.openstreetmap.org/directions?from=' + userLat + ',' + userLng + '&to=' + place.location.lat + ',' + place.location.lng;
+        let thumb = '/images/skipqs-logo.png';
+        if (place.isRegistered && place.imageUrl) thumb = place.imageUrl;
         const card = document.createElement('div');
         card.className = 'place-card';
-        card.id = `card-${i}`;
-        
+        card.id = 'card-' + i;
         if (place.isRegistered) {
             const d = place.liveData;
-            card.setAttribute('data-live', 'true');
-            card.innerHTML = `
-                <div onclick="selectPlace(${i})">
-                    <div class="card-top">
-                        <img src="${thumb}" class="thumb">
-                        <div style="flex:1">
-                            <strong style="color:var(--primary);">★ ${place.displayName}</strong>
-                            <div class="info-tags"><span class="dist-tag">${miles} mi</span><span class="time-tag">🚗 ${driveTime}m</span></div>
-                            <div class="q-badge q-online">LIVE: ${d.peopleInLine || 0} in line</div>
-                            <div class="est-box">⌛ Wait: ~${d.queueLoadMins || 0}m</div>
-
-                        </div>
-                    </div>
-                </div>
-                <div class="action-row">
-                    <a href="${d.googleMapsLink || mapsUrl}" target="_blank" class="btn btn-sec">Directions</a>
-                    <button onclick="window.location.href='join-queue.html?id=${place.id}'" class="btn btn-join">JOIN</button>
-                </div>`;
+            card.setAttribute('data-live','true');
+            card.innerHTML = '<div onclick="selectPlace('+i+')"><div class="card-top"><img src="'+thumb+'" class="thumb" onerror="this.src=\'/images/skipqs-logo.png\'"><div style="flex:1"><strong style="color:var(--primary);">★ '+place.displayName+'</strong><div class="info-tags"><span class="dist-tag">'+miles+' mi</span><span class="time-tag">🚗 '+driveTime+'m</span></div><div class="q-badge q-online">LIVE: '+(d.peopleInLine||0)+' in line</div><div class="est-box">⌛ Wait: ~'+(d.queueLoadMins||0)+'m</div></div></div></div><div class="action-row"><a href="'+osmDir+'" target="_blank" rel="noopener" class="btn btn-sec">🗺️ Directions</a><button onclick="window.location.href=\'join-queue.html?id='+place.id+'\'" class="btn btn-join">JOIN</button></div>';
         } else {
-            card.setAttribute('data-live', 'false');
-            card.innerHTML = `
-                <div onclick="selectPlace(${i})">
-                    <div class="card-top">
-                        <img src="${thumb}" class="thumb">
-                        <div style="flex:1">
-                            <strong>${place.displayName}</strong>
-                            <div class="info-tags"><span class="dist-tag">${miles} mi</span><span class="time-tag">🚗 ${driveTime}m</span></div>
-                           <div class="q-badge q-offline">
-    ${place.fromCache ? "Cached result" : "Queueing not enabled"}
-</div>
-
-                        </div>
-                    </div>
-                </div>
-                <div class="action-row">
-                    <a href="${mapsUrl}" target="_blank" class="btn btn-sec">Directions</a>
-                    <button onclick="window.location.href='provider-signup.html'" class="btn btn-reg">BUSINESS OWNER?<br>REGISTER FREE</button>
-                </div>`;
+            card.setAttribute('data-live','false');
+            card.innerHTML = '<div onclick="selectPlace('+i+')"><div class="card-top"><img src="'+thumb+'" class="thumb" onerror="this.src=\'/images/skipqs-logo.png\'"><div style="flex:1"><strong>'+place.displayName+'</strong><div class="info-tags"><span class="dist-tag">'+miles+' mi</span><span class="time-tag">🚗 '+driveTime+'m</span></div><div class="q-badge q-offline">'+(place.fromCache?'Cached result':'Queueing not enabled')+'</div></div></div></div><div class="action-row"><a href="'+osmDir+'" target="_blank" rel="noopener" class="btn btn-sec">🗺️ Directions</a><button onclick="window.location.href=\'provider-signup.html\'" class="btn btn-reg">BUSINESS OWNER?<br>REGISTER FREE</button></div>';
         }
         container.appendChild(card);
     });
-    document.getElementById("counter").innerText = `Found ${places.length} results nearby.`;
+    document.getElementById('counter').innerText = 'Found '+places.length+' results nearby.';
     applyLiveFilter();
 }
 
-function getPlacePhoto() {
-    return null;
-}
-
-
-
+/* ===== SELECT PLACE ===== */
 function selectPlace(index) {
     const place = currentPlaces[index];
     document.querySelectorAll('.place-card').forEach(c => c.classList.remove('active'));
-    document.getElementById(`card-${index}`).classList.add('active');
-    
-    // FIXED: Syntax for mapsUrl in the detail panel
-    const mapsUrl = `https://www.google.com/search?q=https://www.google.com/maps/search/%3Fapi%3D1%26query%3D${encodeURIComponent(place.displayName)}&query_place_id=${place.id}`;
-let mainPhoto = place.isRegistered
-    ? place.imageUrl
-    : '/images/skipqs-logo.png';
-
-
-
-    document.getElementById('detailPanel').innerHTML = `
-        <div style="width:100%; max-width:480px; background:white; border-radius:20px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.1); text-align:left;">
-            <img src="${mainPhoto}" style="width:100%; height:280px; object-fit:cover;">
-            <div style="padding:25px;">
-                <h2 style="margin:0;">${place.displayName}</h2>
-                <p style="color:var(--text-muted);">${place.shortFormattedAddress || ""}</p>
-                ${place.isRegistered ? `
-                    <div class="q-badge q-online" style="font-size:1.1rem; padding:15px; width:100%; text-align:center; box-sizing:border-box;">${place.liveData.peopleInLine || 0} People Waiting</div>
-                    <button onclick="window.location.href='join-queue.html?id=${place.id}'" class="btn btn-join" style="width:100%; margin-top:15px; padding:15px;">JOIN LIVE QUEUE</button>
-                ` : `<div class="q-badge q-offline" style="width:100%; text-align:center; box-sizing:border-box; padding:10px;">Queueing not enabled</div>`}
-                <a href="${place.liveData?.googleMapsLink || mapsUrl}" target="_blank" class="btn btn-sec" style="margin-top:15px; width:100%;">Get Directions</a>
-            </div>
-        </div>`;
+    document.getElementById('card-'+index).classList.add('active');
+    if (window.innerWidth < 769) {
+        document.getElementById('card-'+index).scrollIntoView({behavior:'smooth',block:'center'});
+        return;
+    }
+    panMapToPlace(place);
+    if (leafletMap && place.location) {
+        const osmDir = 'https://www.openstreetmap.org/directions?from='+userLat+','+userLng+'&to='+place.location.lat+','+place.location.lng;
+        const popupHtml = '<div style="min-width:180px;"><strong>'+place.displayName+'</strong><br><span style="font-size:0.8rem;color:#64748b;">'+place.shortFormattedAddress+'</span><br>'+(place.isRegistered?'<div style="margin:6px 0;background:#d1fae5;color:#065f46;padding:4px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;">'+place.liveData.peopleInLine+' in line · ~'+place.liveData.queueLoadMins+'m wait</div><a href="join-queue.html?id='+place.id+'" style="display:block;background:#2563eb;color:white;text-align:center;padding:6px;border-radius:6px;text-decoration:none;font-size:0.8rem;font-weight:700;margin-top:6px;">JOIN QUEUE</a>':'<div style="margin:6px 0;background:#f1f5f9;color:#64748b;padding:4px 8px;border-radius:4px;font-size:0.75rem;">Queueing not enabled</div>')+'<a href="'+osmDir+'" target="_blank" rel="noopener" style="display:block;text-align:center;margin-top:6px;font-size:0.8rem;color:#2563eb;">🗺️ Get Directions</a></div>';
+        L.popup().setLatLng([place.location.lat,place.location.lng]).setContent(popupHtml).openOn(leafletMap);
+    }
 }
-    </script>
 
-    <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAJFGE5OFfn-OhDNJ_rWO5oi2d2CHl2fXE&loading=async&libraries=places,geometry&callback=initMap"></script>
+window.addEventListener('DOMContentLoaded', init);
+</script>
 </body>
 </html>

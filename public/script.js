@@ -94,44 +94,8 @@ function closeQueueModal() {
 }
 
 function confirmQueue() {
-  try {
-    const userNameInput = document.getElementById('userName');
-    const userPhoneInput = document.getElementById('userPhone');
-
-    if (!userNameInput || !userPhoneInput) {
-      console.error('Form inputs not found');
-      return;
-    }
-
-    const name = userNameInput.value.trim();
-    const phone = userPhoneInput.value.trim();
-
-    if (!name || !phone) {
-      alert('Please enter name and phone');
-      return;
-    }
-
-    // Validate phone format
-    if (!/^\d{10,}$/.test(phone.replace(/\D/g, ''))) {
-      alert('Please enter a valid phone number');
-      return;
-    }
-
-    alert(
-      `✅ Queue Joined!\n\n` +
-      `Service: ${selectedServiceName}\n` +
-      `Name: ${name}\n` +
-      `Phone: ${phone}`
-    );
-
-    // Clear form
-    userNameInput.value = '';
-    userPhoneInput.value = '';
-    closeQueueModal();
-  } catch (err) {
-    console.error('Error confirming queue:', err);
-    alert('Error joining queue. Please try again.');
-  }
+  // Legacy modal removed — join-queue.html handles real queue joins via Firebase.
+  window.location.href = 'nearby.html';
 }
 
 // Initialize on page load

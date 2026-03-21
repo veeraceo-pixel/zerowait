@@ -392,55 +392,52 @@
       firebase.auth().signOut().then(() => window.location.reload());
     }
 
-    // Load Listings
+    // Load Listings — live data from Firebase only, no dummy fallbacks
     async function loadListings() {
       try {
+        // Use a simpler query to avoid requiring a composite Firestore index
         const snapshot = await db.collection('providers')
           .where('isOpen', '==', true)
-          .orderBy('currentWait', 'asc')
           .limit(8)
           .get();
 
         if (snapshot.empty) {
-          showDemoData();
+          showEmptyState();
           return;
         }
 
-        const shortestWait = [];
-        const featured = [];
-        
-        snapshot.forEach((doc, index) => {
-          const data = doc.data();
-          if (index < 4) {
-            shortestWait.push(createListingCard(data, doc.id, false));
-          } else {
-            featured.push(createListingCard(data, doc.id, true));
-          }
-        });
+        // Sort by currentWaitMins client-side so no index is needed
+        const docs = [];
+        snapshot.forEach(doc => docs.push({ id: doc.id, data: doc.data() }));
+        docs.sort((a, b) => (a.data.currentWaitMins || 0) - (b.data.currentWaitMins || 0));
 
-        document.getElementById('shortestWaitList').innerHTML = shortestWait.join('');
-        document.getElementById('featuredList').innerHTML = featured.join('');
+        const shortestWait = docs.slice(0, 4).map((d, i) => createListingCard(d.data, d.id, false));
+        const featured     = docs.slice(4, 8).map((d, i) => createListingCard(d.data, d.id, true));
+
+        document.getElementById('shortestWaitList').innerHTML = shortestWait.join('') || emptyGridHTML('shortest wait');
+        document.getElementById('featuredList').innerHTML     = featured.join('')     || emptyGridHTML('featured');
 
       } catch (error) {
         console.error('Error loading listings:', error);
-        showDemoData();
+        showEmptyState();
       }
     }
 
     function createListingCard(data, id, isFeatured) {
+      const waitMins = data.currentWaitMins || data.peopleInLine || 0;
       return `
-        <a href="nearby.html?id=${id}" class="listing-card">
+        <a href="join-queue.html?id=${id}" class="listing-card">
           <div class="listing-image">
             ${getEmojiForCategory(data.category)}
-            <div class="wait-badge">${data.currentWait || 0} min</div>
+            <div class="wait-badge">${waitMins} min wait</div>
             ${isFeatured ? '<div class="featured-badge">Featured</div>' : ''}
           </div>
           <div class="listing-info">
-            <div class="listing-title">${data.businessName}</div>
-            <div class="listing-wait">${data.currentWait || 0} min wait</div>
+            <div class="listing-title">${data.businessName || 'Business'}</div>
+            <div class="listing-wait">${waitMins} min wait</div>
             <div class="listing-location">📍 ${data.address || 'Location not specified'}</div>
             <div class="listing-meta">
-              <div class="listing-category">${data.category}</div>
+              <div class="listing-category">${data.category || ''}</div>
               <div class="listing-status">● OPEN</div>
             </div>
           </div>
@@ -448,23 +445,18 @@
       `;
     }
 
-    function showDemoData() {
-      const demoData = [
-        { businessName: 'QuickCuts Barber', category: 'Salon', currentWait: 5, address: '123 Main St' },
-        { businessName: 'City Dental Clinic', category: 'Clinic', currentWait: 12, address: '456 Oak Ave' },
-        { businessName: 'FastFit Gym', category: 'Gym', currentWait: 8, address: '789 Fitness Blvd' },
-        { businessName: 'Bella Salon & Spa', category: 'Salon', currentWait: 15, address: '321 Beauty Lane' },
-        { businessName: 'Metro Bank Downtown', category: 'Banking', currentWait: 10, address: '555 Finance St' },
-        { businessName: 'Golden Restaurant', category: 'Dining', currentWait: 20, address: '888 Food Court' },
-        { businessName: 'Auto Fix Garage', category: 'Repair', currentWait: 30, address: '999 Mechanic Rd' },
-        { businessName: 'Fresh Car Wash', category: 'Wash', currentWait: 7, address: '111 Clean Dr' }
-      ];
+    function emptyGridHTML(section) {
+      return `<div class="empty-state" style="grid-column:1/-1;">
+        <div class="empty-state-icon">🏪</div>
+        <p>No ${section} businesses registered yet.</p>
+        <a href="provider-signup.html" style="color:var(--primary);font-weight:600;">Register your business →</a>
+      </div>`;
+    }
 
-      const shortestWait = demoData.slice(0, 4).map((d, i) => createListingCard(d, `demo${i}`, false)).join('');
-      const featured = demoData.slice(4, 8).map((d, i) => createListingCard(d, `demo${i+4}`, true)).join('');
-
-      document.getElementById('shortestWaitList').innerHTML = shortestWait;
-      document.getElementById('featuredList').innerHTML = featured;
+    function showEmptyState() {
+      const html = emptyGridHTML('open');
+      document.getElementById('shortestWaitList').innerHTML = html;
+      document.getElementById('featuredList').innerHTML = html;
     }
 
     function getEmojiForCategory(category) {
