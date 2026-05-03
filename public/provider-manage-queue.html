@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Manage Queue | skipQs</title>
+  <link rel="stylesheet" href="style.css"/>
+  
+</head>
+<body class="app-body">
+  <header class="app-header">
+    <div class="container header-inner">
+      <a href="index.html" class="logo"><span class="logo-mark">skip</span><span class="logo-accent">Qs</span></a>
+      <nav class="nav">
+        <a href="find-services.html">Find Services</a>
+        <a href="my-queues.html">My Queues</a>
+        <a href="how-it-works.html">How It Works</a>
+        <a href="blog.html">Blog</a>
+      </nav>
+      <div class="header-actions">
+        <a href="provider-dashboard.html" class="btn btn-ghost">For Businesses</a>
+        <a href="login.html" class="btn btn-outline" id="loginBtn">Log in</a>
+        <a href="signup.html" class="btn btn-primary">Sign up</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-main">
+
+    <section class="section">
+      <div class="container section-header"><h1>Manage queue</h1><p>View and manage customers currently waiting.</p></div>
+      <div class="container two-column">
+        <div class="card">
+          <h2 id="manage-queue-service-name">Service</h2>
+          <p id="manage-queue-meta" style="color:#6b7280;"></p>
+          <ul class="queue-list" id="manage-queue-list"></ul>
+        </div>
+        <div>
+          <div class="card" style="margin-bottom:1rem;">
+            <h3>Queue controls</h3>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+              <button class="btn btn-primary" id="queue-pause">Pause queue</button>
+              <button class="btn btn-ghost" id="queue-close" style="color:#ef4444;border:1px solid #ef4444;">Close queue</button>
+            </div>
+          </div>
+          <div class="card"><h3>Today's stats</h3><p id="manage-queue-stats" style="color:#6b7280;">Loading…</p></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="app-footer">
+    <div class="container footer-grid">
+      <div>
+        <div class="logo footer-logo"><span class="logo-mark">skip</span><span class="logo-accent">Qs</span></div>
+        <p class="footer-text">Skip the queue, save your time. Smart queue management for salons, clinics, banks and more.</p>
+      </div>
+      <div><h4>Product</h4><a href="find-services.html">Find services</a><a href="my-queues.html">My queues</a><a href="how-it-works.html">How it works</a></div>
+      <div><h4>For businesses</h4><a href="business-pricing.html">Pricing</a><a href="business-how-it-works.html">How it works</a><a href="provider-dashboard.html">Dashboard</a></div>
+      <div><h4>Company</h4><a href="about.html">About</a><a href="contact.html">Contact</a><a href="blog.html">Blog</a></div>
+      <div><h4>Legal</h4><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="cookie-policy.html">Cookies</a></div>
+    </div>
+    <div class="container footer-bottom">
+      <span>© <span id="year"></span> skipQs. All rights reserved.</span>
+      <span>Powered by OpenStreetMap · Supabase · No Google APIs</span>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="supabase-config.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

@@ -4,8 +4,8 @@
    https://app.supabase.com → Project Settings → API
    ============================================================ */
 
-const SUPABASE_URL  = 'https://idcrplpiokodcanjfolf.supabase.co';
-const SUPABASE_ANON = 'sb_publishable_ygbeTEvM5TdJKRND4GM5dQ_YPGYQI8e';
+const SUPABASE_URL  = 'https://YOUR_PROJECT_ID.supabase.co';
+const SUPABASE_ANON = 'YOUR_ANON_PUBLIC_KEY';
 
 // Initialise the Supabase client (loaded via CDN in each HTML file)
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);

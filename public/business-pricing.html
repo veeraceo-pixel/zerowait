@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Business Pricing | skipQs</title>
+  <link rel="stylesheet" href="style.css"/>
+  
+</head>
+<body class="app-body">
+  <header class="app-header">
+    <div class="container header-inner">
+      <a href="index.html" class="logo"><span class="logo-mark">skip</span><span class="logo-accent">Qs</span></a>
+      <nav class="nav">
+        <a href="find-services.html">Find Services</a>
+        <a href="my-queues.html">My Queues</a>
+        <a href="how-it-works.html">How It Works</a>
+        <a href="blog.html">Blog</a>
+      </nav>
+      <div class="header-actions">
+        <a href="provider-dashboard.html" class="btn btn-ghost">For Businesses</a>
+        <a href="login.html" class="btn btn-outline" id="loginBtn">Log in</a>
+        <a href="signup.html" class="btn btn-primary">Sign up</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-main">
+
+    <section class="section">
+      <div class="container section-header"><h1>Pricing for businesses</h1><p>Start free, scale as you grow. No long-term contracts.</p></div>
+      <div class="container card-grid pricing-grid">
+        <article class="card pricing-card">
+          <h2>Starter</h2><p class="price">Free</p>
+          <ul><li>1 location</li><li>Up to 2 services</li><li>Basic queue management</li><li>Email support</li></ul>
+          <a href="signup.html" class="btn btn-outline-dark">Get started</a>
+        </article>
+        <article class="card pricing-card pricing-card--highlight">
+          <h2>Growth</h2><p class="price">£29 / month</p>
+          <ul><li>Up to 3 locations</li><li>Unlimited services</li><li>Analytics &amp; reports</li><li>Priority support</li></ul>
+          <a href="signup.html" class="btn btn-primary">Choose Growth</a>
+        </article>
+        <article class="card pricing-card">
+          <h2>Enterprise</h2><p class="price">Let's talk</p>
+          <ul><li>Multi-city operations</li><li>Custom integrations</li><li>Dedicated account manager</li><li>SLA &amp; onboarding</li></ul>
+          <a href="contact.html" class="btn btn-outline-dark">Contact sales</a>
+        </article>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="app-footer">
+    <div class="container footer-grid">
+      <div>
+        <div class="logo footer-logo"><span class="logo-mark">skip</span><span class="logo-accent">Qs</span></div>
+        <p class="footer-text">Skip the queue, save your time. Smart queue management for salons, clinics, banks and more.</p>
+      </div>
+      <div><h4>Product</h4><a href="find-services.html">Find services</a><a href="my-queues.html">My queues</a><a href="how-it-works.html">How it works</a></div>
+      <div><h4>For businesses</h4><a href="business-pricing.html">Pricing</a><a href="business-how-it-works.html">How it works</a><a href="provider-dashboard.html">Dashboard</a></div>
+      <div><h4>Company</h4><a href="about.html">About</a><a href="contact.html">Contact</a><a href="blog.html">Blog</a></div>
+      <div><h4>Legal</h4><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="cookie-policy.html">Cookies</a></div>
+    </div>
+    <div class="container footer-bottom">
+      <span>© <span id="year"></span> skipQs. All rights reserved.</span>
+      <span>Powered by OpenStreetMap · Supabase · No Google APIs</span>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="supabase-config.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
