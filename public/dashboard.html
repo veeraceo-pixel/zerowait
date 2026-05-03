@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Queues | skipQs</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{--primary:#002f34;--accent:#23e5db;--bg:#f7f8f8;--border:#e2e8f0;}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--primary);}
+    .nav-bar{background:var(--primary);padding:.9rem 1.5rem;display:flex;justify-content:space-between;align-items:center;}
+    .nav-logo{color:var(--accent);font-size:1.5rem;font-weight:800;text-decoration:none;}
+    .nav-inner{display:flex;gap:1rem;align-items:center;}
+    .nav-links a{color:rgba(255,255,255,.85);text-decoration:none;font-size:.85rem;font-weight:500;}
+    .nav-links a.btn-logout{background:rgba(255,255,255,.15);padding:.4rem .9rem;border-radius:6px;}
+    .page-wrap{max-width:740px;margin:2rem auto;padding:0 1rem 4rem;}
+    .page-header{margin-bottom:1.5rem;}
+    .page-header h1{font-size:1.8rem;font-weight:800;}
+    .tabs{display:flex;gap:.5rem;margin-bottom:1.5rem;}
+    .tab-btn{padding:.6rem 1.4rem;border-radius:2rem;border:1.5px solid var(--border);background:white;font-family:inherit;font-size:.9rem;font-weight:600;cursor:pointer;color:#64748b;transition:.2s;}
+    .tab-btn.active{background:var(--primary);color:white;border-color:var(--primary);}
+    .loading-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4rem 2rem;color:#94a3b8;}
+    .spinner-ring{width:36px;height:36px;border:4px solid #e2e8f0;border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;margin-bottom:1rem;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .visit-card{background:white;border-radius:1rem;border:1px solid var(--border);padding:1.2rem 1.5rem;margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;}
+    .visit-biz{font-weight:700;font-size:1rem;}
+    .visit-svc{font-size:.85rem;color:#64748b;margin-top:.2rem;}
+    .visit-meta{font-size:.75rem;color:#94a3b8;margin-top:.4rem;}
+    .visit-actions{margin-top:.6rem;}
+    .btn-track{display:inline-block;padding:.45rem 1rem;background:var(--primary);color:white;border-radius:2rem;font-size:.8rem;font-weight:700;text-decoration:none;}
+    .status-badge{padding:.3rem .9rem;border-radius:2rem;font-size:.75rem;font-weight:700;}
+    .badge-waiting{background:#fef9c3;color:#854d0e;}
+    .badge-serving{background:#dcfce7;color:#15803d;}
+    .badge-completed{background:#e2e8f0;color:#475569;}
+    .empty-box{text-align:center;padding:4rem 2rem;color:#94a3b8;}
+    .empty-box .icon{font-size:3rem;margin-bottom:1rem;}
+    .empty-box h2{font-size:1.1rem;color:#64748b;}
+  </style>
+</head>
+<body>
+
+<header class="nav-bar">
+  <a href="index.html" class="nav-logo">skipQs</a>
+  <div class="nav-inner">
+    <div class="nav-links">
+      <a href="#" class="btn-logout" onclick="doLogout()">Log out</a>
+    </div>
+  </div>
+</header>
+
+<div class="page-wrap">
+  <div class="page-header"><h1>My Queues</h1></div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('active',this)">Active</button>
+    <button class="tab-btn"        onclick="switchTab('history',this)">History</button>
+  </div>
+
+  <div id="listArea">
+    <div class="loading-state"><div class="spinner-ring"></div><p>Loading…</p></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="supabase-config.js"></script>
+
+<script>
+  let currentTab = 'active';
+
+  sb.auth.getSession().then(({ data: { session } }) => {
+    if (!session) { window.location.href = 'login.html'; return; }
+    loadTab(currentTab, session.user.id);
+  });
+
+  function switchTab(tab, el) {
+    currentTab = tab;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    sb.auth.getSession().then(({ data: { session } }) => loadTab(tab, session.user.id));
+  }
+
+  async function loadTab(tab, uid) {
+    const list = document.getElementById('listArea');
+    list.innerHTML = '<div class="loading-state"><div class="spinner-ring"></div><p>Loading…</p></div>';
+
+    let query = sb.from('queues').select('*').eq('user_id', uid);
+    if (tab === 'active')  query = query.in('status', ['waiting','serving']).order('joined_at', { ascending: false });
+    else                   query = query.eq('status','completed').order('completed_at', { ascending: false }).limit(50);
+
+    const { data, error } = await query;
+
+    if (error) { list.innerHTML = `<div class="empty-box"><div class="icon">⚠️</div><h2>${error.message}</h2></div>`; return; }
+    if (!data.length) {
+      list.innerHTML = `<div class="empty-box">
+        <div class="icon">${tab==='active'?'📋':'🕐'}</div>
+        <h2>${tab==='active'?'No active queues':'No history yet'}</h2>
+      </div>`; return;
+    }
+
+    list.innerHTML = data.map(d => {
+      const date  = d.joined_at ? new Date(d.joined_at).toLocaleString([], {dateStyle:'medium',timeStyle:'short'}) : '';
+      const badge = d.status==='waiting' ? 'badge-waiting' : d.status==='serving' ? 'badge-serving' : 'badge-completed';
+      const label = d.status.charAt(0).toUpperCase() + d.status.slice(1);
+      const track = d.status !== 'completed' ? `<div class="visit-actions"><a href="join-queue.html?id=${d.provider_id}" class="btn-track">Track Position →</a></div>` : '';
+      return `<div class="visit-card">
+        <div>
+          <div class="visit-biz">${esc(d.business_name||'Service Provider')}</div>
+          <div class="visit-svc">${esc(d.selected_service||'Services not listed')}</div>
+          <div class="visit-meta">${date}</div>
+          ${track}
+        </div>
+        <span class="status-badge ${badge}">${label}</span>
+      </div>`;
+    }).join('');
+  }
+
+  function doLogout() { sb.auth.signOut().then(() => window.location.href='index.html'); }
+  function esc(s) { const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+</script>
+</body>
+</html>

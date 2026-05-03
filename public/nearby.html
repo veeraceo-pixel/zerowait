@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Find Nearby Services | skipQs</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Leaflet — open-source maps, no API key, no billing -->
+  <link  rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    :root{--primary:#002f34;--accent:#23e5db;--bg:#f7f8f8;--text-muted:#64748b;--border:#e2e8f0;--success:#059669;--nav-bg:#002f34;}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Inter',sans-serif;background:var(--bg);height:100vh;overflow:hidden;}
+    .navbar{background:var(--nav-bg);padding:.75rem 1rem;display:flex;justify-content:space-between;align-items:center;z-index:1000;position:relative;}
+    .logo{font-weight:800;color:var(--accent);text-decoration:none;font-size:1.2rem;}
+    .nav-right a{color:white;text-decoration:none;font-size:.85rem;margin-left:12px;font-weight:600;}
+    .nav-right a.pill{background:rgba(255,255,255,.2);padding:6px 12px;border-radius:6px;}
+    .filter-bar{display:flex;gap:8px;overflow-x:auto;padding:10px 1.25rem;background:white;border-bottom:1px solid var(--border);scrollbar-width:none;align-items:center;}
+    .filter-bar::-webkit-scrollbar{display:none;}
+    .chip{white-space:nowrap;padding:6px 16px;border-radius:50px;background:var(--bg);border:1px solid var(--border);font-size:.8rem;font-weight:600;cursor:pointer;color:var(--text-muted);}
+    .chip.active{background:var(--primary);color:white;border-color:var(--primary);}
+    .chip-live{background:#ecfdf5;color:var(--success);border-color:#34d399;}
+    .chip-live.active{background:var(--success);color:white;}
+    .main-layout{display:flex;height:calc(100vh - 110px);flex-direction:column;}
+    .list-panel{flex:1;overflow-y:auto;padding:1.25rem;background:white;z-index:10;}
+    .map-panel{display:none;position:relative;flex:1;overflow:hidden;}
+    #leaflet-map{width:100%;height:100%;z-index:1;}
+    .place-card{padding:1rem;margin-bottom:1rem;border:1px solid var(--border);border-radius:12px;background:white;cursor:pointer;transition:.2s;position:relative;}
+    .place-card.hidden{display:none;}
+    .place-card.active{border:2.5px solid var(--primary);background:#f0fdfc;}
+    .card-top{display:flex;gap:12px;margin-bottom:12px;}
+    .thumb{width:75px;height:75px;border-radius:8px;object-fit:cover;background:#eee;}
+    .info-tags{display:flex;gap:8px;margin-top:5px;align-items:center;flex-wrap:wrap;}
+    .dist-tag{font-size:.65rem;color:var(--primary);font-weight:800;background:#f0fdfc;padding:2px 6px;border-radius:4px;}
+    .time-tag{font-size:.65rem;color:var(--success);font-weight:700;}
+    .q-badge{font-size:.7rem;font-weight:800;padding:4px 8px;border-radius:4px;margin-top:5px;display:inline-block;}
+    .q-live{background:#d1fae5;color:#065f46;border:1px solid #34d399;}
+    .q-off{background:#f1f5f9;color:#64748b;}
+    .est-box{font-size:.65rem;color:var(--success);margin-top:4px;line-height:1.4;}
+    .action-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+    .btn{flex:1;min-width:80px;padding:10px;border-radius:8px;font-size:.7rem;font-weight:700;text-align:center;cursor:pointer;border:none;text-decoration:none;display:flex;align-items:center;justify-content:center;}
+    .btn-join{background:var(--primary);color:white;}
+    .btn-reg{background:#475569;color:white;line-height:1.2;font-size:.6rem;}
+    .btn-dir{background:#f1f5f9;color:#1e293b;border:1px solid var(--border);}
+    @media(min-width:769px){.main-layout{flex-direction:row;}.list-panel{max-width:450px;border-right:1px solid var(--border);}.map-panel{display:flex;flex:1;}}
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="index.html" class="logo">skipQs</a>
+  <div class="nav-right">
+    <a href="dashboard.html">My Visits</a>
+    <a href="login.html" id="authBtn" class="pill">Login</a>
+  </div>
+</nav>
+
+<div class="filter-bar">
+  <div class="chip chip-live" id="toggleLive" onclick="toggleLiveOnly()">⚡ Live Only</div>
+  <div style="border-left:1px solid #eee;height:20px;margin:0 5px;"></div>
+  <div class="chip" data-type="salon">💇 Salons</div>
+  <div class="chip" data-type="dining">🍽️ Dining</div>
+  <div class="chip" data-type="clinic">🏥 Clinics</div>
+  <div class="chip" data-type="banking">🏦 Banking</div>
+  <div class="chip" data-type="gym">🏋️ Gyms</div>
+  <div class="chip" data-type="repair">🛠️ Repairs</div>
+  <div class="chip" data-type="gov">🏛️ Gov</div>
+  <div class="chip" data-type="wash">🧼 Wash</div>
+</div>
+
+<div class="main-layout">
+  <div class="list-panel">
+    <h2 id="title" style="margin:0;font-size:1.2rem;">Nearby Services</h2>
+    <p id="counter" style="font-size:.7rem;color:var(--text-muted);margin-bottom:1rem;">Locating…</p>
+    <div id="results"></div>
+  </div>
+  <div class="map-panel" id="mapPanel">
+    <div id="leaflet-map"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="supabase-config.js"></script>
+
+<script>
+/* ===== Leaflet (OpenStreetMap tiles — free, no API key) ===== */
+let leafletMap = null, placeMarkers = [];
+let userLat = 53.4808, userLng = -2.2426; // Manchester fallback
+
+function initLeafletMap(lat, lng) {
+  if (window.innerWidth < 769) return;
+  leafletMap = L.map('leaflet-map').setView([lat, lng], 14);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom: 19
+  }).addTo(leafletMap);
+  const userIcon = L.divIcon({
+    html: '<div style="background:var(--primary);width:14px;height:14px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,.4);"></div>',
+    iconSize: [20,20], iconAnchor: [10,10], className: ''
+  });
+  L.marker([lat, lng], { icon: userIcon }).addTo(leafletMap).bindPopup('📍 You are here');
+}
+
+function addMapMarkers(places) {
+  if (!leafletMap) return;
+  placeMarkers.forEach(m => leafletMap.removeLayer(m));
+  placeMarkers = [];
+  places.forEach((p, i) => {
+    if (!p.location?.lat) return;
+    const icon = L.divIcon({
+      html: `<div style="background:${p.isRegistered?'#059669':'#64748b'};color:white;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.3);">${p.isRegistered?'⚡ ':'📍'}${p.displayName.substring(0,20)}</div>`,
+      iconAnchor: [0,0], className: ''
+    });
+    placeMarkers.push(L.marker([p.location.lat, p.location.lng], { icon }).addTo(leafletMap).on('click', () => selectPlace(i)));
+  });
+}
+
+/* ===== Haversine distance (no Google Maps geometry) ===== */
+function haversineDistance(lat1, lng1, lat2, lng2) {
+  const R=6371000, dLat=(lat2-lat1)*Math.PI/180, dLng=(lng2-lng1)*Math.PI/180;
+  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+/* ===== Overpass API (OSM POI search — free, no key) ===== */
+const OVERPASS_TAGS = {
+  salon:   [['amenity','hairdresser'],['shop','beauty'],['shop','hairdresser']],
+  dining:  [['amenity','restaurant'],['amenity','cafe'],['amenity','fast_food']],
+  clinic:  [['amenity','clinic'],['amenity','doctors'],['amenity','hospital']],
+  banking: [['amenity','bank']],
+  gym:     [['leisure','fitness_centre'],['amenity','gym']],
+  repair:  [['shop','car_repair'],['amenity','car_repair']],
+  gov:     [['office','government'],['amenity','townhall'],['office','council']],
+  wash:    [['amenity','car_wash'],['shop','laundry'],['shop','dry_cleaning']]
+};
+
+async function searchOverpass(svcType, lat, lng, limit) {
+  const tags = OVERPASS_TAGS[svcType] || [['amenity','hairdresser']];
+  const nodeQ = tags.map(([k,v])=>`node["${k}"="${v}"](around:15000,${lat},${lng});`).join('');
+  const query = `[out:json][timeout:15];(${nodeQ});out body ${limit};`;
+  const res = await fetch('https://overpass-api.de/api/interpreter?data=' + encodeURIComponent(query));
+  if (!res.ok) throw new Error('Overpass ' + res.status);
+  const data = await res.json();
+  return (data.elements||[]).map(el => {
+    const t = el.tags||{};
+    let addr = '';
+    if (t['addr:street']) { addr = ((t['addr:housenumber']||'')+' '+t['addr:street']).trim(); if(t['addr:city']) addr+=', '+t['addr:city']; }
+    return { id:'osm_'+el.id, displayName:t.name||'', location:{lat:el.lat,lng:el.lon},
+      calculatedDistance:haversineDistance(lat,lng,el.lat,el.lon), shortFormattedAddress:addr, isRegistered:false };
+  }).filter(p=>p.displayName).sort((a,b)=>a.calculatedDistance-b.calculatedDistance);
+}
+
+/* ===== Supabase places cache (replaces Firestore cache) ===== */
+const CACHE_TTL = 20*24*60*60*1000;
+function roundCoord(v){return Math.round(v*100)/100;}
+function cacheKey(t,lat,lng){return `${t}_${roundCoord(lat)}_${roundCoord(lng)}`;}
+
+async function readCache(svcType, lat, lng) {
+  const { data } = await sb.from('places_cache').select('*').eq('cache_key', cacheKey(svcType,lat,lng)).maybeSingle();
+  if (!data) return null;
+  if (new Date(data.expires_at) < new Date()) return null;
+  return (data.results||[]).map(p=>({ id:p.id, displayName:p.displayName, location:{lat:p.lat,lng:p.lng},
+    calculatedDistance:haversineDistance(lat,lng,p.lat,p.lng), shortFormattedAddress:p.address||'', isRegistered:false, fromCache:true }));
+}
+
+async function writeCache(svcType, lat, lng, places) {
+  await sb.from('places_cache').upsert({
+    cache_key: cacheKey(svcType,lat,lng),
+    service_type: svcType,
+    results: places.slice(0,10).map(p=>({id:p.id,displayName:p.displayName,lat:p.location.lat,lng:p.location.lng,address:p.shortFormattedAddress||''})),
+    expires_at: new Date(Date.now()+CACHE_TTL).toISOString()
+  });
+}
+
+/* ===== App state ===== */
+const params = new URLSearchParams(window.location.search);
+let serviceType = params.get('type') || 'salon';
+let liveOnly = false, currentPlaces = [];
+
+const LABELS = {
+  salon:'Salons & Barbers', dining:'Restaurants & Dining', clinic:'Clinics & Health',
+  banking:'Banking & Finance', gym:'Gyms & Fitness', repair:'Repairs & Services',
+  gov:'Gov & Public Services', wash:'Wash & Laundry'
+};
+const CATEGORY_MAP = {
+  salon:['salon','barber','beauty'], clinic:['clinic','hospital','medical','doctor'],
+  dining:['restaurant','cafe','food','dining'], banking:['bank'],
+  gym:['gym','fitness'], repair:['repair','mechanic'],
+  gov:['government','council'], wash:['wash','laundry']
+};
+
+document.getElementById('title').textContent = LABELS[serviceType]||'Nearby Services';
+
+// Auth nav
+sb.auth.getSession().then(({data:{session}})=>{
+  const btn = document.getElementById('authBtn');
+  if (session) { btn.textContent='Dashboard'; btn.href='dashboard.html'; }
+});
+
+// Category chips
+document.querySelectorAll('.chip[data-type]').forEach(chip => {
+  if (chip.dataset.type===serviceType) chip.classList.add('active');
+  chip.onclick = () => {
+    document.querySelectorAll('.chip[data-type]').forEach(c=>c.classList.remove('active'));
+    chip.classList.add('active');
+    serviceType = chip.dataset.type;
+    document.getElementById('title').textContent = LABELS[serviceType];
+    executePlacesSearch();
+  };
+});
+
+function toggleLiveOnly() {
+  liveOnly = !liveOnly;
+  document.getElementById('toggleLive').classList.toggle('active', liveOnly);
+  applyLiveFilter();
+}
+function applyLiveFilter() {
+  let count = 0;
+  document.querySelectorAll('.place-card').forEach(card => {
+    const live = card.dataset.live==='true';
+    if (liveOnly&&!live) card.classList.add('hidden'); else { card.classList.remove('hidden'); count++; }
+  });
+  document.getElementById('counter').textContent = 'Showing '+count+' results.';
+}
+
+/* ===== Init ===== */
+function init() {
+  navigator.geolocation.getCurrentPosition(
+    pos => { userLat=pos.coords.latitude; userLng=pos.coords.longitude; initLeafletMap(userLat,userLng); executePlacesSearch(); },
+    ()  => { initLeafletMap(userLat,userLng); executePlacesSearch(); }
+  );
+}
+
+/* ===== Main search ===== */
+async function executePlacesSearch() {
+  const MAX = 10;
+  const container = document.getElementById('results');
+  container.innerHTML = "<p style='padding:20px;color:#64748b;'>Searching nearby services…</p>";
+
+  /* 1. Registered providers from Supabase */
+  const supaPlaces = [];
+  try {
+    const { data: providers } = await sb.from('providers').select('id,business_name,lat,lng,address,category,capacity,is_open');
+    for (const prov of (providers||[])) {
+      if (!prov.lat||!prov.lng) continue;
+      const cat = (prov.category||'').toLowerCase();
+      const allowed = CATEGORY_MAP[serviceType]||[];
+      if (!allowed.some(k=>cat.includes(k))) continue;
+      const dist = haversineDistance(userLat,userLng,prov.lat,prov.lng);
+      if (dist*0.000621371>25) continue;
+
+      // Count active queue entries
+      const { data: qRows } = await sb.from('queues').select('service_duration').eq('provider_id',prov.id).in('status',['waiting','serving']);
+      let totalMins=0;
+      (qRows||[]).forEach(q=>{ let m=parseInt(q.service_duration,10); if(isNaN(m)||m<=0) m=15; totalMins+=m; });
+      const capacity = Math.max(1,parseInt(prov.capacity)||1);
+      const waitMins = qRows?.length ? Math.max(5,Math.ceil(totalMins/capacity)) : 0;
+
+      supaPlaces.push({
+        id:prov.id, displayName:prov.business_name||'Local Partner',
+        location:{lat:prov.lat,lng:prov.lng},
+        calculatedDistance:dist, shortFormattedAddress:prov.address||'',
+        isRegistered:true, waitTime:waitMins, peopleInQueue:qRows?.length||0,
+        liveData:{peopleInLine:qRows?.length||0, queueLoadMins:waitMins, currentWaitMins:waitMins}
+      });
+    }
+  } catch(e) { console.error('Supabase error:', e); }
+
+  supaPlaces.sort((a,b)=>a.calculatedDistance-b.calculatedDistance);
+  const supaLimited = supaPlaces.slice(0,MAX);
+
+  if (supaLimited.length>=MAX) {
+    currentPlaces=supaLimited; renderList(supaLimited); addMapMarkers(supaLimited); return;
+  }
+
+  /* 2. OSM/Overpass fallback */
+  const shownIds = new Set(supaLimited.map(p=>normalizeName(p.displayName)));
+  let osmPlaces = [];
+  const cached = await readCache(serviceType,userLat,userLng);
+  if (cached?.length) {
+    osmPlaces = cached;
+  } else {
+    try {
+      osmPlaces = await searchOverpass(serviceType,userLat,userLng,MAX-supaLimited.length);
+      if (osmPlaces.length) await writeCache(serviceType,userLat,userLng,osmPlaces);
+    } catch(err) {
+      console.warn('Overpass error:',err);
+      container.innerHTML += "<p style='color:#ef4444;font-size:.8rem;padding:0 1rem;'>⚠️ Map data unavailable.</p>";
+    }
+  }
+
+  osmPlaces = osmPlaces.filter(g=>{ const n=normalizeName(g.displayName); if(shownIds.has(n)) return false; shownIds.add(n); return true; });
+  const combined = [...supaLimited,...osmPlaces]
+    .sort((a,b)=>{ if(a.isRegistered&&!b.isRegistered) return -1; if(!a.isRegistered&&b.isRegistered) return 1; return a.calculatedDistance-b.calculatedDistance; })
+    .slice(0,MAX);
+
+  currentPlaces=combined; renderList(combined); addMapMarkers(combined);
+}
+
+function normalizeName(n){ return (n||'').toLowerCase().replace(/[^a-z0-9]/g,''); }
+
+/* ===== Render cards ===== */
+function renderList(places) {
+  const container = document.getElementById('results');
+  container.innerHTML='';
+  if (!places.length) {
+    container.innerHTML='<div style="text-align:center;padding:40px 20px;color:#94a3b8;"><div style="font-size:2.5rem;margin-bottom:12px;">🔍</div><p>No services found nearby.</p></div>';
+    document.getElementById('counter').textContent='No results found.'; return;
+  }
+  places.forEach((p,i)=>{
+    const miles=(p.calculatedDistance*0.000621371).toFixed(1);
+    const drive=Math.round((parseFloat(miles)/12)*60)+2;
+    const osmDir=`https://www.openstreetmap.org/directions?from=${userLat},${userLng}&to=${p.location.lat},${p.location.lng}`;
+    const card=document.createElement('div');
+    card.className='place-card'; card.id='card-'+i;
+
+    if (p.isRegistered) {
+      const d=p.liveData;
+      card.dataset.live='true';
+      card.innerHTML=`<div onclick="selectPlace(${i})"><div class="card-top"><img src="/images/skipqs-logo.png" class="thumb"><div style="flex:1"><strong style="color:var(--primary);">★ ${esc(p.displayName)}</strong><div class="info-tags"><span class="dist-tag">${miles} mi</span><span class="time-tag">🚗 ${drive}m</span></div><div class="q-badge q-live">LIVE: ${d.peopleInLine} in line</div><div class="est-box">⌛ Wait: ~${d.queueLoadMins}m</div></div></div></div><div class="action-row"><a href="${osmDir}" target="_blank" rel="noopener" class="btn btn-dir">🗺️ Directions</a><button onclick="window.location.href='join-queue.html?id=${p.id}'" class="btn btn-join">JOIN</button></div>`;
+    } else {
+      card.dataset.live='false';
+      card.innerHTML=`<div onclick="selectPlace(${i})"><div class="card-top"><img src="/images/skipqs-logo.png" class="thumb"><div style="flex:1"><strong>${esc(p.displayName)}</strong><div class="info-tags"><span class="dist-tag">${miles} mi</span><span class="time-tag">🚗 ${drive}m</span></div><div class="q-badge q-off">${p.fromCache?'Cached':'Queueing not enabled'}</div></div></div></div><div class="action-row"><a href="${osmDir}" target="_blank" rel="noopener" class="btn btn-dir">🗺️ Directions</a><button onclick="window.location.href='provider-signup.html'" class="btn btn-reg">BUSINESS OWNER?<br>REGISTER FREE</button></div>`;
+    }
+    container.appendChild(card);
+  });
+  document.getElementById('counter').textContent='Found '+places.length+' results nearby.';
+  applyLiveFilter();
+}
+
+function selectPlace(i) {
+  const p=currentPlaces[i];
+  document.querySelectorAll('.place-card').forEach(c=>c.classList.remove('active'));
+  document.getElementById('card-'+i).classList.add('active');
+  if (window.innerWidth<769) { document.getElementById('card-'+i).scrollIntoView({behavior:'smooth',block:'center'}); return; }
+  if (!leafletMap||!p.location) return;
+  leafletMap.setView([p.location.lat,p.location.lng],16);
+  const osmDir=`https://www.openstreetmap.org/directions?from=${userLat},${userLng}&to=${p.location.lat},${p.location.lng}`;
+  const popup=p.isRegistered
+    ?`<div style="min-width:180px;"><strong>${esc(p.displayName)}</strong><br><span style="font-size:.8rem;color:#64748b;">${esc(p.shortFormattedAddress)}</span><div style="margin:6px 0;background:#d1fae5;color:#065f46;padding:4px 8px;border-radius:4px;font-size:.75rem;font-weight:700;">${p.liveData.peopleInLine} in line · ~${p.liveData.queueLoadMins}m</div><a href="join-queue.html?id=${p.id}" style="display:block;background:var(--primary);color:white;text-align:center;padding:6px;border-radius:6px;text-decoration:none;font-size:.8rem;font-weight:700;margin-top:6px;">JOIN QUEUE</a><a href="${osmDir}" target="_blank" rel="noopener" style="display:block;text-align:center;margin-top:6px;font-size:.8rem;">🗺️ Directions</a></div>`
+    :`<div style="min-width:180px;"><strong>${esc(p.displayName)}</strong><br><div style="margin:6px 0;background:#f1f5f9;color:#64748b;padding:4px 8px;border-radius:4px;font-size:.75rem;">Queueing not enabled</div><a href="${osmDir}" target="_blank" rel="noopener" style="display:block;text-align:center;margin-top:6px;font-size:.8rem;">🗺️ Directions</a></div>`;
+  L.popup().setLatLng([p.location.lat,p.location.lng]).setContent(popup).openOn(leafletMap);
+}
+
+function esc(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+window.addEventListener('DOMContentLoaded', init);
+</script>
+
+<!--
+  NOTE: A `places_cache` table is needed in Supabase for OSM result caching.
+  Add this to SUPABASE_SCHEMA.sql and run it:
+
+  CREATE TABLE IF NOT EXISTS public.places_cache (
+    cache_key    TEXT PRIMARY KEY,
+    service_type TEXT,
+    results      JSONB,
+    expires_at   TIMESTAMPTZ
+  );
+  ALTER TABLE public.places_cache ENABLE ROW LEVEL SECURITY;
+  CREATE POLICY "places_cache_all" ON public.places_cache FOR ALL USING (TRUE) WITH CHECK (TRUE);
+-->
+</body>
+</html>
