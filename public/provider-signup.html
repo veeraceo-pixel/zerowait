@@ -1,250 +1,105 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Business Registration | skipQs</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    :root { --primary:#002f34; --accent:#23e5db; --bg:#f7f8f8; --border:#e2e8f0; --white:#fff; }
-    *{box-sizing:border-box; margin:0; padding:0;}
-    body{font-family:'Inter',sans-serif; background:var(--bg); color:var(--primary);}
-    .navbar{background:var(--primary); padding:1rem 2rem; display:flex; justify-content:space-between; align-items:center;}
-    .logo{font-size:1.5rem; font-weight:800; color:var(--accent); text-decoration:none;}
-    .auth-wrapper{max-width:680px; margin:2rem auto; padding:0 1rem 4rem;}
-    h2.section-title{font-size:1.6rem; font-weight:800; margin-bottom:.4rem;}
-    .subtitle{color:#64748b; margin-bottom:2rem; font-size:.95rem;}
-    .step-block{background:var(--white); border-radius:1rem; padding:1.8rem; margin-bottom:1.5rem; border:1px solid var(--border);}
-    .step-label{font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--accent); margin-bottom:.5rem;}
-    .step-heading{font-size:1.1rem; font-weight:700; margin-bottom:1.2rem;}
-    .form-row{display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;}
-    .form-row.single{grid-template-columns:1fr;}
-    .form-group{display:flex; flex-direction:column; gap:.4rem;}
-    .form-label{font-size:.8rem; font-weight:600; color:#475569;}
-    .form-control{padding:.75rem 1rem; border:1.5px solid var(--border); border-radius:.6rem; font-size:.95rem; font-family:inherit; transition:border-color .2s;}
-    .form-control:focus{outline:none; border-color:var(--accent);}
-    .hint{font-size:.75rem; color:#94a3b8; margin-top:.2rem;}
-    .geo-row{display:flex; gap:.5rem; align-items:flex-end;}
-    .geo-row .form-control{flex:1;}
-    .btn-geo{background:var(--primary); color:white; border:none; border-radius:.6rem; padding:.75rem 1.2rem; font-size:.85rem; font-weight:600; cursor:pointer; white-space:nowrap;}
-    .btn-geo:hover{opacity:.85;}
-    .geo-result{font-size:.8rem; margin-top:.4rem; color:#059669; display:none;}
-    .geo-error{font-size:.8rem; margin-top:.4rem; color:#dc2626; display:none;}
-    .error-msg{background:#fee2e2; color:#b91c1c; border-radius:.5rem; padding:.75rem 1rem; font-size:.875rem; margin-bottom:1rem; display:none;}
-    .svc-table{width:100%; border-collapse:collapse; font-size:.9rem;}
-    .svc-table th{text-align:left; padding:.5rem .75rem; font-size:.7rem; text-transform:uppercase; color:#64748b; border-bottom:1px solid var(--border);}
-    .svc-table td{padding:.5rem .75rem; border-bottom:1px solid #f1f5f9;}
-    .svc-table input{padding:.4rem .6rem; border:1px solid var(--border); border-radius:.4rem; width:100%; font-family:inherit;}
-    .btn-add-row{background:none; border:none; color:var(--primary); font-weight:700; font-size:.85rem; cursor:pointer; margin-top:.5rem;}
-    .btn-del{background:none; border:none; color:#ef4444; font-size:1.2rem; cursor:pointer; font-weight:bold;}
-    .btn-submit{width:100%; background:var(--primary); color:white; padding:1rem; border:none; border-radius:.6rem; font-size:1rem; font-weight:700; cursor:pointer; display:flex; justify-content:center; align-items:center; gap:10px;}
-    .btn-submit:hover{opacity:.88;}
-    .btn-submit:disabled{opacity:.6; cursor:not-allowed;}
-    .spinner{width:18px; height:18px; border:3px solid rgba(255,255,255,.3); border-radius:50%; border-top-color:#fff; animation:spin 1s linear infinite; display:none;}
-    @keyframes spin{to{transform:rotate(360deg);}}
-    @media(max-width:600px){.form-row{grid-template-columns:1fr;}}
-  </style>
+  <meta charset="UTF-8" />
+  <title>Provider sign up | skipQs</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
-
-<header class="navbar">
-  <a href="index.html" class="logo">skipQs</a>
-  <a href="login.html" style="color:rgba(255,255,255,.85);text-decoration:none;font-size:.9rem;font-weight:600;">Sign In</a>
-</header>
-
-<main class="auth-wrapper">
-  <h2 class="section-title">Register Your Business</h2>
-  <p class="subtitle">Get your virtual queue live in minutes. No card required.</p>
-
-  <div id="errorMsg" class="error-msg"></div>
-
-  <!-- Step 1: Business Info -->
-  <div class="step-block">
-    <div class="step-label">Step 1</div>
-    <div class="step-heading">Business Details</div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Business Name *</label>
-        <input type="text" id="bizName" class="form-control" placeholder="e.g. City Barbers" required>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Category *</label>
-        <select id="category" class="form-control" required>
-          <option value="">Select category…</option>
-          <option>Barber</option><option>Salon</option><option>Clinic</option>
-          <option>Restaurant</option><option>Pharmacy</option><option>Gym</option>
-          <option>Bank</option><option>Other</option>
-        </select>
+  <header class="sq-header">
+    <div class="sq-container sq-header-inner">
+      <div class="sq-logo">skip<span>Qs</span></div>
+      <nav class="sq-nav">
+        <a href="/find-services.html">Find services</a>
+        <a href="/provider-dashboard.html">Provider dashboard</a>
+      </nav>
+      <div class="sq-header-actions">
+        <a href="/login.html" class="sq-btn sq-btn-ghost">Log in</a>
       </div>
     </div>
+  </header>
 
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Phone Number *</label>
-        <input type="tel" id="phone" class="form-control" placeholder="e.g. 447900123456" required>
+  <main class="sq-main">
+    <section class="sq-section">
+      <div class="sq-container sq-grid-2">
+        <div>
+          <h1>Join skipQs as a provider</h1>
+          <p class="sq-subtle">
+            Create your business account and start managing queues in minutes.
+          </p>
+          <ul class="sq-list">
+            <li><strong>Real-time queues</strong> for your customers.</li>
+            <li><strong>Less crowding</strong> in your waiting area.</li>
+            <li><strong>Better experience</strong> and reviews.</li>
+          </ul>
+        </div>
+
+        <div class="sq-card">
+          <h2>Create provider account</h2>
+          <form id="provider-signup-form" class="sq-form">
+            <label>
+              <span>Business name</span>
+              <input type="text" name="business_name" required />
+            </label>
+            <label>
+              <span>Category</span>
+              <input type="text" name="category" placeholder="Salon, clinic, bank…" required />
+            </label>
+            <label>
+              <span>Address</span>
+              <input type="text" name="address" required />
+            </label>
+            <label>
+              <span>Phone</span>
+              <input type="tel" name="phone" />
+            </label>
+            <label>
+              <span>Capacity (people served at once)</span>
+              <input type="number" name="capacity" min="1" value="1" required />
+            </label>
+            <label>
+              <span>Email</span>
+              <input type="email" name="email" required />
+            </label>
+            <label>
+              <span>Password</span>
+              <input type="password" name="password" minlength="6" required />
+            </label>
+            <button type="submit" class="sq-btn sq-btn-primary">Create account</button>
+            <p id="provider-signup-message" class="sq-form-message"></p>
+          </form>
+        </div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Simultaneous Capacity *</label>
-        <input type="number" id="capacity" class="form-control" value="1" min="1" required>
-        <span class="hint">How many customers you can serve at once</span>
-      </div>
-    </div>
+    </section>
+  </main>
 
-    <!-- Address geocoder (Nominatim — 100% free, no key) -->
-    <div class="form-group" style="margin-bottom:1rem;">
-      <label class="form-label">Business Address *</label>
-      <div class="geo-row">
-        <input type="text" id="addressInput" class="form-control" placeholder="e.g. 25 King Street, Manchester M2 6AE" required>
-        <button type="button" class="btn-geo" onclick="geocodeAddress()">Look Up</button>
-      </div>
-      <div id="geoResult" class="geo-result"></div>
-      <div id="geoError"  class="geo-error"></div>
-      <input type="hidden" id="lat">
-      <input type="hidden" id="lng">
-    </div>
-  </div>
+  <script type="module">
+    import { providerSignup } from './api.js';
 
-  <!-- Step 2: Account -->
-  <div class="step-block">
-    <div class="step-label">Step 2</div>
-    <div class="step-heading">Account Credentials</div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Email *</label>
-        <input type="email" id="email" class="form-control" placeholder="admin@business.com" required>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Password *</label>
-        <input type="password" id="password" class="form-control" placeholder="Minimum 6 characters" required minlength="6">
-      </div>
-    </div>
-  </div>
+    const form = document.getElementById('provider-signup-form');
+    const msg = document.getElementById('provider-signup-message');
 
-  <!-- Step 3: Services -->
-  <div class="step-block">
-    <div class="step-label">Step 3</div>
-    <div class="step-heading">Services & Prices</div>
-    <table class="svc-table">
-      <thead><tr><th>Service Name</th><th>Duration (mins)</th><th>Price (£)</th><th></th></tr></thead>
-      <tbody id="svcBody"></tbody>
-    </table>
-    <button type="button" class="btn-add-row" onclick="addRow()">+ Add Service</button>
-  </div>
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      msg.textContent = '';
+      msg.className = 'sq-form-message';
 
-  <button class="btn-submit" id="submitBtn" onclick="register()">
-    <span id="spinner" class="spinner"></span>
-    <span id="btnText">Complete Registration</span>
-  </button>
-</main>
+      const data = Object.fromEntries(new FormData(form).entries());
+      msg.textContent = 'Creating your account…';
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="supabase-config.js"></script>
-
-<script>
-  /* ---- Geocoding via Nominatim (OpenStreetMap, free, no API key) ---- */
-  async function geocodeAddress() {
-    const address = document.getElementById('addressInput').value.trim();
-    const resEl   = document.getElementById('geoResult');
-    const errEl   = document.getElementById('geoError');
-    resEl.style.display = 'none'; errEl.style.display = 'none';
-
-    if (!address) { errEl.textContent = 'Enter an address first.'; errEl.style.display = 'block'; return; }
-
-    try {
-      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`;
-      const res  = await fetch(url, { headers: { 'Accept-Language': 'en' } });
-      const data = await res.json();
-
-      if (!data.length) {
-        errEl.textContent = 'Address not found. Try adding a postcode or city name.';
-        errEl.style.display = 'block'; return;
+      const result = await providerSignup(data);
+      if (result.error) {
+        msg.textContent = result.error;
+        msg.classList.add('error');
+      } else {
+        msg.textContent = 'Account created. Redirecting to dashboard…';
+        msg.classList.add('success');
+        setTimeout(() => {
+          window.location.href = '/provider-dashboard.html';
+        }, 1200);
       }
-
-      document.getElementById('lat').value = data[0].lat;
-      document.getElementById('lng').value = data[0].lon;
-      resEl.textContent = '✓ Located: ' + data[0].display_name;
-      resEl.style.display = 'block';
-    } catch {
-      errEl.textContent = 'Geocoding failed — please check your connection.';
-      errEl.style.display = 'block';
-    }
-  }
-
-  /* ---- Service Rows ---- */
-  function addRow(name = '', duration = '', price = '') {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td><input class="form-control s-name" type="text" placeholder="Service name" value="${name}" required></td>
-      <td><input class="form-control s-dur"  type="number" placeholder="30" value="${duration}" min="1"></td>
-      <td><input class="form-control s-price" type="number" placeholder="0.00" value="${price}" min="0" step="0.01"></td>
-      <td><button class="btn-del" type="button" onclick="this.closest('tr').remove()">×</button></td>`;
-    document.getElementById('svcBody').appendChild(tr);
-  }
-  addRow(); // default one row
-
-  /* ---- Registration ---- */
-  async function register() {
-    const errDiv = document.getElementById('errorMsg');
-    errDiv.style.display = 'none';
-
-    const bizName  = document.getElementById('bizName').value.trim();
-    const category = document.getElementById('category').value;
-    const phone    = document.getElementById('phone').value.trim();
-    const capacity = parseInt(document.getElementById('capacity').value) || 1;
-    const address  = document.getElementById('addressInput').value.trim();
-    const lat      = parseFloat(document.getElementById('lat').value);
-    const lng      = parseFloat(document.getElementById('lng').value);
-    const email    = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
-
-    if (!bizName || !category || !phone || !address || !email || !password) {
-      errDiv.textContent = 'Please fill in all required fields.'; errDiv.style.display = 'block'; return;
-    }
-    if (!lat || !lng) {
-      errDiv.textContent = 'Please look up your address to get coordinates.'; errDiv.style.display = 'block'; return;
-    }
-
-    // Collect services
-    const rows = document.querySelectorAll('#svcBody tr');
-    const services = Array.from(rows).map(tr => ({
-      name:     tr.querySelector('.s-name').value.trim(),
-      duration: parseInt(tr.querySelector('.s-dur').value) || 15,
-      price:    parseFloat(tr.querySelector('.s-price').value) || 0
-    })).filter(s => s.name);
-
-    const btn     = document.getElementById('submitBtn');
-    const spinner = document.getElementById('spinner');
-    const btnText = document.getElementById('btnText');
-    btn.disabled = true; spinner.style.display = 'block'; btnText.textContent = 'Registering…';
-
-    // 1. Create auth account
-    const { data, error: authErr } = await sb.auth.signUp({ email, password });
-    if (authErr) {
-      btn.disabled = false; spinner.style.display = 'none'; btnText.textContent = 'Complete Registration';
-      errDiv.textContent = authErr.message; errDiv.style.display = 'block'; return;
-    }
-    const uid = data.user.id;
-
-    // 2. Insert provider row
-    const { error: provErr } = await sb.from('providers').insert({
-      id: uid, business_name: bizName, category, phone, address, lat, lng, capacity,
-      is_open: true, current_wait_mins: 0, people_in_line: 0
     });
-    if (provErr) {
-      errDiv.textContent = 'Profile save failed: ' + provErr.message; errDiv.style.display = 'block';
-      btn.disabled = false; spinner.style.display = 'none'; btnText.textContent = 'Complete Registration'; return;
-    }
-
-    // 3. Insert services
-    if (services.length) {
-      const svcRows = services.map(s => ({ provider_id: uid, name: s.name, duration: s.duration, price: s.price }));
-      await sb.from('services').insert(svcRows);
-    }
-
-    alert('Registration complete! You can now log in to your dashboard.');
-    window.location.href = 'login.html';
-  }
-</script>
+  </script>
 </body>
 </html>

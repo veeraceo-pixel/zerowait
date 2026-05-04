@@ -1,107 +1,175 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Skip the Queue, Save Your Time | skipQs</title>
-  <link rel="stylesheet" href="style.css"/>
-  
+  <meta charset="UTF-8" />
+  <title>skipQs – Skip the queue, save your time</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/styles.css" />
 </head>
-<body class="app-body">
-  <header class="app-header">
-    <div class="container header-inner">
-      <a href="index.html" class="logo"><span class="logo-mark">skip</span><span class="logo-accent">Qs</span></a>
-      <nav class="nav">
-        <a href="find-services.html">Find Services</a>
-        <a href="my-queues.html">My Queues</a>
-        <a href="how-it-works.html">How It Works</a>
-        <a href="blog.html">Blog</a>
+<body>
+  <header class="sq-header">
+    <div class="sq-container sq-header-inner">
+      <div class="sq-logo">skip<span>Qs</span></div>
+      <nav class="sq-nav">
+        <a href="/find-services.html">Find services</a>
+        <a href="/my-queues.html">My queues</a>
+        <a href="/provider-dashboard.html">For providers</a>
       </nav>
-      <div class="header-actions">
-        <a href="provider-dashboard.html" class="btn btn-ghost">For Businesses</a>
-        <a href="login.html" class="btn btn-outline" id="loginBtn">Log in</a>
-        <a href="signup.html" class="btn btn-primary">Sign up</a>
+      <div class="sq-header-actions">
+        <a href="/login.html" class="sq-btn sq-btn-ghost">Log in</a>
+        <a href="/signup.html" class="sq-btn sq-btn-primary">Sign up</a>
       </div>
     </div>
   </header>
 
-  <main class="app-main">
-
-    <section class="hero">
-      <div class="container hero-grid">
-        <div class="hero-text">
+  <main>
+    <section class="sq-hero">
+      <div class="sq-container sq-hero-inner">
+        <div class="sq-hero-copy">
           <h1>Skip the queue, not your life.</h1>
-          <p class="hero-subtitle">Discover nearby services, join queues remotely, and arrive just in time. No more waiting rooms.</p>
-          <form class="hero-search" id="search-form">
-            <input type="text" name="q" id="search-query" placeholder="Search for salons, clinics, banks..."/>
-            <input type="text" name="location" id="search-location" placeholder="Location (optional)"/>
-            <button type="submit" class="btn btn-primary">Find services</button>
+          <p>
+            Join queues remotely, track your turn in real time, and arrive just in time.
+            No more waiting rooms.
+          </p>
+
+          <form id="hero-search-form" class="sq-hero-search">
+            <input
+              type="text"
+              id="hero-search-input"
+              placeholder="Search salons, clinics, banks…"
+              aria-label="Search services"
+            />
+            <button type="submit" class="sq-btn sq-btn-primary">Find services</button>
           </form>
-          <div class="hero-tags"><span>Salons</span><span>Clinics</span><span>Banks</span><span>Gyms</span></div>
+
+          <div class="sq-hero-meta">
+            <div>
+              <span class="sq-meta-label">Live providers</span>
+              <span id="hero-live-providers-count" class="sq-meta-value">—</span>
+            </div>
+            <div>
+              <span class="sq-meta-label">People in line now</span>
+              <span id="hero-people-in-line" class="sq-meta-value">—</span>
+            </div>
+          </div>
         </div>
-        <div class="hero-card">
-          <h2>Live queue preview</h2>
-          <p class="hero-card-subtitle">Real-time wait times near you.</p>
-          <ul class="queue-list" id="homepage-queues"><li><span style="color:#9ca3af">Loading live data…</span></li></ul>
-          <a href="how-it-works.html" class="hero-link">See how it works →</a>
+
+        <div class="sq-hero-panel">
+          <h2>Live queues near you</h2>
+          <p class="sq-subtle">Real-time wait times from providers on skipQs.</p>
+          <div id="live-queue-list" class="sq-queue-list sq-queue-list-compact">
+            <div class="sq-queue-card sq-queue-card-skeleton">
+              <div class="sq-skeleton-line"></div>
+              <div class="sq-skeleton-line short"></div>
+              <div class="sq-skeleton-line short"></div>
+            </div>
+            <div class="sq-queue-card sq-queue-card-skeleton">
+              <div class="sq-skeleton-line"></div>
+              <div class="sq-skeleton-line short"></div>
+              <div class="sq-skeleton-line short"></div>
+            </div>
+          </div>
+          <a href="/find-services.html" class="sq-link-inline">Browse all providers →</a>
         </div>
-      </div>
-    </section>
-    <section class="section">
-      <div class="container section-header"><h2>For customers</h2><p>Join queues from your phone, track your turn, and arrive just in time.</p></div>
-      <div class="container card-grid">
-        <article class="card"><h3>Find nearby services</h3><p>Search by category, location, or name to discover salons, clinics, banks and more.</p></article>
-        <article class="card"><h3>Join the queue remotely</h3><p>Reserve your place in line without standing there. Get live updates on your position.</p></article>
-        <article class="card"><h3>Arrive just in time</h3><p>We update you as your turn approaches so you can plan your day around your life.</p></article>
-      </div>
-    </section>
-    <section class="section section-alt">
-      <div class="container section-header"><h2>For businesses</h2><p>Turn waiting time into a smooth, predictable experience for your customers.</p></div>
-      <div class="container card-grid">
-        <article class="card"><h3>Smart queue management</h3><p>Manage walk-ins and bookings in one place. Reduce crowding and frustration.</p></article>
-        <article class="card"><h3>Happier customers</h3><p>Give customers control over their time. Fewer complaints, better reviews.</p></article>
-        <article class="card"><h3>Actionable insights</h3><p>See peak hours, average wait times, and staff performance to optimise operations.</p></article>
-      </div>
-      <div class="container cta-row">
-        <a href="business-pricing.html" class="btn btn-primary">View business pricing</a>
-        <a href="business-how-it-works.html" class="btn btn-outline-dark">How skipQs works for businesses</a>
-      </div>
-    </section>
-    <section class="section">
-      <div class="container section-header"><h2>Popular categories</h2></div>
-      <div class="container pill-grid">
-        <a href="nearby.html?type=salon" class="pill">💇 Salons</a>
-        <a href="nearby.html?type=clinic" class="pill">🏥 Clinics</a>
-        <a href="nearby.html?type=banking" class="pill">🏦 Banks</a>
-        <a href="nearby.html?type=gym" class="pill">🏋️ Gyms</a>
-        <a href="nearby.html?type=dining" class="pill">🍽️ Restaurants</a>
-        <a href="nearby.html?type=repair" class="pill">🛠️ Repairs</a>
-        <a href="nearby.html?type=gov" class="pill">🏛️ Government</a>
-        <a href="nearby.html?type=wash" class="pill">🧼 Car Wash</a>
       </div>
     </section>
 
+    <section class="sq-section">
+      <div class="sq-container sq-grid-2">
+        <div>
+          <h2>For customers</h2>
+          <p>
+            Join queues from your phone, track your position, and arrive just in time.
+          </p>
+          <ul class="sq-list">
+            <li><strong>Search providers</strong> by category and location.</li>
+            <li><strong>Select a service</strong> and join the queue remotely.</li>
+            <li><strong>Track ETA</strong> with live updates.</li>
+          </ul>
+        </div>
+        <div class="sq-card">
+          <h3>Demo queue timer</h3>
+          <p class="sq-subtle">Example of how your turn countdown looks.</p>
+          <div class="sq-queue-status">
+            <div>
+              <span class="sq-label">Your position</span>
+              <span id="demo-position" class="sq-value">3</span>
+            </div>
+            <div>
+              <span class="sq-label">Estimated wait</span>
+              <span id="demo-eta" class="sq-value">12 mins</span>
+            </div>
+            <div>
+              <span class="sq-label">Next slot in</span>
+              <span id="demo-timer" class="sq-value sq-timer">07:30</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="sq-section sq-section-alt">
+      <div class="sq-container sq-grid-2">
+        <div>
+          <h2>For providers</h2>
+          <p>Turn chaotic waiting rooms into smooth, predictable queues.</p>
+          <ul class="sq-list">
+            <li><strong>Manage queues</strong> for walk-ins and online customers.</li>
+            <li><strong>Call next</strong> with one tap from your dashboard.</li>
+            <li><strong>See load</strong> with people in line and wait time.</li>
+          </ul>
+          <div class="sq-cta-row">
+            <a href="/provider-signup.html" class="sq-btn sq-btn-primary">Provider sign up</a>
+            <a href="/provider-dashboard.html" class="sq-btn sq-btn-ghost">Go to dashboard</a>
+          </div>
+        </div>
+        <div class="sq-card">
+          <h3>Today's load</h3>
+          <ul id="business-snapshot" class="sq-mini-list"></ul>
+        </div>
+      </div>
+    </section>
   </main>
 
-  <footer class="app-footer">
-    <div class="container footer-grid">
+  <footer class="sq-footer">
+    <div class="sq-container sq-footer-inner">
       <div>
-        <div class="logo footer-logo"><span class="logo-mark">skip</span><span class="logo-accent">Qs</span></div>
-        <p class="footer-text">Skip the queue, save your time. Smart queue management for salons, clinics, banks and more.</p>
+        <div class="sq-logo">skip<span>Qs</span></div>
+        <p class="sq-subtle">
+          Smart queue management for salons, clinics, banks and more.
+        </p>
       </div>
-      <div><h4>Product</h4><a href="find-services.html">Find services</a><a href="my-queues.html">My queues</a><a href="how-it-works.html">How it works</a></div>
-      <div><h4>For businesses</h4><a href="business-pricing.html">Pricing</a><a href="business-how-it-works.html">How it works</a><a href="provider-dashboard.html">Dashboard</a></div>
-      <div><h4>Company</h4><a href="about.html">About</a><a href="contact.html">Contact</a><a href="blog.html">Blog</a></div>
-      <div><h4>Legal</h4><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="cookie-policy.html">Cookies</a></div>
+      <div class="sq-footer-cols">
+        <div>
+          <h4>Product</h4>
+          <a href="/find-services.html">Find services</a>
+          <a href="/my-queues.html">My queues</a>
+        </div>
+        <div>
+          <h4>For providers</h4>
+          <a href="/provider-signup.html">Provider sign up</a>
+          <a href="/provider-dashboard.html">Dashboard</a>
+        </div>
+        <div>
+          <h4>Company</h4>
+          <a href="/about.html">About</a>
+          <a href="/contact.html">Contact</a>
+        </div>
+        <div>
+          <h4>Legal</h4>
+          <a href="/terms.html">Terms</a>
+          <a href="/privacy.html">Privacy</a>
+        </div>
+      </div>
     </div>
-    <div class="container footer-bottom">
-      <span>© <span id="year"></span> skipQs. All rights reserved.</span>
-      <span>Powered by OpenStreetMap · Supabase · No Google APIs</span>
+    <div class="sq-footer-bottom">
+      <div class="sq-container sq-footer-bottom-inner">
+        <span>© 2026 skipQs. All rights reserved.</span>
+      </div>
     </div>
   </footer>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="supabase-config.js"></script>
-  <script src="script.js"></script>
+  <script type="module" src="/api.js"></script>
+  <script type="module" src="/app.js"></script>
 </body>
 </html>

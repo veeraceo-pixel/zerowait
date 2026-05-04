@@ -1,133 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Create Account | skipQs</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root { --primary:#002f34; --accent:#23e5db; --bg-light:#f7f8f8; --text-muted:#64748b; --white:#fff; --shadow:0 10px 15px -3px rgba(0,0,0,.1); }
-    body { font-family:'Inter',sans-serif; background:var(--bg-light); margin:0; display:flex; flex-direction:column; min-height:100vh; }
-    .navbar { background:var(--primary); padding:1rem 2rem; display:flex; justify-content:space-between; align-items:center; }
-    .logo { font-size:1.5rem; font-weight:800; color:var(--accent); text-decoration:none; }
-    .navbar a.biz { color:rgba(255,255,255,.85); text-decoration:none; font-size:.9rem; font-weight:600; }
-    .auth-wrapper { flex:1; display:flex; align-items:center; justify-content:center; padding:2rem; }
-    .auth-card { background:var(--white); width:100%; max-width:450px; padding:2.5rem; border-radius:1.25rem; box-shadow:var(--shadow); }
-    .auth-header h1 { font-size:1.8rem; margin:0 0 .5rem; color:#0f172a; }
-    .auth-header p { color:var(--text-muted); margin-bottom:2rem; font-size:.95rem; }
-    .form-group { margin-bottom:1.25rem; text-align:left; }
-    .form-label { display:block; font-size:.875rem; font-weight:600; margin-bottom:.5rem; }
-    .form-control { width:100%; padding:.8rem 1rem; box-sizing:border-box; border:1.5px solid #cbd5e1; border-radius:.6rem; font-size:1rem; transition:border-color .2s; }
-    .form-control:focus { outline:none; border-color:var(--accent); }
-    .btn-submit { width:100%; background:var(--primary); color:white; padding:1rem; border:none; border-radius:.6rem; font-size:1rem; font-weight:600; cursor:pointer; display:flex; justify-content:center; align-items:center; gap:10px; }
-    .btn-submit:hover { opacity:.88; }
-    .btn-submit:disabled { opacity:.6; cursor:not-allowed; }
-    .spinner { width:18px; height:18px; border:3px solid rgba(255,255,255,.3); border-radius:50%; border-top-color:#fff; animation:spin 1s linear infinite; display:none; }
-    @keyframes spin { to { transform:rotate(360deg); } }
-    .error-msg { background:#fee2e2; color:#b91c1c; border-radius:.5rem; padding:.75rem 1rem; font-size:.875rem; margin-bottom:1rem; display:none; }
-    .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:1000; justify-content:center; align-items:center; backdrop-filter:blur(4px); }
-    .success-popup { background:white; padding:2.5rem; border-radius:1.5rem; text-align:center; max-width:320px; width:90%; animation:popIn .4s cubic-bezier(.175,.885,.32,1.275); box-shadow:0 25px 50px -12px rgba(0,0,0,.25); }
-    .success-icon { width:60px; height:60px; background:#10b981; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:2rem; margin:0 auto 1.5rem; }
-    @keyframes popIn { from{transform:scale(.8);opacity:0} to{transform:scale(1);opacity:1} }
-    .auth-footer { margin-top:1.5rem; text-align:center; font-size:.9rem; color:var(--text-muted); }
-    .auth-footer a { color:var(--primary); text-decoration:none; font-weight:600; }
-  </style>
+  <meta charset="UTF-8" />
+  <title>Sign up | skipQs</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
-
-<header class="navbar">
-  <a href="index.html" class="logo">skipQs</a>
-  <a href="provider-signup.html" class="biz">For Businesses →</a>
-</header>
-
-<main class="auth-wrapper">
-  <div class="auth-card">
-    <div class="auth-header">
-      <h1>Join skipQs</h1>
-      <p>Sign up to start skipping queues at your favourite places.</p>
-    </div>
-
-    <div id="errorMsg" class="error-msg"></div>
-
-    <form id="signupForm">
-      <div class="form-group">
-        <label class="form-label">Full Name</label>
-        <input type="text" id="fullName" class="form-control" placeholder="Enter your name" required>
+  <main class="sq-main">
+    <section class="sq-section">
+      <div class="sq-container sq-grid-2">
+        <div>
+          <h1>Create your account</h1>
+          <p class="sq-subtle">Join queues and track your turn.</p>
+        </div>
+        <div class="sq-card">
+          <form id="signup-form" class="sq-form">
+            <label>
+              <span>Email</span>
+              <input type="email" name="email" required />
+            </label>
+            <label>
+              <span>Password</span>
+              <input type="password" name="password" minlength="6" required />
+            </label>
+            <button type="submit" class="sq-btn sq-btn-primary">Sign up</button>
+            <p id="signup-message" class="sq-form-message"></p>
+            <p class="sq-subtle">
+              Already have an account? <a href="/login.html">Log in</a>
+            </p>
+          </form>
+        </div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Email Address</label>
-        <input type="email" id="email" class="form-control" placeholder="name@example.com" required>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Password</label>
-        <input type="password" id="password" class="form-control" placeholder="At least 8 characters" required minlength="8">
-      </div>
-      <button type="submit" class="btn-submit" id="submitBtn">
-        <span id="spinner" class="spinner"></span>
-        <span id="btnText">Create Account</span>
-      </button>
-    </form>
+    </section>
+  </main>
 
-    <div class="auth-footer">Already have an account? <a href="login.html">Log in</a></div>
-  </div>
-</main>
+  <script type="module">
+    import { signup } from './api.js';
 
-<div id="successOverlay" class="overlay">
-  <div class="success-popup">
-    <div class="success-icon">✓</div>
-    <h2 style="margin:0 0 .5rem; color:#0f172a;">Account Created!</h2>
-    <p style="color:#64748b; margin-bottom:2rem; font-size:.95rem; line-height:1.5;">Welcome to skipQs. Your account is ready. Let's start skipping those lines!</p>
-    <button id="successBtn" class="btn-submit">Continue</button>
-  </div>
-</div>
+    const form = document.getElementById('signup-form');
+    const msg = document.getElementById('signup-message');
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="supabase-config.js"></script>
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      msg.textContent = '';
+      msg.className = 'sq-form-message';
 
-<script>
-  const errDiv = document.getElementById('errorMsg');
-  function showError(msg) { errDiv.textContent = msg; errDiv.style.display = 'block'; }
+      const data = Object.fromEntries(new FormData(form).entries());
+      msg.textContent = 'Creating your account…';
 
-  document.getElementById('signupForm').onsubmit = async (e) => {
-    e.preventDefault();
-    errDiv.style.display = 'none';
-
-    const fullName = document.getElementById('fullName').value.trim();
-    const email    = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
-    const btn      = document.getElementById('submitBtn');
-    const btnText  = document.getElementById('btnText');
-    const spinner  = document.getElementById('spinner');
-
-    btn.disabled = true;
-    btnText.textContent = 'Setting up account…';
-    spinner.style.display = 'block';
-
-    // 1. Create auth user
-    const { data, error } = await sb.auth.signUp({ email, password });
-    if (error) {
-      btn.disabled = false; btnText.textContent = 'Create Account'; spinner.style.display = 'none';
-      showError(error.message); return;
-    }
-
-    // 2. Insert public profile row
-    const { error: profileErr } = await sb.from('users').insert({
-      id:           data.user.id,
-      display_name: fullName,
-      email:        email,
-      role:         'customer'
+      const result = await signup(data.email, data.password);
+      if (result.error) {
+        msg.textContent = result.error;
+        msg.classList.add('error');
+      } else {
+        msg.textContent = 'Account created. Check your email to confirm.';
+        msg.classList.add('success');
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 1200);
+      }
     });
-
-    spinner.style.display = 'none';
-    if (profileErr) { showError('Account created but profile save failed: ' + profileErr.message); return; }
-
-    // 3. Show success popup
-    document.getElementById('successOverlay').style.display = 'flex';
-    document.getElementById('successBtn').onclick = () => {
-      const pending = sessionStorage.getItem('redirectAfterLogin');
-      window.location.replace(pending || 'index.html');
-    };
-  };
-</script>
+  </script>
 </body>
 </html>
