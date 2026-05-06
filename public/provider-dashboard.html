@@ -1,154 +1,348 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Provider dashboard | skipQs</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="/styles.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>skipQs | Provider Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{--primary:#002f34;--accent:#23e5db;--bg:#f7f8f8;--sidebar:#0f172a;--text:#1e293b;--border:#e2e8f0;}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;}
+    nav{width:260px;background:var(--sidebar);color:white;display:flex;flex-direction:column;padding:1.5rem;position:fixed;height:100vh;z-index:1000;}
+    .nav-logo{font-size:1.6rem;font-weight:800;color:var(--accent);margin-bottom:2rem;}
+    .nav-link{padding:.8rem 1rem;color:#94a3b8;text-decoration:none;border-radius:.5rem;margin-bottom:.5rem;cursor:pointer;display:flex;align-items:center;gap:12px;font-weight:500;border:none;background:none;width:100%;text-align:left;font-family:inherit;font-size:1rem;}
+    .nav-link.active{background:#1e293b;color:white;border-left:4px solid var(--accent);}
+    main{flex:1;margin-left:260px;padding:2rem;width:calc(100% - 260px);}
+    .header-bar{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2rem;}
+    .status-badge{padding:.4rem 1rem;border-radius:2rem;font-size:.75rem;font-weight:700;display:inline-block;margin-top:8px;}
+    .open{background:#dcfce7;color:#15803d;}.closed{background:#fee2e2;color:#b91c1c;}
+    .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.5rem;margin-bottom:2rem;}
+    .stat-card{background:white;padding:1.5rem;border-radius:1rem;border:1px solid var(--border);}
+    .stat-card h4{margin:0;font-size:.75rem;color:#64748b;text-transform:uppercase;}
+    .stat-val{font-size:2.2rem;font-weight:800;margin-top:.5rem;}
+    .content-card{background:white;border-radius:1rem;border:1px solid var(--border);margin-bottom:2rem;overflow:hidden;}
+    .card-header{padding:1.2rem 1.5rem;border-bottom:1px solid var(--border);font-weight:700;display:flex;justify-content:space-between;align-items:center;}
+    table{width:100%;border-collapse:collapse;}
+    th{text-align:left;padding:1rem 1.5rem;font-size:.7rem;color:#64748b;text-transform:uppercase;border-bottom:1px solid var(--border);background:#fcfcfd;}
+    td{padding:1.2rem 1.5rem;border-bottom:1px solid var(--border);}
+    .form-group{display:flex;gap:10px;padding:1.5rem;border-bottom:1px solid var(--border);flex-wrap:wrap;align-items:center;}
+    input[type=text],input[type=number]{padding:.7rem 1rem;border:1px solid var(--border);border-radius:.5rem;font-family:inherit;}
+    .btn{padding:.7rem 1.2rem;border-radius:.5rem;font-weight:600;cursor:pointer;border:1px solid var(--border);background:white;font-family:inherit;}
+    .btn-primary{background:var(--primary);color:white;border:none;}
+    .btn-green{background:#16a34a;color:white;border:none;}
+    .btn-sm{padding:.4rem .8rem;font-size:.8rem;}
+    #qrOverlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:2000;display:none;align-items:center;justify-content:center;}
+    .qr-card{background:white;padding:2rem;border-radius:1rem;text-align:center;}
+    .svc-del{color:#ef4444;cursor:pointer;font-weight:bold;font-size:1.2rem;border:none;background:none;}
+    .edit-input{width:70px;padding:.4rem;border:1px solid var(--border);border-radius:.4rem;text-align:center;}
+    @media(max-width:1024px){.grid{grid-template-columns:repeat(2,1fr);}}
+    @media(max-width:850px){nav{width:70px;padding:1.5rem .5rem;align-items:center;}.nav-logo,.nav-link span:last-child{display:none;}main{margin-left:70px;width:calc(100% - 70px);padding:1rem;}.grid{grid-template-columns:1fr;}}
+  </style>
 </head>
 <body>
-  <header class="sq-header">
-    <div class="sq-container sq-header-inner">
-      <div class="sq-logo">skip<span>Qs</span></div>
-      <nav class="sq-nav">
-        <a href="/provider-dashboard.html" class="active">Dashboard</a>
-      </nav>
-      <div class="sq-header-actions">
-        <button id="logout-btn" class="sq-btn sq-btn-ghost">Log out</button>
-      </div>
+
+<nav>
+  <div class="nav-logo">skipQs</div>
+  <button class="nav-link active"  onclick="showSection('live',    this)"><span>📡</span><span>Live Queue</span></button>
+  <button class="nav-link"         onclick="showSection('history', this)"><span>📊</span><span>History</span></button>
+  <button class="nav-link"         onclick="showSection('services',this)"><span>🛠️</span><span>Services</span></button>
+  <button class="nav-link"         onclick="toggleQR()"><span>📱</span><span>QR Code</span></button>
+  <button class="nav-link"         onclick="handleLogout()"><span>🚪</span><span>Logout</span></button>
+</nav>
+
+<main>
+  <div class="header-bar">
+    <div>
+      <h1 style="margin:0" id="bizTitle">Dashboard</h1>
+      <div id="statusBadge"></div>
     </div>
-  </header>
+    <button class="btn" onclick="toggleStatus()">Switch Status</button>
+  </div>
 
-  <main class="sq-main">
-    <section class="sq-section">
-      <div class="sq-container">
-        <h1>Provider dashboard</h1>
-        <p class="sq-subtle">Manage your live queue.</p>
+  <div class="grid">
+    <div class="stat-card"><h4>Waiting</h4><div class="stat-val" id="waitCount">0</div></div>
+    <div class="stat-card"><h4>Est. Wait</h4><div class="stat-val" id="totalMins">0<small style="font-size:1rem">m</small></div></div>
+    <div class="stat-card">
+      <h4>Capacity</h4>
+      <div class="stat-val" id="capDisplay">1</div>
+      <input type="range" id="capSlider" min="1" max="10" value="1" step="1" oninput="updateCapacity(this.value)" style="width:100%;margin-top:10px;cursor:pointer;">
+    </div>
+    <div class="stat-card"><h4>Served Today</h4><div class="stat-val" id="servedToday">0</div></div>
+  </div>
 
-        <div id="provider-info" class="sq-card"></div>
+  <section id="sec-live" class="content-card">
+    <div class="card-header">Active Queue Management</div>
+    <table>
+      <thead><tr><th>Customer</th><th>Service</th><th>Est. Mins</th><th>Action</th></tr></thead>
+      <tbody id="qItems"></tbody>
+    </table>
+  </section>
 
-        <h2>Current queue</h2>
-        <div id="provider-queue-list" class="sq-queue-list"></div>
-        <div id="provider-queue-empty" class="sq-empty-state" hidden>
-          <h3>No one in queue</h3>
-          <p>When customers join, they will appear here.</p>
-        </div>
-      </div>
-    </section>
-  </main>
+  <section id="sec-services" class="content-card" style="display:none">
+    <div class="card-header">Service Management</div>
+    <div class="form-group">
+      <input type="text"   id="sName"  placeholder="Service name"  style="flex:2;">
+      <input type="number" id="sTime"  placeholder="Mins"          style="flex:1;">
+      <input type="number" id="sPrice" placeholder="Price (£)"     style="flex:1;" step="0.01">
+      <button class="btn btn-primary" onclick="addSvc()">Add Service</button>
+    </div>
+    <table>
+      <thead><tr><th>Name</th><th>Price</th><th>Duration (mins)</th><th style="text-align:right">Del</th></tr></thead>
+      <tbody id="svcList"></tbody>
+    </table>
+  </section>
 
-  <script type="module">
-    import {
-      getProviderProfile,
-      getProviderQueue,
-      updateQueueStatus,
-      logout
-    } from './api.js';
+  <section id="sec-history" class="content-card" style="display:none">
+    <div class="card-header">Daily History</div>
+    <div style="padding:1rem;border-bottom:1px solid var(--border)">
+      <input type="date" id="hDate" class="btn" onchange="loadHistory()" style="width:auto;">
+    </div>
+    <table>
+      <thead><tr><th>Customer</th><th>Service</th><th>Completed</th></tr></thead>
+      <tbody id="hItems"></tbody>
+    </table>
+  </section>
+</main>
 
-    const infoEl = document.getElementById('provider-info');
-    const listEl = document.getElementById('provider-queue-list');
-    const emptyEl = document.getElementById('provider-queue-empty');
-    const logoutBtn = document.getElementById('logout-btn');
+<div id="qrOverlay">
+  <div class="qr-card">
+    <h3>Customer Entrance QR</h3>
+    <p style="color:#64748b;font-size:.9rem;margin:.5rem 0 1.5rem;">Scan to join the queue.</p>
+    <div id="qrcode-box" style="display:flex;justify-content:center;"></div>
+    <button class="btn btn-primary" style="margin-top:1.5rem;" onclick="toggleQR()">Close</button>
+  </div>
+</div>
 
-    logoutBtn.addEventListener('click', async () => {
-      await logout();
-      window.location.href = '/';
-    });
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/easyqrcodejs@4.4.10/dist/easy.qrcode.min.js"></script>
 
-    async function renderDashboard() {
-      const user = await window.sqGetCurrentUser();
-      if (!user) {
-        window.location.href = '/login.html';
-        return;
-      }
+<script>
+  let curUid, currentCapacity = 1, queueChannel, providerChannel, svcChannel;
 
-      const provider = await getProviderProfile(user.id);
-      if (!provider) {
-        infoEl.innerHTML = '<p class="sq-subtle">No provider profile found for this account.</p>';
-        return;
-      }
+  /* ---- AUTH ---- */
+  sb.auth.getSession().then(async ({ data: { session } }) => {
+    if (!session) { window.location.href = 'login.html'; return; }
+    curUid = session.user.id;
+    await loadProviderData();
+    startLiveQ();
+    loadServices();
+    updateServedToday();
+    document.getElementById('hDate').value = new Date().toISOString().split('T')[0];
+  });
 
-      infoEl.innerHTML = `
-        <h2>${provider.business_name}</h2>
-        <p class="sq-subtle">${provider.address || ''}</p>
-        <div class="sq-queue-status">
-          <div>
-            <span class="sq-label">People in line</span>
-            <span class="sq-value">${provider.people_in_line ?? 0}</span>
-          </div>
-          <div>
-            <span class="sq-label">Current wait</span>
-            <span class="sq-value">${provider.current_wait_mins ?? 0} mins</span>
-          </div>
-          <div>
-            <span class="sq-label">Status</span>
-            <span class="sq-value">${provider.is_open ? 'Open' : 'Closed'}</span>
-          </div>
-        </div>
-      `;
+  async function loadProviderData() {
+    const { data } = await sb.from('providers').select('*').eq('id', curUid).single();
+    if (!data) return;
+    applyProviderData(data);
 
-      const queue = await getProviderQueue(provider.id);
-      listEl.innerHTML = '';
+    // Live provider updates (open/closed, capacity changes)
+    providerChannel = sb.channel('provider:' + curUid)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'providers', filter: 'id=eq.' + curUid },
+        payload => applyProviderData(payload.new))
+      .subscribe();
+  }
 
-      if (!queue.length) {
-        emptyEl.hidden = false;
-        return;
-      }
-      emptyEl.hidden = true;
+  function applyProviderData(data) {
+    currentCapacity = data.capacity || 1;
+    document.getElementById('bizTitle').textContent = data.business_name;
+    document.getElementById('capDisplay').textContent = currentCapacity;
+    document.getElementById('capSlider').value = currentCapacity;
+    const badge = document.getElementById('statusBadge');
+    badge.innerHTML = data.is_open
+      ? '<span class="status-badge open">● Business is Open</span>'
+      : '<span class="status-badge closed">● Business is Closed</span>';
+  }
 
-      queue.forEach((q, index) => {
-        const card = document.createElement('article');
-        card.className = 'sq-queue-card';
+  /* ---- LIVE QUEUE ---- */
+  function startLiveQ() {
+    if (queueChannel) sb.removeChannel(queueChannel);
 
-        card.innerHTML = `
-          <header class="sq-queue-card-header">
-            <h3>${q.customer_name}</h3>
-            <span class="sq-badge">${q.selected_service || 'Service'}</span>
-          </header>
-          <p class="sq-subtle">Joined at ${new Date(q.joined_at).toLocaleTimeString()}</p>
-          <div class="sq-queue-status">
-            <div>
-              <span class="sq-label">Position</span>
-              <span class="sq-value">${index + 1}</span>
-            </div>
-            <div>
-              <span class="sq-label">Duration</span>
-              <span class="sq-value">${q.service_duration} mins</span>
-            </div>
-            <div>
-              <span class="sq-label">Status</span>
-              <span class="sq-value">${q.status}</span>
-            </div>
-          </div>
-          <div class="sq-cta-row">
-            <button class="sq-btn sq-btn-primary" data-action="call" data-id="${q.id}">
-              Call next
-            </button>
-            <button class="sq-btn sq-btn-ghost" data-action="complete" data-id="${q.id}">
-              Complete
-            </button>
-          </div>
-        `;
-        listEl.appendChild(card);
-      });
+    queueChannel = sb.channel('queue:' + curUid)
+      .on('postgres_changes', {
+        event: '*', schema: 'public', table: 'queues',
+        filter: 'provider_id=eq.' + curUid
+      }, () => refreshQueue())
+      .subscribe();
 
-      listEl.addEventListener('click', async (e) => {
-        const btn = e.target.closest('button[data-action]');
-        if (!btn) return;
-        const id = btn.dataset.id;
-        const action = btn.dataset.action;
+    refreshQueue();
+  }
 
-        if (action === 'call') {
-          await updateQueueStatus(id, 'serving');
-        } else if (action === 'complete') {
-          await updateQueueStatus(id, 'completed');
-        }
-        renderDashboard();
-      }, { once: true });
+  async function refreshQueue() {
+    const { data: rows } = await sb.from('queues')
+      .select('*')
+      .eq('provider_id', curUid)
+      .in('status', ['waiting', 'serving'])
+      .order('joined_at', { ascending: true });
+
+    const items = document.getElementById('qItems');
+    if (!rows || rows.length === 0) {
+      items.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:3rem;color:#94a3b8;">No active customers</td></tr>`;
+      document.getElementById('waitCount').textContent = 0;
+      document.getElementById('totalMins').innerHTML  = '0<small style="font-size:1rem">m</small>';
+      syncProviderStats(0, 0);
+      return;
     }
 
-    renderDashboard();
-    setInterval(renderDashboard, 15_000);
-  </script>
+    let totalMins = 0, waitingCount = 0;
+    items.innerHTML = '';
+
+    rows.forEach(d => {
+      if (d.status === 'serving') {
+        items.innerHTML = `<tr style="background:#f0fdf4;border-left:4px solid #22c55e;">
+          <td><span class="status-badge open" style="font-size:.6rem">NOW SERVING</span><br><strong>${esc(d.customer_name)}</strong></td>
+          <td>${esc(d.selected_service||'—')}</td><td style="color:#16a34a;font-weight:bold;">In Progress</td>
+          <td><button class="btn btn-green btn-sm" onclick="completeService('${d.id}')">Finish ✓</button></td>
+        </tr>` + items.innerHTML;
+      } else {
+        waitingCount++;
+        const dur = Number(d.service_duration) || 0;
+        totalMins += dur;
+        items.innerHTML += `<tr>
+          <td><strong>${esc(d.customer_name)}</strong><br><small>${esc(d.customer_phone||'')}</small></td>
+          <td>${esc(d.selected_service||'—')}</td>
+          <td>${dur}m</td>
+          <td><button class="btn btn-primary btn-sm" onclick="startServing('${d.id}')">Start Serving</button></td>
+        </tr>`;
+      }
+    });
+
+    const estWait = Math.ceil(totalMins / (currentCapacity || 1));
+    document.getElementById('waitCount').textContent = waitingCount;
+    document.getElementById('totalMins').innerHTML   = estWait + '<small style="font-size:1rem">m</small>';
+    syncProviderStats(estWait, waitingCount);
+  }
+
+  async function syncProviderStats(estWait, peopleInLine) {
+    await sb.from('providers').update({
+      current_wait_mins: estWait, people_in_line: peopleInLine, last_sync: new Date().toISOString()
+    }).eq('id', curUid);
+  }
+
+  async function startServing(id) {
+    await sb.from('queues').update({ status: 'serving', served_at: new Date().toISOString() }).eq('id', id);
+  }
+
+  async function completeService(id) {
+    const today = new Date().toISOString().split('T')[0];
+    await sb.from('queues').update({
+      status: 'completed', completed_at: new Date().toISOString(), completed_date: today
+    }).eq('id', id);
+    updateServedToday();
+  }
+
+  /* ---- SERVICES ---- */
+  function loadServices() {
+    if (svcChannel) sb.removeChannel(svcChannel);
+
+    svcChannel = sb.channel('services:' + curUid)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'services', filter: 'provider_id=eq.' + curUid },
+        () => refreshServices())
+      .subscribe();
+
+    refreshServices();
+  }
+
+  async function refreshServices() {
+    const { data } = await sb.from('services').select('*').eq('provider_id', curUid).order('created_at');
+    const list = document.getElementById('svcList');
+    list.innerHTML = '';
+    (data || []).forEach(s => {
+      list.innerHTML += `<tr>
+        <td><strong>${esc(s.name)}</strong></td>
+        <td>£${Number(s.price).toFixed(2)}</td>
+        <td><input class="edit-input" type="number" value="${s.duration}" onchange="updateSvcDuration('${s.id}',this.value)"> m</td>
+        <td style="text-align:right"><button class="svc-del" onclick="delSvc('${s.id}')">×</button></td>
+      </tr>`;
+    });
+  }
+
+  async function addSvc() {
+    const n = document.getElementById('sName').value.trim();
+    const t = document.getElementById('sTime').value;
+    const p = document.getElementById('sPrice').value;
+    if (!n || !t) return;
+    await sb.from('services').insert({ provider_id: curUid, name: n, duration: parseInt(t), price: parseFloat(p)||0 });
+    document.getElementById('sName').value = '';
+    document.getElementById('sTime').value = '';
+    document.getElementById('sPrice').value = '';
+  }
+
+  async function updateSvcDuration(id, val) {
+    await sb.from('services').update({ duration: parseInt(val) }).eq('id', id);
+  }
+
+  async function delSvc(id) {
+    if (!confirm('Delete this service?')) return;
+    await sb.from('services').delete().eq('id', id);
+  }
+
+  /* ---- HISTORY ---- */
+  async function loadHistory() {
+    const date = document.getElementById('hDate').value;
+    const { data } = await sb.from('queues')
+      .select('*').eq('provider_id', curUid).eq('status', 'completed').eq('completed_date', date)
+      .order('completed_at', { ascending: false });
+
+    const list = document.getElementById('hItems');
+    if (!data || !data.length) {
+      list.innerHTML = `<tr><td colspan="3" style="text-align:center;padding:2rem;color:#94a3b8;">No history for this date</td></tr>`; return;
+    }
+    list.innerHTML = data.map(d => {
+      const time = d.completed_at ? new Date(d.completed_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '—';
+      return `<tr><td><strong>${esc(d.customer_name)}</strong></td><td>${esc(d.selected_service||'—')}</td><td>${time}</td></tr>`;
+    }).join('');
+  }
+
+  async function updateServedToday() {
+    const today = new Date().toISOString().split('T')[0];
+    const { count } = await sb.from('queues')
+      .select('id', { count: 'exact', head: true })
+      .eq('provider_id', curUid).eq('status', 'completed').eq('completed_date', today);
+    document.getElementById('servedToday').textContent = count || 0;
+  }
+
+  /* ---- UTILITIES ---- */
+  async function updateCapacity(val) {
+    document.getElementById('capDisplay').textContent = val;
+    currentCapacity = parseInt(val);
+    await sb.from('providers').update({ capacity: currentCapacity }).eq('id', curUid);
+  }
+
+  async function toggleStatus() {
+    const { data } = await sb.from('providers').select('is_open').eq('id', curUid).single();
+    await sb.from('providers').update({ is_open: !data.is_open }).eq('id', curUid);
+  }
+
+  function toggleQR() {
+    const overlay = document.getElementById('qrOverlay');
+    overlay.style.display = overlay.style.display === 'flex' ? 'none' : 'flex';
+    if (overlay.style.display === 'flex') {
+      const box = document.getElementById('qrcode-box');
+      box.innerHTML = '';
+      const url = window.location.origin + '/join-queue.html?id=' + curUid;
+      new QRCode(box, { text: url, width: 250, height: 250 });
+    }
+  }
+
+  function showSection(id, el) {
+    document.querySelectorAll('section').forEach(s => s.style.display = 'none');
+    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+    document.getElementById('sec-' + id).style.display = 'block';
+    el.classList.add('active');
+    if (id === 'history') loadHistory();
+  }
+
+  function handleLogout() {
+    sb.auth.signOut().then(() => window.location.href = 'index.html');
+  }
+
+  function esc(str) {
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+</script>
 </body>
 </html>

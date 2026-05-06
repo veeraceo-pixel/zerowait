@@ -1,66 +1,144 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Log in | skipQs</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="/styles.css" />
+  <meta charset="UTF-8">
+  <title>Login | skipQs</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --primary: #002f34; --accent: #23e5db; --bg-light: #f7f8f8; --text-main: #002f34; --text-muted: #64748b; --white: #fff; --shadow: 0 10px 15px -3px rgba(0,0,0,.1); }
+    body { font-family: 'Inter', sans-serif; background: var(--bg-light); margin: 0; display: flex; flex-direction: column; min-height: 100vh; }
+    .navbar { background: var(--primary); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .logo { font-size: 1.5rem; font-weight: 800; color: var(--accent); text-decoration: none; }
+    .auth-wrapper { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .auth-card { background: var(--white); width: 100%; max-width: 420px; padding: 2.5rem; border-radius: 1.25rem; box-shadow: var(--shadow); }
+    .auth-header h1 { font-size: 1.8rem; margin: 0 0 .5rem; color: #0f172a; }
+    .auth-header p { color: var(--text-muted); margin-bottom: 2rem; font-size: .95rem; }
+    .form-group { margin-bottom: 1.25rem; text-align: left; }
+    .form-label { display: block; font-size: .875rem; font-weight: 600; margin-bottom: .5rem; }
+    .form-control { width: 100%; padding: .8rem 1rem; box-sizing: border-box; border: 1.5px solid #cbd5e1; border-radius: .6rem; font-size: 1rem; transition: border-color .2s; }
+    .form-control:focus { outline: none; border-color: var(--accent); }
+    .btn-submit { width: 100%; background: var(--primary); color: white; padding: 1rem; border: none; border-radius: .6rem; font-size: 1rem; font-weight: 600; cursor: pointer; transition: opacity .2s; }
+    .btn-submit:hover { opacity: .88; }
+    .btn-submit:disabled { opacity: .6; cursor: not-allowed; }
+    .auth-footer { margin-top: 1.5rem; text-align: center; font-size: .9rem; color: var(--text-muted); }
+    .auth-footer a { color: var(--primary); text-decoration: none; font-weight: 600; }
+    .error-msg { background: #fee2e2; color: #b91c1c; border-radius: .5rem; padding: .75rem 1rem; font-size: .875rem; margin-bottom: 1rem; display: none; }
+    .forgot { text-align: right; font-size: .8rem; margin-top: -.5rem; margin-bottom: 1rem; }
+    .forgot a { color: var(--text-muted); text-decoration: none; }
+    .forgot a:hover { text-decoration: underline; }
+  </style>
 </head>
 <body>
-  <main class="sq-main">
-    <section class="sq-section">
-      <div class="sq-container sq-grid-2">
-        <div>
-          <h1>Log in</h1>
-          <p class="sq-subtle">Access your queues and dashboard.</p>
-        </div>
-        <div class="sq-card">
-          <form id="login-form" class="sq-form">
-            <label>
-              <span>Email</span>
-              <input type="email" name="email" required />
-            </label>
-            <label>
-              <span>Password</span>
-              <input type="password" name="password" required />
-            </label>
-            <button type="submit" class="sq-btn sq-btn-primary">Log in</button>
-            <p id="login-message" class="sq-form-message"></p>
-            <p class="sq-subtle">
-              No account? <a href="/signup.html">Sign up</a>
-            </p>
-          </form>
-        </div>
+
+<header class="navbar">
+  <a href="index.html" class="logo">skipQs</a>
+</header>
+
+<main class="auth-wrapper">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h1>Welcome Back</h1>
+      <p>Log in to access your account.</p>
+    </div>
+
+    <div id="errorMsg" class="error-msg"></div>
+
+    <form id="loginForm">
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input type="email" id="email" class="form-control" placeholder="name@email.com" required>
       </div>
-    </section>
-  </main>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" id="password" class="form-control" placeholder="••••••••" required>
+      </div>
+      <div class="forgot"><a href="#" id="forgotLink">Forgot password?</a></div>
+      <button type="submit" class="btn-submit" id="submitBtn">Sign In</button>
+    </form>
 
-  <script type="module">
-    import { login } from './api.js';
+    <div class="auth-footer">
+      New here? <a href="signup.html">Create an account</a>
+    </div>
+  </div>
+</main>
 
-    const form = document.getElementById('login-form');
-    const msg = document.getElementById('login-message');
+<!-- Supabase JS CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="supabase-config.js"></script>
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      msg.textContent = '';
-      msg.className = 'sq-form-message';
+<script>
+  const errDiv  = document.getElementById('errorMsg');
+  const btn     = document.getElementById('submitBtn');
 
-      const data = Object.fromEntries(new FormData(form).entries());
-      msg.textContent = 'Logging in…';
+  function showError(msg) { errDiv.textContent = msg; errDiv.style.display = 'block'; }
+  function hideError()    { errDiv.style.display = 'none'; }
 
-      const result = await login(data.email, data.password);
-      if (result.error) {
-        msg.textContent = result.error;
-        msg.classList.add('error');
+  async function redirectUser(session) {
+    if (!session) return;
+    try {
+      const { data } = await sb
+        .from('providers')
+        .select('id')
+        .eq('id', session.user.id)
+        .maybeSingle();
+
+      const pending = sessionStorage.getItem('redirectAfterLogin');
+      if (data) {
+        window.location.replace('provider-dashboard.html');
+      } else if (pending) {
+        sessionStorage.removeItem('redirectAfterLogin');
+        window.location.replace(pending);
       } else {
-        msg.textContent = 'Logged in. Redirecting…';
-        msg.classList.add('success');
-        setTimeout(() => {
-          window.location.href = '/';
-        }, 800);
+        window.location.replace('index.html');
       }
+    } catch {
+      window.location.replace('index.html');
+    }
+  }
+
+  // If already logged in, redirect immediately
+  sb.auth.getSession().then(({ data: { session } }) => {
+    if (session) redirectUser(session);
+  });
+
+  // Login form
+  document.getElementById('loginForm').onsubmit = async (e) => {
+    e.preventDefault();
+    hideError();
+    btn.disabled = true;
+    btn.textContent = 'Signing in…';
+
+    const email    = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      btn.disabled = false;
+      btn.textContent = 'Sign In';
+      if (error.message.includes('Invalid login')) {
+        showError('Incorrect email or password. Please try again.');
+      } else {
+        showError(error.message);
+      }
+      return;
+    }
+    redirectUser(data.session);
+  };
+
+  // Forgot password
+  document.getElementById('forgotLink').onclick = async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('email').value.trim();
+    if (!email) { showError('Enter your email address first.'); return; }
+    const { error } = await sb.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + '/login.html'
     });
-  </script>
+    if (error) { showError(error.message); return; }
+    hideError();
+    alert('Password reset email sent – check your inbox.');
+  };
+</script>
 </body>
 </html>
