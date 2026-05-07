@@ -196,20 +196,45 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let isSubmitting = false;
 
 async function geocodeAddress() {
+
   const address = document.getElementById('addressInput').value.trim();
+
   if (!address) return;
+
+  const errDiv = document.getElementById('errorMsg');
+  const geoResult = document.getElementById('geoResult');
+
+  // reset messages
+  errDiv.style.display = 'none';
+  errDiv.textContent = '';
+
+  geoResult.style.display = 'none';
+  geoResult.textContent = '';
+
   try {
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`;
+
+    const url =
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`;
+
     const res = await fetch(url);
     const data = await res.json();
-    if (!data.length) { showError('Address not found.'); return; }
+
+    if (!data.length) {
+      showError('Address not found.');
+      return;
+    }
+
     document.getElementById('lat').value = data[0].lat;
     document.getElementById('lng').value = data[0].lon;
-    const geoResult = document.getElementById('geoResult');
+
     geoResult.style.display = 'block';
     geoResult.textContent = '✓ Address verified';
+
   } catch(err) {
+
+    console.error(err);
     showError('Address lookup failed');
+
   }
 }
 
