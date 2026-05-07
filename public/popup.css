@@ -1,0 +1,109 @@
+/* ============================================================
+   skipQs — popup.css
+   Add @import or <link> to this file, or paste into style.css
+   ============================================================ */
+
+/* Overlay */
+.wait-popup {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(6px);
+}
+
+/* Utility — toggled by JS */
+.hidden {
+  display: none !important;
+}
+
+/* Card */
+.wait-popup-card {
+  width: 92%;
+  max-width: 380px;
+  background: #fff;
+  border-radius: 24px;
+  padding: 2rem;
+  text-align: center;
+  position: relative;
+  animation: popupIn 0.25s ease;
+}
+
+/* Close button */
+.popup-close {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  border: none;
+  background: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #64748b;
+}
+.popup-close:hover { color: #000; }
+
+/* Icon */
+.popup-icon {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Large wait-time number */
+.popup-wait-time {
+  font-size: 52px;
+  font-weight: 800;
+  margin: 20px 0;
+  color: #002f34;
+}
+.popup-wait-time small {
+  font-size: 18px;
+  font-weight: 400;
+  color: #64748b;
+}
+
+/* Meta row (people / live) */
+.popup-meta {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+}
+.popup-meta div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.popup-meta strong {
+  font-size: 1.2rem;
+  color: #002f34;
+}
+.popup-meta span {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+/* Join button */
+.popup-join-btn {
+  margin-top: 24px;
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 14px;
+  background: #002f34;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.popup-join-btn:hover { opacity: 0.88; }
+
+/* Entry animation */
+@keyframes popupIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}

@@ -1,0 +1,38 @@
+<!--
+  skipQs — Wait-Time Popup
+  ========================
+  Paste this block into index.html immediately BEFORE the closing </body> tag.
+  Also include popup.css (or merge into style.css) and ensure script.js is loaded.
+-->
+
+<div id="waitPopup" class="wait-popup hidden">
+  <div class="wait-popup-card">
+
+    <button class="popup-close" onclick="closeWaitPopup()">×</button>
+
+    <div class="popup-icon">🕐</div>
+
+    <h2 id="popupBusinessName">Queue Status</h2>
+
+    <div class="popup-wait-time">
+      <span id="popupWait">15</span>
+      <small>mins</small>
+    </div>
+
+    <div class="popup-meta">
+      <div>
+        <strong id="popupPeople">4</strong>
+        <span>People Ahead</span>
+      </div>
+      <div>
+        <strong>Live</strong>
+        <span>Realtime</span>
+      </div>
+    </div>
+
+    <button class="popup-join-btn" id="popupJoinBtn">
+      🚀 Join Queue
+    </button>
+
+  </div>
+</div>
