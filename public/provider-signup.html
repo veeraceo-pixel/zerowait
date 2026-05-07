@@ -499,7 +499,7 @@ async function register() {
       services.map(s => ({
         provider_id:   uid,
         name:          s.name,
-        duration_mins: s.duration,
+        duration: s.duration,
         price:         s.price
       }))
     );
