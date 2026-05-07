@@ -11,12 +11,12 @@
   --accent:#23e5db;
   --bg:#f7f8f8;
   --border:#e2e8f0;
-  --white:#fff;
   --danger:#dc2626;
   --success:#059669;
 }
 * { box-sizing:border-box; margin:0; padding:0; }
 body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--primary); }
+
 .navbar {
   background:var(--primary);
   padding:1rem 2rem;
@@ -25,48 +25,91 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--primary
   align-items:center;
 }
 .logo { font-size:1.5rem; font-weight:800; color:var(--accent); text-decoration:none; }
+
 .auth-wrapper { max-width:700px; margin:2rem auto; padding:0 1rem 5rem; }
 .title { font-size:2rem; font-weight:800; margin-bottom:.5rem; }
 .subtitle { color:#64748b; margin-bottom:2rem; }
-.card { background:#fff; border-radius:18px; padding:1.6rem; margin-bottom:1.4rem; border:1px solid var(--border); }
+
+.card {
+  background:#fff;
+  border-radius:18px;
+  padding:1.6rem;
+  margin-bottom:1.4rem;
+  border:1px solid var(--border);
+}
 .step { font-size:.75rem; color:var(--accent); font-weight:800; margin-bottom:.5rem; text-transform:uppercase; }
 .heading { font-size:1.15rem; font-weight:700; margin-bottom:1.2rem; }
+
 .row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem; }
 .group { display:flex; flex-direction:column; gap:.4rem; }
 label { font-size:.85rem; font-weight:600; }
+
 input, select {
   padding:.9rem 1rem;
   border-radius:12px;
   border:1.5px solid var(--border);
   font-family:inherit;
   font-size:.95rem;
+  width:100%;
 }
 input:focus, select:focus { outline:none; border-color:var(--accent); }
-.geo { display:flex; gap:.6rem; }
+
+.geo { display:flex; gap:.6rem; align-items:flex-start; }
 .geo input { flex:1; }
+
 .lookup-btn {
   background:var(--primary);
   color:white;
   border:none;
   border-radius:12px;
-  padding:0 1rem;
+  padding:.9rem 1rem;
   cursor:pointer;
   font-weight:700;
+  font-family:inherit;
+  white-space:nowrap;
+  flex-shrink:0;
 }
+.lookup-btn:disabled { opacity:.6; cursor:not-allowed; }
+
 .success-msg { color:var(--success); font-size:.85rem; margin-top:.5rem; display:none; }
 .error-msg {
   background:#fee2e2;
   color:#b91c1c;
   padding:1rem;
   border-radius:12px;
-  margin-bottom:1rem;
+  margin-bottom:1.2rem;
   display:none;
 }
+.success-banner {
+  background:#d1fae5;
+  color:#065f46;
+  padding:1.2rem;
+  border-radius:12px;
+  margin-bottom:1.2rem;
+  display:none;
+  font-weight:600;
+  text-align:center;
+}
+
 table { width:100%; border-collapse:collapse; }
 th { text-align:left; font-size:.75rem; color:#64748b; padding-bottom:.6rem; }
-td { padding:.45rem 0; }
-.delete-btn { background:none; border:none; color:red; cursor:pointer; font-size:1.2rem; }
-.add-service { margin-top:1rem; background:none; border:none; color:var(--primary); font-weight:700; cursor:pointer; }
+td { padding:.4rem .3rem; }
+td input { padding:.6rem .7rem; font-size:.9rem; }
+.s-name  { width:100%; }
+.s-dur   { width:80px !important; }
+.s-price { width:80px !important; }
+.delete-btn { background:none; border:none; color:red; cursor:pointer; font-size:1.3rem; padding:0 .4rem; }
+.add-service {
+  margin-top:.8rem;
+  background:none;
+  border:none;
+  color:var(--primary);
+  font-weight:700;
+  cursor:pointer;
+  font-family:inherit;
+  font-size:.9rem;
+}
+
 .submit-btn {
   width:100%;
   background:var(--primary);
@@ -81,18 +124,22 @@ td { padding:.45rem 0; }
   align-items:center;
   justify-content:center;
   gap:10px;
+  font-family:inherit;
 }
 .submit-btn:disabled { opacity:.7; cursor:not-allowed; }
+
 .spinner {
   width:18px;
   height:18px;
   border:3px solid rgba(255,255,255,.3);
   border-top-color:#fff;
   border-radius:50%;
-  animation:spin 1s linear infinite;
+  animation:spin .9s linear infinite;
   display:none;
+  flex-shrink:0;
 }
 @keyframes spin { to { transform:rotate(360deg); } }
+
 @media(max-width:640px) { .row { grid-template-columns:1fr; } }
 </style>
 </head>
@@ -106,18 +153,21 @@ td { padding:.45rem 0; }
   <div class="title">Register Your Business</div>
   <div class="subtitle">Launch your virtual queue in minutes.</div>
 
-  <div id="errorMsg" class="error-msg"></div>
+  <div id="errorMsg"   class="error-msg"></div>
+  <div id="successMsg" class="success-banner"></div>
 
+  <!-- STEP 1 -->
   <div class="card">
     <div class="step">STEP 1</div>
     <div class="heading">Business Details</div>
+
     <div class="row">
       <div class="group">
-        <label>Business Name</label>
-        <input type="text" id="bizName" placeholder="City Barbers">
+        <label for="bizName">Business Name</label>
+        <input type="text" id="bizName" placeholder="City Barbers" autocomplete="organization">
       </div>
       <div class="group">
-        <label>Category</label>
+        <label for="category">Category</label>
         <select id="category">
           <option value="">Select category</option>
           <option>Barber</option>
@@ -129,21 +179,30 @@ td { padding:.45rem 0; }
         </select>
       </div>
     </div>
+
     <div class="row">
       <div class="group">
-        <label>Phone</label>
-        <input type="tel" id="phone" placeholder="447900123456">
+        <label for="phone">Phone</label>
+        <input type="tel" id="phone" placeholder="07900 123456" autocomplete="tel">
       </div>
       <div class="group">
-        <label>Capacity</label>
-        <input type="number" id="capacity" value="1" min="1">
+        <label for="capacity">Capacity (simultaneous customers)</label>
+        <input type="number" id="capacity" value="1" min="1" max="100">
       </div>
     </div>
+
     <div class="group">
-      <label>Business Address</label>
+      <label for="addressInput">Business Address</label>
       <div class="geo">
-        <input type="text" id="addressInput" placeholder="25 King Street, Manchester">
-        <button class="lookup-btn" onclick="geocodeAddress()">Look Up</button>
+        <input
+          type="text"
+          id="addressInput"
+          placeholder="25 King Street, Manchester"
+          autocomplete="street-address"
+        >
+        <button type="button" class="lookup-btn" id="lookupBtn" onclick="geocodeAddress()">
+          Look Up
+        </button>
       </div>
       <div id="geoResult" class="success-msg"></div>
       <input type="hidden" id="lat">
@@ -151,28 +210,32 @@ td { padding:.45rem 0; }
     </div>
   </div>
 
+  <!-- STEP 2 -->
   <div class="card">
     <div class="step">STEP 2</div>
     <div class="heading">Login Credentials</div>
+
     <div class="row">
       <div class="group">
-        <label>Email</label>
-        <input type="email" id="email" placeholder="admin@business.com">
+        <label for="email">Email</label>
+        <input type="email" id="email" placeholder="admin@business.com" autocomplete="email">
       </div>
       <div class="group">
-        <label>Password</label>
-        <input type="password" id="password" placeholder="Minimum 6 characters">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Minimum 6 characters" autocomplete="new-password">
       </div>
     </div>
   </div>
 
+  <!-- STEP 3 -->
   <div class="card">
     <div class="step">STEP 3</div>
     <div class="heading">Services</div>
+
     <table>
       <thead>
         <tr>
-          <th>Service</th>
+          <th>Service Name</th>
           <th>Duration (mins)</th>
           <th>Price (£)</th>
           <th></th>
@@ -180,10 +243,11 @@ td { padding:.45rem 0; }
       </thead>
       <tbody id="svcBody"></tbody>
     </table>
-    <button class="add-service" onclick="addRow()">+ Add Service</button>
+
+    <button type="button" class="add-service" onclick="addRow()">+ Add Service</button>
   </div>
 
-  <button class="submit-btn" id="submitBtn" onclick="register()">
+  <button type="button" class="submit-btn" id="submitBtn" onclick="register()">
     <span class="spinner" id="spinner"></span>
     <span id="btnText">Complete Registration</span>
   </button>
@@ -192,153 +256,271 @@ td { padding:.45rem 0; }
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script>
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-let isSubmitting = false;
+// Guard: catch missing config early
+if (typeof SUPABASE_URL === 'undefined' || typeof SUPABASE_ANON_KEY === 'undefined') {
+  document.getElementById('errorMsg').textContent =
+    'Config error: supabase-config.js not loaded correctly.';
+  document.getElementById('errorMsg').style.display = 'block';
+  document.getElementById('submitBtn').disabled = true;
+  throw new Error('Missing Supabase config');
+}
 
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let isSubmitting      = false;
+let geocodingInProgress = false;
+
+// Clear verified coords if user edits address after looking it up
+document.getElementById('addressInput').addEventListener('input', () => {
+  document.getElementById('lat').value = '';
+  document.getElementById('lng').value = '';
+  const g = document.getElementById('geoResult');
+  g.style.display = 'none';
+  g.textContent   = '';
+});
+
+// ── GEOCODE ──────────────────────────────────────────────────────────────────
 async function geocodeAddress() {
+  if (geocodingInProgress) return;
 
   const address = document.getElementById('addressInput').value.trim();
+  if (!address) { showError('Please enter an address first.'); return; }
 
-  if (!address) return;
-
-  const errDiv = document.getElementById('errorMsg');
+  const btn       = document.getElementById('lookupBtn');
   const geoResult = document.getElementById('geoResult');
 
-  // reset messages
-  errDiv.style.display = 'none';
-  errDiv.textContent = '';
+  hideError();
+  geoResult.style.display  = 'none';
+  geoResult.textContent    = '';
+  document.getElementById('lat').value = '';
+  document.getElementById('lng').value = '';
 
-  geoResult.style.display = 'none';
-  geoResult.textContent = '';
+  geocodingInProgress = true;
+  btn.disabled        = true;
+  btn.textContent     = 'Looking...';
 
   try {
-
-    const url =
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`;
-
-    const res = await fetch(url);
+    const res  = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`
+    );
     const data = await res.json();
 
     if (!data.length) {
-      showError('Address not found.');
+      showError('Address not found. Try adding your city or postcode.');
       return;
     }
 
     document.getElementById('lat').value = data[0].lat;
     document.getElementById('lng').value = data[0].lon;
 
+    // Show a short version of the resolved address
+    const shortAddr = data[0].display_name.split(',').slice(0, 3).join(',');
+    geoResult.textContent  = `✓ Verified: ${shortAddr}`;
     geoResult.style.display = 'block';
-    geoResult.textContent = '✓ Address verified';
 
   } catch(err) {
-
-    console.error(err);
-    showError('Address lookup failed');
-
+    console.error('Geocode error:', err);
+    showError('Address lookup failed. Check your connection and try again.');
+  } finally {
+    geocodingInProgress = false;
+    btn.disabled        = false;
+    btn.textContent     = 'Look Up';
   }
 }
 
-function addRow(name='', duration='', price='') {
+// ── SERVICE ROWS ─────────────────────────────────────────────────────────────
+function addRow(name = '', duration = '', price = '') {
   const tr = document.createElement('tr');
-  tr.innerHTML = `
-    <td><input class="s-name" placeholder="Haircut" value="${name}" style="width:100%"></td>
-    <td><input class="s-dur" type="number" value="${duration}" placeholder="30" style="width:80px"></td>
-    <td><input class="s-price" type="number" value="${price}" placeholder="15" style="width:80px"></td>
-    <td><button class="delete-btn" onclick="this.closest('tr').remove()">×</button></td>
-  `;
+
+  const makeInput = (cls, type, placeholder, value, extra = {}) => {
+    const el = document.createElement('input');
+    el.className   = cls;
+    el.type        = type;
+    el.placeholder = placeholder;
+    el.value       = value;
+    Object.assign(el, extra);
+    return el;
+  };
+
+  const delBtn       = document.createElement('button');
+  delBtn.type        = 'button';
+  delBtn.className   = 'delete-btn';
+  delBtn.textContent = '×';
+  delBtn.title       = 'Remove service';
+  delBtn.onclick     = () => tr.remove();
+
+  const cells = [
+    makeInput('s-name',  'text',   'e.g. Haircut', name),
+    makeInput('s-dur',   'number', '30',           duration, { min: '1' }),
+    makeInput('s-price', 'number', '15',           price,    { min: '0', step: '0.01' }),
+    delBtn
+  ];
+
+  cells.forEach(el => {
+    const td = document.createElement('td');
+    td.appendChild(el);
+    tr.appendChild(td);
+  });
+
   document.getElementById('svcBody').appendChild(tr);
 }
-addRow();
+addRow(); // start with one empty row
 
+// ── HELPERS ──────────────────────────────────────────────────────────────────
 function showError(msg) {
-  const errDiv = document.getElementById('errorMsg');
-  errDiv.textContent = msg;
-  errDiv.style.display = 'block';
-  errDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  const el = document.getElementById('errorMsg');
+  el.textContent  = msg;
+  el.style.display = 'block';
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+function hideError() {
+  document.getElementById('errorMsg').style.display = 'none';
+}
+function showSuccess(msg) {
+  const el = document.getElementById('successMsg');
+  el.textContent  = msg;
+  el.style.display = 'block';
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+function resetBtn() {
+  document.getElementById('submitBtn').disabled   = false;
+  document.getElementById('spinner').style.display = 'none';
+  document.getElementById('btnText').textContent  = 'Complete Registration';
+  isSubmitting = false;
 }
 
+// ── REGISTER ─────────────────────────────────────────────────────────────────
 async function register() {
   if (isSubmitting) return;
-  document.getElementById('errorMsg').style.display = 'none';
+  hideError();
 
-  const bizName   = document.getElementById('bizName').value.trim();
-  const category  = document.getElementById('category').value;
-  const phone     = document.getElementById('phone').value.trim();
-  const capacity  = parseInt(document.getElementById('capacity').value) || 1;
-  const address   = document.getElementById('addressInput').value.trim();
-  const lat       = parseFloat(document.getElementById('lat').value);
-  const lng       = parseFloat(document.getElementById('lng').value);
-  const email     = document.getElementById('email').value.trim().toLowerCase();
-  const password  = document.getElementById('password').value;
+  // Read all values
+  const bizName  = document.getElementById('bizName').value.trim();
+  const category = document.getElementById('category').value;
+  const phone    = document.getElementById('phone').value.trim();
+  const capacity = Math.max(1, parseInt(document.getElementById('capacity').value) || 1);
+  const address  = document.getElementById('addressInput').value.trim();
+  const lat      = parseFloat(document.getElementById('lat').value);
+  const lng      = parseFloat(document.getElementById('lng').value);
+  const email    = document.getElementById('email').value.trim().toLowerCase();
+  const password = document.getElementById('password').value;
 
-  if (!bizName || !category || !phone || !address || !email || !password) {
-    showError('Please complete all required fields.'); return;
+  // Field-by-field validation with clear messages
+  if (!bizName)  { showError('Please enter your business name.');    return; }
+  if (!category) { showError('Please select a business category.');  return; }
+  if (!phone)    { showError('Please enter your phone number.');     return; }
+
+  const digitsOnly = phone.replace(/\D/g, '');
+  if (digitsOnly.length < 10 || digitsOnly.length > 15) {
+    showError('Phone number must be 10–15 digits.'); return;
   }
-  if (!/^\+?[0-9]{10,15}$/.test(phone.replace(/\s/g, ''))) {
-    showError('Please enter a valid phone number.'); return;
+
+  if (!address)  { showError('Please enter your business address.'); return; }
+
+  if (isNaN(lat) || isNaN(lng)) {
+    showError('Please click "Look Up" to verify your address before submitting.'); return;
   }
+
+  if (!email)    { showError('Please enter your email address.');    return; }
+  if (!password) { showError('Please enter a password.');            return; }
   if (password.length < 6) {
     showError('Password must be at least 6 characters.'); return;
   }
-  if (isNaN(lat) || isNaN(lng)) {
-    showError('Please click "Look Up" to verify your address.'); return;
-  }
 
-  const rows = document.querySelectorAll('#svcBody tr');
-  const services = Array.from(rows).map(tr => ({
-    name:     tr.querySelector('.s-name').value.trim(),
-    duration: parseInt(tr.querySelector('.s-dur').value) || 15,
-    price:    parseFloat(tr.querySelector('.s-price').value) || 0
+  // Collect + validate services
+  const services = Array.from(document.querySelectorAll('#svcBody tr')).map(row => ({
+    name:     row.querySelector('.s-name').value.trim(),
+    duration: Math.max(1,   parseInt(row.querySelector('.s-dur').value)    || 15),
+    price:    Math.max(0, parseFloat(row.querySelector('.s-price').value)  || 0)
   })).filter(s => s.name);
 
-  if (!services.length) { showError('Add at least one service.'); return; }
+  if (!services.length) { showError('Please add at least one service.'); return; }
 
+  // Lock UI
   const btn     = document.getElementById('submitBtn');
   const spinner = document.getElementById('spinner');
   const btnText = document.getElementById('btnText');
-  isSubmitting  = true;
-  btn.disabled  = true;
+
+  isSubmitting          = true;
+  btn.disabled          = true;
   spinner.style.display = 'block';
-  btnText.textContent   = 'Creating business...';
+  btnText.textContent   = 'Creating your account...';
+
+  let uid = null;
 
   try {
-    // Check for duplicate email
-    const { data: existingUsers } = await sb
+    // 1. Check duplicate email in providers table
+    const { data: existing } = await sb
       .from('providers')
-      .select('email')
+      .select('id')
       .eq('email', email)
       .maybeSingle();
-    if (existingUsers) throw new Error('Business already registered with this email.');
 
-    // Create auth account
+    if (existing) throw new Error('A business is already registered with this email.');
+
+    // 2. Create Supabase Auth account
     const { data: authData, error: authErr } = await sb.auth.signUp({ email, password });
     if (authErr) throw authErr;
-    const uid = authData.user.id;
 
-    // Insert provider record
+    // If email confirmation is ON, user object is returned but session is null.
+    // Handle this gracefully instead of crashing.
+    if (!authData || !authData.user) {
+      showSuccess(
+        '✅ Account created! Please check your email to confirm your address, then sign in to your dashboard.'
+      );
+      resetBtn();
+      return;
+    }
+
+    uid = authData.user.id;
+    btnText.textContent = 'Saving business profile...';
+
+    // 3. Insert provider row
     const { error: providerErr } = await sb.from('providers').insert({
-      id: uid, email, business_name: bizName, category, phone,
-      address, lat, lng, capacity, is_open: true,
-      current_wait_mins: 0, people_in_line: 0,
-      created_at: new Date().toISOString()
+      id:                uid,
+      email,
+      business_name:     bizName,
+      category,
+      phone,
+      address,
+      lat,
+      lng,
+      capacity,
+      is_open:           true,
+      current_wait_mins: 0,
+      people_in_line:    0,
+      created_at:        new Date().toISOString()
     });
     if (providerErr) throw providerErr;
 
-    // Insert services
+    btnText.textContent = 'Adding services...';
+
+    // 4. Insert services
     const { error: svcErr } = await sb.from('services').insert(
-      services.map(s => ({ provider_id: uid, name: s.name, duration_mins: s.duration, price: s.price }))
+      services.map(s => ({
+        provider_id:   uid,
+        name:          s.name,
+        duration_mins: s.duration,
+        price:         s.price
+      }))
     );
     if (svcErr) throw svcErr;
 
-    btnText.textContent = 'Success! Redirecting...';
-    setTimeout(() => { window.location.href = 'provider-dashboard.html'; }, 1800);
-  } catch(err) {
-    console.error(err);
-    showError(err.message || 'Registration failed');
-    btn.disabled = false;
+    // 5. Done
     spinner.style.display = 'none';
-    btnText.textContent = 'Complete Registration';
-    isSubmitting = false;
+    btnText.textContent   = '✓ Success! Redirecting...';
+    setTimeout(() => { window.location.href = 'provider-dashboard.html'; }, 1800);
+
+  } catch(err) {
+    console.error('Registration error:', err);
+
+    // If auth account was created but a later DB step failed,
+    // sign out so the user can try again without hitting the duplicate check
+    if (uid) {
+      try { await sb.auth.signOut(); } catch(_) {}
+    }
+
+    showError(err.message || 'Registration failed. Please try again.');
+    resetBtn();
   }
 }
 </script>
