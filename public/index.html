@@ -3,394 +3,793 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>skipQs - Skip the Queue, Save Your Time</title>
-  <meta name="description" content="Join virtual queues at salons, clinics, restaurants & more. No more standing in line.">
+  <title>skipQs — Skip the Queue, Save Your Time</title>
+  <meta name="description" content="See live wait times at hospitals, clinics, salons, banks and more. Join virtual queues from anywhere.">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    :root{--primary:#002f34;--accent:#23e5db;--accent2:#ffce32;--text-dark:#002f34;--text-muted:#406367;--bg:#f7f8f8;--border:#c8d7dc;--white:#fff;--green:#059669;}
+    :root{
+      --primary:#002f34;--accent:#23e5db;--accent2:#ffce32;
+      --text-dark:#002f34;--text-muted:#406367;--bg:#f7f8f8;
+      --border:#e2e8f0;--white:#fff;--green:#059669;
+      --danger:#dc2626;--warning:#d97706;
+    }
     *{margin:0;padding:0;box-sizing:border-box;}
     body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text-dark);line-height:1.6;}
     .container{max-width:1280px;margin:0 auto;padding:0 20px;}
-    /* TOP BAR */
-    .top-bar{background:var(--primary);color:white;padding:8px 0;font-size:12px;}
+
+    /* ── QUEUE TIMER BANNER ── */
+    #queueBanner{
+      display:none;
+      background:linear-gradient(135deg,#003d42 0%,#005959 100%);
+      border-bottom:3px solid var(--accent);
+      color:white;padding:0;
+    }
+    .qb-inner{
+      display:flex;align-items:center;gap:0;min-height:68px;
+    }
+    .qb-icon{
+      background:var(--accent);color:var(--primary);
+      display:flex;align-items:center;justify-content:center;
+      width:68px;min-height:68px;font-size:1.6rem;flex-shrink:0;
+    }
+    .qb-info{
+      flex:1;padding:.8rem 1.4rem;
+    }
+    .qb-label{font-size:.68rem;text-transform:uppercase;letter-spacing:.6px;font-weight:700;color:rgba(255,255,255,.5);margin-bottom:.15rem;}
+    .qb-title{font-size:1rem;font-weight:800;letter-spacing:-.2px;}
+    .qb-sub{font-size:.8rem;color:rgba(255,255,255,.7);margin-top:.1rem;}
+    .qb-timer{
+      padding:.8rem 1.8rem;text-align:center;border-left:1px solid rgba(255,255,255,.12);
+    }
+    .qb-timer-value{
+      font-size:2.2rem;font-weight:800;color:var(--accent);line-height:1;letter-spacing:-1px;
+      font-variant-numeric:tabular-nums;
+    }
+    .qb-timer-label{font-size:.6rem;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.5);font-weight:700;margin-top:.1rem;}
+    .qb-actions{
+      padding:.8rem 1.2rem;display:flex;align-items:center;gap:.6rem;border-left:1px solid rgba(255,255,255,.12);flex-shrink:0;
+    }
+    .qb-btn{
+      padding:.5rem 1rem;border-radius:8px;font-weight:700;font-size:.8rem;
+      text-decoration:none;white-space:nowrap;cursor:pointer;border:none;font-family:inherit;
+      display:inline-flex;align-items:center;gap:.3rem;
+    }
+    .qb-btn-primary{background:var(--accent);color:var(--primary);}
+    .qb-btn-primary:hover{background:#1bcabf;}
+    .qb-btn-ghost{background:rgba(255,255,255,.12);color:white;}
+    .qb-btn-ghost:hover{background:rgba(255,255,255,.2);}
+    .qb-pulse{
+      width:9px;height:9px;border-radius:50%;background:var(--accent);
+      animation:qbPulse 1.4s ease-in-out infinite;display:inline-block;margin-right:.3rem;
+    }
+    @keyframes qbPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.7)}}
+
+    /* ── TOP BAR ── */
+    .top-bar{background:var(--primary);color:white;padding:7px 0;font-size:12px;}
     .top-bar .container{display:flex;justify-content:space-between;align-items:center;}
-    .top-bar a{color:rgba(255,255,255,.85);text-decoration:none;margin-left:20px;font-weight:500;}
+    .top-bar a{color:rgba(255,255,255,.8);text-decoration:none;margin-left:18px;font-weight:500;}
     .top-bar a:hover{color:white;}
-    /* LIVE BANNER */
-    .live-banner{background:linear-gradient(135deg,#002f34 0%,#004d40 50%,#002f34 100%);color:white;border-bottom:3px solid var(--accent);position:relative;overflow:hidden;}
-    .live-banner-inner{display:flex;align-items:stretch;min-height:82px;}
-    .live-pill{background:#dc2626;color:white;display:flex;align-items:center;gap:8px;padding:0 28px;font-size:13px;font-weight:800;letter-spacing:1px;text-transform:uppercase;flex-shrink:0;}
-    .live-dot{width:9px;height:9px;background:white;border-radius:50%;animation:livePulse 1.2s ease-in-out infinite;}
-    @keyframes livePulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
-    .live-stats{display:flex;align-items:center;flex:1;padding:0 30px;gap:36px;flex-wrap:wrap;}
-    .live-stat-item{display:flex;flex-direction:column;align-items:center;gap:2px;}
-    .live-stat-value{font-size:28px;font-weight:800;color:var(--accent);line-height:1;min-width:52px;text-align:center;transition:all .4s;}
-    .live-stat-label{font-size:11px;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.5px;font-weight:600;white-space:nowrap;}
-    .live-divider{width:1px;height:40px;background:rgba(255,255,255,.12);flex-shrink:0;}
-    .live-cta{display:flex;align-items:center;padding:0 28px;flex-shrink:0;gap:16px;}
-    .live-cta-text{font-size:13px;color:rgba(255,255,255,.8);max-width:180px;line-height:1.4;}
-    .live-cta-text strong{color:var(--accent2);font-size:14px;}
-    .btn-join-now{background:var(--accent);color:var(--primary);border:none;padding:11px 24px;border-radius:50px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap;transition:.2s;text-decoration:none;display:inline-block;}
-    .btn-join-now:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(35,229,219,.4);}
-    .live-update-time{position:absolute;bottom:5px;right:14px;font-size:10px;color:rgba(255,255,255,.25);}
-    /* HEADER */
+
+    /* ── HEADER ── */
     header{background:white;padding:14px 0;box-shadow:0 2px 8px rgba(0,0,0,.06);position:sticky;top:0;z-index:1000;}
     .header-content{display:flex;align-items:center;gap:16px;}
-    .logo{font-size:30px;font-weight:800;color:var(--primary);text-decoration:none;letter-spacing:-1.5px;flex-shrink:0;}
+    .logo{font-size:28px;font-weight:800;color:var(--primary);text-decoration:none;letter-spacing:-1.5px;flex-shrink:0;}
     .logo span{color:var(--accent);}
-    .search-wrapper{flex:1;display:flex;border:2px solid var(--primary);border-radius:6px;overflow:hidden;max-width:640px;}
-    .search-input{flex:1;border:none;padding:13px 16px;font-size:15px;outline:none;font-family:inherit;}
+    .search-wrapper{flex:1;display:flex;border:2px solid var(--primary);border-radius:8px;overflow:hidden;max-width:600px;}
+    .search-input{flex:1;border:none;padding:12px 16px;font-size:15px;outline:none;font-family:inherit;background:#fff;}
     .search-input::placeholder{color:#9cb3b7;}
-    .search-btn{background:var(--primary);color:white;border:none;padding:0 28px;font-size:15px;font-weight:700;cursor:pointer;}
+    .search-btn{background:var(--primary);color:white;border:none;padding:0 26px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;}
     .search-btn:hover{background:#004050;}
-    .header-actions{display:flex;gap:10px;align-items:center;flex-shrink:0;}
-    .user-icon{width:38px;height:38px;border-radius:50%;background:var(--bg);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:17px;cursor:pointer;}
-    .btn-post{background:var(--accent);color:var(--primary);border:none;padding:11px 24px;border-radius:50px;font-size:14px;font-weight:800;cursor:pointer;transition:.2s;white-space:nowrap;}
-    .btn-post:hover{transform:translateY(-2px);box-shadow:0 4px 14px rgba(35,229,219,.4);}
-    /* CATEGORIES */
-    .categories-section{background:white;padding:20px 0;margin:20px 0;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,.06);}
-    .section-heading{font-size:17px;font-weight:700;margin-bottom:16px;}
-    .categories-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;}
-    .category-card{text-align:center;padding:16px 8px;border-radius:8px;text-decoration:none;color:var(--text-dark);transition:.2s;border:1.5px solid transparent;}
-    .category-card:hover{background:var(--bg);border-color:var(--border);transform:translateY(-2px);}
-    .category-icon{font-size:34px;display:block;margin-bottom:8px;}
-    .category-name{font-size:12px;font-weight:600;}
-    /* LISTINGS */
-    .content-wrapper{display:grid;gap:24px;margin:20px 0;}
+    .header-right{display:flex;gap:10px;align-items:center;flex-shrink:0;}
+    .btn-header{padding:10px 20px;border-radius:50px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;border:none;white-space:nowrap;display:inline-block;}
+    .btn-header-ghost{background:var(--bg);color:var(--primary);border:1.5px solid var(--border);}
+    .btn-header-ghost:hover{background:#eef2f3;}
+    .btn-header-accent{background:var(--accent);color:var(--primary);}
+    .btn-header-accent:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(35,229,219,.35);}
+    #userMenuBtn{
+      width:36px;height:36px;border-radius:50%;background:var(--bg);border:2px solid var(--border);
+      display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;
+      text-decoration:none;color:var(--primary);
+    }
+
+    /* ── HERO ── */
+    .hero{
+      background:linear-gradient(135deg,#002f34 0%,#004d57 50%,#002f34 100%);
+      color:white;padding:60px 0 70px;position:relative;overflow:hidden;
+    }
+    .hero::before{
+      content:'';position:absolute;inset:0;
+      background:radial-gradient(ellipse at 70% 50%,rgba(35,229,219,.12) 0%,transparent 70%);
+    }
+    .hero-inner{display:grid;grid-template-columns:1fr 1fr;gap:50px;align-items:center;position:relative;}
+    .hero-eyebrow{font-size:.75rem;text-transform:uppercase;letter-spacing:1px;font-weight:700;color:var(--accent);margin-bottom:.8rem;}
+    .hero h1{font-size:3rem;font-weight:800;line-height:1.1;letter-spacing:-1.5px;margin-bottom:1rem;}
+    .hero h1 span{color:var(--accent);}
+    .hero-sub{font-size:1.05rem;opacity:.85;max-width:480px;line-height:1.7;margin-bottom:1.8rem;}
+    .hero-btns{display:flex;gap:.8rem;flex-wrap:wrap;}
+    .btn-hero-primary{background:var(--accent);color:var(--primary);padding:14px 28px;border-radius:50px;font-weight:800;font-size:.95rem;text-decoration:none;display:inline-block;transition:.2s;}
+    .btn-hero-primary:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(35,229,219,.4);}
+    .btn-hero-outline{background:transparent;color:white;padding:14px 28px;border-radius:50px;font-weight:700;font-size:.95rem;text-decoration:none;border:2px solid rgba(255,255,255,.4);display:inline-block;transition:.2s;}
+    .btn-hero-outline:hover{border-color:white;}
+    /* Live stats on hero right */
+    .hero-stats-panel{
+      background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
+      border-radius:20px;padding:1.8rem;backdrop-filter:blur(8px);
+    }
+    .hero-stats-title{font-size:.7rem;text-transform:uppercase;letter-spacing:.7px;font-weight:700;color:rgba(255,255,255,.45);margin-bottom:1.2rem;}
+    .hero-stat-row{display:flex;align-items:center;gap:1rem;padding:.7rem 0;border-bottom:1px solid rgba(255,255,255,.07);}
+    .hero-stat-row:last-child{border-bottom:none;padding-bottom:0;}
+    .hero-stat-icon{font-size:1.4rem;width:36px;text-align:center;flex-shrink:0;}
+    .hero-stat-info{flex:1;}
+    .hero-stat-val{font-size:1.4rem;font-weight:800;color:var(--accent);line-height:1;}
+    .hero-stat-lbl{font-size:.7rem;color:rgba(255,255,255,.5);font-weight:600;text-transform:uppercase;letter-spacing:.3px;}
+    .live-pill{
+      display:inline-flex;align-items:center;gap:.4rem;
+      background:#dc2626;color:white;padding:4px 10px;border-radius:50px;
+      font-size:.65rem;font-weight:800;letter-spacing:.6px;text-transform:uppercase;margin-bottom:.8rem;
+    }
+    .live-dot{width:7px;height:7px;border-radius:50%;background:white;animation:qbPulse 1.2s ease-in-out infinite;}
+
+    /* ── CATEGORIES ── */
+    .categories-section{background:white;padding:28px 0;margin:24px 0;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.05);}
+    .section-title{font-size:18px;font-weight:700;margin-bottom:18px;}
+    .categories-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;}
+    .cat-card{
+      text-align:center;padding:18px 8px;border-radius:10px;text-decoration:none;
+      color:var(--text-dark);transition:.2s;border:1.5px solid transparent;
+    }
+    .cat-card:hover{background:var(--bg);border-color:var(--border);transform:translateY(-2px);}
+    .cat-icon{font-size:2.2rem;display:block;margin-bottom:8px;}
+    .cat-name{font-size:12px;font-weight:700;}
+
+    /* ── LISTINGS SECTION ── */
     .section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
-    .section-title{font-size:20px;font-weight:700;}
     .view-all{color:var(--primary);text-decoration:none;font-weight:600;font-size:13px;}
     .view-all:hover{text-decoration:underline;}
     .listings-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
-    .listing-card{background:white;border-radius:8px;overflow:hidden;text-decoration:none;color:inherit;box-shadow:0 1px 4px rgba(0,0,0,.08);transition:.2s;border:1.5px solid transparent;}
-    .listing-card:hover{box-shadow:0 6px 20px rgba(0,0,0,.12);transform:translateY(-3px);border-color:var(--accent);}
-    .listing-image{width:100%;height:160px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:50px;position:relative;overflow:hidden;}
-    .wait-badge{position:absolute;top:10px;right:10px;background:var(--accent2);color:var(--primary);padding:4px 12px;border-radius:50px;font-size:12px;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,.15);}
-    .open-badge{position:absolute;bottom:10px;left:10px;background:rgba(5,150,105,.9);color:white;padding:3px 10px;border-radius:50px;font-size:11px;font-weight:700;display:flex;align-items:center;gap:5px;}
-    .open-dot{width:6px;height:6px;border-radius:50%;background:#4ade80;animation:livePulse 1.5s infinite;}
+
+    /* ── LISTING CARD ── */
+    .listing-card{
+      background:white;border-radius:10px;overflow:hidden;text-decoration:none;
+      color:inherit;box-shadow:0 1px 4px rgba(0,0,0,.08);transition:.2s;border:1.5px solid transparent;
+      display:block;
+    }
+    .listing-card:hover{box-shadow:0 8px 24px rgba(0,0,0,.12);transform:translateY(-3px);border-color:var(--accent);}
+    .listing-img{
+      width:100%;height:150px;background:linear-gradient(135deg,#002f34,#004d57);
+      display:flex;align-items:center;justify-content:center;font-size:3.2rem;position:relative;
+    }
+    .wait-badge{
+      position:absolute;top:10px;right:10px;background:var(--accent2);color:var(--primary);
+      padding:4px 12px;border-radius:50px;font-size:11px;font-weight:800;
+    }
+    .wait-badge.high{background:#fee2e2;color:var(--danger);}
+    .wait-badge.med{background:#fef9c3;color:#854d0e;}
+    .open-badge{
+      position:absolute;bottom:10px;left:10px;background:rgba(5,150,105,.9);
+      color:white;padding:3px 10px;border-radius:50px;font-size:10px;font-weight:700;
+      display:flex;align-items:center;gap:4px;
+    }
+    .open-dot{width:5px;height:5px;border-radius:50%;background:#4ade80;animation:qbPulse 1.5s infinite;}
     .listing-info{padding:14px;}
-    .listing-title{font-size:15px;font-weight:600;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-    .listing-wait{font-size:22px;font-weight:800;color:var(--primary);margin:6px 0;}
-    .listing-location{font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .listing-name{font-size:14px;font-weight:700;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .listing-wait{font-size:20px;font-weight:800;color:var(--primary);margin:6px 0;}
+    .listing-addr{font-size:12px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
     .listing-meta{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--bg);}
-    .listing-category{font-size:11px;color:var(--text-muted);background:var(--bg);padding:3px 8px;border-radius:4px;font-weight:600;}
-    .listing-people{font-size:12px;color:var(--green);font-weight:700;}
-    /* PROMO */
-    .promo-banner{background:linear-gradient(135deg,var(--primary) 0%,#004d57 100%);color:white;padding:50px 40px;border-radius:12px;display:grid;grid-template-columns:1fr auto;align-items:center;gap:40px;}
-    .promo-banner h2{font-size:30px;font-weight:800;margin-bottom:10px;letter-spacing:-.5px;}
-    .promo-banner p{font-size:15px;opacity:.85;max-width:520px;}
-    .promo-btn-group{display:flex;gap:12px;align-items:center;flex-shrink:0;}
-    .btn-white{background:white;color:var(--primary);padding:14px 28px;border:none;border-radius:50px;font-size:14px;font-weight:800;cursor:pointer;transition:.2s;text-decoration:none;white-space:nowrap;display:inline-block;}
-    .btn-white:hover{transform:translateY(-2px);}
-    .btn-outline-white{background:transparent;color:white;padding:14px 28px;border:2px solid rgba(255,255,255,.5);border-radius:50px;font-size:14px;font-weight:700;cursor:pointer;transition:.2s;text-decoration:none;white-space:nowrap;display:inline-block;}
-    .btn-outline-white:hover{border-color:white;}
-    /* HOW IT WORKS */
-    .how-section{background:white;border-radius:12px;padding:40px;box-shadow:0 1px 4px rgba(0,0,0,.06);}
-    .steps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:30px;margin-top:24px;}
-    .step-card{text-align:center;padding:20px;}
-    .step-icon{font-size:40px;margin-bottom:12px;}
-    .step-title{font-size:16px;font-weight:700;margin-bottom:8px;}
-    .step-desc{font-size:14px;color:var(--text-muted);line-height:1.6;}
-    /* SKELETON */
-    .skeleton{background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:8px;}
+    .listing-cat{font-size:11px;color:var(--text-muted);background:var(--bg);padding:3px 8px;border-radius:4px;font-weight:600;}
+    .listing-queue{font-size:12px;color:var(--green);font-weight:700;}
+    /* skeleton */
+    .skel{background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:10px;height:240px;}
     @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-    .skeleton-card{height:280px;}
-    /* FOOTER */
+
+    /* ── PROMO BANNER ── */
+    .promo{
+      background:linear-gradient(135deg,var(--primary) 0%,#005959 100%);
+      color:white;padding:50px 44px;border-radius:14px;
+      display:grid;grid-template-columns:1fr auto;align-items:center;gap:40px;
+    }
+    .promo h2{font-size:1.7rem;font-weight:800;margin-bottom:.5rem;letter-spacing:-.5px;}
+    .promo p{opacity:.85;font-size:.95rem;max-width:480px;}
+    .promo-btns{display:flex;gap:.8rem;flex-shrink:0;flex-wrap:wrap;}
+    .btn-white{background:white;color:var(--primary);padding:12px 26px;border-radius:50px;font-weight:800;font-size:.9rem;text-decoration:none;white-space:nowrap;display:inline-block;}
+    .btn-white:hover{transform:translateY(-2px);}
+    .btn-outline-white{background:transparent;color:white;padding:12px 26px;border-radius:50px;font-weight:700;font-size:.9rem;text-decoration:none;border:2px solid rgba(255,255,255,.45);white-space:nowrap;display:inline-block;}
+    .btn-outline-white:hover{border-color:white;}
+
+    /* ── HOW IT WORKS ── */
+    .how-section{background:white;border-radius:14px;padding:40px;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+    .steps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin-top:24px;}
+    .step-card{text-align:center;padding:20px 16px;}
+    .step-num{
+      width:44px;height:44px;border-radius:50%;background:var(--primary);color:var(--accent);
+      display:inline-flex;align-items:center;justify-content:center;
+      font-size:1.1rem;font-weight:800;margin-bottom:14px;
+    }
+    .step-icon{font-size:2.4rem;display:block;margin-bottom:10px;}
+    .step-title{font-size:15px;font-weight:700;margin-bottom:8px;}
+    .step-desc{font-size:13px;color:var(--text-muted);line-height:1.65;}
+
+    /* ── FOOTER ── */
     footer{background:var(--primary);color:white;padding:50px 0 24px;margin-top:60px;}
-    .footer-top{display:grid;grid-template-columns:1.5fr repeat(3,1fr);gap:40px;margin-bottom:40px;}
-    .footer-brand .logo-footer{font-size:26px;font-weight:800;letter-spacing:-1px;margin-bottom:12px;display:block;}
-    .footer-brand p{font-size:13px;color:rgba(255,255,255,.6);line-height:1.7;max-width:260px;}
-    .footer-col h4{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:16px;color:rgba(255,255,255,.45);}
-    .footer-col ul{list-style:none;}
-    .footer-col li{margin-bottom:10px;}
-    .footer-col a{color:rgba(255,255,255,.75);text-decoration:none;font-size:14px;transition:.2s;}
+    .footer-grid{display:grid;grid-template-columns:1.5fr repeat(3,1fr);gap:40px;margin-bottom:36px;}
+    .footer-brand-logo{font-size:24px;font-weight:800;letter-spacing:-1px;color:white;text-decoration:none;display:block;margin-bottom:10px;}
+    .footer-brand-logo span{color:var(--accent);}
+    .footer-brand p{font-size:13px;color:rgba(255,255,255,.55);line-height:1.7;max-width:240px;}
+    .footer-col h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.4);margin-bottom:14px;}
+    .footer-col a{color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;display:block;margin-bottom:8px;}
     .footer-col a:hover{color:white;}
-    .footer-bottom{display:flex;justify-content:space-between;align-items:center;padding-top:24px;border-top:1px solid rgba(255,255,255,.1);font-size:12px;color:rgba(255,255,255,.4);}
-    /* MOBILE NAV */
+    .footer-bot{padding-top:20px;border-top:1px solid rgba(255,255,255,.1);font-size:12px;color:rgba(255,255,255,.35);display:flex;justify-content:space-between;align-items:center;}
+
+    /* ── MOBILE NAV ── */
     .mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--border);z-index:999;box-shadow:0 -4px 20px rgba(0,0,0,.08);}
-    .mobile-nav-grid{display:flex;justify-content:space-around;padding:8px 0 4px;}
+    .mobile-nav-grid{display:flex;justify-content:space-around;padding:8px 0 6px;}
     .mobile-nav-item{text-align:center;color:var(--text-muted);text-decoration:none;padding:4px 8px;flex:1;}
     .mobile-nav-item.active{color:var(--primary);}
-    .mobile-nav-item span{display:block;font-size:22px;margin-bottom:2px;}
+    .mobile-nav-item span{display:block;font-size:20px;margin-bottom:2px;}
     .mobile-nav-item p{font-size:10px;margin:0;font-weight:600;}
-    /* EMPTY */
-    .empty-state{text-align:center;padding:60px 20px;color:var(--text-muted);grid-column:1/-1;}
-    .empty-state-icon{font-size:60px;margin-bottom:16px;}
-    .empty-state h3{font-size:18px;font-weight:700;margin-bottom:8px;color:var(--text-dark);}
-    .empty-state a{color:var(--primary);text-decoration:none;font-weight:700;display:inline-block;margin-top:12px;}
-    @media(max-width:1200px){.listings-grid{grid-template-columns:repeat(3,1fr)}.categories-grid{grid-template-columns:repeat(4,1fr)}}
-    @media(max-width:900px){.live-stats{gap:20px;padding:0 16px}.live-cta{display:none}.promo-banner{grid-template-columns:1fr;gap:20px}.footer-top{grid-template-columns:1fr 1fr}}
-    @media(max-width:768px){.header-content{flex-wrap:wrap;gap:12px}.search-wrapper{width:100%;order:3}.listings-grid{grid-template-columns:repeat(2,1fr);gap:12px}.categories-grid{grid-template-columns:repeat(4,1fr)}.steps-grid{grid-template-columns:1fr;gap:16px}.footer-top{grid-template-columns:1fr 1fr;gap:24px}.footer-brand{grid-column:1/-1}.mobile-nav{display:block}body{padding-bottom:68px}.promo-banner{padding:30px 24px}.promo-banner h2{font-size:22px}}
-    @media(max-width:480px){.listings-grid{grid-template-columns:1fr}.live-divider{display:none}.logo{font-size:24px}.footer-top{grid-template-columns:1fr}}
+
+    /* ── CONTENT WRAPPER ── */
+    .content-wrap{display:flex;flex-direction:column;gap:28px;margin:20px 0;}
+
+    /* ── RESPONSIVE ── */
+    @media(max-width:1100px){.listings-grid{grid-template-columns:repeat(3,1fr)}.categories-grid{grid-template-columns:repeat(4,1fr)}.hero h1{font-size:2.4rem}}
+    @media(max-width:900px){.hero-inner{grid-template-columns:1fr}.hero-stats-panel{display:none}.promo{grid-template-columns:1fr;gap:20px}.footer-grid{grid-template-columns:1fr 1fr}}
+    @media(max-width:760px){
+      .listings-grid{grid-template-columns:repeat(2,1fr);gap:12px}
+      .categories-grid{grid-template-columns:repeat(3,1fr)}
+      .steps-grid{grid-template-columns:1fr;gap:16px}
+      .footer-grid{grid-template-columns:1fr 1fr}
+      .mobile-nav{display:block}
+      body{padding-bottom:66px}
+      .qb-timer,.qb-actions{display:none}
+    }
+    @media(max-width:480px){
+      .listings-grid{grid-template-columns:1fr}
+      .categories-grid{grid-template-columns:repeat(3,1fr)}
+      .footer-grid{grid-template-columns:1fr}
+      .hero h1{font-size:2rem}
+      .search-wrapper{max-width:100%}
+    }
   </style>
 </head>
 <body>
 
+<!-- ═══════════════════════════════════════════════
+     ACTIVE QUEUE TIMER BANNER (shown when logged in + active queue)
+════════════════════════════════════════════════════ -->
+<div id="queueBanner">
+  <div class="container">
+    <div class="qb-inner">
+      <div class="qb-icon">🎫</div>
+      <div class="qb-info">
+        <div class="qb-label"><span class="qb-pulse"></span>Your Active Queue</div>
+        <div class="qb-title" id="qbTitle">Loading your queue…</div>
+        <div class="qb-sub" id="qbSub"></div>
+      </div>
+      <div class="qb-timer">
+        <div class="qb-timer-value" id="qbTimerVal">—</div>
+        <div class="qb-timer-label">min left</div>
+      </div>
+      <div class="qb-actions">
+        <a href="dashboard.html" class="qb-btn qb-btn-primary" id="qbViewBtn">View My Queue</a>
+        <button class="qb-btn qb-btn-ghost" onclick="leaveQueue()">Leave Queue</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     TOP BAR
+════════════════════════════════════════════════════ -->
 <div class="top-bar">
   <div class="container">
-    <span>📍 <span id="currentCity">Your Location</span></span>
+    <span>🏥 Hospitals · 🏦 Banks · 💇‍♀️ Salons · 🍽️ Restaurants · 🏋️ Gyms</span>
     <div>
       <a href="about.html">About</a>
       <a href="how-it-works.html">How It Works</a>
+      <a href="hospital-signup.html">For Hospitals</a>
       <a href="login.html" id="loginLink">Login</a>
       <a href="#" id="logoutLink" style="display:none" onclick="handleLogout(event)">Logout</a>
     </div>
   </div>
 </div>
 
-<div class="live-banner">
-  <div class="container">
-    <div class="live-banner-inner">
-      <div class="live-pill"><div class="live-dot"></div>Live</div>
-      <div class="live-stats">
-        <div class="live-stat-item"><div class="live-stat-value" id="liveOpenCount">—</div><div class="live-stat-label">Businesses Open</div></div>
-        <div class="live-divider"></div>
-        <div class="live-stat-item"><div class="live-stat-value" id="livePeopleCount">—</div><div class="live-stat-label">People in Queue</div></div>
-        <div class="live-divider"></div>
-        <div class="live-stat-item"><div class="live-stat-value" id="liveAvgWait">—</div><div class="live-stat-label">Avg Wait (mins)</div></div>
-        <div class="live-divider"></div>
-        <div class="live-stat-item"><div class="live-stat-value" id="liveServedToday">—</div><div class="live-stat-label">Served Today</div></div>
-      </div>
-      <div class="live-cta">
-        <div class="live-cta-text"><strong>Skip the wait</strong><br>Join a queue from anywhere</div>
-        <a href="nearby.html" class="btn-join-now">Find Near Me →</a>
-      </div>
-    </div>
-  </div>
-  <div class="live-update-time" id="lastUpdated">Connecting…</div>
-</div>
-
+<!-- ═══════════════════════════════════════════════
+     HEADER
+════════════════════════════════════════════════════ -->
 <header>
   <div class="container">
     <div class="header-content">
       <a href="index.html" class="logo">skip<span>Qs</span></a>
       <div class="search-wrapper">
-        <input type="text" class="search-input" id="searchInput" placeholder="Find Salons, Clinics, Banks, Gyms near you…">
+        <input type="text" class="search-input" id="searchInput" placeholder="Search hospitals, clinics, salons, banks…" autocomplete="off">
         <button class="search-btn" onclick="performSearch()">Search</button>
       </div>
-      <div class="header-actions">
-        <div class="user-icon" id="userIcon" onclick="handleUserClick()" title="My Account">👤</div>
-        <button class="btn-post" onclick="window.location.href='provider-signup.html'">+ List Business</button>
+      <div class="header-right">
+        <a href="hospitals.html" class="btn-header btn-header-ghost">🏥 Hospitals</a>
+        <a href="dashboard.html" class="btn-header btn-header-ghost" id="dashBtn" style="display:none">My Queues</a>
+        <a href="signup.html" class="btn-header btn-header-ghost" id="signupBtn">Sign Up</a>
+        <a href="business-signup.html" class="btn-header btn-header-accent">+ List Business</a>
       </div>
     </div>
   </div>
 </header>
 
-<section class="categories-section">
+<!-- ═══════════════════════════════════════════════
+     HERO
+════════════════════════════════════════════════════ -->
+<section class="hero">
   <div class="container">
-    <h2 class="section-heading">Browse by Category</h2>
-    <div class="categories-grid">
-      <a href="nearby.html?type=salon"   class="category-card"><span class="category-icon">💇‍♀️</span><div class="category-name">Salons</div></a>
-      <a href="nearby.html?type=clinic"  class="category-card"><span class="category-icon">🏥</span><div class="category-name">Clinics</div></a>
-      <a href="nearby.html?type=dining"  class="category-card"><span class="category-icon">🍽️</span><div class="category-name">Restaurants</div></a>
-      <a href="nearby.html?type=gym"     class="category-card"><span class="category-icon">🏋️</span><div class="category-name">Gyms</div></a>
-      <a href="nearby.html?type=banking" class="category-card"><span class="category-icon">🏦</span><div class="category-name">Banks</div></a>
-      <a href="nearby.html?type=repair"  class="category-card"><span class="category-icon">🛠️</span><div class="category-name">Repairs</div></a>
-      <a href="nearby.html?type=gov"     class="category-card"><span class="category-icon">🏛️</span><div class="category-name">Government</div></a>
-      <a href="nearby.html?type=wash"    class="category-card"><span class="category-icon">🧼</span><div class="category-name">Car Wash</div></a>
+    <div class="hero-inner">
+      <div>
+        <div class="hero-eyebrow">Real-time Queue Management</div>
+        <h1>Skip the Queue,<br><span>Save Your Time</span></h1>
+        <p class="hero-sub">See live wait times at hospitals, clinics, salons, banks and more. Join the queue from anywhere and arrive only when it's your turn.</p>
+        <div class="hero-btns">
+          <a href="hospitals.html" class="btn-hero-primary">🏥 Find a Hospital</a>
+          <a href="nearby.html" class="btn-hero-outline">Browse All Services →</a>
+        </div>
+      </div>
+      <!-- Live Stats Panel -->
+      <div class="hero-stats-panel">
+        <div class="live-pill"><div class="live-dot"></div>Live Stats</div>
+        <div class="hero-stats-title">Right now on skipQs</div>
+        <div class="hero-stat-row">
+          <div class="hero-stat-icon">🏢</div>
+          <div class="hero-stat-info">
+            <div class="hero-stat-val" id="statOpen">—</div>
+            <div class="hero-stat-lbl">Businesses Open</div>
+          </div>
+        </div>
+        <div class="hero-stat-row">
+          <div class="hero-stat-icon">👥</div>
+          <div class="hero-stat-info">
+            <div class="hero-stat-val" id="statQueue">—</div>
+            <div class="hero-stat-lbl">People in Queue</div>
+          </div>
+        </div>
+        <div class="hero-stat-row">
+          <div class="hero-stat-icon">⏱️</div>
+          <div class="hero-stat-info">
+            <div class="hero-stat-val" id="statAvg">—</div>
+            <div class="hero-stat-lbl">Avg Wait (minutes)</div>
+          </div>
+        </div>
+        <div class="hero-stat-row">
+          <div class="hero-stat-icon">✅</div>
+          <div class="hero-stat-info">
+            <div class="hero-stat-val" id="statServed">—</div>
+            <div class="hero-stat-lbl">Served Today</div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
-<div class="container content-wrapper">
+<!-- ═══════════════════════════════════════════════
+     CATEGORIES
+════════════════════════════════════════════════════ -->
+<section class="categories-section">
+  <div class="container">
+    <h2 class="section-title">Browse by Category</h2>
+    <div class="categories-grid">
+      <a href="hospitals.html"    class="cat-card"><span class="cat-icon">🏥</span><div class="cat-name">Hospitals</div></a>
+      <a href="clinics.html"      class="cat-card"><span class="cat-icon">🩺</span><div class="cat-name">Clinics</div></a>
+      <a href="pharmacies.html"   class="cat-card"><span class="cat-icon">💊</span><div class="cat-name">Pharmacies</div></a>
+      <a href="salons.html"       class="cat-card"><span class="cat-icon">💇‍♀️</span><div class="cat-name">Salons</div></a>
+      <a href="banks.html"        class="cat-card"><span class="cat-icon">🏦</span><div class="cat-name">Banks</div></a>
+      <a href="restaurants.html"  class="cat-card"><span class="cat-icon">🍽️</span><div class="cat-name">Restaurants</div></a>
+      <a href="gyms.html"         class="cat-card"><span class="cat-icon">🏋️</span><div class="cat-name">Gyms</div></a>
+      <a href="government.html"   class="cat-card"><span class="cat-icon">🏛️</span><div class="cat-name">Government</div></a>
+      <a href="car-wash.html"     class="cat-card"><span class="cat-icon">🧼</span><div class="cat-name">Car Wash</div></a>
+      <a href="repairs.html"      class="cat-card"><span class="cat-icon">🛠️</span><div class="cat-name">Repairs</div></a>
+      <a href="nearby.html"       class="cat-card"><span class="cat-icon">🔍</span><div class="cat-name">Search All</div></a>
+      <a href="hospital-signup.html" class="cat-card"><span class="cat-icon">➕</span><div class="cat-name">Add Yours</div></a>
+    </div>
+  </div>
+</section>
 
+<!-- ═══════════════════════════════════════════════
+     MAIN LISTINGS
+════════════════════════════════════════════════════ -->
+<div class="container content-wrap">
+
+  <!-- Shortest waits -->
   <section>
     <div class="section-header">
       <h2 class="section-title">⚡ Shortest Wait Times Right Now</h2>
       <a href="nearby.html" class="view-all">View all →</a>
     </div>
-    <div class="listings-grid" id="shortestWaitList">
-      <div class="skeleton skeleton-card"></div>
-      <div class="skeleton skeleton-card"></div>
-      <div class="skeleton skeleton-card"></div>
-      <div class="skeleton skeleton-card"></div>
+    <div class="listings-grid" id="shortestList">
+      <div class="skel"></div><div class="skel"></div>
+      <div class="skel"></div><div class="skel"></div>
     </div>
   </section>
 
-  <div class="promo-banner">
-    <div>
-      <h2>Join Virtually, Save Time ⏰</h2>
-      <p>No more standing in line. Join queues from anywhere and get notified when it's your turn.</p>
+  <!-- Hospital spotlight -->
+  <section>
+    <div class="section-header">
+      <h2 class="section-title">🏥 Hospitals — Live Department Waits</h2>
+      <a href="hospitals.html" class="view-all">All hospitals →</a>
     </div>
-    <div class="promo-btn-group">
-      <a href="how-it-works.html" class="btn-white">How It Works</a>
-      <a href="provider-signup.html" class="btn-outline-white">For Businesses</a>
+    <div class="listings-grid" id="hospitalList">
+      <div class="skel"></div><div class="skel"></div>
+      <div class="skel"></div><div class="skel"></div>
+    </div>
+  </section>
+
+  <!-- Promo -->
+  <div class="promo">
+    <div>
+      <h2>Register Your Hospital or Business 🏥</h2>
+      <p>Let patients and customers see live wait times. Add all departments, update waits in seconds — free to get started.</p>
+    </div>
+    <div class="promo-btns">
+      <a href="hospital-signup.html" class="btn-white">Register Hospital</a>
+      <a href="business-signup.html" class="btn-outline-white">Other Business</a>
     </div>
   </div>
 
+  <!-- How it works -->
   <div class="how-section">
-    <div class="section-header" style="margin-bottom:0;">
+    <div class="section-header" style="margin-bottom:0">
       <h2 class="section-title">How skipQs Works</h2>
       <a href="how-it-works.html" class="view-all">Full guide →</a>
     </div>
     <div class="steps-grid">
-      <div class="step-card"><div class="step-icon">🔍</div><div class="step-title">Find a Business</div><div class="step-desc">Search by category or location. See real-time wait times before you leave home.</div></div>
-      <div class="step-card"><div class="step-icon">📱</div><div class="step-title">Join the Queue</div><div class="step-desc">Tap "Join" to secure your spot. Select services and enter your details.</div></div>
-      <div class="step-card"><div class="step-icon">🔔</div><div class="step-title">Arrive When Ready</div><div class="step-desc">Watch your position count down in real time. Show up only when it's almost your turn.</div></div>
+      <div class="step-card">
+        <span class="step-icon">🔍</span>
+        <div class="step-title">Find a Service</div>
+        <div class="step-desc">Browse hospitals, clinics, salons and more. See real-time wait times for every department before you leave home.</div>
+      </div>
+      <div class="step-card">
+        <span class="step-icon">📱</span>
+        <div class="step-title">Join the Queue</div>
+        <div class="step-desc">Tap "Join Queue" to secure your spot instantly. Your live timer starts counting down automatically.</div>
+      </div>
+      <div class="step-card">
+        <span class="step-icon">🔔</span>
+        <div class="step-title">Arrive When Ready</div>
+        <div class="step-desc">Watch your timer on this page. Show up only when it's almost your turn — no more waiting in line.</div>
+      </div>
     </div>
   </div>
 
+  <!-- More open now -->
   <section>
     <div class="section-header">
       <h2 class="section-title">🌟 Open Now Near You</h2>
       <a href="nearby.html" class="view-all">View all →</a>
     </div>
     <div class="listings-grid" id="featuredList">
-      <div class="skeleton skeleton-card"></div>
-      <div class="skeleton skeleton-card"></div>
-      <div class="skeleton skeleton-card"></div>
-      <div class="skeleton skeleton-card"></div>
+      <div class="skel"></div><div class="skel"></div>
+      <div class="skel"></div><div class="skel"></div>
     </div>
   </section>
 
 </div>
 
+<!-- ═══════════════════════════════════════════════
+     MOBILE BOTTOM NAV
+════════════════════════════════════════════════════ -->
 <nav class="mobile-nav">
   <div class="mobile-nav-grid">
     <a href="index.html"     class="mobile-nav-item active"><span>🏠</span><p>Home</p></a>
-    <a href="nearby.html"    class="mobile-nav-item"><span>🔍</span><p>Search</p></a>
+    <a href="hospitals.html" class="mobile-nav-item"><span>🏥</span><p>Hospitals</p></a>
     <a href="dashboard.html" class="mobile-nav-item"><span>📋</span><p>My Queues</p></a>
-    <a href="login.html"     class="mobile-nav-item"><span>👤</span><p>Account</p></a>
+    <a href="nearby.html"    class="mobile-nav-item"><span>🔍</span><p>Search</p></a>
+    <a href="login.html"     class="mobile-nav-item" id="mobileLoginBtn"><span>👤</span><p>Account</p></a>
   </div>
 </nav>
 
+<!-- ═══════════════════════════════════════════════
+     FOOTER
+════════════════════════════════════════════════════ -->
 <footer>
   <div class="container">
-    <div class="footer-top">
+    <div class="footer-grid">
       <div class="footer-brand">
-        <span class="logo-footer">skipQs</span>
-        <p>The smarter way to wait. Join virtual queues at your favourite local businesses and arrive only when it's your turn.</p>
+        <a href="index.html" class="footer-brand-logo">skip<span>Qs</span></a>
+        <p>The smarter way to wait. Join virtual queues at hospitals, clinics, salons and more — arrive only when it's your turn.</p>
       </div>
-      <div class="footer-col"><h4>Company</h4><ul><li><a href="about.html">About Us</a></li><li><a href="how-it-works.html">How It Works</a></li><li><a href="provider-signup.html">For Businesses</a></li></ul></div>
-      <div class="footer-col"><h4>Customers</h4><ul><li><a href="nearby.html">Find Services</a></li><li><a href="dashboard.html">My Queues</a></li><li><a href="signup.html">Create Account</a></li></ul></div>
-      <div class="footer-col"><h4>Legal</h4><ul><li><a href="terms.html">Terms of Use</a></li><li><a href="privacy.html">Privacy Policy</a></li></ul></div>
+      <div class="footer-col">
+        <h4>Healthcare</h4>
+        <a href="hospitals.html">Hospitals</a>
+        <a href="clinics.html">Clinics</a>
+        <a href="pharmacies.html">Pharmacies</a>
+        <a href="hospital-signup.html">Register Hospital</a>
+      </div>
+      <div class="footer-col">
+        <h4>Services</h4>
+        <a href="salons.html">Salons</a>
+        <a href="banks.html">Banks</a>
+        <a href="restaurants.html">Restaurants</a>
+        <a href="gyms.html">Gyms</a>
+        <a href="nearby.html">All Services</a>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <a href="about.html">About</a>
+        <a href="how-it-works.html">How It Works</a>
+        <a href="contact.html">Contact</a>
+        <a href="privacy.html">Privacy</a>
+        <a href="terms.html">Terms</a>
+      </div>
     </div>
-    <div class="footer-bottom">
-      <span>© 2026 skipQs. All rights reserved. Built for people who value their time.</span>
-      <span>Powered by OpenStreetMap · Supabase · No Google APIs</span>
+    <div class="footer-bot">
+      <span>© <span id="year"></span> skipQs · Skip the queue, save your time.</span>
+      <span>Powered by Supabase · OpenStreetMap</span>
     </div>
   </div>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="supabase-config.js"></script>
-
 <script>
-  /* === LIVE BANNER (Supabase Realtime) === */
-  async function refreshBanner() {
-    const { data: providers } = await sb.from('providers').select('id,is_open,capacity');
-    if (!providers) return;
+  document.getElementById('year').textContent = new Date().getFullYear();
 
-    const openProviders = providers.filter(p => p.is_open);
-    animateStat('liveOpenCount', openProviders.length);
+  // ── helpers ──
+  function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  const ICONS = {Hospital:'🏥',Clinic:'🩺',Pharmacy:'💊',Salon:'💇‍♀️',Barber:'💈',Bank:'🏦',Restaurant:'🍽️',Gym:'🏋️',CarWash:'🧼',Government:'🏛️',Repair:'🛠️'};
 
-    if (!openProviders.length) { animateStat('livePeopleCount',0); animateStat('liveAvgWait',0); return; }
+  // ──────────────────────────────────────────────
+  // QUEUE TIMER BANNER
+  // ──────────────────────────────────────────────
+  let timerInterval = null;
+  let activeQueueEntry = null;
 
-    const openIds = openProviders.map(p => p.id);
-    const { data: qRows } = await sb.from('queues').select('provider_id,service_duration').in('status',['waiting','serving']);
-    const active = (qRows||[]).filter(q => openIds.includes(q.provider_id));
-    let totalDur = 0, durCount = 0;
-    active.forEach(q => { const m=parseInt(q.service_duration,10); if(!isNaN(m)&&m>0){totalDur+=m;durCount++;} });
-    animateStat('livePeopleCount', active.length);
-    animateStat('liveAvgWait', durCount ? Math.ceil(totalDur/durCount) : 0);
+  async function checkActiveQueue(userId) {
+    // Fetch user's active queue (waiting or serving)
+    const { data: qRows } = await sb.from('queues')
+      .select('id, status, service_duration, department_id, provider_id, created_at')
+      .eq('user_id', userId)
+      .in('status', ['waiting', 'serving'])
+      .limit(1);
 
-    const today = new Date().toISOString().split('T')[0];
-    const { count } = await sb.from('queues').select('id',{count:'exact',head:true}).eq('status','completed').eq('completed_date',today);
-    animateStat('liveServedToday', count||0);
+    if (!qRows || !qRows.length) {
+      hideBanner();
+      return;
+    }
 
-    document.getElementById('lastUpdated').textContent = 'Updated ' + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-  }
+    const q = qRows[0];
+    activeQueueEntry = q;
 
-  function animateStat(id, value) {
-    const el = document.getElementById(id);
-    if (!el || el.textContent === String(value)) return;
-    el.style.transform='scale(1.18)'; el.style.color='#23e5db';
-    el.textContent = value;
-    setTimeout(()=>{ el.style.transform=''; el.style.color=''; }, 400);
-  }
+    // Fetch provider name
+    const { data: prov } = await sb.from('providers').select('business_name, id, is_hospital, category').eq('id', q.provider_id).maybeSingle();
+    // Fetch department if linked
+    let deptName = '';
+    let waitMins = q.service_duration || 15;
 
-  // Supabase realtime subscription
-  function startLiveBanner() {
-    refreshBanner();
-    sb.channel('index-live')
-      .on('postgres_changes',{event:'*',schema:'public',table:'queues'},()=>refreshBanner())
-      .on('postgres_changes',{event:'UPDATE',schema:'public',table:'providers'},()=>refreshBanner())
+    if (q.department_id) {
+      const { data: dept } = await sb.from('departments').select('name, wait_minutes').eq('id', q.department_id).maybeSingle();
+      if (dept) {
+        deptName = dept.name;
+        waitMins = dept.wait_minutes || waitMins;
+      }
+    }
+
+    const bizName = prov ? prov.business_name : 'Your Queue';
+    const isHosp = prov && (prov.is_hospital || prov.category === 'Hospital');
+    const detailHref = prov ? (isHosp ? `hospital-detail.html?id=${prov.id}` : `business-detail.html?id=${prov.id}`) : 'dashboard.html';
+
+    document.getElementById('qbTitle').textContent = bizName + (deptName ? ' — ' + deptName : '');
+    document.getElementById('qbSub').textContent = q.status === 'serving' ? '🔔 You are being served now!' : 'You are in the queue';
+    document.getElementById('qbViewBtn').href = detailHref;
+
+    // Start timer countdown from waitMins
+    startTimer(waitMins);
+    document.getElementById('queueBanner').style.display = 'block';
+
+    // Realtime: re-check if department wait_minutes changes
+    if (q.department_id) {
+      sb.channel('banner-dept-' + q.department_id)
+        .on('postgres_changes', {event:'UPDATE', schema:'public', table:'departments', filter:`id=eq.${q.department_id}`}, async (payload) => {
+          const newWait = payload.new.wait_minutes || 0;
+          resetTimer(newWait);
+        })
+        .subscribe();
+    }
+
+    // Realtime: hide banner if queue entry is completed / cancelled
+    sb.channel('banner-queue-' + q.id)
+      .on('postgres_changes', {event:'UPDATE', schema:'public', table:'queues', filter:`id=eq.${q.id}`}, async (payload) => {
+        if (['completed','cancelled','no_show'].includes(payload.new.status)) {
+          hideBanner();
+        }
+      })
       .subscribe();
   }
 
-  /* === LISTINGS === */
-  async function loadListings() {
-    const { data: providers } = await sb.from('providers').select('id,business_name,address,category,capacity,is_open').eq('is_open',true).limit(12);
-    if (!providers?.length) { showEmptyState(); return; }
-
-    const docs = await Promise.all(providers.map(async p => {
-      const { data: qRows } = await sb.from('queues').select('service_duration').eq('provider_id',p.id).in('status',['waiting','serving']);
-      let total=0;
-      (qRows||[]).forEach(q=>{ const m=parseInt(q.service_duration,10); total+=((!isNaN(m)&&m>0)?m:15); });
-      const cap = Math.max(1,parseInt(p.capacity)||1);
-      return { ...p, waitMins: qRows?.length ? Math.ceil(total/cap) : 0, peopleCount: qRows?.length||0 };
-    }));
-
-    docs.sort((a,b) => a.waitMins - b.waitMins);
-    const render = (list, id) => { document.getElementById(id).innerHTML = list.length ? list.map(card).join('') : emptyHTML(); };
-    render(docs.slice(0,4), 'shortestWaitList');
-    render(docs.slice(4,8).length ? docs.slice(4,8) : docs.slice(0,4), 'featuredList');
+  function startTimer(minutes) {
+    if (timerInterval) clearInterval(timerInterval);
+    let secs = Math.max(0, Math.round(minutes * 60));
+    renderTimer(secs);
+    timerInterval = setInterval(() => {
+      if (secs > 0) secs--;
+      renderTimer(secs);
+    }, 1000);
   }
 
-  const EMOJI = {Salon:'💇‍♀️',Barber:'💈',Clinic:'🏥',Gym:'🏋️',Bank:'🏦',Dining:'🍽️',Restaurant:'🍽️',Repair:'🛠️',Wash:'🧼',Government:'🏛️'};
+  function resetTimer(minutes) {
+    if (timerInterval) clearInterval(timerInterval);
+    startTimer(minutes);
+    // Update the displayed value immediately
+    document.getElementById('qbTimerVal').textContent = String(minutes);
+  }
 
-  function card(p) {
-    const emoji = EMOJI[p.category] || '🏪';
-    return `<a href="join-queue.html?id=${p.id}" class="listing-card">
-      <div class="listing-image">
-        <span style="font-size:50px;">${emoji}</span>
-        <div class="wait-badge">${p.waitMins} min wait</div>
-        <div class="open-badge"><div class="open-dot"></div> Open</div>
+  function renderTimer(secs) {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    document.getElementById('qbTimerVal').textContent = m > 0 ? String(m) : (s > 0 ? '<1' : '0');
+  }
+
+  function hideBanner() {
+    document.getElementById('queueBanner').style.display = 'none';
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+    activeQueueEntry = null;
+  }
+
+  async function leaveQueue() {
+    if (!activeQueueEntry) return;
+    if (!confirm('Are you sure you want to leave this queue?')) return;
+    await sb.from('queues').update({ status: 'cancelled' }).eq('id', activeQueueEntry.id);
+    hideBanner();
+  }
+
+  // ──────────────────────────────────────────────
+  // LIVE STATS
+  // ──────────────────────────────────────────────
+  async function refreshStats() {
+    const { data: providers } = await sb.from('providers').select('id, is_open');
+    if (!providers) return;
+    const open = providers.filter(p => p.is_open);
+    animStat('statOpen', open.length);
+
+    const openIds = open.map(p => p.id);
+    if (!openIds.length) { animStat('statQueue',0); animStat('statAvg',0); return; }
+
+    const { data: depts } = await sb.from('departments').select('wait_minutes').in('provider_id', openIds).eq('is_open', true);
+    if (depts && depts.length) {
+      const waits = depts.map(d => d.wait_minutes || 0);
+      const avg = Math.round(waits.reduce((a,b)=>a+b,0) / waits.length);
+      animStat('statAvg', avg);
+    }
+
+    const { count: qCount } = await sb.from('queues').select('id',{count:'exact',head:true}).in('status',['waiting','serving']);
+    animStat('statQueue', qCount || 0);
+
+    const today = new Date().toISOString().split('T')[0];
+    const { count: served } = await sb.from('queues').select('id',{count:'exact',head:true}).eq('status','completed').gte('created_at', today + 'T00:00:00');
+    animStat('statServed', served || 0);
+  }
+
+  function animStat(id, val) {
+    const el = document.getElementById(id);
+    if (!el || el.textContent === String(val)) return;
+    el.style.transform='scale(1.2)'; el.style.color='var(--accent2)';
+    el.textContent = val;
+    setTimeout(()=>{ el.style.transform=''; el.style.color=''; el.style.transition='all .3s'; }, 350);
+  }
+
+  // ──────────────────────────────────────────────
+  // LISTINGS
+  // ──────────────────────────────────────────────
+  async function loadListings() {
+    // Shortest waits: all open providers, pick those with lowest dept wait
+    const { data: provs } = await sb.from('providers').select('id,business_name,address,category,is_open,is_hospital').eq('is_open',true).limit(20);
+    if (!provs?.length) { emptyGrid('shortestList'); emptyGrid('featuredList'); emptyGrid('hospitalList'); return; }
+
+    const ids = provs.map(p => p.id);
+    const { data: depts } = await sb.from('departments').select('provider_id,wait_minutes,is_open').in('provider_id',ids).eq('is_open',true);
+    const byProv = {};
+    (depts||[]).forEach(d => {
+      if (!byProv[d.provider_id]) byProv[d.provider_id] = [];
+      byProv[d.provider_id].push(d);
+    });
+
+    const enriched = provs.map(p => {
+      const pdepts = byProv[p.id] || [];
+      const minWait = pdepts.length ? Math.min(...pdepts.map(d=>d.wait_minutes||0)) : 0;
+      return { ...p, minWait, deptCount: pdepts.length };
+    });
+
+    enriched.sort((a,b) => a.minWait - b.minWait);
+
+    const hospitals = enriched.filter(p => p.is_hospital || p.category === 'Hospital');
+    const others = enriched.filter(p => !p.is_hospital && p.category !== 'Hospital');
+
+    renderGrid('shortestList', enriched.slice(0,4));
+    renderGrid('hospitalList', hospitals.slice(0,4).length ? hospitals.slice(0,4) : enriched.slice(0,4));
+    renderGrid('featuredList', others.slice(0,4).length ? others.slice(0,4) : enriched.slice(0,4));
+  }
+
+  function renderGrid(id, items) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = items.length ? items.map(listingCard).join('') : `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--text-muted);">Nothing here yet — <a href="business-signup.html" style="color:var(--primary);font-weight:700;">add your business</a></div>`;
+  }
+
+  function emptyGrid(id) {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--text-muted);">No open businesses yet. <a href="business-signup.html" style="color:var(--primary);font-weight:700;">Be the first →</a></div>`;
+  }
+
+  function listingCard(p) {
+    const icon = ICONS[p.category] || (p.is_hospital ? '🏥' : '🏪');
+    const wait = p.minWait;
+    const badgeCls = wait > 60 ? 'high' : wait > 30 ? 'med' : '';
+    const detailPage = (p.is_hospital || p.category === 'Hospital') ? 'hospital-detail.html' : 'business-detail.html';
+    return `
+    <a href="${detailPage}?id=${esc(p.id)}" class="listing-card">
+      <div class="listing-img">
+        <span>${icon}</span>
+        <div class="wait-badge ${badgeCls}">${wait} min wait</div>
+        <div class="open-badge"><div class="open-dot"></div>Open</div>
       </div>
       <div class="listing-info">
-        <div class="listing-title">${esc(p.business_name||'Business')}</div>
-        <div class="listing-wait">${p.waitMins} min</div>
-        <div class="listing-location">📍 ${esc(p.address||'Location not set')}</div>
+        <div class="listing-name">${esc(p.business_name||'Business')}</div>
+        <div class="listing-wait">${wait} <span style="font-size:12px;font-weight:500;color:var(--text-muted);">min wait</span></div>
+        <div class="listing-addr">📍 ${esc(p.address||'Location not set')}</div>
         <div class="listing-meta">
-          <div class="listing-category">${esc(p.category||'Service')}</div>
-          <div class="listing-people">👥 ${p.peopleCount} in line</div>
+          <div class="listing-cat">${esc(p.category||'Service')}</div>
+          <div class="listing-queue">${p.deptCount} ${p.deptCount===1?'dept':'depts'}</div>
         </div>
       </div>
     </a>`;
   }
 
-  function emptyHTML() {
-    return `<div class="empty-state"><div class="empty-state-icon">🏪</div><h3>No open businesses yet</h3><p>Be the first to list your business.</p><a href="provider-signup.html">Register your business →</a></div>`;
-  }
-  function showEmptyState() { document.getElementById('shortestWaitList').innerHTML = emptyHTML(); document.getElementById('featuredList').innerHTML = emptyHTML(); }
-  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-  /* === SEARCH === */
+  // ──────────────────────────────────────────────
+  // SEARCH
+  // ──────────────────────────────────────────────
   function performSearch() {
     const q = document.getElementById('searchInput').value.trim();
-    window.location.href = q ? `nearby.html?q=${encodeURIComponent(q)}` : 'nearby.html';
+    if (q) window.location.href = 'nearby.html?q=' + encodeURIComponent(q);
+    else window.location.href = 'nearby.html';
   }
   document.getElementById('searchInput').addEventListener('keypress', e => { if(e.key==='Enter') performSearch(); });
 
-  /* === AUTH === */
-  sb.auth.getSession().then(({ data: { session } }) => {
+  // ──────────────────────────────────────────────
+  // AUTH
+  // ──────────────────────────────────────────────
+  async function handleLogout(e) {
+    e.preventDefault();
+    await sb.auth.signOut();
+    window.location.reload();
+  }
+
+  // ──────────────────────────────────────────────
+  // INIT
+  // ──────────────────────────────────────────────
+  (async function init() {
+    // Auth state
+    const { data: { session } } = await sb.auth.getSession();
     const loggedIn = !!session;
     document.getElementById('loginLink').style.display  = loggedIn ? 'none' : 'inline';
     document.getElementById('logoutLink').style.display = loggedIn ? 'inline' : 'none';
-    if (loggedIn && session.user.email) {
-      document.getElementById('userIcon').textContent = session.user.email.charAt(0).toUpperCase();
+    document.getElementById('signupBtn').style.display  = loggedIn ? 'none' : 'inline-block';
+    document.getElementById('dashBtn').style.display    = loggedIn ? 'inline-block' : 'none';
+    if (loggedIn) {
+      const mobileLogin = document.getElementById('mobileLoginBtn');
+      if (mobileLogin) { mobileLogin.href = 'dashboard.html'; mobileLogin.querySelector('span').textContent = '📋'; mobileLogin.querySelector('p').textContent = 'Queues'; }
     }
-  });
 
-  function handleLogout(e) { e.preventDefault(); sb.auth.signOut().then(()=>window.location.reload()); }
-  function handleUserClick() {
-    sb.auth.getSession().then(({data:{session}}) => {
-      window.location.href = session ? 'dashboard.html' : 'login.html';
-    });
-  }
+    // Load timer banner for logged-in users
+    if (loggedIn && session.user) {
+      await checkActiveQueue(session.user.id);
+    }
 
-  /* === INIT === */
-  window.addEventListener('DOMContentLoaded', () => { startLiveBanner(); loadListings(); });
+    // Load listings + stats in parallel
+    loadListings();
+    refreshStats();
+
+    // Realtime stats refresh
+    sb.channel('index-realtime')
+      .on('postgres_changes',{event:'*',schema:'public',table:'queues'},()=>refreshStats())
+      .on('postgres_changes',{event:'UPDATE',schema:'public',table:'providers'},()=>{ refreshStats(); loadListings(); })
+      .on('postgres_changes',{event:'UPDATE',schema:'public',table:'departments'},()=>refreshStats())
+      .subscribe();
+  })();
 </script>
 </body>
 </html>

@@ -6,51 +6,115 @@
   <title>My Queues | skipQs</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    :root{--primary:#002f34;--accent:#23e5db;--bg:#f7f8f8;--border:#e2e8f0;}
+    :root{--primary:#002f34;--accent:#23e5db;--accent2:#ffce32;--bg:#f7f8f8;--border:#e2e8f0;--success:#059669;--danger:#dc2626;--warning:#d97706;--text-muted:#406367;}
     *{box-sizing:border-box;margin:0;padding:0;}
-    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--primary);}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--primary);line-height:1.55;}
+    /* ── NAV ── */
     .nav-bar{background:var(--primary);padding:.9rem 1.5rem;display:flex;justify-content:space-between;align-items:center;}
-    .nav-logo{color:var(--accent);font-size:1.5rem;font-weight:800;text-decoration:none;}
-    .nav-inner{display:flex;gap:1rem;align-items:center;}
-    .nav-links a{color:rgba(255,255,255,.85);text-decoration:none;font-size:.85rem;font-weight:500;}
-    .nav-links a.btn-logout{background:rgba(255,255,255,.15);padding:.4rem .9rem;border-radius:6px;}
-    .page-wrap{max-width:740px;margin:2rem auto;padding:0 1rem 4rem;}
-    .page-header{margin-bottom:1.5rem;}
-    .page-header h1{font-size:1.8rem;font-weight:800;}
-    .tabs{display:flex;gap:.5rem;margin-bottom:1.5rem;}
-    .tab-btn{padding:.6rem 1.4rem;border-radius:2rem;border:1.5px solid var(--border);background:white;font-family:inherit;font-size:.9rem;font-weight:600;cursor:pointer;color:#64748b;transition:.2s;}
+    .nav-logo{color:white;font-size:1.5rem;font-weight:800;text-decoration:none;letter-spacing:-1px;}
+    .nav-logo span{color:var(--accent);}
+    .nav-right{display:flex;gap:.8rem;align-items:center;}
+    .nav-link{color:rgba(255,255,255,.8);text-decoration:none;font-size:.85rem;font-weight:600;}
+    .nav-link:hover{color:white;}
+    .nav-btn{background:rgba(255,255,255,.15);color:white;border:none;padding:.45rem .9rem;border-radius:8px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit;text-decoration:none;}
+    .nav-btn:hover{background:rgba(255,255,255,.25);}
+    /* ── LAYOUT ── */
+    .page-wrap{max-width:780px;margin:2rem auto;padding:0 1rem 5rem;}
+    /* ── ACTIVE QUEUE CARD ── */
+    .active-queue-card{
+      background:linear-gradient(135deg,#002f34 0%,#005959 100%);
+      color:white;border-radius:18px;padding:1.6rem;margin-bottom:1.4rem;
+      display:flex;align-items:center;gap:1.2rem;flex-wrap:wrap;
+      border:2px solid rgba(35,229,219,.3);
+    }
+    .aqc-icon{font-size:2.4rem;flex-shrink:0;}
+    .aqc-info{flex:1;min-width:180px;}
+    .aqc-label{font-size:.65rem;text-transform:uppercase;letter-spacing:.6px;font-weight:700;color:rgba(255,255,255,.5);margin-bottom:.2rem;}
+    .aqc-title{font-size:1.15rem;font-weight:800;letter-spacing:-.3px;margin-bottom:.1rem;}
+    .aqc-sub{font-size:.82rem;color:rgba(255,255,255,.65);}
+    .aqc-timer{text-align:center;padding:.6rem 1.2rem;border-left:1px solid rgba(255,255,255,.12);}
+    .aqc-timer-val{font-size:2.6rem;font-weight:800;color:var(--accent);line-height:1;letter-spacing:-1px;font-variant-numeric:tabular-nums;}
+    .aqc-timer-lbl{font-size:.6rem;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.45);font-weight:700;margin-top:.1rem;}
+    .aqc-actions{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;}
+    .aqc-btn{padding:.55rem 1rem;border-radius:8px;font-size:.82rem;font-weight:700;cursor:pointer;text-decoration:none;border:none;font-family:inherit;display:inline-block;}
+    .aqc-btn-primary{background:var(--accent);color:var(--primary);}
+    .aqc-btn-primary:hover{background:#1bcabf;}
+    .aqc-btn-ghost{background:rgba(255,255,255,.12);color:white;}
+    .aqc-btn-ghost:hover{background:rgba(255,255,255,.2);}
+    .live-pill{display:inline-flex;align-items:center;gap:.35rem;background:rgba(16,185,129,.85);padding:3px 10px;border-radius:50px;font-size:.65rem;font-weight:800;letter-spacing:.4px;text-transform:uppercase;margin-bottom:.5rem;}
+    .live-dot{width:6px;height:6px;border-radius:50%;background:white;animation:pulse 1.4s ease-in-out infinite;}
+    @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.7)}}
+    /* ── SECTION HEADER ── */
+    .page-header{margin-bottom:1.4rem;}
+    .page-header h1{font-size:1.8rem;font-weight:800;letter-spacing:-.5px;}
+    .page-header p{color:var(--text-muted);font-size:.92rem;margin-top:.3rem;}
+    /* ── TABS ── */
+    .tabs{display:flex;gap:.5rem;margin-bottom:1.4rem;}
+    .tab-btn{padding:.55rem 1.4rem;border-radius:2rem;border:1.5px solid var(--border);background:white;font-family:inherit;font-size:.88rem;font-weight:600;cursor:pointer;color:var(--text-muted);transition:.2s;}
     .tab-btn.active{background:var(--primary);color:white;border-color:var(--primary);}
-    .loading-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4rem 2rem;color:#94a3b8;}
-    .spinner-ring{width:36px;height:36px;border:4px solid #e2e8f0;border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;margin-bottom:1rem;}
+    /* ── LOADING ── */
+    .loading-box{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4rem 2rem;color:var(--text-muted);}
+    .spinner{width:34px;height:34px;border:4px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;margin-bottom:1rem;}
     @keyframes spin{to{transform:rotate(360deg);}}
-    .visit-card{background:white;border-radius:1rem;border:1px solid var(--border);padding:1.2rem 1.5rem;margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;}
-    .visit-biz{font-weight:700;font-size:1rem;}
-    .visit-svc{font-size:.85rem;color:#64748b;margin-top:.2rem;}
-    .visit-meta{font-size:.75rem;color:#94a3b8;margin-top:.4rem;}
-    .visit-actions{margin-top:.6rem;}
-    .btn-track{display:inline-block;padding:.45rem 1rem;background:var(--primary);color:white;border-radius:2rem;font-size:.8rem;font-weight:700;text-decoration:none;}
-    .status-badge{padding:.3rem .9rem;border-radius:2rem;font-size:.75rem;font-weight:700;}
+    /* ── QUEUE CARDS ── */
+    .queue-card{
+      background:white;border-radius:14px;border:1px solid var(--border);
+      padding:1.2rem 1.4rem;margin-bottom:1rem;
+      display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;
+      transition:.2s;
+    }
+    .queue-card:hover{border-color:var(--accent);box-shadow:0 4px 16px rgba(0,0,0,.06);}
+    .qc-left{flex:1;min-width:0;}
+    .qc-biz{font-weight:700;font-size:1rem;margin-bottom:.15rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .qc-dept{font-size:.82rem;color:var(--text-muted);margin-bottom:.3rem;}
+    .qc-date{font-size:.72rem;color:rgba(0,0,0,.35);margin-bottom:.6rem;}
+    .qc-actions{display:flex;gap:.5rem;flex-wrap:wrap;}
+    .qc-btn{display:inline-block;padding:.4rem .85rem;border-radius:8px;font-size:.78rem;font-weight:700;text-decoration:none;cursor:pointer;border:none;font-family:inherit;}
+    .qc-btn-primary{background:var(--primary);color:white;}
+    .qc-btn-primary:hover{background:#001f24;}
+    .qc-btn-danger{background:#fee2e2;color:#b91c1c;}
+    .qc-btn-danger:hover{background:#fecaca;}
+    .qc-right{display:flex;flex-direction:column;align-items:flex-end;gap:.5rem;flex-shrink:0;}
+    .status-badge{padding:.3rem .85rem;border-radius:2rem;font-size:.72rem;font-weight:700;white-space:nowrap;}
     .badge-waiting{background:#fef9c3;color:#854d0e;}
     .badge-serving{background:#dcfce7;color:#15803d;}
-    .badge-completed{background:#e2e8f0;color:#475569;}
-    .empty-box{text-align:center;padding:4rem 2rem;color:#94a3b8;}
-    .empty-box .icon{font-size:3rem;margin-bottom:1rem;}
-    .empty-box h2{font-size:1.1rem;color:#64748b;}
+    .badge-completed{background:var(--border);color:#475569;}
+    .badge-cancelled{background:#fee2e2;color:#b91c1c;}
+    .qc-wait{text-align:right;}
+    .qc-wait-val{font-size:1.6rem;font-weight:800;color:var(--primary);line-height:1;}
+    .qc-wait-lbl{font-size:.62rem;text-transform:uppercase;letter-spacing:.4px;color:var(--text-muted);font-weight:700;}
+    /* ── EMPTY ── */
+    .empty-box{text-align:center;padding:4rem 2rem;color:var(--text-muted);}
+    .empty-icon{font-size:3rem;margin-bottom:.8rem;}
+    .empty-box h2{font-size:1.1rem;color:var(--primary);margin-bottom:.4rem;}
+    .empty-box a{display:inline-block;margin-top:1rem;padding:.65rem 1.4rem;background:var(--primary);color:white;border-radius:10px;font-weight:700;text-decoration:none;font-size:.9rem;}
+    /* ── TOAST ── */
+    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--primary);color:white;padding:.9rem 1.4rem;border-radius:50px;font-weight:600;font-size:.9rem;z-index:2000;transition:.3s;opacity:0;}
+    .toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+    .toast.success{background:var(--success);}
+    .toast.error{background:var(--danger);}
   </style>
 </head>
 <body>
 
 <header class="nav-bar">
-  <a href="index.html" class="nav-logo">skipQs</a>
-  <div class="nav-inner">
-    <div class="nav-links">
-      <a href="#" class="btn-logout" onclick="doLogout()">Log out</a>
-    </div>
+  <a href="index.html" class="nav-logo">skip<span>Qs</span></a>
+  <div class="nav-right">
+    <a href="nearby.html" class="nav-link">Find Services</a>
+    <a href="hospitals.html" class="nav-link">Hospitals</a>
+    <button class="nav-btn" onclick="doLogout()">Log out</button>
   </div>
 </header>
 
 <div class="page-wrap">
-  <div class="page-header"><h1>My Queues</h1></div>
+
+  <!-- ── ACTIVE QUEUE SECTION ── -->
+  <div id="activeQueueArea"></div>
+
+  <div class="page-header">
+    <h1>My Queues</h1>
+    <p>Track your position and estimated wait time.</p>
+  </div>
 
   <div class="tabs">
     <button class="tab-btn active" onclick="switchTab('active',this)">Active</button>
@@ -58,65 +122,229 @@
   </div>
 
   <div id="listArea">
-    <div class="loading-state"><div class="spinner-ring"></div><p>Loading…</p></div>
+    <div class="loading-box"><div class="spinner"></div><p>Loading your queues…</p></div>
   </div>
+
 </div>
+
+<div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="supabase-config.js"></script>
-
 <script>
   let currentTab = 'active';
+  let timerInterval = null;
+  let currentUserId = null;
 
-  sb.auth.getSession().then(({ data: { session } }) => {
+  function toast(msg, type='success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.className = 'toast show ' + type;
+    setTimeout(()=>{ t.className='toast'; }, 2500);
+  }
+
+  function esc(s){ const d=document.createElement('div'); d.textContent=String(s||''); return d.innerHTML; }
+
+  // ── INIT ──
+  sb.auth.getSession().then(async ({ data: { session } }) => {
     if (!session) { window.location.href = 'login.html'; return; }
-    loadTab(currentTab, session.user.id);
+    currentUserId = session.user.id;
+    await loadActiveQueueBanner();
+    loadTab('active');
   });
 
+  // ── ACTIVE QUEUE BANNER WITH TIMER ──
+  async function loadActiveQueueBanner() {
+    const area = document.getElementById('activeQueueArea');
+    const { data: rows } = await sb.from('queues')
+      .select('id,status,provider_id,department_id,service_duration,joined_at')
+      .eq('user_id', currentUserId)
+      .in('status',['waiting','serving'])
+      .limit(1);
+
+    if (!rows || !rows.length) { area.innerHTML=''; return; }
+    const q = rows[0];
+
+    // Fetch provider
+    const { data: prov } = await sb.from('providers').select('business_name,id,is_hospital,category').eq('id',q.provider_id).maybeSingle();
+    // Fetch department
+    let deptName = '', waitMins = q.service_duration || 15;
+    if (q.department_id) {
+      const { data: dept } = await sb.from('departments').select('name,wait_minutes').eq('id',q.department_id).maybeSingle();
+      if (dept) { deptName = dept.name; waitMins = dept.wait_minutes || waitMins; }
+    }
+
+    const bizName = prov ? prov.business_name : 'Your Queue';
+    const isHosp = prov && (prov.is_hospital || prov.category === 'Hospital');
+    const detailPage = prov ? (isHosp ? `hospital-detail.html?id=${prov.id}` : `business-detail.html?id=${prov.id}`) : '#';
+
+    area.innerHTML = `
+      <div class="active-queue-card" id="aqCard">
+        <div class="aqc-icon">🎫</div>
+        <div class="aqc-info">
+          <div class="live-pill"><div class="live-dot"></div>Active</div>
+          <div class="aqc-label">You are in the queue</div>
+          <div class="aqc-title">${esc(bizName)}${deptName ? ' — ' + esc(deptName) : ''}</div>
+          <div class="aqc-sub" id="aqStatus">${q.status === 'serving' ? '🔔 You are being served now!' : 'Waiting for your turn…'}</div>
+        </div>
+        <div class="aqc-timer">
+          <div class="aqc-timer-val" id="aqTimerVal">—</div>
+          <div class="aqc-timer-lbl">min left</div>
+        </div>
+        <div class="aqc-actions">
+          <a href="${detailPage}" class="aqc-btn aqc-btn-primary">View Department</a>
+          <button class="aqc-btn aqc-btn-ghost" onclick="cancelQueue('${q.id}')">Leave Queue</button>
+        </div>
+      </div>`;
+
+    startTimer(waitMins, q.joined_at);
+
+    // Realtime updates
+    if (q.department_id) {
+      sb.channel('dash-dept-' + q.department_id)
+        .on('postgres_changes',{event:'UPDATE',schema:'public',table:'departments',filter:`id=eq.${q.department_id}`}, payload => {
+          const newWait = payload.new.wait_minutes || 0;
+          resetTimer(newWait, q.joined_at);
+        })
+        .subscribe();
+    }
+    sb.channel('dash-queue-' + q.id)
+      .on('postgres_changes',{event:'UPDATE',schema:'public',table:'queues',filter:`id=eq.${q.id}`}, async payload => {
+        if (['completed','cancelled','no_show'].includes(payload.new.status)) {
+          area.innerHTML = '';
+          if (timerInterval) clearInterval(timerInterval);
+          loadTab(currentTab);
+        } else if (payload.new.status === 'serving') {
+          const el = document.getElementById('aqStatus');
+          if (el) el.textContent = '🔔 You are being served now!';
+        }
+      })
+      .subscribe();
+  }
+
+  function startTimer(minutes, joinedAt) {
+    if (timerInterval) clearInterval(timerInterval);
+    // Calculate how many seconds have already elapsed since joining
+    let elapsed = 0;
+    if (joinedAt) {
+      elapsed = Math.floor((Date.now() - new Date(joinedAt).getTime()) / 1000);
+    }
+    let remaining = Math.max(0, Math.round(minutes * 60) - elapsed);
+    renderTimerVal(remaining);
+    timerInterval = setInterval(() => {
+      if (remaining > 0) remaining--;
+      renderTimerVal(remaining);
+    }, 1000);
+  }
+
+  function resetTimer(minutes, joinedAt) {
+    startTimer(minutes, joinedAt);
+  }
+
+  function renderTimerVal(secs) {
+    const el = document.getElementById('aqTimerVal');
+    if (!el) return;
+    const m = Math.floor(secs / 60);
+    el.textContent = m > 0 ? String(m) : (secs > 0 ? '<1' : '✓');
+  }
+
+  async function cancelQueue(id) {
+    if (!confirm('Leave this queue?')) return;
+    const { error } = await sb.from('queues').update({ status:'cancelled' }).eq('id', id);
+    if (error) { toast('Could not leave queue', 'error'); return; }
+    toast('You have left the queue');
+    document.getElementById('activeQueueArea').innerHTML = '';
+    if (timerInterval) clearInterval(timerInterval);
+    loadTab(currentTab);
+  }
+
+  // ── TABS ──
   function switchTab(tab, el) {
     currentTab = tab;
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     el.classList.add('active');
-    sb.auth.getSession().then(({ data: { session } }) => loadTab(tab, session.user.id));
+    loadTab(tab);
   }
 
-  async function loadTab(tab, uid) {
+  // ── LOAD QUEUE LIST ──
+  async function loadTab(tab) {
     const list = document.getElementById('listArea');
-    list.innerHTML = '<div class="loading-state"><div class="spinner-ring"></div><p>Loading…</p></div>';
+    list.innerHTML = '<div class="loading-box"><div class="spinner"></div><p>Loading…</p></div>';
 
-    let query = sb.from('queues').select('*').eq('user_id', uid);
-    if (tab === 'active')  query = query.in('status', ['waiting','serving']).order('joined_at', { ascending: false });
-    else                   query = query.eq('status','completed').order('completed_at', { ascending: false }).limit(50);
+    let query = sb.from('queues')
+      .select('id,status,provider_id,department_id,service_duration,joined_at,created_at')
+      .eq('user_id', currentUserId);
 
-    const { data, error } = await query;
-
-    if (error) { list.innerHTML = `<div class="empty-box"><div class="icon">⚠️</div><h2>${error.message}</h2></div>`; return; }
-    if (!data.length) {
-      list.innerHTML = `<div class="empty-box">
-        <div class="icon">${tab==='active'?'📋':'🕐'}</div>
-        <h2>${tab==='active'?'No active queues':'No history yet'}</h2>
-      </div>`; return;
+    if (tab === 'active') {
+      query = query.in('status',['waiting','serving']).order('created_at',{ascending:false});
+    } else {
+      query = query.in('status',['completed','cancelled','no_show']).order('created_at',{ascending:false}).limit(50);
     }
 
-    list.innerHTML = data.map(d => {
-      const date  = d.joined_at ? new Date(d.joined_at).toLocaleString([], {dateStyle:'medium',timeStyle:'short'}) : '';
-      const badge = d.status==='waiting' ? 'badge-waiting' : d.status==='serving' ? 'badge-serving' : 'badge-completed';
-      const label = d.status.charAt(0).toUpperCase() + d.status.slice(1);
-      const track = d.status !== 'completed' ? `<div class="visit-actions"><a href="join-queue.html?id=${d.provider_id}" class="btn-track">Track Position →</a></div>` : '';
-      return `<div class="visit-card">
-        <div>
-          <div class="visit-biz">${esc(d.business_name||'Service Provider')}</div>
-          <div class="visit-svc">${esc(d.selected_service||'Services not listed')}</div>
-          <div class="visit-meta">${date}</div>
-          ${track}
-        </div>
-        <span class="status-badge ${badge}">${label}</span>
-      </div>`;
+    const { data, error } = await query;
+    if (error) { list.innerHTML=`<div class="empty-box"><div class="empty-icon">⚠️</div><h2>${esc(error.message)}</h2></div>`; return; }
+    if (!data || !data.length) {
+      list.innerHTML = `
+        <div class="empty-box">
+          <div class="empty-icon">${tab==='active'?'📋':'🕐'}</div>
+          <h2>${tab==='active'?'No active queues':'No history yet'}</h2>
+          <p>${tab==='active'?'Join a queue and it will appear here.':'Your completed queues will show here.'}</p>
+          <a href="nearby.html">Find Services →</a>
+        </div>`; return;
+    }
+
+    // Enrich with provider + department names
+    const provIds = [...new Set(data.map(d=>d.provider_id).filter(Boolean))];
+    const deptIds = [...new Set(data.map(d=>d.department_id).filter(Boolean))];
+
+    const [provRes, deptRes] = await Promise.all([
+      provIds.length ? sb.from('providers').select('id,business_name,is_hospital,category').in('id',provIds) : { data:[] },
+      deptIds.length ? sb.from('departments').select('id,name,wait_minutes').in('id',deptIds) : { data:[] }
+    ]);
+
+    const provMap = {};
+    (provRes.data||[]).forEach(p => { provMap[p.id]=p; });
+    const deptMap = {};
+    (deptRes.data||[]).forEach(d => { deptMap[d.id]=d; });
+
+    list.innerHTML = data.map(q => {
+      const prov = provMap[q.provider_id];
+      const dept = deptMap[q.department_id];
+      const bizName = prov ? prov.business_name : 'Service Provider';
+      const deptName = dept ? dept.name : '';
+      const waitMins = dept ? (dept.wait_minutes||0) : (q.service_duration||0);
+      const isHosp = prov && (prov.is_hospital || prov.category === 'Hospital');
+      const detailPage = prov ? (isHosp ? `hospital-detail.html?id=${prov.id}` : `business-detail.html?id=${prov.id}`) : '#';
+      const date = q.created_at ? new Date(q.created_at).toLocaleString([],{dateStyle:'medium',timeStyle:'short'}) : '';
+      const badgeCls = q.status==='waiting'?'badge-waiting':q.status==='serving'?'badge-serving':q.status==='completed'?'badge-completed':'badge-cancelled';
+      const label = q.status.charAt(0).toUpperCase()+q.status.slice(1);
+
+      return `
+        <div class="queue-card">
+          <div class="qc-left">
+            <div class="qc-biz">${esc(bizName)}</div>
+            ${deptName ? `<div class="qc-dept">🏥 ${esc(deptName)}</div>` : ''}
+            <div class="qc-date">${date}</div>
+            ${['waiting','serving'].includes(q.status) ? `
+            <div class="qc-actions">
+              <a href="${detailPage}" class="qc-btn qc-btn-primary">View Wait Times</a>
+              <button class="qc-btn qc-btn-danger" onclick="cancelQueue('${q.id}')">Leave Queue</button>
+            </div>` : ''}
+          </div>
+          <div class="qc-right">
+            <span class="status-badge ${badgeCls}">${label}</span>
+            ${['waiting','serving'].includes(q.status) ? `
+            <div class="qc-wait">
+              <div class="qc-wait-val">${waitMins}</div>
+              <div class="qc-wait-lbl">min wait</div>
+            </div>` : ''}
+          </div>
+        </div>`;
     }).join('');
   }
 
-  function doLogout() { sb.auth.signOut().then(() => window.location.href='index.html'); }
-  function esc(s) { const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+  function doLogout() {
+    sb.auth.signOut().then(() => window.location.href = 'index.html');
+  }
 </script>
 </body>
 </html>

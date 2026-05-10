@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hospital Registration | skipQs</title>
+<meta name="description" content="Register your hospital on skipQs. Add departments and let patients see live wait times.">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--primary:#002f34;--accent:#23e5db;--accent2:#ffce32;--bg:#f7f8f8;--border:#e2e8f0;--danger:#dc2626;--success:#059669;--text-muted:#406367;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--primary);line-height:1.55;}
+.navbar{background:var(--primary);padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;}
+.logo{font-size:1.5rem;font-weight:800;color:white;text-decoration:none;letter-spacing:-1px;}
+.logo span{color:var(--accent);}
+.navbar a.back{color:rgba(255,255,255,.75);text-decoration:none;font-size:.9rem;font-weight:600;}
+.navbar a.back:hover{color:white;}
+.auth-wrapper{max-width:780px;margin:2rem auto;padding:0 1rem 5rem;}
+.title{font-size:2.1rem;font-weight:800;margin-bottom:.4rem;letter-spacing:-.5px;}
+.subtitle{color:var(--text-muted);margin-bottom:1.6rem;font-size:1rem;}
+.intro-banner{background:linear-gradient(135deg,#002f34 0%,#004d57 100%);color:white;border-radius:14px;padding:1.4rem 1.6rem;margin-bottom:1.6rem;display:flex;gap:1rem;align-items:center;}
+.intro-icon{font-size:2.4rem;flex-shrink:0;}
+.intro-text h3{font-size:1.05rem;margin-bottom:.2rem;}
+.intro-text p{font-size:.88rem;opacity:.85;}
+.card{background:#fff;border-radius:18px;padding:1.6rem;margin-bottom:1.4rem;border:1px solid var(--border);}
+.step{font-size:.75rem;color:var(--accent);font-weight:800;margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.5px;}
+.heading{font-size:1.15rem;font-weight:700;margin-bottom:1.2rem;}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;}
+.group{display:flex;flex-direction:column;gap:.4rem;}
+label{font-size:.85rem;font-weight:600;}
+input,select,textarea{padding:.85rem 1rem;border-radius:12px;border:1.5px solid var(--border);font-family:inherit;font-size:.95rem;width:100%;background:white;}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);}
+textarea{resize:vertical;min-height:60px;}
+.geo{display:flex;gap:.6rem;align-items:flex-start;}
+.geo input{flex:1;}
+.lookup-btn{background:var(--primary);color:white;border:none;border-radius:12px;padding:.85rem 1rem;cursor:pointer;font-weight:700;font-family:inherit;white-space:nowrap;flex-shrink:0;}
+.lookup-btn:disabled{opacity:.6;cursor:not-allowed;}
+.success-msg{color:var(--success);font-size:.85rem;margin-top:.5rem;display:none;}
+.error-msg{background:#fee2e2;color:#b91c1c;padding:1rem;border-radius:12px;margin-bottom:1.2rem;display:none;}
+.success-banner{background:#d1fae5;color:#065f46;padding:1.2rem;border-radius:12px;margin-bottom:1.2rem;display:none;font-weight:600;text-align:center;}
+.dept-row{display:grid;grid-template-columns:36px 1fr 110px 110px 36px;gap:.6rem;align-items:center;margin-bottom:.6rem;}
+.dept-row input{padding:.65rem .8rem;font-size:.9rem;}
+.dept-row .icon-input{text-align:center;font-size:1.1rem;padding:.65rem .3rem;}
+.dept-header{display:grid;grid-template-columns:36px 1fr 110px 110px 36px;gap:.6rem;font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:.5rem;padding:0 .3rem;}
+.delete-btn{background:none;border:none;color:#dc2626;cursor:pointer;font-size:1.4rem;padding:0;}
+.delete-btn:hover{color:#991b1b;}
+.add-row-btn{margin-top:.8rem;background:var(--bg);border:1.5px dashed var(--border);color:var(--primary);font-weight:700;cursor:pointer;font-family:inherit;font-size:.9rem;padding:.7rem 1rem;border-radius:10px;width:100%;transition:.2s;}
+.add-row-btn:hover{background:#eef2f3;border-color:var(--accent);}
+.preset-row{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem;}
+.preset-chip{background:var(--bg);border:1px solid var(--border);color:var(--primary);padding:.4rem .8rem;border-radius:50px;font-size:.78rem;font-weight:600;cursor:pointer;font-family:inherit;}
+.preset-chip:hover{background:var(--accent);border-color:var(--accent);}
+.hint{font-size:.8rem;color:var(--text-muted);margin-bottom:1rem;}
+.submit-btn{width:100%;background:var(--primary);color:white;border:none;padding:1rem;border-radius:14px;font-size:1rem;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;font-family:inherit;}
+.submit-btn:hover{background:#001f24;}
+.submit-btn:disabled{opacity:.7;cursor:not-allowed;}
+.spinner{width:18px;height:18px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .9s linear infinite;display:none;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+@media(max-width:640px){
+  .row{grid-template-columns:1fr;}
+  .dept-row,.dept-header{grid-template-columns:36px 1fr 80px 80px 30px;gap:.4rem;}
+  .auth-wrapper{padding:0 .8rem 4rem;}
+}
+</style>
+</head>
+<body>
+
+<header class="navbar">
+  <a href="index.html" class="logo">skip<span>Qs</span></a>
+  <a href="provider-signup.html" class="back">← Other business types</a>
+</header>
+
+<main class="auth-wrapper">
+  <div class="title">Register Your Hospital</div>
+  <div class="subtitle">Let patients see live wait times for every department.</div>
+
+  <div class="intro-banner">
+    <div class="intro-icon">🏥</div>
+    <div class="intro-text">
+      <h3>Built for hospitals</h3>
+      <p>Add each department (ER, Cardiology, Radiology…). Patients will see real-time waits the moment they open skipQs.</p>
+    </div>
+  </div>
+
+  <div id="errorMsg" class="error-msg"></div>
+  <div id="successMsg" class="success-banner"></div>
+
+  <!-- STEP 1 -->
+  <div class="card">
+    <div class="step">STEP 1</div>
+    <div class="heading">Hospital Details</div>
+
+    <div class="row">
+      <div class="group">
+        <label for="bizName">Hospital Name</label>
+        <input type="text" id="bizName" placeholder="St. Mary's General Hospital" autocomplete="organization">
+      </div>
+      <div class="group">
+        <label for="phone">Reception Phone</label>
+        <input type="tel" id="phone" placeholder="020 1234 5678" autocomplete="tel">
+      </div>
+    </div>
+
+    <div class="group" style="margin-bottom:1rem;">
+      <label for="description">Short description (optional)</label>
+      <textarea id="description" placeholder="Multi-specialty hospital serving Greater Manchester."></textarea>
+    </div>
+
+    <div class="group">
+      <label for="addressInput">Hospital Address</label>
+      <div class="geo">
+        <input type="text" id="addressInput" placeholder="100 Oxford Road, Manchester" autocomplete="street-address">
+        <button type="button" class="lookup-btn" id="lookupBtn" onclick="geocodeAddress()">Look Up</button>
+      </div>
+      <div id="geoResult" class="success-msg"></div>
+      <input type="hidden" id="lat">
+      <input type="hidden" id="lng">
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="card">
+    <div class="step">STEP 2</div>
+    <div class="heading">Admin Login</div>
+    <div class="row">
+      <div class="group">
+        <label for="email">Email</label>
+        <input type="email" id="email" placeholder="admin@hospital.com" autocomplete="email">
+      </div>
+      <div class="group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Minimum 6 characters" autocomplete="new-password">
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="card">
+    <div class="step">STEP 3</div>
+    <div class="heading">Departments</div>
+    <div class="hint">Add every department that takes walk-in or appointment patients. You can update wait times any time from the dashboard.</div>
+
+    <div class="preset-row">
+      <span style="font-size:.78rem;color:var(--text-muted);font-weight:700;align-self:center;margin-right:.3rem;">Quick add:</span>
+      <button type="button" class="preset-chip" onclick="quickAdd('🚑','Emergency (ER)',60,4)">🚑 ER</button>
+      <button type="button" class="preset-chip" onclick="quickAdd('❤️','Cardiology',30,2)">❤️ Cardiology</button>
+      <button type="button" class="preset-chip" onclick="quickAdd('🦴','Orthopedics',30,2)">🦴 Orthopedics</button>
+      <button type="button" class="preset-chip" onclick="quickAdd('👶','Pediatrics',25,2)">👶 Pediatrics</button>
+      <button type="button" class="preset-chip" onclick="quickAdd('🩻','Radiology',20,3)">🩻 Radiology</button>
+      <button type="button" class="preset-chip" onclick="quickAdd('🧪','Pathology',15,3)">🧪 Pathology</button>
+      <button type="button" class="preset-chip" onclick="quickAdd('🦷','Dental',30,2)">🦷 Dental</button>
+      <button type="button" class="preset-chip" onclick="quickAdd('👁️','Ophthalmology',25,2)">👁️ Ophthalmology</button>
+      <button type="button" class="preset-chip" onclick="quickAdd('🤰','Gynecology',30,2)">🤰 Gynecology</button>
+      <button type="button" class="preset-chip" onclick="quickAdd('🧠','Neurology',40,2)">🧠 Neurology</button>
+    </div>
+
+    <div class="dept-header">
+      <div>Icon</div>
+      <div>Department Name</div>
+      <div>Wait (min)</div>
+      <div>Capacity</div>
+      <div></div>
+    </div>
+    <div id="deptBody"></div>
+
+    <button type="button" class="add-row-btn" onclick="addRow()">+ Add Custom Department</button>
+  </div>
+
+  <button type="button" class="submit-btn" id="submitBtn" onclick="register()">
+    <span class="spinner" id="spinner"></span>
+    <span id="btnText">Complete Registration</span>
+  </button>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="supabase-config.js"></script>
+<script>
+let isSubmitting = false;
+let geocodingInProgress = false;
+
+document.getElementById('addressInput').addEventListener('input', () => {
+  document.getElementById('lat').value = '';
+  document.getElementById('lng').value = '';
+  const g = document.getElementById('geoResult');
+  g.style.display='none'; g.textContent='';
+});
+
+async function geocodeAddress() {
+  if (geocodingInProgress) return;
+  const address = document.getElementById('addressInput').value.trim();
+  if (!address) { showError('Please enter an address first.'); return; }
+  const btn = document.getElementById('lookupBtn');
+  const geoResult = document.getElementById('geoResult');
+  hideError();
+  geoResult.style.display='none'; geoResult.textContent='';
+  document.getElementById('lat').value=''; document.getElementById('lng').value='';
+  geocodingInProgress = true;
+  btn.disabled = true; btn.textContent = 'Looking...';
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`);
+    const data = await res.json();
+    if (!data.length) { showError('Address not found. Try adding your city or postcode.'); return; }
+    document.getElementById('lat').value = data[0].lat;
+    document.getElementById('lng').value = data[0].lon;
+    const shortAddr = data[0].display_name.split(',').slice(0,3).join(',');
+    geoResult.textContent = `✓ Verified: ${shortAddr}`;
+    geoResult.style.display = 'block';
+  } catch(err) {
+    console.error(err);
+    showError('Address lookup failed. Check your connection and try again.');
+  } finally {
+    geocodingInProgress = false;
+    btn.disabled = false; btn.textContent = 'Look Up';
+  }
+}
+
+function addRow(icon='🏥', name='', wait=15, capacity=2) {
+  const row = document.createElement('div');
+  row.className = 'dept-row';
+
+  const iconEl = document.createElement('input');
+  iconEl.type='text'; iconEl.maxLength=2; iconEl.value=icon;
+  iconEl.className='dept-icon icon-input';
+
+  const nameEl = document.createElement('input');
+  nameEl.type='text'; nameEl.placeholder='e.g. Cardiology'; nameEl.value=name;
+  nameEl.className='dept-name';
+
+  const waitEl = document.createElement('input');
+  waitEl.type='number'; waitEl.min='0'; waitEl.value=wait;
+  waitEl.className='dept-wait';
+
+  const capEl = document.createElement('input');
+  capEl.type='number'; capEl.min='1'; capEl.value=capacity;
+  capEl.className='dept-cap';
+
+  const del = document.createElement('button');
+  del.type='button'; del.className='delete-btn'; del.textContent='×';
+  del.title='Remove department';
+  del.onclick = () => row.remove();
+
+  row.append(iconEl, nameEl, waitEl, capEl, del);
+  document.getElementById('deptBody').appendChild(row);
+}
+
+function quickAdd(icon, name, wait, capacity) {
+  // Don't add duplicates
+  const exists = Array.from(document.querySelectorAll('.dept-name')).some(i => i.value.trim().toLowerCase() === name.toLowerCase());
+  if (exists) return;
+  addRow(icon, name, wait, capacity);
+}
+
+// Start with two empty rows
+addRow('🚑','Emergency (ER)',60,4);
+addRow('🩻','Radiology',20,3);
+
+function showError(msg){ const el=document.getElementById('errorMsg'); el.textContent=msg; el.style.display='block'; el.scrollIntoView({behavior:'smooth',block:'center'}); }
+function hideError(){ document.getElementById('errorMsg').style.display='none'; }
+function showSuccess(msg){ const el=document.getElementById('successMsg'); el.textContent=msg; el.style.display='block'; el.scrollIntoView({behavior:'smooth',block:'center'}); }
+function resetBtn(){ document.getElementById('submitBtn').disabled=false; document.getElementById('spinner').style.display='none'; document.getElementById('btnText').textContent='Complete Registration'; isSubmitting=false; }
+
+async function register() {
+  if (isSubmitting) return;
+  hideError();
+
+  const bizName = document.getElementById('bizName').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  const description = document.getElementById('description').value.trim();
+  const address = document.getElementById('addressInput').value.trim();
+  const lat = parseFloat(document.getElementById('lat').value);
+  const lng = parseFloat(document.getElementById('lng').value);
+  const email = document.getElementById('email').value.trim().toLowerCase();
+  const password = document.getElementById('password').value;
+
+  if (!bizName) { showError('Please enter your hospital name.'); return; }
+  if (!phone) { showError('Please enter a reception phone number.'); return; }
+  const digits = phone.replace(/\D/g,'');
+  if (digits.length < 10 || digits.length > 15) { showError('Phone number must be 10–15 digits.'); return; }
+  if (!address) { showError('Please enter your hospital address.'); return; }
+  if (isNaN(lat) || isNaN(lng)) { showError('Please click "Look Up" to verify your address.'); return; }
+  if (!email) { showError('Please enter your email address.'); return; }
+  if (!password) { showError('Please enter a password.'); return; }
+  if (password.length < 6) { showError('Password must be at least 6 characters.'); return; }
+
+  // Collect departments
+  const depts = Array.from(document.querySelectorAll('#deptBody .dept-row')).map((row, i) => ({
+    icon: row.querySelector('.dept-icon').value.trim() || '🏥',
+    name: row.querySelector('.dept-name').value.trim(),
+    wait_minutes: Math.max(0, parseInt(row.querySelector('.dept-wait').value) || 0),
+    capacity: Math.max(1, parseInt(row.querySelector('.dept-cap').value) || 1),
+    display_order: i
+  })).filter(d => d.name);
+
+  if (!depts.length) { showError('Please add at least one department.'); return; }
+
+  // Lock UI
+  const btn = document.getElementById('submitBtn');
+  const spinner = document.getElementById('spinner');
+  const btnText = document.getElementById('btnText');
+  isSubmitting = true;
+  btn.disabled = true;
+  spinner.style.display = 'block';
+  btnText.textContent = 'Creating your hospital account...';
+
+  try {
+    // 1. Create auth user
+    const { data: signUpData, error: signUpErr } = await sb.auth.signUp({ email, password });
+    if (signUpErr) { showError(signUpErr.message); resetBtn(); return; }
+
+    // Confirm session (dev environments often have email-confirm off)
+    let session = signUpData.session;
+    if (!session) {
+      const { data: signInData, error: signInErr } = await sb.auth.signInWithPassword({ email, password });
+      if (signInErr) { showError('Account created. Please check your inbox to confirm, then log in.'); resetBtn(); return; }
+      session = signInData.session;
+    }
+    const uid = session?.user?.id;
+    if (!uid) { showError('Could not establish a session. Please log in.'); resetBtn(); return; }
+
+    // 2. Create provider row
+    const { data: providerRow, error: provErr } = await sb.from('providers').insert({
+      user_id: uid,
+      business_name: bizName,
+      category: 'Hospital',
+      is_hospital: true,
+      phone, email, address,
+      lat, lng,
+      capacity: depts.reduce((s,d)=>s+d.capacity, 0),
+      is_open: true,
+      description: description || null
+    }).select().single();
+
+    if (provErr) {
+      console.error(provErr);
+      showError('Could not save hospital details: ' + provErr.message);
+      resetBtn(); return;
+    }
+
+    // 3. Bulk insert departments
+    const deptRows = depts.map(d => ({
+      provider_id: providerRow.id,
+      name: d.name,
+      icon: d.icon,
+      wait_minutes: d.wait_minutes,
+      capacity: d.capacity,
+      display_order: d.display_order,
+      is_open: true
+    }));
+
+    const { error: deptErr } = await sb.from('departments').insert(deptRows);
+    if (deptErr) {
+      console.error(deptErr);
+      showError('Hospital saved, but departments failed: ' + deptErr.message + '. You can add them from the dashboard.');
+      setTimeout(()=>{ window.location.href='hospital-dashboard.html'; }, 2500);
+      return;
+    }
+
+    showSuccess('🎉 Hospital registered with ' + depts.length + ' departments. Redirecting…');
+    setTimeout(()=>{ window.location.href='hospital-dashboard.html'; }, 1500);
+  } catch (err) {
+    console.error(err);
+    showError('Unexpected error: ' + (err.message || err));
+    resetBtn();
+  }
+}
+</script>
+</body>
+</html>

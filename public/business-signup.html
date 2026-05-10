@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Business Registration | skipQs</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--primary:#002f34;--accent:#23e5db;--accent2:#ffce32;--bg:#f7f8f8;--border:#e2e8f0;--danger:#dc2626;--success:#059669;--text-muted:#406367;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--primary);line-height:1.55;}
+.navbar{background:var(--primary);padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;}
+.logo{font-size:1.5rem;font-weight:800;color:white;text-decoration:none;letter-spacing:-1px;}
+.logo span{color:var(--accent);}
+.navbar a.back{color:rgba(255,255,255,.75);text-decoration:none;font-size:.9rem;font-weight:600;}
+.navbar a.back:hover{color:white;}
+.auth-wrapper{max-width:780px;margin:2rem auto;padding:0 1rem 5rem;}
+.title{font-size:2.1rem;font-weight:800;margin-bottom:.4rem;letter-spacing:-.5px;}
+.subtitle{color:var(--text-muted);margin-bottom:1.6rem;font-size:1rem;}
+.intro-banner{background:linear-gradient(135deg,#002f34 0%,#004d57 100%);color:white;border-radius:14px;padding:1.4rem 1.6rem;margin-bottom:1.6rem;display:flex;gap:1rem;align-items:center;}
+.intro-icon{font-size:2.4rem;flex-shrink:0;}
+.intro-text h3{font-size:1.05rem;margin-bottom:.2rem;}
+.intro-text p{font-size:.88rem;opacity:.85;}
+.card{background:#fff;border-radius:18px;padding:1.6rem;margin-bottom:1.4rem;border:1px solid var(--border);}
+.step{font-size:.75rem;color:var(--accent);font-weight:800;margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.5px;}
+.heading{font-size:1.15rem;font-weight:700;margin-bottom:1.2rem;}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;}
+.group{display:flex;flex-direction:column;gap:.4rem;}
+label{font-size:.85rem;font-weight:600;}
+input,select,textarea{padding:.85rem 1rem;border-radius:12px;border:1.5px solid var(--border);font-family:inherit;font-size:.95rem;width:100%;background:white;}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);}
+textarea{resize:vertical;min-height:60px;}
+.geo{display:flex;gap:.6rem;align-items:flex-start;}
+.geo input{flex:1;}
+.lookup-btn{background:var(--primary);color:white;border:none;border-radius:12px;padding:.85rem 1rem;cursor:pointer;font-weight:700;font-family:inherit;white-space:nowrap;flex-shrink:0;}
+.lookup-btn:disabled{opacity:.6;cursor:not-allowed;}
+.success-msg{color:var(--success);font-size:.85rem;margin-top:.5rem;display:none;}
+.error-msg{background:#fee2e2;color:#b91c1c;padding:1rem;border-radius:12px;margin-bottom:1.2rem;display:none;}
+.success-banner{background:#d1fae5;color:#065f46;padding:1.2rem;border-radius:12px;margin-bottom:1.2rem;display:none;font-weight:600;text-align:center;}
+.dept-row{display:grid;grid-template-columns:36px 1fr 110px 110px 36px;gap:.6rem;align-items:center;margin-bottom:.6rem;}
+.dept-row input{padding:.65rem .8rem;font-size:.9rem;}
+.dept-row .icon-input{text-align:center;font-size:1.1rem;padding:.65rem .3rem;}
+.dept-header{display:grid;grid-template-columns:36px 1fr 110px 110px 36px;gap:.6rem;font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:.5rem;padding:0 .3rem;}
+.delete-btn{background:none;border:none;color:#dc2626;cursor:pointer;font-size:1.4rem;padding:0;}
+.delete-btn:hover{color:#991b1b;}
+.add-row-btn{margin-top:.8rem;background:var(--bg);border:1.5px dashed var(--border);color:var(--primary);font-weight:700;cursor:pointer;font-family:inherit;font-size:.9rem;padding:.7rem 1rem;border-radius:10px;width:100%;transition:.2s;}
+.add-row-btn:hover{background:#eef2f3;border-color:var(--accent);}
+.preset-row{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem;}
+.preset-chip{background:var(--bg);border:1px solid var(--border);color:var(--primary);padding:.4rem .8rem;border-radius:50px;font-size:.78rem;font-weight:600;cursor:pointer;font-family:inherit;}
+.preset-chip:hover{background:var(--accent);border-color:var(--accent);}
+.hint{font-size:.8rem;color:var(--text-muted);margin-bottom:1rem;}
+.submit-btn{width:100%;background:var(--primary);color:white;border:none;padding:1rem;border-radius:14px;font-size:1rem;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;font-family:inherit;}
+.submit-btn:hover{background:#001f24;}
+.submit-btn:disabled{opacity:.7;cursor:not-allowed;}
+.spinner{width:18px;height:18px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .9s linear infinite;display:none;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+@media(max-width:640px){
+  .row{grid-template-columns:1fr;}
+  .dept-row,.dept-header{grid-template-columns:36px 1fr 80px 80px 30px;gap:.4rem;}
+  .auth-wrapper{padding:0 .8rem 4rem;}
+}
+</style>
+</head>
+<body>
+
+<header class="navbar">
+  <a href="index.html" class="logo">skip<span>Qs</span></a>
+  <a href="provider-signup.html" class="back">← Choose another category</a>
+</header>
+
+<main class="auth-wrapper">
+  <div class="title" id="pageTitle">Register Your Business</div>
+  <div class="subtitle" id="pageSubtitle">Launch your virtual queue in minutes.</div>
+
+  <div class="intro-banner">
+    <div class="intro-icon" id="sectorIcon">🏪</div>
+    <div class="intro-text">
+      <h3 id="sectorIntroHead">Built for your business</h3>
+      <p id="sectorIntroText">Customers will see live wait times the moment they open skipQs.</p>
+    </div>
+  </div>
+
+  <div id="errorMsg" class="error-msg"></div>
+  <div id="successMsg" class="success-banner"></div>
+
+  <!-- STEP 1 -->
+  <div class="card">
+    <div class="step">STEP 1</div>
+    <div class="heading">Business Details</div>
+
+    <div class="row">
+      <div class="group">
+        <label for="bizName">Business Name</label>
+        <input type="text" id="bizName" placeholder="Your business name" autocomplete="organization">
+      </div>
+      <div class="group">
+        <label for="category">Category</label>
+        <select id="category"></select>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="group">
+        <label for="phone">Phone</label>
+        <input type="tel" id="phone" placeholder="07900 123456" autocomplete="tel">
+      </div>
+      <div class="group">
+        <label for="capacityField">Total Concurrent Customers (auto)</label>
+        <input type="number" id="capacityField" value="1" min="1" max="500" disabled style="background:var(--bg);">
+      </div>
+    </div>
+
+    <div class="group" style="margin-bottom:1rem;">
+      <label for="description">Short description (optional)</label>
+      <textarea id="description" placeholder="Tell customers what makes you great."></textarea>
+    </div>
+
+    <div class="group">
+      <label for="addressInput">Business Address</label>
+      <div class="geo">
+        <input type="text" id="addressInput" placeholder="Street, City" autocomplete="street-address">
+        <button type="button" class="lookup-btn" id="lookupBtn" onclick="geocodeAddress()">Look Up</button>
+      </div>
+      <div id="geoResult" class="success-msg"></div>
+      <input type="hidden" id="lat">
+      <input type="hidden" id="lng">
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="card">
+    <div class="step">STEP 2</div>
+    <div class="heading">Admin Login</div>
+    <div class="row">
+      <div class="group">
+        <label for="email">Email</label>
+        <input type="email" id="email" placeholder="admin@business.com" autocomplete="email">
+      </div>
+      <div class="group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Minimum 6 characters" autocomplete="new-password">
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="card">
+    <div class="step">STEP 3</div>
+    <div class="heading" id="unitHeading">Departments</div>
+    <div class="hint" id="unitHint">Add every section that takes customers. You can update wait times any time from the dashboard.</div>
+
+    <div class="preset-row" id="presetRow">
+      <span style="font-size:.78rem;color:var(--text-muted);font-weight:700;align-self:center;margin-right:.3rem;">Quick add:</span>
+    </div>
+
+    <div class="dept-header">
+      <div>Icon</div>
+      <div id="unitColLabel">Name</div>
+      <div>Wait (min)</div>
+      <div>Capacity</div>
+      <div></div>
+    </div>
+    <div id="deptBody"></div>
+
+    <button type="button" class="add-row-btn" id="addCustomBtn" onclick="addRow()">+ Add Custom</button>
+  </div>
+
+  <button type="button" class="submit-btn" id="submitBtn" onclick="register()">
+    <span class="spinner" id="spinner"></span>
+    <span id="btnText">Complete Registration</span>
+  </button>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="supabase-config.js"></script>
+<script src="sector-config.js"></script>
+<script>
+let isSubmitting = false;
+let geocodingInProgress = false;
+
+const params = new URLSearchParams(location.search);
+let category = params.get('category') || 'Hospital';
+let cfg = window.getSectorConfig(category);
+
+function applyCategory() {
+  cfg = window.getSectorConfig(category);
+
+  document.getElementById('pageTitle').textContent  = 'Register Your ' + cfg.label;
+  document.getElementById('pageSubtitle').textContent = cfg.tagline;
+  document.getElementById('sectorIcon').textContent = cfg.icon;
+  document.getElementById('sectorIntroHead').textContent = 'Built for ' + cfg.plural.toLowerCase();
+  document.getElementById('sectorIntroText').textContent = 'Add each ' + cfg.unitSingular.toLowerCase() + '. Customers see live waits the moment they open skipQs.';
+  document.getElementById('unitHeading').textContent = cfg.unitPlural;
+  document.getElementById('unitHint').textContent = 'Add every ' + cfg.unitSingular.toLowerCase() + ' that takes customers. You can update wait times any time from the dashboard.';
+  document.getElementById('unitColLabel').textContent = cfg.unitSingular + ' Name';
+  document.getElementById('addCustomBtn').textContent = '+ Add Custom ' + cfg.unitSingular;
+
+  // Preset chips
+  const presetRow = document.getElementById('presetRow');
+  // Clear chips except the "Quick add:" label (first child)
+  Array.from(presetRow.querySelectorAll('.preset-chip')).forEach(el => el.remove());
+  cfg.presets.forEach(([icon, name, wait, cap]) => {
+    const b = document.createElement('button');
+    b.type='button'; b.className='preset-chip'; b.textContent = icon + ' ' + name;
+    b.onclick = () => quickAdd(icon, name, wait, cap);
+    presetRow.appendChild(b);
+  });
+
+  // Reset rows: start with first 2 presets if available
+  document.getElementById('deptBody').innerHTML = '';
+  const seed = cfg.presets.slice(0, 2);
+  if (seed.length) seed.forEach(p => addRow(...p));
+  else addRow();
+}
+
+function populateCategorySelect() {
+  const sel = document.getElementById('category');
+  sel.innerHTML = '';
+  (window.SECTOR_ORDER || Object.keys(window.SECTOR_CONFIG)).forEach(k => {
+    const c = window.SECTOR_CONFIG[k];
+    if (!c) return;
+    const opt = document.createElement('option');
+    opt.value = k;
+    opt.textContent = c.label;
+    if (k === category) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener('change', () => {
+    category = sel.value;
+    // Update URL so reload keeps state
+    const u = new URL(location.href);
+    u.searchParams.set('category', category);
+    history.replaceState(null, '', u);
+    applyCategory();
+    updateCapacityField();
+  });
+}
+
+document.getElementById('addressInput').addEventListener('input', () => {
+  document.getElementById('lat').value = '';
+  document.getElementById('lng').value = '';
+  const g = document.getElementById('geoResult');
+  g.style.display='none'; g.textContent='';
+});
+
+async function geocodeAddress() {
+  if (geocodingInProgress) return;
+  const address = document.getElementById('addressInput').value.trim();
+  if (!address) { showError('Please enter an address first.'); return; }
+  const btn = document.getElementById('lookupBtn');
+  const geoResult = document.getElementById('geoResult');
+  hideError();
+  geoResult.style.display='none'; geoResult.textContent='';
+  document.getElementById('lat').value=''; document.getElementById('lng').value='';
+  geocodingInProgress = true;
+  btn.disabled = true; btn.textContent = 'Looking...';
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`);
+    const data = await res.json();
+    if (!data.length) { showError('Address not found. Try adding your city or postcode.'); return; }
+    document.getElementById('lat').value = data[0].lat;
+    document.getElementById('lng').value = data[0].lon;
+    const shortAddr = data[0].display_name.split(',').slice(0,3).join(',');
+    geoResult.textContent = `✓ Verified: ${shortAddr}`;
+    geoResult.style.display = 'block';
+  } catch(err) {
+    console.error(err);
+    showError('Address lookup failed. Check your connection and try again.');
+  } finally {
+    geocodingInProgress = false;
+    btn.disabled = false; btn.textContent = 'Look Up';
+  }
+}
+
+function addRow(icon, name='', wait=15, capacity=2) {
+  const row = document.createElement('div');
+  row.className = 'dept-row';
+
+  const iconEl = document.createElement('input');
+  iconEl.type='text'; iconEl.maxLength=2; iconEl.value = icon || cfg.icon;
+  iconEl.className='dept-icon icon-input';
+
+  const nameEl = document.createElement('input');
+  nameEl.type='text'; nameEl.placeholder='e.g. ' + (cfg.presets[0]?.[1] || cfg.unitSingular);
+  nameEl.value=name; nameEl.className='dept-name';
+
+  const waitEl = document.createElement('input');
+  waitEl.type='number'; waitEl.min='0'; waitEl.value=wait;
+  waitEl.className='dept-wait';
+  waitEl.addEventListener('input', updateCapacityField);
+
+  const capEl = document.createElement('input');
+  capEl.type='number'; capEl.min='1'; capEl.value=capacity;
+  capEl.className='dept-cap';
+  capEl.addEventListener('input', updateCapacityField);
+
+  const del = document.createElement('button');
+  del.type='button'; del.className='delete-btn'; del.textContent='×';
+  del.title='Remove';
+  del.onclick = () => { row.remove(); updateCapacityField(); };
+
+  row.append(iconEl, nameEl, waitEl, capEl, del);
+  document.getElementById('deptBody').appendChild(row);
+  updateCapacityField();
+}
+
+function quickAdd(icon, name, wait, capacity) {
+  const exists = Array.from(document.querySelectorAll('.dept-name')).some(i => i.value.trim().toLowerCase() === name.toLowerCase());
+  if (exists) return;
+  addRow(icon, name, wait, capacity);
+}
+
+function updateCapacityField() {
+  let total = 0;
+  document.querySelectorAll('#deptBody .dept-cap').forEach(el => total += Math.max(1, parseInt(el.value)||1));
+  document.getElementById('capacityField').value = total || 1;
+}
+
+function showError(msg){ const el=document.getElementById('errorMsg'); el.textContent=msg; el.style.display='block'; el.scrollIntoView({behavior:'smooth',block:'center'}); }
+function hideError(){ document.getElementById('errorMsg').style.display='none'; }
+function showSuccess(msg){ const el=document.getElementById('successMsg'); el.textContent=msg; el.style.display='block'; el.scrollIntoView({behavior:'smooth',block:'center'}); }
+function resetBtn(){ document.getElementById('submitBtn').disabled=false; document.getElementById('spinner').style.display='none'; document.getElementById('btnText').textContent='Complete Registration'; isSubmitting=false; }
+
+async function register() {
+  if (isSubmitting) return;
+  hideError();
+
+  const bizName = document.getElementById('bizName').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  const description = document.getElementById('description').value.trim();
+  const address = document.getElementById('addressInput').value.trim();
+  const lat = parseFloat(document.getElementById('lat').value);
+  const lng = parseFloat(document.getElementById('lng').value);
+  const email = document.getElementById('email').value.trim().toLowerCase();
+  const password = document.getElementById('password').value;
+  const cat = document.getElementById('category').value;
+
+  if (!bizName) { showError('Please enter your business name.'); return; }
+  if (!cat) { showError('Please choose a category.'); return; }
+  if (!phone) { showError('Please enter a phone number.'); return; }
+  const digits = phone.replace(/\D/g,'');
+  if (digits.length < 10 || digits.length > 15) { showError('Phone number must be 10–15 digits.'); return; }
+  if (!address) { showError('Please enter your address.'); return; }
+  if (isNaN(lat) || isNaN(lng)) { showError('Please click "Look Up" to verify your address.'); return; }
+  if (!email) { showError('Please enter your email.'); return; }
+  if (!password) { showError('Please enter a password.'); return; }
+  if (password.length < 6) { showError('Password must be at least 6 characters.'); return; }
+
+  const units = Array.from(document.querySelectorAll('#deptBody .dept-row')).map((row, i) => ({
+    icon: row.querySelector('.dept-icon').value.trim() || cfg.icon,
+    name: row.querySelector('.dept-name').value.trim(),
+    wait_minutes: Math.max(0, parseInt(row.querySelector('.dept-wait').value) || 0),
+    capacity: Math.max(1, parseInt(row.querySelector('.dept-cap').value) || 1),
+    display_order: i
+  })).filter(d => d.name);
+
+  if (!units.length) { showError('Please add at least one ' + cfg.unitSingular.toLowerCase() + '.'); return; }
+
+  const btn = document.getElementById('submitBtn');
+  const spinner = document.getElementById('spinner');
+  const btnText = document.getElementById('btnText');
+  isSubmitting = true;
+  btn.disabled = true;
+  spinner.style.display = 'block';
+  btnText.textContent = 'Creating your account...';
+
+  try {
+    const { data: signUpData, error: signUpErr } = await sb.auth.signUp({ email, password });
+    if (signUpErr) { showError(signUpErr.message); resetBtn(); return; }
+
+    let session = signUpData.session;
+    if (!session) {
+      const { data: signInData, error: signInErr } = await sb.auth.signInWithPassword({ email, password });
+      if (signInErr) { showError('Account created. Please confirm your email, then log in.'); resetBtn(); return; }
+      session = signInData.session;
+    }
+    const uid = session?.user?.id;
+    if (!uid) { showError('Could not establish a session. Please log in.'); resetBtn(); return; }
+
+    const totalCapacity = units.reduce((s,d)=>s+d.capacity, 0);
+    const { data: providerRow, error: provErr } = await sb.from('providers').insert({
+      user_id: uid,
+      business_name: bizName,
+      category: cat,
+      is_hospital: cat === 'Hospital',
+      phone, email, address,
+      lat, lng,
+      capacity: totalCapacity,
+      is_open: true,
+      description: description || null
+    }).select().single();
+
+    if (provErr) { console.error(provErr); showError('Could not save: ' + provErr.message); resetBtn(); return; }
+
+    const rows = units.map(d => ({
+      provider_id: providerRow.id,
+      name: d.name, icon: d.icon,
+      wait_minutes: d.wait_minutes, capacity: d.capacity,
+      display_order: d.display_order, is_open: true
+    }));
+    const { error: deptErr } = await sb.from('departments').insert(rows);
+    if (deptErr) {
+      console.error(deptErr);
+      showError('Account saved, but adding ' + cfg.unitPlural.toLowerCase() + ' failed: ' + deptErr.message + '. Add them from the dashboard.');
+      setTimeout(()=>{ window.location.href='business-dashboard.html'; }, 2500);
+      return;
+    }
+
+    showSuccess('🎉 ' + cfg.label + ' registered with ' + units.length + ' ' + (units.length===1?cfg.unitSingular:cfg.unitPlural).toLowerCase() + '. Redirecting…');
+    setTimeout(()=>{ window.location.href='business-dashboard.html'; }, 1500);
+  } catch (err) {
+    console.error(err);
+    showError('Unexpected error: ' + (err.message || err));
+    resetBtn();
+  }
+}
+
+// init
+populateCategorySelect();
+applyCategory();
+</script>
+</body>
+</html>

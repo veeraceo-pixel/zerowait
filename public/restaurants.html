@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Banks | skipQs</title>
-<meta name="description" content="Live counter wait times at banks. Skip the queue from your phone.">
+<title>Restaurants | skipQs</title>
+<meta name="description" content="Live table wait times at restaurants. Skip the waitlist.">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="sector.css">
 </head>
-<body data-category="Bank">
+<body data-category="Restaurant">
 
 <header>
   <div class="container">
@@ -16,16 +16,16 @@
       <a href="index.html" class="logo">skip<span>Qs</span></a>
       <nav class="nav">
         <a href="hospitals.html">Hospitals</a>
-        <a href="clinics.html">Clinics</a>
         <a href="salons.html">Salons</a>
-        <a href="banks.html" class="active">Banks</a>
-        <a href="restaurants.html">Restaurants</a>
-        <a href="nearby.html">All</a>
+        <a href="banks.html">Banks</a>
+        <a href="restaurants.html" class="active">Restaurants</a>
+        <a href="gyms.html">Gyms</a>
+        <a href="find-services.html">All</a>
       </nav>
       <div class="spacer"></div>
       <div class="header-actions">
         <a href="login.html" class="btn btn-ghost">Login</a>
-        <a href="#" data-signup-link class="btn btn-primary">+ List Bank</a>
+        <a href="#" data-signup-link class="btn btn-primary">+ List Restaurant</a>
       </div>
     </div>
   </div>
@@ -35,30 +35,30 @@
   <div class="container">
     <div class="hero-inner">
       <div>
-        <h1>Bank without the <span class="accent">queue</span></h1>
-        <p id="sectorTagline">Live counter waits — bank without queues.</p>
+        <h1>Skip the <span class="accent">restaurant waitlist</span></h1>
+        <p id="sectorTagline">Live table waits in real time.</p>
         <div class="hero-stats">
-          <div class="hero-stat"><div class="hero-stat-value" id="statTotal">—</div><div class="hero-stat-label">Banks on skipQs</div></div>
-          <div class="hero-stat"><div class="hero-stat-value" id="statUnits">—</div><div class="hero-stat-label">Counters tracked</div></div>
+          <div class="hero-stat"><div class="hero-stat-value" id="statTotal">—</div><div class="hero-stat-label">Restaurants on skipQs</div></div>
+          <div class="hero-stat"><div class="hero-stat-value" id="statUnits">—</div><div class="hero-stat-label">Sections tracked</div></div>
           <div class="hero-stat"><div class="hero-stat-value" id="statAvgWait">—</div><div class="hero-stat-label">Average wait (min)</div></div>
           <div class="hero-stat"><div class="hero-stat-value" id="statShortest">—</div><div class="hero-stat-label">Shortest wait now</div></div>
         </div>
       </div>
-      <div class="hero-img" id="sectorIcon">🏦</div>
+      <div class="hero-img" id="sectorIcon">🍽️</div>
     </div>
   </div>
 </section>
 
 <div class="container search-section">
   <div class="search-card">
-    <input id="searchInput" class="search-input" type="text" placeholder="Search by bank or city…">
+    <input id="searchInput" class="search-input" type="text" placeholder="Search by restaurant or city…">
     <button onclick="document.getElementById('searchInput').dispatchEvent(new Event('keyup'))">Search</button>
   </div>
 </div>
 
 <main class="container">
-  <h2 class="section-title">🏦 Banks open right now</h2>
-  <div class="subtle">Counter-by-counter waits, updated live.</div>
+  <h2 class="section-title">🍽️ Restaurants open right now</h2>
+  <div class="subtle">Dine-in, takeaway, bar — pick the shortest queue.</div>
   <div class="grid" id="grid"><div class="skel">Loading…</div><div class="skel">Loading…</div><div class="skel">Loading…</div></div>
 </main>
 
@@ -66,8 +66,8 @@
   <div class="container">
     <div class="footer-grid">
       <div><a href="index.html" class="logo" style="color:white;">skip<span>Qs</span></a><p style="font-size:.85rem;opacity:.65;margin-top:.6rem;max-width:280px;">Skip the queue. Save your time.</p></div>
-      <div><h4>Customers</h4><a href="banks.html">Banks</a><a href="nearby.html">All Services</a><a href="my-queues.html">My Queues</a></div>
-      <div><h4>For Banks</h4><a href="#" data-signup-link>Register Bank</a><a href="business-dashboard.html">Dashboard</a><a href="business-pricing.html">Pricing</a></div>
+      <div><h4>Customers</h4><a href="restaurants.html">Restaurants</a><a href="find-services.html">All Services</a><a href="my-queues.html">My Queues</a></div>
+      <div><h4>For Restaurants</h4><a href="#" data-signup-link>Register Restaurant</a><a href="business-dashboard.html">Dashboard</a><a href="business-pricing.html">Pricing</a></div>
       <div><h4>Company</h4><a href="about.html">About</a><a href="contact.html">Contact</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a></div>
     </div>
     <div class="footer-bot">© <span id="year"></span> skipQs · Powered by OpenStreetMap &amp; Supabase</div>

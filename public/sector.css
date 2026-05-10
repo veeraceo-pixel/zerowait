@@ -1,0 +1,88 @@
+/* ============================================================
+   skipQs – Shared Sector Page Styles
+   Used by all sector landing pages: hospitals, salons, banks, etc.
+   ============================================================ */
+:root{--primary:#002f34;--accent:#23e5db;--accent2:#ffce32;--bg:#f7f8f8;--border:#e2e8f0;--danger:#dc2626;--success:#059669;--warning:#d97706;--text-muted:#406367;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--primary);line-height:1.55;}
+.container{max-width:1200px;margin:0 auto;padding:0 20px;}
+
+header{background:white;padding:14px 0;box-shadow:0 2px 8px rgba(0,0,0,.06);position:sticky;top:0;z-index:1000;}
+.header-content{display:flex;align-items:center;gap:16px;}
+.logo{font-size:28px;font-weight:800;color:var(--primary);text-decoration:none;letter-spacing:-1.5px;}
+.logo span{color:var(--accent);}
+.nav{display:flex;gap:18px;margin-left:24px;}
+.nav a{color:var(--text-muted);text-decoration:none;font-size:14px;font-weight:600;}
+.nav a:hover,.nav a.active{color:var(--primary);}
+.spacer{flex:1;}
+.header-actions{display:flex;gap:10px;}
+.btn{padding:9px 18px;border-radius:50px;font-weight:700;text-decoration:none;font-size:13px;border:none;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:.3rem;}
+.btn-primary{background:var(--accent);color:var(--primary);}
+.btn-primary:hover{background:#1bcabf;}
+.btn-ghost{background:var(--bg);color:var(--primary);border:1px solid var(--border);}
+
+.hero{background:linear-gradient(135deg,#002f34 0%,#004d57 50%,#002f34 100%);color:white;padding:50px 0 60px;}
+.hero-inner{display:grid;grid-template-columns:1.5fr 1fr;gap:40px;align-items:center;}
+.hero h1{font-size:2.4rem;font-weight:800;letter-spacing:-1px;margin-bottom:.6rem;line-height:1.15;}
+.hero h1 .accent{color:var(--accent);}
+.hero p{font-size:1rem;opacity:.85;margin-bottom:1.4rem;max-width:520px;}
+.hero-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
+.hero-stat{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:1rem 1.2rem;}
+.hero-stat-value{font-size:1.7rem;font-weight:800;color:var(--accent);line-height:1;margin-bottom:.2rem;}
+.hero-stat-label{font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;font-weight:600;opacity:.65;}
+.hero-img{font-size:8rem;text-align:center;}
+
+.search-section{margin:-30px 0 1.6rem;position:relative;z-index:5;}
+.search-card{background:white;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.08);padding:1rem;display:grid;grid-template-columns:1fr auto;gap:.6rem;align-items:center;}
+.search-input{padding:.85rem 1rem;border:none;font-size:.95rem;outline:none;font-family:inherit;background:var(--bg);border-radius:10px;}
+.search-card button{padding:.85rem 1.6rem;background:var(--primary);color:white;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-family:inherit;}
+
+.section-title{font-size:1.4rem;font-weight:800;margin-bottom:1rem;letter-spacing:-.3px;}
+.subtle{font-size:.85rem;color:var(--text-muted);margin-bottom:1rem;}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:2rem;}
+
+.h-card{background:white;border-radius:16px;overflow:hidden;text-decoration:none;color:inherit;border:1px solid var(--border);transition:.2s;display:block;}
+.h-card:hover{transform:translateY(-3px);box-shadow:0 10px 28px rgba(0,0,0,.1);border-color:var(--accent);}
+.h-card-top{background:linear-gradient(135deg,#002f34 0%,#004d57 100%);color:white;padding:1.1rem 1.2rem;position:relative;}
+.h-card-top h3{font-size:1.1rem;font-weight:800;letter-spacing:-.3px;margin-bottom:.2rem;}
+.h-card-top .addr{font-size:.78rem;opacity:.7;}
+.status-pill{position:absolute;top:1rem;right:1rem;background:rgba(16,185,129,.95);color:white;padding:3px 10px;border-radius:50px;font-size:.7rem;font-weight:800;display:flex;align-items:center;gap:5px;}
+.status-pill.closed{background:rgba(156,163,175,.9);}
+.live-dot{width:6px;height:6px;border-radius:50%;background:white;animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+.h-card-body{padding:1rem 1.2rem;}
+.dept-row{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;border-bottom:1px dashed var(--border);font-size:.88rem;}
+.dept-row:last-child{border-bottom:none;}
+.dept-name{font-weight:600;display:flex;align-items:center;gap:.4rem;}
+.dept-wait{font-weight:800;}
+.wait-low{color:var(--success);}
+.wait-med{color:var(--warning);}
+.wait-high{color:var(--danger);}
+.wait-closed{color:#9ca3af;font-weight:600;font-size:.78rem;}
+
+.h-card-foot{padding:.8rem 1.2rem;background:var(--bg);border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.h-card-foot .meta{font-size:.78rem;color:var(--text-muted);}
+.cta-text{color:var(--primary);font-size:.82rem;font-weight:700;}
+
+.empty{text-align:center;padding:3rem 1rem;color:var(--text-muted);background:white;border-radius:16px;border:1px dashed var(--border);}
+.empty h3{color:var(--primary);margin-bottom:.4rem;}
+.skel{background:white;border-radius:16px;border:1px solid var(--border);padding:1.2rem;height:200px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);}
+
+footer{background:var(--primary);color:white;padding:2.4rem 0 1.4rem;margin-top:3rem;}
+.footer-grid{display:grid;grid-template-columns:1.5fr repeat(3,1fr);gap:2rem;margin-bottom:1.6rem;}
+.footer-grid h4{font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;opacity:.5;margin-bottom:.8rem;font-weight:700;}
+.footer-grid a{color:rgba(255,255,255,.75);text-decoration:none;font-size:.85rem;display:block;margin-bottom:.4rem;}
+.footer-grid a:hover{color:white;}
+.footer-bot{padding-top:1rem;border-top:1px solid rgba(255,255,255,.1);font-size:.78rem;opacity:.5;text-align:center;}
+
+@media(max-width:900px){
+  .hero-inner{grid-template-columns:1fr;}.hero-img{display:none;}
+  .grid{grid-template-columns:repeat(2,1fr);}
+  .footer-grid{grid-template-columns:1fr 1fr;}
+}
+@media(max-width:600px){
+  .grid{grid-template-columns:1fr;}
+  .hero h1{font-size:1.8rem;}
+  .nav{display:none;}
+}

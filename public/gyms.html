@@ -1,58 +1,83 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Gyms | skipQs</title>
-  <link rel="stylesheet" href="style.css"/>
-  
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gyms | skipQs</title>
+<meta name="description" content="See which gym zones are crowded right now. Workout with no waiting.">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="sector.css">
 </head>
-<body class="app-body">
-  <header class="app-header">
-    <div class="container header-inner">
-      <a href="index.html" class="logo"><span class="logo-mark">skip</span><span class="logo-accent">Qs</span></a>
+<body data-category="Gym">
+
+<header>
+  <div class="container">
+    <div class="header-content">
+      <a href="index.html" class="logo">skip<span>Qs</span></a>
       <nav class="nav">
-        <a href="find-services.html">Find Services</a>
-        <a href="my-queues.html">My Queues</a>
-        <a href="how-it-works.html">How It Works</a>
-        <a href="blog.html">Blog</a>
+        <a href="hospitals.html">Hospitals</a>
+        <a href="salons.html">Salons</a>
+        <a href="banks.html">Banks</a>
+        <a href="gyms.html" class="active">Gyms</a>
+        <a href="restaurants.html">Restaurants</a>
+        <a href="find-services.html">All</a>
       </nav>
+      <div class="spacer"></div>
       <div class="header-actions">
-        <a href="provider-dashboard.html" class="btn btn-ghost">For Businesses</a>
-        <a href="login.html" class="btn btn-outline" id="loginBtn">Log in</a>
-        <a href="signup.html" class="btn btn-primary">Sign up</a>
+        <a href="login.html" class="btn btn-ghost">Login</a>
+        <a href="#" data-signup-link class="btn btn-primary">+ List Gym</a>
       </div>
     </div>
-  </header>
+  </div>
+</header>
 
-  <main class="app-main">
-
-    <section class="section">
-      <div class="container section-header"><h1>Gyms using skipQs</h1><p>Join gym queues and check wait times before you arrive.</p></div>
-      <div class="container card-grid" id="category-results"></div>
-    </section>
-
-  </main>
-
-  <footer class="app-footer">
-    <div class="container footer-grid">
+<section class="hero">
+  <div class="container">
+    <div class="hero-inner">
       <div>
-        <div class="logo footer-logo"><span class="logo-mark">skip</span><span class="logo-accent">Qs</span></div>
-        <p class="footer-text">Skip the queue, save your time. Smart queue management for salons, clinics, banks and more.</p>
+        <h1>Hit the gym when <span class="accent">it's not packed</span></h1>
+        <p id="sectorTagline">See which zone has free machines right now.</p>
+        <div class="hero-stats">
+          <div class="hero-stat"><div class="hero-stat-value" id="statTotal">—</div><div class="hero-stat-label">Gyms on skipQs</div></div>
+          <div class="hero-stat"><div class="hero-stat-value" id="statUnits">—</div><div class="hero-stat-label">Zones tracked</div></div>
+          <div class="hero-stat"><div class="hero-stat-value" id="statAvgWait">—</div><div class="hero-stat-label">Average wait (min)</div></div>
+          <div class="hero-stat"><div class="hero-stat-value" id="statShortest">—</div><div class="hero-stat-label">Shortest wait now</div></div>
+        </div>
       </div>
-      <div><h4>Product</h4><a href="find-services.html">Find services</a><a href="my-queues.html">My queues</a><a href="how-it-works.html">How it works</a></div>
-      <div><h4>For businesses</h4><a href="business-pricing.html">Pricing</a><a href="business-how-it-works.html">How it works</a><a href="provider-dashboard.html">Dashboard</a></div>
-      <div><h4>Company</h4><a href="about.html">About</a><a href="contact.html">Contact</a><a href="blog.html">Blog</a></div>
-      <div><h4>Legal</h4><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="cookie-policy.html">Cookies</a></div>
+      <div class="hero-img" id="sectorIcon">🏋️</div>
     </div>
-    <div class="container footer-bottom">
-      <span>© <span id="year"></span> skipQs. All rights reserved.</span>
-      <span>Powered by OpenStreetMap · Supabase · No Google APIs</span>
-    </div>
-  </footer>
+  </div>
+</section>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="supabase-config.js"></script>
-  <script src="script.js"></script>
+<div class="container search-section">
+  <div class="search-card">
+    <input id="searchInput" class="search-input" type="text" placeholder="Search by gym or city…">
+    <button onclick="document.getElementById('searchInput').dispatchEvent(new Event('keyup'))">Search</button>
+  </div>
+</div>
+
+<main class="container">
+  <h2 class="section-title">🏋️ Gyms open right now</h2>
+  <div class="subtle">Cardio, weights, studio — see where there's space.</div>
+  <div class="grid" id="grid"><div class="skel">Loading…</div><div class="skel">Loading…</div><div class="skel">Loading…</div></div>
+</main>
+
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div><a href="index.html" class="logo" style="color:white;">skip<span>Qs</span></a><p style="font-size:.85rem;opacity:.65;margin-top:.6rem;max-width:280px;">Skip the queue. Save your time.</p></div>
+      <div><h4>Customers</h4><a href="gyms.html">Gyms</a><a href="find-services.html">All Services</a><a href="my-queues.html">My Queues</a></div>
+      <div><h4>For Gyms</h4><a href="#" data-signup-link>Register Gym</a><a href="business-dashboard.html">Dashboard</a><a href="business-pricing.html">Pricing</a></div>
+      <div><h4>Company</h4><a href="about.html">About</a><a href="contact.html">Contact</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a></div>
+    </div>
+    <div class="footer-bot">© <span id="year"></span> skipQs · Powered by OpenStreetMap &amp; Supabase</div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="supabase-config.js"></script>
+<script src="sector-config.js"></script>
+<script src="sector-listing.js"></script>
+<script>document.getElementById('year').textContent = new Date().getFullYear();</script>
 </body>
 </html>

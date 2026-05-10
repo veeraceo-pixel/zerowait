@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Business Dashboard | skipQs</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--primary:#002f34;--accent:#23e5db;--accent2:#ffce32;--bg:#f7f8f8;--border:#e2e8f0;--danger:#dc2626;--success:#059669;--warning:#d97706;--text-muted:#406367;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--primary);line-height:1.5;}
+.navbar{background:var(--primary);padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;}
+.logo{font-size:1.5rem;font-weight:800;color:white;text-decoration:none;letter-spacing:-1px;}
+.logo span{color:var(--accent);}
+.user-mini{font-size:.85rem;color:rgba(255,255,255,.8);display:flex;gap:.8rem;align-items:center;}
+.user-mini a{color:rgba(255,255,255,.7);text-decoration:none;font-weight:600;}
+.user-mini a:hover{color:white;}
+.wrapper{max-width:1100px;margin:1.6rem auto;padding:0 1rem 5rem;}
+.h-card{background:linear-gradient(135deg,#002f34 0%,#004d57 100%);color:white;border-radius:18px;padding:1.6rem;margin-bottom:1.4rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;}
+.h-info h1{font-size:1.6rem;font-weight:800;letter-spacing:-.5px;margin-bottom:.2rem;display:flex;align-items:center;gap:.6rem;}
+.h-info p{opacity:.8;font-size:.9rem;}
+.cat-pill{font-size:.65rem;background:rgba(35,229,219,.2);color:var(--accent);padding:3px 10px;border-radius:50px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;}
+.toggle-wrap{display:flex;align-items:center;gap:.6rem;}
+.toggle{position:relative;width:54px;height:30px;background:rgba(255,255,255,.2);border-radius:30px;cursor:pointer;transition:.2s;flex-shrink:0;}
+.toggle.on{background:var(--accent);}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:24px;height:24px;background:white;border-radius:50%;transition:.2s;}
+.toggle.on::after{left:27px;}
+.toggle-label{font-size:.85rem;font-weight:700;}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.4rem;}
+.stat{background:white;border-radius:14px;padding:1.2rem;border:1px solid var(--border);}
+.stat-label{font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:.4rem;}
+.stat-value{font-size:1.8rem;font-weight:800;color:var(--primary);}
+.section{background:white;border-radius:18px;padding:1.4rem;margin-bottom:1.4rem;border:1px solid var(--border);}
+.section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.6rem;}
+.section-head h2{font-size:1.1rem;font-weight:800;}
+.btn{padding:.6rem 1.1rem;border-radius:10px;font-weight:700;border:none;cursor:pointer;font-family:inherit;font-size:.85rem;text-decoration:none;display:inline-flex;align-items:center;gap:.4rem;}
+.btn-primary{background:var(--primary);color:white;}
+.btn-primary:hover{background:#001f24;}
+.btn-ghost{background:var(--bg);color:var(--primary);border:1px solid var(--border);}
+.btn-ghost:hover{background:#eef2f3;}
+.btn-danger{background:#fee2e2;color:#b91c1c;}
+.btn-danger:hover{background:#fecaca;}
+.dept-card{background:var(--bg);border:1.5px solid var(--border);border-radius:14px;padding:1rem 1.2rem;margin-bottom:.8rem;display:grid;grid-template-columns:50px 1fr auto;gap:1rem;align-items:center;transition:.2s;}
+.dept-card:hover{border-color:var(--accent);}
+.dept-icon{font-size:2rem;text-align:center;}
+.dept-info{min-width:0;}
+.dept-name{font-size:1.05rem;font-weight:800;margin-bottom:.2rem;}
+.dept-meta{font-size:.78rem;color:var(--text-muted);display:flex;gap:.8rem;flex-wrap:wrap;}
+.dept-status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:.3rem;}
+.dot-open{background:#10b981;}
+.dot-closed{background:#9ca3af;}
+.dept-controls{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;justify-content:flex-end;}
+.wait-input{width:70px;padding:.5rem;border:1.5px solid var(--border);border-radius:8px;text-align:center;font-weight:700;font-family:inherit;font-size:.9rem;}
+.wait-input:focus{outline:none;border-color:var(--accent);}
+.btn-sm{padding:.45rem .8rem;font-size:.78rem;border-radius:8px;}
+.btn-quick{background:var(--accent);color:var(--primary);}
+.btn-quick:hover{background:#1bcabf;}
+.empty{text-align:center;padding:3rem 1rem;color:var(--text-muted);}
+.empty h3{font-size:1.1rem;color:var(--primary);margin-bottom:.4rem;}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:1000;padding:1rem;}
+.modal.show{display:flex;}
+.modal-card{background:white;border-radius:18px;padding:1.6rem;max-width:480px;width:100%;}
+.modal-card h3{margin-bottom:1rem;font-size:1.15rem;}
+.modal-row{display:grid;grid-template-columns:60px 1fr 90px 90px;gap:.6rem;margin-bottom:1rem;}
+.modal-row input{padding:.7rem;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:.9rem;}
+.modal-row input:focus{outline:none;border-color:var(--accent);}
+.modal-actions{display:flex;gap:.6rem;justify-content:flex-end;margin-top:1rem;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--primary);color:white;padding:.9rem 1.4rem;border-radius:50px;font-weight:600;font-size:.9rem;z-index:2000;transition:.3s;opacity:0;}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+.toast.success{background:var(--success);}
+.toast.error{background:var(--danger);}
+.loading{text-align:center;padding:3rem;color:var(--text-muted);}
+.preset-quick{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1rem;}
+.preset-quick .preset-chip{background:var(--bg);border:1px solid var(--border);color:var(--primary);padding:.35rem .7rem;border-radius:50px;font-size:.75rem;font-weight:600;cursor:pointer;font-family:inherit;}
+.preset-quick .preset-chip:hover{background:var(--accent);border-color:var(--accent);}
+@media(max-width:780px){
+  .stats-grid{grid-template-columns:repeat(2,1fr);}
+  .dept-card{grid-template-columns:40px 1fr;gap:.8rem;}
+  .dept-controls{grid-column:1/-1;justify-content:space-between;}
+  .modal-row{grid-template-columns:50px 1fr;gap:.5rem;}
+  .modal-row input.dept-wait,.modal-row input.dept-cap{grid-column:1/-1;}
+}
+</style>
+</head>
+<body>
+
+<header class="navbar">
+  <a href="index.html" class="logo">skip<span>Qs</span></a>
+  <div class="user-mini">
+    <span id="userEmail">—</span>
+    <a href="#" onclick="logout(event)">Logout</a>
+  </div>
+</header>
+
+<main class="wrapper" id="content">
+  <div class="loading">Loading your business…</div>
+</main>
+
+<div class="modal" id="addModal">
+  <div class="modal-card">
+    <h3 id="modalTitle">Add</h3>
+    <div class="modal-row">
+      <input type="text" id="m_icon" placeholder="🏪" maxlength="2" style="text-align:center;">
+      <input type="text" id="m_name" placeholder="Name">
+      <input type="number" id="m_wait" placeholder="Wait" min="0" value="15" class="dept-wait">
+      <input type="number" id="m_cap" placeholder="Capacity" min="1" value="2" class="dept-cap">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="m_save" onclick="saveDept()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="supabase-config.js"></script>
+<script src="sector-config.js"></script>
+<script>
+let provider = null;
+let cfg = null;
+let departments = [];
+let editId = null;
+
+function toast(msg, kind='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + kind;
+  setTimeout(()=>{ t.className='toast'; }, 2500);
+}
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+async function logout(e) {
+  if (e) e.preventDefault();
+  await sb.auth.signOut();
+  window.location.href = 'login.html';
+}
+
+async function init() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { window.location.href = 'login.html'; return; }
+  document.getElementById('userEmail').textContent = session.user.email;
+
+  const { data: prov, error } = await sb.from('providers')
+    .select('*')
+    .eq('user_id', session.user.id)
+    .maybeSingle();
+
+  if (error) { toast('Failed to load: ' + error.message, 'error'); return; }
+  if (!prov) {
+    document.getElementById('content').innerHTML = `
+      <div class="empty">
+        <h3>No business registered yet</h3>
+        <p>Choose a category and register to get started.</p>
+        <a href="provider-signup.html" class="btn btn-primary" style="margin-top:1rem;">Register Now</a>
+      </div>`;
+    return;
+  }
+
+  provider = prov;
+  cfg = window.getSectorConfig(prov.category);
+
+  await loadDepartments();
+  render();
+
+  sb.channel('biz-' + provider.id)
+    .on('postgres_changes', {event:'*', schema:'public', table:'departments', filter:`provider_id=eq.${provider.id}`}, async () => {
+      await loadDepartments(); render();
+    })
+    .subscribe();
+}
+
+async function loadDepartments() {
+  const { data, error } = await sb.from('departments')
+    .select('*')
+    .eq('provider_id', provider.id)
+    .order('display_order', { ascending: true });
+  if (error) { toast('Could not load', 'error'); return; }
+  departments = data || [];
+}
+
+function render() {
+  const total = departments.length;
+  const open = departments.filter(d => d.is_open).length;
+  const avg = total ? Math.round(departments.reduce((s,d)=>s+(d.wait_minutes||0),0)/total) : 0;
+  const max = total ? Math.max(...departments.map(d=>d.wait_minutes||0)) : 0;
+  const isOpen = !!provider.is_open;
+
+  document.getElementById('content').innerHTML = `
+    <div class="h-card">
+      <div class="h-info">
+        <h1><span>${cfg.icon}</span> ${esc(provider.business_name)} <span class="cat-pill">${esc(cfg.label)}</span></h1>
+        <p>📍 ${esc(provider.address || 'Address not set')}</p>
+      </div>
+      <div class="toggle-wrap">
+        <span class="toggle-label">${isOpen ? 'OPEN' : 'CLOSED'}</span>
+        <div class="toggle ${isOpen?'on':''}" onclick="toggleProvider()"></div>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat"><div class="stat-label">${esc(cfg.unitPlural)}</div><div class="stat-value">${total}</div></div>
+      <div class="stat"><div class="stat-label">Open Now</div><div class="stat-value" style="color:${open?'#059669':'#9ca3af'}">${open}</div></div>
+      <div class="stat"><div class="stat-label">Avg Wait</div><div class="stat-value">${avg}<span style="font-size:.9rem;color:var(--text-muted);"> min</span></div></div>
+      <div class="stat"><div class="stat-label">Longest Wait</div><div class="stat-value" style="color:${max>60?'#dc2626':max>30?'#d97706':'#059669'}">${max}<span style="font-size:.9rem;color:var(--text-muted);"> min</span></div></div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <h2>${esc(cfg.unitPlural)} &amp; Wait Times</h2>
+        <button class="btn btn-primary" onclick="openAddModal()">+ Add ${esc(cfg.unitSingular)}</button>
+      </div>
+      ${cfg.presets.length ? `
+        <div class="preset-quick">
+          <span style="font-size:.75rem;color:var(--text-muted);align-self:center;font-weight:700;">Quick add:</span>
+          ${cfg.presets.map(([icon,name,wait,cap]) =>
+            `<button class="preset-chip" onclick="quickAddPreset('${esc(icon)}','${esc(name).replace(/'/g,"\\'")}',${wait},${cap})">${esc(icon)} ${esc(name)}</button>`
+          ).join('')}
+        </div>
+      ` : ''}
+      <div id="deptList">
+        ${departments.length ? departments.map(deptCard).join('') : `<div class="empty"><h3>No ${cfg.unitPlural.toLowerCase()} yet</h3><p>Click "Add ${cfg.unitSingular}" or use the quick-add chips.</p></div>`}
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><h2>Public Pages</h2></div>
+      <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
+        <a class="btn btn-ghost" href="business-detail.html?id=${provider.id}" target="_blank">👀 View customer page</a>
+        <a class="btn btn-ghost" href="${cfg.listPage}" target="_blank">📋 ${esc(cfg.plural)} listing</a>
+      </div>
+    </div>
+  `;
+}
+
+function deptCard(d) {
+  const wait = d.wait_minutes || 0;
+  return `
+    <div class="dept-card">
+      <div class="dept-icon">${esc(d.icon || cfg.icon)}</div>
+      <div class="dept-info">
+        <div class="dept-name">${esc(d.name)}</div>
+        <div class="dept-meta">
+          <span><span class="dept-status-dot ${d.is_open?'dot-open':'dot-closed'}"></span>${d.is_open?'Open':'Closed'}</span>
+          <span>👥 Capacity: ${d.capacity}</span>
+          <span>⏱ ${d.avg_consult_minutes||15} min avg</span>
+        </div>
+      </div>
+      <div class="dept-controls">
+        <input type="number" class="wait-input" min="0" value="${wait}" onchange="quickSetWait('${d.id}', this.value)" title="Set wait minutes">
+        <span style="font-size:.7rem;color:var(--text-muted);font-weight:600;">min</span>
+        <button class="btn btn-quick btn-sm" onclick="bumpWait('${d.id}', -5)">−5</button>
+        <button class="btn btn-quick btn-sm" onclick="bumpWait('${d.id}', 5)">+5</button>
+        <button class="btn btn-ghost btn-sm" onclick="toggleDept('${d.id}')">${d.is_open?'Close':'Open'}</button>
+        <button class="btn btn-ghost btn-sm" onclick="editDept('${d.id}')">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteDept('${d.id}','${esc(d.name).replace(/'/g,"\\'")}')">×</button>
+      </div>
+    </div>`;
+}
+
+async function quickSetWait(id, value) {
+  const v = Math.max(0, parseInt(value) || 0);
+  const { error } = await sb.from('departments').update({ wait_minutes: v }).eq('id', id);
+  if (error) { toast('Update failed', 'error'); return; }
+  toast('Wait updated to ' + v + ' min');
+}
+
+async function bumpWait(id, delta) {
+  const d = departments.find(x => x.id === id);
+  if (!d) return;
+  const next = Math.max(0, (d.wait_minutes || 0) + delta);
+  await quickSetWait(id, next);
+}
+
+async function toggleDept(id) {
+  const d = departments.find(x => x.id === id);
+  if (!d) return;
+  const { error } = await sb.from('departments').update({ is_open: !d.is_open }).eq('id', id);
+  if (error) { toast('Failed', 'error'); return; }
+  toast((!d.is_open ? 'Opened ' : 'Closed ') + d.name);
+}
+
+async function toggleProvider() {
+  const next = !provider.is_open;
+  const { error } = await sb.from('providers').update({ is_open: next }).eq('id', provider.id);
+  if (error) { toast('Failed', 'error'); return; }
+  provider.is_open = next;
+  toast(cfg.label + ' is now ' + (next ? 'OPEN' : 'CLOSED'));
+  render();
+}
+
+async function deleteDept(id, name) {
+  if (!confirm('Delete "' + name + '"? This cannot be undone.')) return;
+  const { error } = await sb.from('departments').delete().eq('id', id);
+  if (error) { toast('Delete failed', 'error'); return; }
+  toast('Deleted');
+}
+
+function openAddModal() {
+  editId = null;
+  document.getElementById('modalTitle').textContent = 'Add ' + cfg.unitSingular;
+  document.getElementById('m_icon').value = cfg.icon;
+  document.getElementById('m_name').value = '';
+  document.getElementById('m_name').placeholder = cfg.unitSingular + ' name';
+  document.getElementById('m_wait').value = '15';
+  document.getElementById('m_cap').value = '2';
+  document.getElementById('addModal').classList.add('show');
+  setTimeout(()=>document.getElementById('m_name').focus(), 50);
+}
+
+function editDept(id) {
+  const d = departments.find(x => x.id === id);
+  if (!d) return;
+  editId = id;
+  document.getElementById('modalTitle').textContent = 'Edit ' + cfg.unitSingular;
+  document.getElementById('m_icon').value = d.icon || cfg.icon;
+  document.getElementById('m_name').value = d.name;
+  document.getElementById('m_wait').value = d.wait_minutes;
+  document.getElementById('m_cap').value = d.capacity;
+  document.getElementById('addModal').classList.add('show');
+}
+
+function closeModal() { document.getElementById('addModal').classList.remove('show'); }
+
+async function saveDept() {
+  const icon = document.getElementById('m_icon').value.trim() || cfg.icon;
+  const name = document.getElementById('m_name').value.trim();
+  const wait = Math.max(0, parseInt(document.getElementById('m_wait').value) || 0);
+  const cap  = Math.max(1, parseInt(document.getElementById('m_cap').value) || 1);
+
+  if (!name) { toast('Name is required', 'error'); return; }
+
+  if (editId) {
+    const { error } = await sb.from('departments').update({ icon, name, wait_minutes: wait, capacity: cap }).eq('id', editId);
+    if (error) { toast('Save failed: '+error.message, 'error'); return; }
+    toast('Updated');
+  } else {
+    const order = departments.length;
+    const { error } = await sb.from('departments').insert({
+      provider_id: provider.id,
+      icon, name, wait_minutes: wait, capacity: cap,
+      display_order: order, is_open: true
+    });
+    if (error) { toast('Add failed: '+error.message, 'error'); return; }
+    toast('Added');
+  }
+  closeModal();
+}
+
+async function quickAddPreset(icon, name, wait, cap) {
+  const exists = departments.some(d => d.name.toLowerCase() === name.toLowerCase());
+  if (exists) { toast('"' + name + '" already exists', 'error'); return; }
+  const order = departments.length;
+  const { error } = await sb.from('departments').insert({
+    provider_id: provider.id,
+    icon, name, wait_minutes: wait, capacity: cap,
+    display_order: order, is_open: true
+  });
+  if (error) { toast('Add failed: '+error.message, 'error'); return; }
+  toast('Added ' + name);
+}
+
+document.getElementById('addModal').addEventListener('click', e => {
+  if (e.target.id === 'addModal') closeModal();
+});
+
+init();
+</script>
+</body>
+</html>
