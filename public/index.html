@@ -20,46 +20,47 @@
     /* ── QUEUE TIMER BANNER ── */
     #queueBanner{
       display:none;
-      background:linear-gradient(135deg,#003d42 0%,#005959 100%);
-      border-bottom:3px solid var(--accent);
-      color:white;padding:0;
+      background:var(--accent2); /* bright yellow — stands out from dark nav */
+      border-bottom:3px solid rgba(0,47,52,.2);
+      color:var(--primary);padding:0;
+      position:sticky;top:0;z-index:1001; /* sits above header */
     }
     .qb-inner{
-      display:flex;align-items:center;gap:0;min-height:68px;
+      display:flex;align-items:center;gap:0;min-height:60px;
     }
     .qb-icon{
-      background:var(--accent);color:var(--primary);
+      background:var(--primary);color:var(--accent2);
       display:flex;align-items:center;justify-content:center;
-      width:68px;min-height:68px;font-size:1.6rem;flex-shrink:0;
+      width:60px;min-height:60px;font-size:1.5rem;flex-shrink:0;
     }
     .qb-info{
-      flex:1;padding:.8rem 1.4rem;
+      flex:1;padding:.6rem 1.2rem;
     }
-    .qb-label{font-size:.68rem;text-transform:uppercase;letter-spacing:.6px;font-weight:700;color:rgba(255,255,255,.5);margin-bottom:.15rem;}
-    .qb-title{font-size:1rem;font-weight:800;letter-spacing:-.2px;}
-    .qb-sub{font-size:.8rem;color:rgba(255,255,255,.7);margin-top:.1rem;}
+    .qb-label{font-size:.65rem;text-transform:uppercase;letter-spacing:.6px;font-weight:700;color:rgba(0,47,52,.55);margin-bottom:.1rem;}
+    .qb-title{font-size:.95rem;font-weight:800;letter-spacing:-.2px;color:var(--primary);}
+    .qb-sub{font-size:.78rem;color:rgba(0,47,52,.65);margin-top:.08rem;}
     .qb-timer{
-      padding:.8rem 1.8rem;text-align:center;border-left:1px solid rgba(255,255,255,.12);
+      padding:.6rem 1.4rem;text-align:center;border-left:1px solid rgba(0,47,52,.15);
     }
     .qb-timer-value{
-      font-size:2.2rem;font-weight:800;color:var(--accent);line-height:1;letter-spacing:-1px;
+      font-size:1.9rem;font-weight:800;color:var(--primary);line-height:1;letter-spacing:-1px;
       font-variant-numeric:tabular-nums;
     }
-    .qb-timer-label{font-size:.6rem;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.5);font-weight:700;margin-top:.1rem;}
+    .qb-timer-label{font-size:.58rem;text-transform:uppercase;letter-spacing:.5px;color:rgba(0,47,52,.5);font-weight:700;margin-top:.1rem;}
     .qb-actions{
-      padding:.8rem 1.2rem;display:flex;align-items:center;gap:.6rem;border-left:1px solid rgba(255,255,255,.12);flex-shrink:0;
+      padding:.6rem 1rem;display:flex;align-items:center;gap:.5rem;border-left:1px solid rgba(0,47,52,.15);flex-shrink:0;
     }
     .qb-btn{
-      padding:.5rem 1rem;border-radius:8px;font-weight:700;font-size:.8rem;
+      padding:.45rem .9rem;border-radius:8px;font-weight:700;font-size:.78rem;
       text-decoration:none;white-space:nowrap;cursor:pointer;border:none;font-family:inherit;
       display:inline-flex;align-items:center;gap:.3rem;
     }
-    .qb-btn-primary{background:var(--accent);color:var(--primary);}
-    .qb-btn-primary:hover{background:#1bcabf;}
-    .qb-btn-ghost{background:rgba(255,255,255,.12);color:white;}
-    .qb-btn-ghost:hover{background:rgba(255,255,255,.2);}
+    .qb-btn-primary{background:var(--primary);color:white;}
+    .qb-btn-primary:hover{background:#001f24;}
+    .qb-btn-ghost{background:rgba(0,47,52,.12);color:var(--primary);}
+    .qb-btn-ghost:hover{background:rgba(0,47,52,.2);}
     .qb-pulse{
-      width:9px;height:9px;border-radius:50%;background:var(--accent);
+      width:9px;height:9px;border-radius:50%;background:var(--primary);
       animation:qbPulse 1.4s ease-in-out infinite;display:inline-block;margin-right:.3rem;
     }
     @keyframes qbPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.7)}}
@@ -242,13 +243,31 @@
       .mobile-nav{display:block}
       body{padding-bottom:66px}
       .qb-timer,.qb-actions{display:none}
+      /* hide desktop nav links — bottom nav handles it */
+      .top-bar{display:none}
+      .header-right{display:none}
+      .header-content{gap:10px}
+      /* compact hero */
+      .hero{padding:36px 0 44px}
+      .hero h1{font-size:2rem;letter-spacing:-.8px}
+      .hero-sub{font-size:.92rem;margin-bottom:1.2rem}
+      .hero-btns{gap:.6rem}
+      .btn-hero-primary,.btn-hero-outline{padding:12px 20px;font-size:.88rem}
+      /* compact promo */
+      .promo{padding:32px 24px}
+      .promo h2{font-size:1.3rem}
+      /* categories */
+      .categories-section{margin:16px 0;padding:20px 0}
     }
     @media(max-width:480px){
       .listings-grid{grid-template-columns:1fr}
       .categories-grid{grid-template-columns:repeat(3,1fr)}
       .footer-grid{grid-template-columns:1fr}
-      .hero h1{font-size:2rem}
+      .hero h1{font-size:1.75rem}
       .search-wrapper{max-width:100%}
+      /* stack queue banner on tiny screens */
+      .qb-inner{flex-wrap:wrap;min-height:auto;padding:.4rem 0}
+      .qb-info{padding:.6rem 1rem}
     }
   </style>
 </head>
@@ -283,11 +302,11 @@
 ════════════════════════════════════════════════════ -->
 <div class="top-bar">
   <div class="container">
-    <span>🏥 Hospitals · 🏦 Banks · 💇‍♀️ Salons · 🍽️ Restaurants · 🏋️ Gyms</span>
+    <span>🏥 Hospitals · 🏦 Banks · 💇 Salons · 🍽️ Restaurants · 🏋️ Gyms</span>
     <div>
       <a href="about.html">About</a>
       <a href="how-it-works.html">How It Works</a>
-      <a href="hospital-signup.html">For Hospitals</a>
+      <a href="business-signup.html">For Businesses</a>
       <a href="login.html" id="loginLink">Login</a>
       <a href="#" id="logoutLink" style="display:none" onclick="handleLogout(event)">Logout</a>
     </div>
@@ -306,6 +325,7 @@
         <button class="search-btn" onclick="performSearch()">Search</button>
       </div>
       <div class="header-right">
+        <a href="nearby.html" class="btn-header btn-header-ghost">🔍 Services</a>
         <a href="hospitals.html" class="btn-header btn-header-ghost">🏥 Hospitals</a>
         <a href="dashboard.html" class="btn-header btn-header-ghost" id="dashBtn" style="display:none">My Queues</a>
         <a href="signup.html" class="btn-header btn-header-ghost" id="signupBtn">Sign Up</a>
@@ -326,8 +346,8 @@
         <h1>Skip the Queue,<br><span>Save Your Time</span></h1>
         <p class="hero-sub">See live wait times at hospitals, clinics, salons, banks and more. Join the queue from anywhere and arrive only when it's your turn.</p>
         <div class="hero-btns">
-          <a href="hospitals.html" class="btn-hero-primary">🏥 Find a Hospital</a>
-          <a href="nearby.html" class="btn-hero-outline">Browse All Services →</a>
+          <a href="nearby.html" class="btn-hero-primary">🔍 Find Services Near You</a>
+          <a href="hospitals.html" class="btn-hero-outline">🏥 Hospitals →</a>
         </div>
       </div>
       <!-- Live Stats Panel -->
@@ -385,7 +405,7 @@
       <a href="car-wash.html"     class="cat-card"><span class="cat-icon">🧼</span><div class="cat-name">Car Wash</div></a>
       <a href="repairs.html"      class="cat-card"><span class="cat-icon">🛠️</span><div class="cat-name">Repairs</div></a>
       <a href="nearby.html"       class="cat-card"><span class="cat-icon">🔍</span><div class="cat-name">Search All</div></a>
-      <a href="hospital-signup.html" class="cat-card"><span class="cat-icon">➕</span><div class="cat-name">Add Yours</div></a>
+      <a href="business-signup.html" class="cat-card"><span class="cat-icon">➕</span><div class="cat-name">Add Yours</div></a>
     </div>
   </div>
 </section>
@@ -407,10 +427,10 @@
     </div>
   </section>
 
-  <!-- Hospital spotlight -->
+  <!-- Hospitals section -->
   <section>
     <div class="section-header">
-      <h2 class="section-title">🏥 Hospitals — Live Department Waits</h2>
+      <h2 class="section-title">🏥 Hospitals Near You</h2>
       <a href="hospitals.html" class="view-all">All hospitals →</a>
     </div>
     <div class="listings-grid" id="hospitalList">
@@ -422,12 +442,12 @@
   <!-- Promo -->
   <div class="promo">
     <div>
-      <h2>Register Your Hospital or Business 🏥</h2>
-      <p>Let patients and customers see live wait times. Add all departments, update waits in seconds — free to get started.</p>
+      <h2>List Your Business — It's Free 🚀</h2>
+      <p>Hospitals, salons, banks, clinics, gyms and more. Let customers see live wait times and join your queue from anywhere.</p>
     </div>
     <div class="promo-btns">
-      <a href="hospital-signup.html" class="btn-white">Register Hospital</a>
-      <a href="business-signup.html" class="btn-outline-white">Other Business</a>
+      <a href="hospital-signup.html" class="btn-white">🏥 Register Hospital</a>
+      <a href="business-signup.html" class="btn-outline-white">Other Business →</a>
     </div>
   </div>
 
@@ -456,10 +476,10 @@
     </div>
   </div>
 
-  <!-- More open now -->
+  <!-- Other services open now -->
   <section>
     <div class="section-header">
-      <h2 class="section-title">🌟 Open Now Near You</h2>
+      <h2 class="section-title">💼 Other Services — Open Now</h2>
       <a href="nearby.html" class="view-all">View all →</a>
     </div>
     <div class="listings-grid" id="featuredList">
@@ -621,7 +641,12 @@
   function renderTimer(secs) {
     const m = Math.floor(secs / 60);
     const s = secs % 60;
-    document.getElementById('qbTimerVal').textContent = m > 0 ? String(m) : (s > 0 ? '<1' : '0');
+    const mm = String(m).padStart(2,'0');
+    const ss = String(s).padStart(2,'0');
+    document.getElementById('qbTimerVal').textContent = mm + ':' + ss;
+    // change label to reflect format
+    const lbl = document.querySelector('.qb-timer-label');
+    if (lbl) lbl.textContent = 'time left';
   }
 
   function hideBanner() {
@@ -676,12 +701,15 @@
   // LISTINGS
   // ──────────────────────────────────────────────
   async function loadListings() {
-    // Shortest waits: all open providers, pick those with lowest dept wait
-    const { data: provs } = await sb.from('providers').select('id,business_name,address,category,is_open,is_hospital').eq('is_open',true).limit(20);
+    // Fetch open providers
+    const { data: provs } = await sb.from('providers')
+      .select('id,business_name,address,category,is_open,is_hospital')
+      .eq('is_open',true).limit(40);
     if (!provs?.length) { emptyGrid('shortestList'); emptyGrid('featuredList'); emptyGrid('hospitalList'); return; }
 
     const ids = provs.map(p => p.id);
-    const { data: depts } = await sb.from('departments').select('provider_id,wait_minutes,is_open').in('provider_id',ids).eq('is_open',true);
+    const { data: depts } = await sb.from('departments')
+      .select('provider_id,wait_minutes,is_open').in('provider_id',ids).eq('is_open',true);
     const byProv = {};
     (depts||[]).forEach(d => {
       if (!byProv[d.provider_id]) byProv[d.provider_id] = [];
@@ -690,18 +718,32 @@
 
     const enriched = provs.map(p => {
       const pdepts = byProv[p.id] || [];
-      const minWait = pdepts.length ? Math.min(...pdepts.map(d=>d.wait_minutes||0)) : 0;
+      const minWait = pdepts.length ? Math.min(...pdepts.map(d=>d.wait_minutes||0)) : null;
       return { ...p, minWait, deptCount: pdepts.length };
+    })
+    // Only show providers that have at least 1 open department (no fake/incomplete listings)
+    .filter(p => p.deptCount > 0)
+    // Only show providers with a real address (more than 4 chars, not pure alphanumeric garbage)
+    .filter(p => {
+      const addr = (p.address||'').trim();
+      return addr.length >= 5 && /\s/.test(addr); // must contain a space (real addresses do)
     });
 
-    enriched.sort((a,b) => a.minWait - b.minWait);
+    // Sort by wait time ascending
+    enriched.sort((a,b) => (a.minWait||999) - (b.minWait||999));
 
     const hospitals = enriched.filter(p => p.is_hospital || p.category === 'Hospital');
-    const others = enriched.filter(p => !p.is_hospital && p.category !== 'Hospital');
+    const others    = enriched.filter(p => !p.is_hospital && p.category !== 'Hospital');
 
+    // ── De-duplicated sections ──────────────────────────
+    // Shortest waits: top 4 across all types
     renderGrid('shortestList', enriched.slice(0,4));
-    renderGrid('hospitalList', hospitals.slice(0,4).length ? hospitals.slice(0,4) : enriched.slice(0,4));
-    renderGrid('featuredList', others.slice(0,4).length ? others.slice(0,4) : enriched.slice(0,4));
+
+    // Hospitals section: hospitals only (no fallback to others)
+    renderGrid('hospitalList', hospitals.slice(0,4));
+
+    // Other services: non-hospitals only (no fallback to hospitals)
+    renderGrid('featuredList', others.slice(0,4));
   }
 
   function renderGrid(id, items) {
@@ -718,22 +760,25 @@
   function listingCard(p) {
     const icon = ICONS[p.category] || (p.is_hospital ? '🏥' : '🏪');
     const wait = p.minWait;
+    const waitLabel = wait === null ? '—' : (wait === 0 ? '~0' : String(wait));
     const badgeCls = wait > 60 ? 'high' : wait > 30 ? 'med' : '';
     const detailPage = (p.is_hospital || p.category === 'Hospital') ? 'hospital-detail.html' : 'business-detail.html';
+    const isHosp = p.is_hospital || p.category === 'Hospital';
+    const unitWord = isHosp ? (p.deptCount===1?'dept':'depts') : (p.deptCount===1?'service':'services');
     return `
     <a href="${detailPage}?id=${esc(p.id)}" class="listing-card">
       <div class="listing-img">
         <span>${icon}</span>
-        <div class="wait-badge ${badgeCls}">${wait} min wait</div>
+        <div class="wait-badge ${badgeCls}">${waitLabel} min wait</div>
         <div class="open-badge"><div class="open-dot"></div>Open</div>
       </div>
       <div class="listing-info">
         <div class="listing-name">${esc(p.business_name||'Business')}</div>
-        <div class="listing-wait">${wait} <span style="font-size:12px;font-weight:500;color:var(--text-muted);">min wait</span></div>
-        <div class="listing-addr">📍 ${esc(p.address||'Location not set')}</div>
+        <div class="listing-wait">${waitLabel} <span style="font-size:12px;font-weight:500;color:var(--text-muted);">min wait</span></div>
+        <div class="listing-addr">📍 ${esc(p.address||'')}</div>
         <div class="listing-meta">
           <div class="listing-cat">${esc(p.category||'Service')}</div>
-          <div class="listing-queue">${p.deptCount} ${p.deptCount===1?'dept':'depts'}</div>
+          <div class="listing-queue">${p.deptCount} ${unitWord}</div>
         </div>
       </div>
     </a>`;
