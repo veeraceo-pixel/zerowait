@@ -1,213 +1,344 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Find services | skipQs</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="/styles.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Find Services | skipQs</title>
+<meta name="description" content="Find hospitals, clinics, salons, banks, restaurants and more with live wait times. Skip the queue.">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="sector.css">
+<style>
+  /* ── Category filter pills ── */
+  .category-filters {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 1.25rem 0;
+  }
+  .cat-chip {
+    padding: 7px 16px;
+    border-radius: 50px;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    font-size: .78rem;
+    font-weight: 700;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: .15s;
+    user-select: none;
+  }
+  .cat-chip:hover { border-color: var(--primary); color: var(--primary); }
+  .cat-chip.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+  /* ── Sector group header ── */
+  .sector-group { margin-bottom: 2.5rem; }
+  .sector-group-title {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--primary);
+    margin-bottom: 1rem;
+    padding-bottom: .5rem;
+    border-bottom: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sector-group .grid { margin-top: 0; }
+</style>
 </head>
-<body>
-  <header class="sq-header">
-    <div class="sq-container sq-header-inner">
-      <div class="sq-logo">skip<span>Qs</span></div>
-      <nav class="sq-nav">
-        <a href="/find-services.html" class="active">Find services</a>
-        <a href="/my-queues.html">My queues</a>
+<body data-category="__all__">
+
+<header>
+  <div class="container">
+    <div class="header-content">
+      <a href="index.html" class="logo">skip<span>Qs</span></a>
+      <nav class="nav">
+        <a href="hospitals.html">Hospitals</a>
+        <a href="clinics.html">Clinics</a>
+        <a href="salons.html">Salons</a>
+        <a href="banks.html">Banks</a>
+        <a href="restaurants.html">Restaurants</a>
+        <a href="find-services.html" class="active">All</a>
       </nav>
-      <div class="sq-header-actions">
-        <a href="/login.html" class="sq-btn sq-btn-ghost">Log in</a>
+      <div class="spacer"></div>
+      <div class="header-actions">
+        <a href="login.html" class="btn btn-ghost">Login</a>
+        <a href="provider-signup.html" class="btn btn-primary">+ Register Business</a>
+      </div>
+      <button class="hamburger" onclick="document.querySelector('.mobile-nav').classList.toggle('open')" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+    <div class="mobile-nav">
+      <a href="hospitals.html">🏥 Hospitals</a>
+      <a href="clinics.html">🩺 Clinics</a>
+      <a href="salons.html">💇 Salons</a>
+      <a href="banks.html">🏦 Banks</a>
+      <a href="restaurants.html">🍽️ Restaurants</a>
+      <a href="find-services.html" class="active">📋 All Services</a>
+      <div class="mobile-actions">
+        <a href="login.html" class="btn btn-ghost">Login</a>
+        <a href="provider-signup.html" class="btn btn-primary">Register</a>
       </div>
     </div>
-  </header>
+  </div>
+</header>
 
-  <main class="sq-main">
-    <section class="sq-section">
-      <div class="sq-container">
-        <h1>Find services</h1>
-        <p class="sq-subtle">Browse providers and join their queues.</p>
-
-        <div class="sq-filter-row">
-          <input
-            type="text"
-            id="search-input"
-            placeholder="Search by name or address"
-          />
-          <select id="category-filter">
-            <option value="">All categories</option>
-            <option value="salon">Salon</option>
-            <option value="clinic">Clinic</option>
-            <option value="bank">Bank</option>
-            <option value="gym">Gym</option>
-            <option value="dining">Restaurant</option>
-          </select>
-        </div>
-
-        <div id="providers-list" class="sq-queue-list"></div>
-        <div id="providers-empty" class="sq-empty-state" hidden>
-          <h3>No providers found</h3>
-          <p>Try a different search or category.</p>
+<section class="hero" style="padding:40px 0;">
+  <div class="container">
+    <div class="hero-inner" style="align-items:center;">
+      <div>
+        <h1>All services, <span class="accent">live wait times</span></h1>
+        <p id="sectorTagline">Browse every registered provider — hospitals, clinics, salons, banks and more.</p>
+        <div class="hero-stats">
+          <div class="hero-stat"><div class="hero-stat-value" id="statTotal">—</div><div class="hero-stat-label">Providers on skipQs</div></div>
+          <div class="hero-stat"><div class="hero-stat-value" id="statUnits">—</div><div class="hero-stat-label">Departments / Services</div></div>
+          <div class="hero-stat"><div class="hero-stat-value" id="statAvgWait">—</div><div class="hero-stat-label">Average wait (min)</div></div>
+          <div class="hero-stat"><div class="hero-stat-value" id="statShortest">—</div><div class="hero-stat-label">Shortest wait now</div></div>
         </div>
       </div>
-    </section>
-  </main>
+      <div class="hero-img" id="sectorIcon">🌐</div>
+    </div>
+  </div>
+</section>
 
-  <script type="module">
-    import {
-      listProviders,
-      getProviderServices,
-      joinQueue
-    } from './api.js';
+<div class="container search-section">
+  <div class="search-card" style="flex-direction:column;gap:12px;align-items:stretch;">
+    <input id="searchInput" class="search-input" type="text" placeholder="Search by name, city or address…" style="border-right:2px solid var(--primary);border-radius:8px;">
+    <div class="category-filters" id="categoryFilters">
+      <div class="cat-chip active" data-cat="">🌐 All</div>
+      <div class="cat-chip" data-cat="Hospital">🏥 Hospitals</div>
+      <div class="cat-chip" data-cat="Clinic">🩺 Clinics</div>
+      <div class="cat-chip" data-cat="Pharmacy">💊 Pharmacies</div>
+      <div class="cat-chip" data-cat="Salon">💇 Salons</div>
+      <div class="cat-chip" data-cat="Barber">💈 Barbers</div>
+      <div class="cat-chip" data-cat="Bank">🏦 Banks</div>
+      <div class="cat-chip" data-cat="Restaurant">🍽️ Restaurants</div>
+      <div class="cat-chip" data-cat="Gym">🏋️ Gyms</div>
+      <div class="cat-chip" data-cat="CarWash">🧼 Car Washes</div>
+      <div class="cat-chip" data-cat="Government">🏛️ Government</div>
+      <div class="cat-chip" data-cat="Repair">🛠️ Repairs</div>
+    </div>
+  </div>
+</div>
 
-    const providersList = document.getElementById('providers-list');
-    const emptyEl = document.getElementById('providers-empty');
-    const searchInput = document.getElementById('search-input');
-    const categoryFilter = document.getElementById('category-filter');
+<main class="container" style="margin-top:1rem;">
+  <div id="grid">
+    <div class="skel">Loading…</div>
+    <div class="skel">Loading…</div>
+    <div class="skel">Loading…</div>
+  </div>
+</main>
 
-    let allProviders = [];
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div><a href="index.html" class="logo" style="color:white;">skip<span>Qs</span></a><p style="font-size:.85rem;opacity:.65;margin-top:.6rem;max-width:280px;">Skip the queue. Save your time.</p></div>
+      <div><h4>Services</h4><a href="hospitals.html">Hospitals</a><a href="clinics.html">Clinics</a><a href="salons.html">Salons</a><a href="find-services.html">All Services</a></div>
+      <div><h4>For Businesses</h4><a href="provider-signup.html">Register Business</a><a href="hospital-signup.html">Register Hospital</a><a href="business-pricing.html">Pricing</a></div>
+      <div><h4>Company</h4><a href="about.html">About</a><a href="contact.html">Contact</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a></div>
+    </div>
+    <div class="footer-bot">© <span id="year"></span> skipQs · Skip the queue, save your time</div>
+  </div>
+</footer>
 
-    async function loadProviders() {
-      const q = (searchInput.value || '').trim();
-      const category = categoryFilter.value || '';
-      const providers = await listProviders({ search: q, category });
-      allProviders = providers;
-      renderProviders();
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="supabase-config.js"></script>
+<script src="auth-nav.js"></script>
+<script src="sector-config.js"></script>
+
+<script>
+(function(){
+  'use strict';
+
+  const CATEGORY_ICONS = {
+    Hospital:'🏥', Clinic:'🩺', Pharmacy:'💊',
+    Salon:'💇‍♀️', Barber:'💈',
+    Bank:'🏦', Restaurant:'🍽️',
+    Gym:'🏋️', CarWash:'🧼',
+    Government:'🏛️', Repair:'🛠️'
+  };
+
+  let allItems = [];
+  let activeCategory = '';
+  let searchQ = '';
+
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  // ── Category filter chips ──
+  document.querySelectorAll('.cat-chip').forEach(chip => {
+    chip.onclick = () => {
+      document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      activeCategory = chip.dataset.cat;
+      render();
+    };
+  });
+
+  // ── Search ──
+  const searchInput = document.getElementById('searchInput');
+  if (searchInput) {
+    searchInput.addEventListener('keyup', () => {
+      searchQ = searchInput.value.trim().toLowerCase();
+      render();
+    });
+  }
+
+  // ── Load all providers ──
+  async function loadAll() {
+    const { data: providers, error } = await sb.from('providers')
+      .select('id, business_name, address, is_open, lat, lng, category, is_hospital, capacity')
+      .order('business_name', { ascending: true });
+
+    if (error || !providers?.length) {
+      showEmpty(error ? 'Could not load providers.' : null);
+      return;
     }
 
-    function renderProviders() {
-      providersList.innerHTML = '';
-      if (!allProviders.length) {
-        emptyEl.hidden = false;
-        return;
+    const ids = providers.map(p => p.id);
+    const { data: depts } = await sb.from('departments').select('*').in('provider_id', ids);
+    const byProvider = {};
+    (depts||[]).forEach(d => { (byProvider[d.provider_id] ||= []).push(d); });
+
+    allItems = providers.map(p => ({
+      ...p,
+      departments: (byProvider[p.id] || []).sort((a,b) => (a.display_order||0)-(b.display_order||0))
+    }));
+
+    updateStats(allItems);
+    render();
+  }
+
+  function updateStats(items) {
+    const allDepts = items.flatMap(h => h.departments);
+    const openDepts = allDepts.filter(d => d.is_open);
+    setText('statTotal',    items.length);
+    setText('statUnits',    allDepts.length);
+    setText('statAvgWait',  openDepts.length ? Math.round(openDepts.reduce((s,d) => s+(d.wait_minutes||0), 0)/openDepts.length) : 0);
+    setText('statShortest', openDepts.length ? Math.min(...openDepts.map(d => d.wait_minutes||0)) : '—');
+  }
+
+  function render() {
+    let items = allItems;
+
+    // Category filter
+    if (activeCategory) {
+      if (activeCategory === 'Hospital') {
+        items = items.filter(p => p.is_hospital || (p.category||'').toLowerCase() === 'hospital');
+      } else {
+        items = items.filter(p => (p.category||'') === activeCategory);
       }
-      emptyEl.hidden = true;
-
-      allProviders.forEach((p) => {
-        const card = document.createElement('article');
-        card.className = 'sq-queue-card';
-
-        card.innerHTML = `
-          <header class="sq-queue-card-header">
-            <h3>${p.business_name}</h3>
-            <span class="sq-badge">${p.category || 'Service'}</span>
-          </header>
-          <p class="sq-subtle">${p.address || ''}</p>
-          <div class="sq-queue-status">
-            <div>
-              <span class="sq-label">People in line</span>
-              <span class="sq-value">${p.people_in_line ?? 0}</span>
-            </div>
-            <div>
-              <span class="sq-label">Current wait</span>
-              <span class="sq-value">${p.current_wait_mins ?? 0} mins</span>
-            </div>
-            <div>
-              <span class="sq-label">Status</span>
-              <span class="sq-value">${p.is_open ? 'Open' : 'Closed'}</span>
-            </div>
-          </div>
-          <details class="sq-join-details">
-            <summary>Join queue</summary>
-            <form class="sq-form sq-join-form" data-provider-id="${p.id}">
-              <label>
-                <span>Your name</span>
-                <input type="text" name="customer_name" required />
-              </label>
-              <label>
-                <span>Phone (optional)</span>
-                <input type="tel" name="customer_phone" />
-              </label>
-              <label>
-                <span>Service</span>
-                <select name="service_id" required>
-                  <option value="">Loading services…</option>
-                </select>
-              </label>
-              <button type="submit" class="sq-btn sq-btn-primary">Join queue</button>
-              <p class="sq-form-message"></p>
-            </form>
-          </details>
-        `;
-
-        providersList.appendChild(card);
-      });
-
-      // Load services for each provider
-      const forms = document.querySelectorAll('.sq-join-form');
-      forms.forEach(async (form) => {
-        const providerId = form.dataset.providerId;
-        const select = form.querySelector('select[name="service_id"]');
-        const msg = form.querySelector('.sq-form-message');
-
-        const services = await getProviderServices(providerId);
-        select.innerHTML = '<option value="">Select a service</option>';
-        if (!services.length) {
-          select.innerHTML = '<option value="">No services configured</option>';
-          select.disabled = true;
-        } else {
-          services.forEach((s) => {
-            const opt = document.createElement('option');
-            opt.value = s.id;
-            opt.textContent = `${s.name} (${s.duration} mins)`;
-            opt.dataset.name = s.name;
-            opt.dataset.duration = s.duration;
-            select.appendChild(opt);
-          });
-        }
-
-        form.addEventListener('submit', async (e) => {
-          e.preventDefault();
-          msg.textContent = '';
-          msg.className = 'sq-form-message';
-
-          const user = await window.sqGetCurrentUser();
-          if (!user) {
-            msg.textContent = 'Please log in to join a queue.';
-            msg.classList.add('error');
-            return;
-          }
-
-          const data = Object.fromEntries(new FormData(form).entries());
-          const selected = select.selectedOptions[0];
-          if (!selected || !selected.value) {
-            msg.textContent = 'Please select a service.';
-            msg.classList.add('error');
-            return;
-          }
-
-          const payload = {
-            user_id: user.id,
-            provider_id: providerId,
-            customer_name: data.customer_name,
-            customer_phone: data.customer_phone || null,
-            selected_service: selected.dataset.name,
-            service_duration: Number(selected.dataset.duration) || 15
-          };
-
-          msg.textContent = 'Joining queue…';
-
-          const result = await joinQueue(payload);
-          if (result.error) {
-            msg.textContent = result.error;
-            msg.classList.add('error');
-          } else {
-            msg.textContent = 'You are in the queue!';
-            msg.classList.add('success');
-            setTimeout(() => {
-              window.location.href = '/my-queues.html';
-            }, 1000);
-          }
-        });
-      });
     }
 
-    searchInput.addEventListener('input', () => {
-      clearTimeout(window._sqSearchTimer);
-      window._sqSearchTimer = setTimeout(loadProviders, 300);
+    // Search filter
+    if (searchQ) {
+      items = items.filter(p =>
+        (p.business_name||'').toLowerCase().includes(searchQ) ||
+        (p.address||'').toLowerCase().includes(searchQ) ||
+        (p.category||'').toLowerCase().includes(searchQ)
+      );
+    }
+
+    const grid = document.getElementById('grid');
+    if (!items.length) { showEmpty(); return; }
+
+    // Group by category when showing "All"
+    if (!activeCategory && !searchQ) {
+      renderGrouped(items, grid);
+    } else {
+      grid.innerHTML = items.map(p => card(p)).join('');
+    }
+
+    updateStats(items);
+  }
+
+  function renderGrouped(items, grid) {
+    // Group providers by category
+    const groups = {};
+    items.forEach(p => {
+      const cat = p.is_hospital ? 'Hospital' : (p.category || 'Other');
+      (groups[cat] ||= []).push(p);
     });
 
-    categoryFilter.addEventListener('change', loadProviders);
+    const order = ['Hospital','Clinic','Pharmacy','Salon','Barber','Bank','Restaurant','Gym','CarWash','Government','Repair','Other'];
+    let html = '';
+    order.forEach(cat => {
+      if (!groups[cat]?.length) return;
+      const cfg = window.getSectorConfig(cat);
+      const icon = CATEGORY_ICONS[cat] || cfg.icon || '🏪';
+      html += `
+        <div class="sector-group">
+          <div class="sector-group-title">${icon} ${cfg.plural}</div>
+          <div class="grid" style="margin-top:0;">${groups[cat].map(p => card(p)).join('')}</div>
+        </div>`;
+    });
+    grid.innerHTML = html;
+  }
 
-    window.addEventListener('load', loadProviders);
-  </script>
+  function card(p) {
+    const isHosp = p.is_hospital || (p.category||'').toLowerCase() === 'hospital';
+    const cfg    = window.getSectorConfig(isHosp ? 'Hospital' : (p.category || 'Other'));
+    const icon   = CATEGORY_ICONS[isHosp ? 'Hospital' : p.category] || cfg.icon || '🏪';
+    const depts  = p.departments || [];
+    const visible = depts.filter(d => d.is_open).sort((a,b) => (a.wait_minutes||0)-(b.wait_minutes||0)).slice(0,4);
+    const moreCount = Math.max(0, depts.length - visible.length);
+    const detailPage = isHosp ? 'hospital-detail.html' : 'business-detail.html';
+
+    function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+    const deptRows = visible.length
+      ? visible.map(d => {
+          const w = d.wait_minutes || 0;
+          const cls = w === 0 ? 'wait-low' : w > 60 ? 'wait-high' : w > 30 ? 'wait-med' : 'wait-low';
+          return `<div class="dept-row"><div class="dept-name">${esc(d.icon||icon)} ${esc(d.name)}</div><div class="dept-wait ${cls}">${w} min</div></div>`;
+        }).join('')
+      : `<div class="dept-row"><div class="dept-name" style="color:var(--text-muted);">No open ${cfg.unitPlural.toLowerCase()}</div></div>`;
+
+    const more = moreCount ? `<div class="dept-row" style="border:none;color:var(--text-muted);font-size:.78rem;">+ ${moreCount} more</div>` : '';
+
+    return `
+      <a href="${detailPage}?id=${esc(p.id)}" class="h-card">
+        <div class="h-card-top">
+          <h3>${esc(p.business_name)}</h3>
+          <div class="addr">📍 ${esc(p.address || 'Address not set')}</div>
+          <div class="status-pill ${p.is_open?'':'closed'}">
+            ${p.is_open ? '<div class="live-dot"></div> OPEN' : 'CLOSED'}
+          </div>
+        </div>
+        <div class="h-card-body">
+          ${deptRows}${more}
+        </div>
+        <div class="h-card-foot">
+          <span class="meta">${icon} ${cfg.label} · ${depts.length} ${depts.length===1?cfg.unitSingular.toLowerCase():cfg.unitPlural.toLowerCase()}</span>
+          <span class="cta-text">View &amp; join queue →</span>
+        </div>
+      </a>`;
+  }
+
+  function showEmpty(msg) {
+    const grid = document.getElementById('grid');
+    msg = msg || 'No services found. Try a different search or category.';
+    grid.innerHTML = `
+      <div class="empty" style="grid-column:1/-1;">
+        <h3>${msg}</h3>
+        <p>Be the first to register your business and get discovered by customers.</p>
+        <a href="provider-signup.html" class="btn btn-primary" style="margin-top:1rem;">Register Your Business →</a>
+      </div>`;
+  }
+
+  function setText(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+  }
+
+  // Realtime
+  sb.channel('find-all')
+    .on('postgres_changes', {event:'*', schema:'public', table:'departments'}, () => loadAll())
+    .on('postgres_changes', {event:'UPDATE', schema:'public', table:'providers'}, () => loadAll())
+    .subscribe();
+
+  loadAll();
+})();
+</script>
 </body>
 </html>

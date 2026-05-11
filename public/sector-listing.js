@@ -28,9 +28,15 @@
   setTextIfPresent('sectorIcon',   cfg.icon);
   setTextIfPresent('sectorUnitPlural', cfg.unitPlural.toLowerCase());
 
-  const signupLinks = document.querySelectorAll('[data-signup-link]');
-  signupLinks.forEach(a => {
-    a.href = 'business-signup.html?category=' + encodeURIComponent(category);
+  // Set signup button href + text consistently for every sector page
+  const signupHref = (category === 'Hospital')
+    ? 'hospital-signup.html'
+    : 'business-signup.html?category=' + encodeURIComponent(category);
+  const signupText = '+ Register ' + cfg.label;
+
+  document.querySelectorAll('[data-signup-link]').forEach(a => {
+    a.href = signupHref;
+    a.textContent = signupText;
   });
 
   function setTextIfPresent(id, text) {
@@ -162,4 +168,23 @@
     .subscribe();
 
   loadAll();
+
+  // ── Auth: swap Login → My Queues when user is signed in ──────────────
+  function updateAuthNav(session) {
+    // Desktop + mobile: find all links pointing at login.html
+    document.querySelectorAll('a[href="login.html"]').forEach(a => {
+      if (session) {
+        a.textContent = 'My Queues';
+        a.href = 'dashboard.html';
+      } else {
+        a.textContent = 'Login';
+        a.href = 'login.html';
+      }
+    });
+  }
+
+  // Check on load
+  sb.auth.getSession().then(({ data: { session } }) => updateAuthNav(session));
+  // Keep in sync if they sign in/out in another tab
+  sb.auth.onAuthStateChange((_event, session) => updateAuthNav(session));
 })();
