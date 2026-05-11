@@ -217,6 +217,7 @@ Orthopaedics"></textarea>
 <script>
 let provider = null;
 let departments = [];
+let queueCounts = {}; // dept_id → number of people currently waiting/serving
 let editId = null;
 
 function toast(msg, kind='success') {
@@ -274,6 +275,19 @@ async function loadDepartments() {
     .order('display_order', { ascending: true });
   if (error) { toast('Could not load departments', 'error'); return; }
   departments = data || [];
+
+  // Fetch live queue counts per department (for parallel capacity calculation)
+  if (departments.length) {
+    const deptIds = departments.map(d => d.id);
+    const { data: qRows } = await sb.from('queues')
+      .select('department_id')
+      .in('department_id', deptIds)
+      .in('status', ['waiting', 'serving']);
+    queueCounts = {};
+    (qRows || []).forEach(q => {
+      if (q.department_id) queueCounts[q.department_id] = (queueCounts[q.department_id] || 0) + 1;
+    });
+  }
 }
 
 function render() {
@@ -329,6 +343,12 @@ function render() {
 function deptCard(d) {
   const wait = d.wait_minutes || 0;
   const waitClass = !d.is_open ? '' : wait === 0 ? 'zero' : wait > 60 ? 'high' : wait > 30 ? 'med' : '';
+  const cap = Math.max(1, d.capacity || 1);
+  const consultMins = d.avg_consult_minutes || 15;
+  const inQueue = queueCounts[d.id] || 0;
+  // Parallel capacity formula: ceil(queue / capacity) * avg_service_time
+  const suggested = Math.ceil(inQueue / cap) * consultMins;
+  const showSuggestion = inQueue > 0 && suggested !== wait;
   return `
     <div class="dept-card">
       <div class="dept-icon">${esc(d.icon || '🏥')}</div>
@@ -336,12 +356,16 @@ function deptCard(d) {
         <div class="dept-name">${esc(d.name)}</div>
         <div class="dept-meta">
           <span><span class="dept-status-dot ${d.is_open?'dot-open':'dot-closed'}"></span>${d.is_open?'Open':'Closed'}</span>
-          <span>👥 Capacity: ${d.capacity}</span>
-          <span>⏱ ${d.avg_consult_minutes||15} min/visit</span>
+          <span title="How many patients can be served simultaneously">🪑 ${cap} slot${cap>1?'s':''}</span>
+          <span title="Average time per patient">⏱ ${consultMins} min/patient</span>
+          <span title="People currently waiting or being served">👥 ${inQueue} in queue</span>
         </div>
+        ${showSuggestion ? `<div style="margin-top:.35rem;font-size:.75rem;color:var(--warning);font-weight:700;">
+          💡 Suggested: ${suggested} min &nbsp;<button class="btn btn-quick btn-sm" style="font-size:.72rem;padding:.3rem .6rem;" onclick="quickSetWait('${d.id}',${suggested})">Apply</button>
+        </div>` : ''}
       </div>
       <div class="dept-controls">
-        <input type="number" class="wait-input" min="0" value="${wait}" onchange="quickSetWait('${d.id}', this.value)" title="Set wait minutes">
+        <input type="number" class="wait-input" min="0" value="${wait}" onchange="quickSetWait('${d.id}', this.value)" title="Current wait time shown to patients">
         <span class="wait-unit">min</span>
         <button class="btn btn-quick btn-sm" onclick="bumpWait('${d.id}', -5)" title="−5 min">−5</button>
         <button class="btn btn-quick btn-sm" onclick="bumpWait('${d.id}', 5)" title="+5 min">+5</button>

@@ -271,13 +271,13 @@
     list.innerHTML = '<div class="loading-box"><div class="spinner"></div><p>Loading…</p></div>';
 
     let query = sb.from('queues')
-      .select('id,status,provider_id,department_id,service_duration,joined_at,created_at')
+      .select('id,status,provider_id,department_id,service_duration,joined_at')
       .eq('user_id', currentUserId);
 
     if (tab === 'active') {
-      query = query.in('status',['waiting','serving']).order('created_at',{ascending:false});
+      query = query.in('status',['waiting','serving']).order('joined_at',{ascending:false});
     } else {
-      query = query.in('status',['completed','cancelled','no_show']).order('created_at',{ascending:false}).limit(50);
+      query = query.in('status',['completed','cancelled','no_show']).order('joined_at',{ascending:false}).limit(50);
     }
 
     const { data, error } = await query;
@@ -314,7 +314,7 @@
       const waitMins = dept ? (dept.wait_minutes||0) : (q.service_duration||0);
       const isHosp = prov && (prov.is_hospital || prov.category === 'Hospital');
       const detailPage = prov ? (isHosp ? `hospital-detail.html?id=${prov.id}` : `business-detail.html?id=${prov.id}`) : '#';
-      const date = q.created_at ? new Date(q.created_at).toLocaleString([],{dateStyle:'medium',timeStyle:'short'}) : '';
+      const date = q.joined_at ? new Date(q.joined_at).toLocaleString([],{dateStyle:'medium',timeStyle:'short'}) : '';
       const badgeCls = q.status==='waiting'?'badge-waiting':q.status==='serving'?'badge-serving':q.status==='completed'?'badge-completed':'badge-cancelled';
       const label = q.status.charAt(0).toUpperCase()+q.status.slice(1);
 
