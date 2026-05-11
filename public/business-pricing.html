@@ -1,74 +1,356 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Business Pricing | skipQs</title>
-  <link rel="stylesheet" href="style.css"/>
-  
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pricing for Businesses | skipQs</title>
+<meta name="description" content="Simple, transparent pricing for hospitals, clinics, salons and businesses. Start free, no contracts.">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--primary:#002f34;--accent:#23e5db;--accent2:#ffce32;--bg:#f7f8f8;--border:#e2e8f0;--text-muted:#406367;--success:#059669;--danger:#dc2626;--warning:#d97706;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--primary);line-height:1.55;}
+.container{max-width:1100px;margin:0 auto;padding:0 20px;}
+
+/* ─── Header ─── */
+header{background:white;padding:14px 0;box-shadow:0 2px 8px rgba(0,0,0,.06);position:sticky;top:0;z-index:1000;}
+.header-content{display:flex;align-items:center;gap:16px;}
+.logo{font-size:1.5rem;font-weight:800;color:var(--primary);text-decoration:none;letter-spacing:-1px;}
+.logo span{color:var(--accent);}
+.nav{display:flex;gap:18px;margin-left:24px;}
+.nav a{color:var(--text-muted);text-decoration:none;font-size:.875rem;font-weight:600;}
+.nav a:hover,.nav a.active{color:var(--primary);}
+.spacer{flex:1;}
+.header-actions{display:flex;gap:10px;}
+.btn{padding:.6rem 1.2rem;border-radius:50px;font-weight:700;text-decoration:none;font-size:.875rem;border:none;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:.3rem;transition:.15s;}
+.btn-primary{background:var(--accent);color:var(--primary);}
+.btn-primary:hover{background:#1bcabf;}
+.btn-ghost{background:var(--bg);color:var(--primary);border:1px solid var(--border);}
+
+/* ─── Hero ─── */
+.hero{background:linear-gradient(135deg,#002f34 0%,#004d57 50%,#002f34 100%);color:white;padding:56px 0 72px;text-align:center;}
+.hero h1{font-size:2.8rem;font-weight:800;letter-spacing:-1.5px;margin-bottom:.8rem;line-height:1.1;}
+.hero h1 span{color:var(--accent);}
+.hero p{font-size:1.05rem;opacity:.85;max-width:540px;margin:0 auto 1.4rem;}
+.hero-badges{display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap;margin-top:1rem;}
+.badge{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:white;padding:.4rem .9rem;border-radius:50px;font-size:.8rem;font-weight:600;}
+
+/* ─── Toggle ─── */
+.billing-toggle{text-align:center;margin:-28px 0 2rem;position:relative;z-index:5;}
+.toggle-pill{display:inline-flex;background:white;border-radius:50px;padding:4px;box-shadow:0 4px 16px rgba(0,0,0,.1);}
+.toggle-pill button{border:none;background:none;padding:.5rem 1.2rem;border-radius:50px;font-weight:700;font-size:.85rem;cursor:pointer;font-family:inherit;color:var(--text-muted);transition:.2s;}
+.toggle-pill button.active{background:var(--primary);color:white;}
+.save-label{display:inline-block;background:#d1fae5;color:#065f46;font-size:.75rem;font-weight:700;padding:.2rem .6rem;border-radius:50px;margin-left:.5rem;}
+
+/* ─── Pricing cards ─── */
+.pricing-section{padding:0 0 4rem;}
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-bottom:3rem;}
+.price-card{background:white;border-radius:20px;padding:2rem;border:1.5px solid var(--border);position:relative;transition:.2s;}
+.price-card:hover{transform:translateY(-4px);box-shadow:0 16px 40px rgba(0,0,0,.1);}
+.price-card.popular{border-color:var(--accent);box-shadow:0 0 0 3px rgba(35,229,219,.15);}
+.popular-badge{position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:var(--accent);color:var(--primary);font-size:.75rem;font-weight:800;padding:.35rem 1rem;border-radius:50px;white-space:nowrap;}
+.plan-icon{font-size:2.2rem;margin-bottom:.8rem;}
+.plan-name{font-size:1.25rem;font-weight:800;margin-bottom:.25rem;}
+.plan-desc{font-size:.85rem;color:var(--text-muted);margin-bottom:1.4rem;line-height:1.4;}
+.price-val{font-size:2.8rem;font-weight:800;letter-spacing:-1.5px;line-height:1;margin-bottom:.25rem;}
+.price-val span{font-size:1rem;font-weight:500;color:var(--text-muted);}
+.price-period{font-size:.82rem;color:var(--text-muted);margin-bottom:1.4rem;}
+.feature-list{list-style:none;margin-bottom:1.6rem;}
+.feature-list li{font-size:.875rem;padding:.45rem 0;border-bottom:1px solid var(--bg);display:flex;align-items:flex-start;gap:.6rem;line-height:1.35;}
+.feature-list li:last-child{border-bottom:none;}
+.feature-list .check{color:var(--success);font-size:1rem;flex-shrink:0;margin-top:.05rem;}
+.feature-list .cross{color:#9ca3af;font-size:1rem;flex-shrink:0;margin-top:.05rem;}
+.feature-list .muted{color:#9ca3af;}
+.cta-btn{display:block;text-align:center;padding:.9rem;border-radius:12px;font-weight:700;text-decoration:none;font-size:.9rem;transition:.15s;}
+.cta-primary{background:var(--primary);color:white;}
+.cta-primary:hover{background:#001f24;}
+.cta-accent{background:var(--accent);color:var(--primary);}
+.cta-accent:hover{background:#1bcabf;}
+.cta-outline{border:1.5px solid var(--border);color:var(--primary);}
+.cta-outline:hover{border-color:var(--primary);}
+
+/* ─── Compare table ─── */
+.compare-section{margin-bottom:4rem;}
+.compare-section h2{font-size:1.5rem;font-weight:800;margin-bottom:1.4rem;text-align:center;}
+.compare-table{background:white;border-radius:16px;overflow:hidden;border:1px solid var(--border);width:100%;}
+.compare-table table{width:100%;border-collapse:collapse;}
+.compare-table th{background:var(--primary);color:white;padding:1rem;font-size:.85rem;font-weight:700;text-align:center;}
+.compare-table th:first-child{text-align:left;}
+.compare-table td{padding:.85rem 1rem;font-size:.875rem;border-bottom:1px solid var(--bg);text-align:center;}
+.compare-table td:first-child{text-align:left;font-weight:600;color:var(--primary);}
+.compare-table tr:last-child td{border-bottom:none;}
+.compare-table tr:nth-child(even){background:#fafbfc;}
+.tick{color:var(--success);font-weight:800;}
+.dash{color:#d1d5db;}
+
+/* ─── FAQ ─── */
+.faq-section{margin-bottom:4rem;}
+.faq-section h2{font-size:1.5rem;font-weight:800;margin-bottom:1.4rem;text-align:center;}
+.faq-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;}
+.faq-item{background:white;border-radius:14px;padding:1.4rem;border:1px solid var(--border);}
+.faq-item h3{font-size:.95rem;font-weight:700;margin-bottom:.5rem;color:var(--primary);}
+.faq-item p{font-size:.875rem;color:var(--text-muted);line-height:1.55;}
+
+/* ─── CTA Banner ─── */
+.cta-banner{background:linear-gradient(135deg,#002f34 0%,#004d57 100%);border-radius:20px;padding:2.5rem;text-align:center;color:white;margin-bottom:4rem;}
+.cta-banner h2{font-size:1.8rem;font-weight:800;margin-bottom:.6rem;}
+.cta-banner p{opacity:.8;margin-bottom:1.4rem;font-size:.95rem;}
+.cta-banner-btns{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;}
+.cta-banner-btns a{padding:.75rem 1.6rem;border-radius:50px;font-weight:700;text-decoration:none;font-size:.9rem;}
+.cta-banner-btns .b1{background:var(--accent);color:var(--primary);}
+.cta-banner-btns .b2{background:rgba(255,255,255,.15);color:white;border:1px solid rgba(255,255,255,.3);}
+
+/* ─── Footer ─── */
+footer{background:var(--primary);color:white;padding:2.4rem 0 1.4rem;}
+.footer-grid{display:grid;grid-template-columns:1.5fr repeat(3,1fr);gap:2rem;margin-bottom:1.6rem;}
+.footer-grid h4{font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;opacity:.5;margin-bottom:.8rem;font-weight:700;}
+.footer-grid a{color:rgba(255,255,255,.75);text-decoration:none;font-size:.85rem;display:block;margin-bottom:.4rem;}
+.footer-grid a:hover{color:white;}
+.footer-bot{padding-top:1rem;border-top:1px solid rgba(255,255,255,.1);font-size:.78rem;opacity:.5;text-align:center;}
+.footer-logo{font-size:1.4rem;font-weight:800;color:white;text-decoration:none;letter-spacing:-1px;margin-bottom:.6rem;display:inline-block;}
+.footer-logo span{color:var(--accent);}
+
+/* ─── Mobile ─── */
+@media(max-width:900px){
+  .pricing-grid{grid-template-columns:1fr;}
+  .faq-grid{grid-template-columns:1fr;}
+  .footer-grid{grid-template-columns:1fr 1fr;}
+}
+@media(max-width:600px){
+  .hero h1{font-size:2rem;}
+  .nav{display:none;}
+  .compare-table{overflow-x:auto;}
+}
+</style>
 </head>
-<body class="app-body">
-  <header class="app-header">
-    <div class="container header-inner">
-      <a href="index.html" class="logo"><span class="logo-mark">skip</span><span class="logo-accent">Qs</span></a>
+<body>
+
+<header>
+  <div class="container">
+    <div class="header-content">
+      <a href="index.html" class="logo">skip<span>Qs</span></a>
       <nav class="nav">
-        <a href="find-services.html">Find Services</a>
-        <a href="my-queues.html">My Queues</a>
-        <a href="how-it-works.html">How It Works</a>
-        <a href="blog.html">Blog</a>
+        <a href="hospitals.html">Hospitals</a>
+        <a href="clinics.html">Clinics</a>
+        <a href="nearby.html">All Services</a>
+        <a href="about.html">About</a>
       </nav>
+      <div class="spacer"></div>
       <div class="header-actions">
-        <a href="provider-dashboard.html" class="btn btn-ghost">For Businesses</a>
-        <a href="login.html" class="btn btn-outline" id="loginBtn">Log in</a>
-        <a href="signup.html" class="btn btn-primary">Sign up</a>
+        <a href="login.html" class="btn btn-ghost">Login</a>
+        <a href="hospital-signup.html" class="btn btn-primary">Register Free</a>
       </div>
     </div>
-  </header>
+  </div>
+</header>
 
-  <main class="app-main">
+<section class="hero">
+  <div class="container">
+    <h1>Simple pricing, <span>zero surprises</span></h1>
+    <p>Start free and upgrade as you grow. No contracts, no hidden fees, cancel anytime.</p>
+    <div class="hero-badges">
+      <span class="badge">✓ Free forever plan</span>
+      <span class="badge">✓ No credit card required</span>
+      <span class="badge">✓ Live in minutes</span>
+    </div>
+  </div>
+</section>
 
-    <section class="section">
-      <div class="container section-header"><h1>Pricing for businesses</h1><p>Start free, scale as you grow. No long-term contracts.</p></div>
-      <div class="container card-grid pricing-grid">
-        <article class="card pricing-card">
-          <h2>Starter</h2><p class="price">Free</p>
-          <ul><li>1 location</li><li>Up to 2 services</li><li>Basic queue management</li><li>Email support</li></ul>
-          <a href="signup.html" class="btn btn-outline-dark">Get started</a>
-        </article>
-        <article class="card pricing-card pricing-card--highlight">
-          <h2>Growth</h2><p class="price">£29 / month</p>
-          <ul><li>Up to 3 locations</li><li>Unlimited services</li><li>Analytics &amp; reports</li><li>Priority support</li></ul>
-          <a href="signup.html" class="btn btn-primary">Choose Growth</a>
-        </article>
-        <article class="card pricing-card">
-          <h2>Enterprise</h2><p class="price">Let's talk</p>
-          <ul><li>Multi-city operations</li><li>Custom integrations</li><li>Dedicated account manager</li><li>SLA &amp; onboarding</li></ul>
-          <a href="contact.html" class="btn btn-outline-dark">Contact sales</a>
-        </article>
+<div class="billing-toggle">
+  <div class="toggle-pill">
+    <button class="active" id="btnMonthly" onclick="setBilling('monthly')">Monthly</button>
+    <button id="btnAnnual" onclick="setBilling('annual')">Annual <span class="save-label">Save 25%</span></button>
+  </div>
+</div>
+
+<section class="pricing-section">
+  <div class="container">
+    <div class="pricing-grid">
+
+      <!-- Starter -->
+      <div class="price-card">
+        <div class="plan-icon">🌱</div>
+        <div class="plan-name">Starter</div>
+        <div class="plan-desc">Perfect for small businesses and single-location clinics or salons.</div>
+        <div class="price-val">Free<span> / forever</span></div>
+        <div class="price-period">No credit card needed</div>
+        <ul class="feature-list">
+          <li><span class="check">✓</span> 1 location</li>
+          <li><span class="check">✓</span> Up to 5 departments / services</li>
+          <li><span class="check">✓</span> Live wait time display</li>
+          <li><span class="check">✓</span> Patient join-queue flow</li>
+          <li><span class="check">✓</span> Basic dashboard</li>
+          <li><span class="cross">✕</span> <span class="muted">Analytics & reports</span></li>
+          <li><span class="cross">✕</span> <span class="muted">Bulk CSV import</span></li>
+          <li><span class="cross">✕</span> <span class="muted">Priority support</span></li>
+        </ul>
+        <a href="hospital-signup.html" class="cta-btn cta-outline">Get Started Free</a>
       </div>
-    </section>
 
-  </main>
+      <!-- Growth (popular) -->
+      <div class="price-card popular">
+        <div class="popular-badge">⭐ Most Popular</div>
+        <div class="plan-icon">🚀</div>
+        <div class="plan-name">Growth</div>
+        <div class="plan-desc">For growing hospitals, clinics and multi-service businesses.</div>
+        <div class="price-val" id="growthPrice">£29<span> / month</span></div>
+        <div class="price-period" id="growthPeriod">Billed monthly · cancel anytime</div>
+        <ul class="feature-list">
+          <li><span class="check">✓</span> Up to 5 locations</li>
+          <li><span class="check">✓</span> Unlimited departments</li>
+          <li><span class="check">✓</span> Live wait time display</li>
+          <li><span class="check">✓</span> Realtime patient updates</li>
+          <li><span class="check">✓</span> Analytics & reports</li>
+          <li><span class="check">✓</span> <strong>Bulk CSV import</strong></li>
+          <li><span class="check">✓</span> Priority email support</li>
+          <li><span class="cross">✕</span> <span class="muted">Dedicated account manager</span></li>
+        </ul>
+        <a href="hospital-signup.html" class="cta-btn cta-accent">Start 14-day Trial</a>
+      </div>
 
-  <footer class="app-footer">
-    <div class="container footer-grid">
+      <!-- Enterprise -->
+      <div class="price-card">
+        <div class="plan-icon">🏢</div>
+        <div class="plan-name">Enterprise</div>
+        <div class="plan-desc">For NHS trusts, hospital networks, and multi-city operations.</div>
+        <div class="price-val">Custom</div>
+        <div class="price-period">Tailored to your scale</div>
+        <ul class="feature-list">
+          <li><span class="check">✓</span> Unlimited locations</li>
+          <li><span class="check">✓</span> Unlimited departments</li>
+          <li><span class="check">✓</span> Custom integrations (EHR, PMS)</li>
+          <li><span class="check">✓</span> White-label option</li>
+          <li><span class="check">✓</span> SLA guarantee</li>
+          <li><span class="check">✓</span> Dedicated account manager</li>
+          <li><span class="check">✓</span> Staff training & onboarding</li>
+          <li><span class="check">✓</span> 24/7 phone support</li>
+        </ul>
+        <a href="contact.html" class="cta-btn cta-primary">Contact Sales →</a>
+      </div>
+
+    </div>
+
+    <!-- Compare table -->
+    <div class="compare-section">
+      <h2>Feature comparison</h2>
+      <div class="compare-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th>Starter</th>
+              <th>Growth</th>
+              <th>Enterprise</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Locations</td><td>1</td><td>5</td><td>Unlimited</td></tr>
+            <tr><td>Departments / services</td><td>5</td><td>Unlimited</td><td>Unlimited</td></tr>
+            <tr><td>Live wait time board</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td></tr>
+            <tr><td>Patient queue join</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td></tr>
+            <tr><td>Realtime updates</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td></tr>
+            <tr><td>Bulk CSV import</td><td class="dash">—</td><td class="tick">✓</td><td class="tick">✓</td></tr>
+            <tr><td>Analytics dashboard</td><td class="dash">—</td><td class="tick">✓</td><td class="tick">✓</td></tr>
+            <tr><td>Custom branding</td><td class="dash">—</td><td class="dash">—</td><td class="tick">✓</td></tr>
+            <tr><td>EHR / PMS integration</td><td class="dash">—</td><td class="dash">—</td><td class="tick">✓</td></tr>
+            <tr><td>SLA guarantee</td><td class="dash">—</td><td class="dash">—</td><td class="tick">✓</td></tr>
+            <tr><td>Support</td><td>Email</td><td>Priority email</td><td>24/7 phone + account manager</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- FAQ -->
+    <div class="faq-section">
+      <h2>Frequently asked questions</h2>
+      <div class="faq-grid">
+        <div class="faq-item">
+          <h3>Is the free plan really free?</h3>
+          <p>Yes, the Starter plan is completely free — no credit card, no time limit. You can register your business and go live in minutes with up to 5 departments.</p>
+        </div>
+        <div class="faq-item">
+          <h3>Can I cancel anytime?</h3>
+          <p>Absolutely. There are no contracts or lock-in periods. Cancel your Growth subscription at any time from your dashboard and you won't be charged again.</p>
+        </div>
+        <div class="faq-item">
+          <h3>Do patients pay to use skipQs?</h3>
+          <p>No. Patients always use skipQs for free. The platform is funded by provider subscriptions, not by the people waiting in queues.</p>
+        </div>
+        <div class="faq-item">
+          <h3>What is the bulk CSV import?</h3>
+          <p>Growth plan providers can upload a CSV file (or paste a list) of their departments or services. skipQs parses them instantly and lets you set wait times before saving — ideal for hospitals with 20+ departments.</p>
+        </div>
+        <div class="faq-item">
+          <h3>What data does skipQs store?</h3>
+          <p>Only what's needed to run the queue: business name, department wait times, and anonymous queue counts. We never sell your data. See our <a href="privacy.html" style="color:var(--primary);font-weight:600;">Privacy Policy</a>.</p>
+        </div>
+        <div class="faq-item">
+          <h3>Does skipQs need an internet connection?</h3>
+          <p>Yes. skipQs is a real-time web app built on Supabase. All providers and patients need an internet connection for live updates to work.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA Banner -->
+    <div class="cta-banner">
+      <h2>Ready to cut wait times?</h2>
+      <p>Join hundreds of providers already using skipQs to keep patients informed and reduce walk-outs.</p>
+      <div class="cta-banner-btns">
+        <a href="hospital-signup.html" class="b1">Register your Hospital — Free</a>
+        <a href="contact.html" class="b2">Talk to Sales</a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="footer-grid">
       <div>
-        <div class="logo footer-logo"><span class="logo-mark">skip</span><span class="logo-accent">Qs</span></div>
-        <p class="footer-text">Skip the queue, save your time. Smart queue management for salons, clinics, banks and more.</p>
+        <a href="index.html" class="footer-logo">skip<span>Qs</span></a>
+        <p style="font-size:.85rem;opacity:.65;max-width:260px;">Skip the queue. Save your time.</p>
       </div>
-      <div><h4>Product</h4><a href="find-services.html">Find services</a><a href="my-queues.html">My queues</a><a href="how-it-works.html">How it works</a></div>
-      <div><h4>For businesses</h4><a href="business-pricing.html">Pricing</a><a href="business-how-it-works.html">How it works</a><a href="provider-dashboard.html">Dashboard</a></div>
-      <div><h4>Company</h4><a href="about.html">About</a><a href="contact.html">Contact</a><a href="blog.html">Blog</a></div>
-      <div><h4>Legal</h4><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="cookie-policy.html">Cookies</a></div>
+      <div>
+        <h4>Patients</h4>
+        <a href="hospitals.html">Hospitals</a>
+        <a href="clinics.html">Clinics</a>
+        <a href="nearby.html">Find Services</a>
+        <a href="dashboard.html">My Queues</a>
+      </div>
+      <div>
+        <h4>For Providers</h4>
+        <a href="hospital-signup.html">Register Hospital</a>
+        <a href="hospital-dashboard.html">Hospital Dashboard</a>
+        <a href="business-dashboard.html">Business Dashboard</a>
+        <a href="business-pricing.html">Pricing</a>
+      </div>
+      <div>
+        <h4>Company</h4>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+        <a href="privacy.html">Privacy</a>
+        <a href="terms.html">Terms</a>
+      </div>
     </div>
-    <div class="container footer-bottom">
-      <span>© <span id="year"></span> skipQs. All rights reserved.</span>
-      <span>Powered by OpenStreetMap · Supabase · No Google APIs</span>
-    </div>
-  </footer>
+    <div class="footer-bot">© <span id="year"></span> skipQs · Powered by OpenStreetMap &amp; Supabase · No Google APIs</div>
+  </div>
+</footer>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="supabase-config.js"></script>
-  <script src="script.js"></script>
+<script>
+document.getElementById('year').textContent = new Date().getFullYear();
+
+const prices = {
+  monthly: { growth: '£29<span> / month</span>', period: 'Billed monthly · cancel anytime' },
+  annual:  { growth: '£22<span> / month</span>', period: 'Billed £264/year · save 25%' }
+};
+
+function setBilling(type) {
+  document.getElementById('btnMonthly').classList.toggle('active', type==='monthly');
+  document.getElementById('btnAnnual').classList.toggle('active', type==='annual');
+  document.getElementById('growthPrice').innerHTML = prices[type].growth;
+  document.getElementById('growthPeriod').textContent = prices[type].period;
+}
+</script>
 </body>
 </html>

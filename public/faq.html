@@ -1,65 +1,318 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>FAQ | skipQs</title>
-  <link rel="stylesheet" href="style.css"/>
-  
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FAQ — skipQs</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'Inter',sans-serif;background:#f7f8f8;color:#002f34;}
+    a{text-decoration:none;}
+
+    .faq-section{margin-bottom:48px;}
+    .faq-section-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:#23e5db;margin-bottom:20px;display:flex;align-items:center;gap:10px;}
+    .faq-section-title::after{content:'';flex:1;height:1px;background:#e2e8f0;}
+
+    .accordion-item{background:white;border-radius:14px;border:1px solid #e2e8f0;margin-bottom:10px;overflow:hidden;}
+    .accordion-btn{width:100%;text-align:left;padding:20px 24px;background:none;border:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-family:'Inter',sans-serif;font-size:15px;font-weight:700;color:#002f34;gap:12px;}
+    .accordion-btn:hover{background:#fafafa;}
+    .accordion-icon{font-size:20px;font-weight:400;color:#406367;flex-shrink:0;transition:transform .25s;line-height:1;}
+    .accordion-body{display:none;padding:0 24px 20px;font-size:14px;color:#406367;line-height:1.7;border-top:1px solid #f0f0f0;padding-top:16px;}
+    .accordion-item.open .accordion-icon{transform:rotate(45deg);}
+    .accordion-item.open .accordion-body{display:block;}
+  </style>
 </head>
-<body class="app-body">
-  <header class="app-header">
-    <div class="container header-inner">
-      <a href="index.html" class="logo"><span class="logo-mark">skip</span><span class="logo-accent">Qs</span></a>
-      <nav class="nav">
-        <a href="find-services.html">Find Services</a>
-        <a href="my-queues.html">My Queues</a>
-        <a href="how-it-works.html">How It Works</a>
-        <a href="blog.html">Blog</a>
-      </nav>
-      <div class="header-actions">
-        <a href="provider-dashboard.html" class="btn btn-ghost">For Businesses</a>
-        <a href="login.html" class="btn btn-outline" id="loginBtn">Log in</a>
-        <a href="signup.html" class="btn btn-primary">Sign up</a>
+<body>
+
+<!-- NAV -->
+<header style="background:white;padding:14px 0;box-shadow:0 2px 8px rgba(0,0,0,.06);position:sticky;top:0;z-index:1000;">
+  <div style="max-width:1100px;margin:0 auto;padding:0 20px;display:flex;align-items:center;gap:16px;">
+    <a href="index.html" style="font-size:26px;font-weight:800;color:#002f34;text-decoration:none;letter-spacing:-1.5px;flex-shrink:0;">skip<span style="color:#23e5db;">Qs</span></a>
+    <div style="flex:1;"></div>
+    <a href="hospitals.html" style="color:#406367;text-decoration:none;font-size:13px;font-weight:600;">Hospitals</a>
+    <a href="how-it-works.html" style="color:#406367;text-decoration:none;font-size:13px;font-weight:600;">How It Works</a>
+    <a href="login.html" style="padding:9px 18px;border-radius:50px;font-size:13px;font-weight:700;text-decoration:none;background:#f7f8f8;color:#002f34;border:1.5px solid #e2e8f0;">Login</a>
+    <a href="signup.html" style="padding:9px 18px;border-radius:50px;font-size:13px;font-weight:700;text-decoration:none;background:#23e5db;color:#002f34;">Sign Up</a>
+  </div>
+</header>
+
+<!-- HERO -->
+<section style="background:linear-gradient(135deg,#002f34 0%,#004a52 60%,#005f6b 100%);padding:70px 20px 60px;text-align:center;">
+  <div style="max-width:600px;margin:0 auto;">
+    <span style="display:inline-block;background:rgba(35,229,219,.15);color:#23e5db;font-size:12px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;padding:6px 16px;border-radius:50px;margin-bottom:20px;border:1px solid rgba(35,229,219,.3);">Help Centre</span>
+    <h1 style="font-size:clamp(32px,5vw,50px);font-weight:900;color:white;line-height:1.1;letter-spacing:-2px;margin-bottom:14px;">Frequently Asked Questions</h1>
+    <p style="font-size:16px;color:rgba(255,255,255,.7);line-height:1.7;">Everything you need to know about skipQs. Can't find your answer? <a href="contact.html" style="color:#23e5db;font-weight:700;">Contact us</a>.</p>
+  </div>
+</section>
+
+<!-- SECTION JUMP LINKS -->
+<div style="background:white;border-bottom:1px solid #e2e8f0;overflow-x:auto;">
+  <div style="max-width:1100px;margin:0 auto;padding:0 20px;display:flex;gap:0;white-space:nowrap;">
+    <a href="#general" style="padding:16px 20px;font-size:13px;font-weight:600;color:#406367;border-bottom:3px solid transparent;text-decoration:none;">General</a>
+    <a href="#patients" style="padding:16px 20px;font-size:13px;font-weight:600;color:#406367;border-bottom:3px solid transparent;text-decoration:none;">For Patients</a>
+    <a href="#hospitals" style="padding:16px 20px;font-size:13px;font-weight:600;color:#406367;border-bottom:3px solid transparent;text-decoration:none;">For Hospitals</a>
+    <a href="#businesses" style="padding:16px 20px;font-size:13px;font-weight:600;color:#406367;border-bottom:3px solid transparent;text-decoration:none;">For Businesses</a>
+    <a href="#technical" style="padding:16px 20px;font-size:13px;font-weight:600;color:#406367;border-bottom:3px solid transparent;text-decoration:none;">Technical</a>
+  </div>
+</div>
+
+<!-- FAQ CONTENT -->
+<section style="padding:60px 20px 80px;">
+  <div style="max-width:820px;margin:0 auto;">
+
+    <!-- GENERAL -->
+    <div class="faq-section" id="general">
+      <div class="faq-section-title">General</div>
+
+      <div class="accordion-item">
+        <button class="accordion-btn" onclick="toggle(this)">
+          Is skipQs free to use?
+          <span class="accordion-icon">+</span>
+        </button>
+        <div class="accordion-body">
+          Yes — skipQs is completely free for patients and customers. You can browse wait times, join queues, and manage your active queue at no cost, with no account required. For businesses, we offer a free tier with core features and optional paid plans for advanced analytics and priority support.
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion-btn" onclick="toggle(this)">
+          Do I need to create an account?
+          <span class="accordion-icon">+</span>
+        </button>
+        <div class="accordion-body">
+          For browsing wait times and viewing queues, no account is needed. To join a queue and track your position live, a simple account is recommended so your session is saved if you close the browser. Businesses and hospitals require an account to manage their queues.
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion-btn" onclick="toggle(this)">
+          Which services are available on skipQs?
+          <span class="accordion-icon">+</span>
+        </button>
+        <div class="accordion-body">
+          skipQs supports hospitals, NHS clinics, private clinics, salons, banks, restaurants, government offices, and more. Any business with a physical queue can register. We currently serve 10+ service categories and are growing rapidly.
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion-btn" onclick="toggle(this)">
+          Is skipQs available outside the UK?
+          <span class="accordion-icon">+</span>
+        </button>
+        <div class="accordion-body">
+          skipQs was founded in the UK and our primary focus is the UK market. However, the platform is accessible globally and we are actively expanding to new regions. If you'd like to bring skipQs to your country or city, <a href="contact.html" style="color:#23e5db;font-weight:600;">get in touch</a>.
+        </div>
       </div>
     </div>
-  </header>
 
-  <main class="app-main">
+    <!-- FOR PATIENTS -->
+    <div class="faq-section" id="patients">
+      <div class="faq-section-title">For Patients</div>
 
-    <section class="section">
-      <div class="container section-header"><h1>Frequently asked questions</h1><p>Answers to common questions from customers and businesses.</p></div>
-      <div class="container card-grid">
-        <article class="card"><h3>What is skipQs?</h3><p>skipQs lets you join queues remotely for salons, clinics, banks and more — from your phone.</p></article>
-        <article class="card"><h3>Is skipQs free for customers?</h3><p>Yes. Joining and tracking queues as a customer is completely free.</p></article>
-        <article class="card"><h3>How do businesses use skipQs?</h3><p>Businesses create an account, add their services, and manage queues from the provider dashboard.</p></article>
-        <article class="card"><h3>Do I lose my place if I'm late?</h3><p>Each business sets its own grace period. You'll see the rules before joining a queue.</p></article>
-        <article class="card"><h3>Can I cancel a queue?</h3><p>Yes, you can cancel from the "My queues" page if you no longer need the service.</p></article>
-        <article class="card"><h3>How much does it cost for businesses?</h3><p>We offer a free tier and paid plans. See our <a href="business-pricing.html" style="color:#6366f1;">pricing page</a>.</p></article>
+      <div class="accordion-item">
+        <button class="accordion-btn" onclick="toggle(this)">
+          Can I join a hospital queue remotely?
+          <span class="accordion-icon">+</span>
+        </button>
+        <div class="accordion-body">
+          Yes — that's one of skipQs's core features. You can browse departments, check live wait times, and join the virtual queue from anywhere: at home, on the bus, or in the car park. You only need to arrive at the hospital when your turn is approaching.
+        </div>
       </div>
-    </section>
 
-  </main>
-
-  <footer class="app-footer">
-    <div class="container footer-grid">
-      <div>
-        <div class="logo footer-logo"><span class="logo-mark">skip</span><span class="logo-accent">Qs</span></div>
-        <p class="footer-text">Skip the queue, save your time. Smart queue management for salons, clinics, banks and more.</p>
+      <div class="accordion-item">
+        <button class="accordion-btn" onclick="toggle(this)">
+          How accurate are the wait times?
+          <span class="accordion-icon">+</span>
+        </button>
+        <div class="accordion-body">
+          Wait times are updated live by staff at each hospital or service. The accuracy depends on how actively the staff update their dashboard — most of our partners refresh times every few minutes. We always show when a wait time was last updated so you know how fresh the data is.
+        </div>
       </div>
-      <div><h4>Product</h4><a href="find-services.html">Find services</a><a href="my-queues.html">My queues</a><a href="how-it-works.html">How it works</a></div>
-      <div><h4>For businesses</h4><a href="business-pricing.html">Pricing</a><a href="business-how-it-works.html">How it works</a><a href="provider-dashboard.html">Dashboard</a></div>
-      <div><h4>Company</h4><a href="about.html">About</a><a href="contact.html">Contact</a><a href="blog.html">Blog</a></div>
-      <div><h4>Legal</h4><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="cookie-policy.html">Cookies</a></div>
-    </div>
-    <div class="container footer-bottom">
-      <span>© <span id="year"></span> skipQs. All rights reserved.</span>
-      <span>Powered by OpenStreetMap · Supabase · No Google APIs</span>
-    </div>
-  </footer>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="supabase-config.js"></script>
-  <script src="script.js"></script>
+      <div class="accordion-item">
+        <button class="accordion-btn" onclick="toggle(this)">
+          What if I miss my turn?
+          <span class="accordion-icon">+</span>
+        </button>
+        <div class="accordion-body">
+          Each service provider sets their own policy for missed turns. Some will hold your spot for a short grace period, others may move you to the back of the queue. We recommend arriving slightly before your expected call time. You can always check the policy on the service's skipQs listing page.
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion-btn" onclick="toggle(this)">
+          Can I leave the queue once I've joined?
+          <span class="accordion-icon">+</span>
+        </button>
+        <div class="accordion-body">
+          Yes. You can leave or cancel your queue position at any time from the homepage timer or your dashboard. Leaving is immediate and frees up your spot for others. Please cancel promptly if your plans change — it helps hospitals manage their queues accurately.
+        </div>
+      </div>
+    </div>
+
+    <!-- FOR HOSPITALS -->
+    <div class="faq-section" id="hospitals">
+      <div class="faq-section-title">For Hospitals</div>
+
+      <div class="accordion-item">
+        <button class="accordion-btn" onclick="toggle(this)">
+          How do I register my hospital on skipQs?
+          <span class="accordion-icon">+</span>
+        </button>
+        <div class="accordion-body">
+          Visit <a href="hospital-signup.html" style="color:#23e5db;font-weight:600;">hospital-signup.html</a> and fill in your hospital's details. Registration takes under 5 minutes. Once approved, you can add departments, set wait times, and go live immediately — all for free.
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion-btn" onclick="toggle(this)">
+          How many departments can we add?
+          <span class="accordion-icon">+</span>
+        </button>
+        <div class="accordion-body">
+          On the free tier, you can add up to 10 departments or service categories. Paid plans support unlimited departments with additional features such as queue analytics, SMS notifications, and dedicated account support.
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion-btn" onclick="toggle(this)">
+          How do staff update wait times?
+          <span class="accordion-icon">+</span>
+        </button>
+        <div class="accordion-body">
+          Staff log into the skipQs dashboard on any device — computer, tablet, or phone. From there, they can update wait times for each department with a single tap. Changes propagate to all patient views instantly, with no page refresh needed.
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion-btn" onclick="toggle(this)">
+          Is our patient data secure?
+          <span class="accordion-icon">+</span>
+        </button>
+        <div class="accordion-body">
+          Yes. skipQs does not store sensitive medical data. Queue positions are tracked by session only, and we comply with UK GDPR requirements. Patient names or records are never shared between services. See our <a href="privacy.html" style="color:#23e5db;font-weight:600;">Privacy Policy</a> for full details.
+        </div>
+      </div>
+    </div>
+
+    <!-- FOR BUSINESSES -->
+    <div class="faq-section" id="businesses">
+      <div class="faq-section-title">For Businesses</div>
+
+      <div class="accordion-item">
+        <button class="accordion-btn" onclick="toggle(this)">
+          What types of businesses can join skipQs?
+          <span class="accordion-icon">+</span>
+        </button>
+        <div class="accordion-body">
+          Any business that operates a physical queue can join skipQs. This includes salons, barbershops, restaurants, banks, post offices, government service centres, pharmacies, and more. If you have customers waiting, we can help.
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion-btn" onclick="toggle(this)">
+          Is there a free tier for businesses?
+          <span class="accordion-icon">+</span>
+        </button>
+        <div class="accordion-body">
+          Yes. Our free tier gives businesses access to core features: listing on skipQs, up to 5 service queues, live wait time updates, and a basic queue management dashboard. Paid plans unlock advanced analytics, SMS alerts, unlimited queues, and priority support.
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion-btn" onclick="toggle(this)">
+          How does skipQs help reduce no-shows?
+          <span class="accordion-icon">+</span>
+        </button>
+        <div class="accordion-body">
+          When customers join a virtual queue, they're invested in their position and much more likely to show up on time. Live wait time visibility also means customers arrive when it suits them — reducing both no-shows and late arrivals. Early data from our partners shows a significant reduction in queue abandonment.
+        </div>
+      </div>
+    </div>
+
+    <!-- TECHNICAL -->
+    <div class="faq-section" id="technical">
+      <div class="faq-section-title">Technical</div>
+
+      <div class="accordion-item">
+        <button class="accordion-btn" onclick="toggle(this)">
+          Do patients need to download an app?
+          <span class="accordion-icon">+</span>
+        </button>
+        <div class="accordion-body">
+          No. skipQs is fully browser-based and works on any device — smartphones, tablets, and desktops. No app store, no downloads, no friction. Simply open the website, find your service, and join.
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion-btn" onclick="toggle(this)">
+          How often do live wait times refresh?
+          <span class="accordion-icon">+</span>
+        </button>
+        <div class="accordion-body">
+          Queue positions and wait times are pushed to the browser automatically. The update frequency depends on how often staff update their dashboard, but your page view always shows the most recently submitted time with a timestamp. We're working on real-time socket updates for all plans.
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion-btn" onclick="toggle(this)">
+          What browsers are supported?
+          <span class="accordion-icon">+</span>
+        </button>
+        <div class="accordion-body">
+          skipQs works on all modern browsers: Chrome, Safari, Firefox, Edge, and Samsung Internet. We recommend keeping your browser updated for the best experience. Internet Explorer is not supported.
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion-btn" onclick="toggle(this)">
+          I found a bug or have a technical issue — what should I do?
+          <span class="accordion-icon">+</span>
+        </button>
+        <div class="accordion-body">
+          Please contact us at <a href="mailto:support@skipqs.com" style="color:#23e5db;font-weight:600;">support@skipqs.com</a> with a description of the issue, the page you were on, and your browser and device. Screenshots are always helpful. We aim to respond to technical issues within 1 business day.
+        </div>
+      </div>
+    </div>
+
+    <!-- STILL NEED HELP -->
+    <div style="background:linear-gradient(135deg,#002f34,#004a52);border-radius:20px;padding:40px;text-align:center;">
+      <h3 style="font-size:24px;font-weight:800;color:white;letter-spacing:-0.5px;margin-bottom:10px;">Still have questions?</h3>
+      <p style="font-size:15px;color:rgba(255,255,255,.7);margin-bottom:24px;">Our team is happy to help. Send us a message and we'll get back to you within 1–2 business days.</p>
+      <a href="contact.html" style="display:inline-block;background:#23e5db;color:#002f34;font-size:14px;font-weight:800;padding:14px 30px;border-radius:50px;">Contact Support</a>
+    </div>
+
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer style="background:#002f34;color:white;padding:40px 0 20px;margin-top:0;">
+  <div style="max-width:1100px;margin:0 auto;padding:0 20px;">
+    <div style="display:grid;grid-template-columns:1.5fr repeat(3,1fr);gap:30px;margin-bottom:28px;">
+      <div><a href="index.html" style="font-size:22px;font-weight:800;color:white;text-decoration:none;letter-spacing:-1px;display:block;margin-bottom:8px;">skip<span style="color:#23e5db;">Qs</span></a><p style="font-size:13px;color:rgba(255,255,255,.55);max-width:220px;">Skip the queue, save your time.</p></div>
+      <div><p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.4);margin-bottom:12px;">Healthcare</p><a href="hospitals.html" style="color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;display:block;margin-bottom:7px;">Hospitals</a><a href="clinics.html" style="color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;display:block;margin-bottom:7px;">Clinics</a></div>
+      <div><p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.4);margin-bottom:12px;">Company</p><a href="about.html" style="color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;display:block;margin-bottom:7px;">About</a><a href="contact.html" style="color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;display:block;margin-bottom:7px;">Contact</a><a href="faq.html" style="color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;display:block;margin-bottom:7px;">FAQ</a></div>
+      <div><p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.4);margin-bottom:12px;">Legal</p><a href="privacy.html" style="color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;display:block;margin-bottom:7px;">Privacy Policy</a><a href="terms.html" style="color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;display:block;margin-bottom:7px;">Terms of Use</a></div>
+    </div>
+    <div style="border-top:1px solid rgba(255,255,255,.1);padding-top:16px;font-size:12px;color:rgba(255,255,255,.35);">© 2026 skipQs · All rights reserved.</div>
+  </div>
+</footer>
+
+<script>
+function toggle(btn) {
+  var item = btn.closest('.accordion-item');
+  var isOpen = item.classList.contains('open');
+  // Close all
+  document.querySelectorAll('.accordion-item.open').forEach(function(el) {
+    el.classList.remove('open');
+  });
+  // Open clicked (if it wasn't open)
+  if (!isOpen) {
+    item.classList.add('open');
+  }
+}
+</script>
+
 </body>
 </html>

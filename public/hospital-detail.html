@@ -280,9 +280,9 @@ function openJoin(deptId) {
   pendingDept = departments.find(d => d.id === deptId);
   if (!pendingDept) return;
   if (!session) {
-    if (confirm('Please log in to join a queue. Go to login page?')) {
-      window.location.href = 'login.html?next=' + encodeURIComponent(location.pathname + location.search);
-    }
+    sessionStorage.setItem('redirectAfterLogin', location.href);
+    toast('Please log in to join a queue', 'error');
+    setTimeout(()=>{ window.location.href = 'login.html'; }, 1200);
     return;
   }
   document.getElementById('joinTitle').textContent = 'Join ' + pendingDept.name + ' Queue';
@@ -322,8 +322,8 @@ async function confirmJoin() {
       return;
     }
     closeJoin();
-    toast('🎉 You are in the queue!');
-    setTimeout(()=>{ window.location.href = 'my-queues.html'; }, 1500);
+    toast('🎉 You are in the queue! Redirecting to your dashboard…', 'success');
+    setTimeout(()=>{ window.location.href = 'dashboard.html'; }, 1800);
   } finally {
     btn.disabled = false; btn.textContent = 'Join Queue';
   }

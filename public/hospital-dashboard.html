@@ -74,12 +74,44 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--primary);li
 .toast.success{background:var(--success);}
 .toast.error{background:var(--danger);}
 .loading{text-align:center;padding:3rem;color:var(--text-muted);}
+/* ─── Bulk Import Modal ─── */
+.bulk-modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:flex-start;justify-content:center;z-index:1100;padding:1rem;overflow-y:auto;}
+.bulk-modal.show{display:flex;}
+.bulk-card{background:white;border-radius:20px;padding:1.6rem;width:100%;max-width:680px;margin:auto;}
+.bulk-card h3{font-size:1.2rem;font-weight:800;margin-bottom:.3rem;}
+.bulk-card .sub{font-size:.85rem;color:var(--text-muted);margin-bottom:1.2rem;}
+.bulk-tabs{display:flex;gap:.5rem;margin-bottom:1.2rem;}
+.bulk-tab{padding:.5rem 1rem;border-radius:8px;font-weight:700;font-size:.82rem;cursor:pointer;border:1.5px solid var(--border);background:var(--bg);color:var(--text-muted);font-family:inherit;}
+.bulk-tab.active{background:var(--primary);color:white;border-color:var(--primary);}
+.bulk-paste{width:100%;min-height:120px;padding:.8rem;border:1.5px dashed var(--border);border-radius:12px;font-family:inherit;font-size:.9rem;resize:vertical;background:var(--bg);}
+.bulk-paste:focus{outline:none;border-color:var(--accent);}
+.bulk-hint{font-size:.78rem;color:var(--text-muted);margin-top:.4rem;line-height:1.5;}
+.bulk-upload-zone{border:2px dashed var(--border);border-radius:12px;padding:2rem;text-align:center;cursor:pointer;transition:.2s;background:var(--bg);}
+.bulk-upload-zone:hover,.bulk-upload-zone.drag{border-color:var(--accent);background:#f0fdfc;}
+.bulk-upload-zone input{display:none;}
+.bulk-upload-icon{font-size:2.2rem;margin-bottom:.5rem;}
+.bulk-upload-text{font-size:.9rem;color:var(--text-muted);}
+.bulk-upload-text strong{color:var(--primary);}
+.review-table{width:100%;border-collapse:collapse;margin-top:1rem;}
+.review-table th{font-size:.75rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);padding:.5rem .6rem;text-align:left;border-bottom:2px solid var(--border);}
+.review-table td{padding:.4rem .4rem;}
+.review-table td input{width:100%;padding:.45rem .6rem;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:.85rem;}
+.review-table td input:focus{outline:none;border-color:var(--accent);}
+.review-table .icon-td input{width:52px;text-align:center;font-size:1.1rem;}
+.review-table .wait-td input{width:64px;text-align:center;}
+.review-table .rm-td{text-align:center;cursor:pointer;color:#9ca3af;font-size:1.1rem;}
+.review-table .rm-td:hover{color:var(--danger);}
+.review-table tr:nth-child(even) td{background:#fafbfc;}
+.bulk-progress{margin-top:.8rem;font-size:.85rem;color:var(--text-muted);}
+.bulk-progress b{color:var(--primary);}
 @media(max-width:780px){
   .stats-grid{grid-template-columns:repeat(2,1fr);}
   .dept-card{grid-template-columns:40px 1fr;gap:.8rem;}
   .dept-controls{grid-column:1/-1;justify-content:space-between;}
   .modal-row{grid-template-columns:50px 1fr;gap:.5rem;}
   .modal-row input.dept-wait,.modal-row input.dept-cap{grid-column:1/-1;}
+  .bulk-card{padding:1.2rem;}
+  .review-table th:nth-child(4),.review-table td:nth-child(4){display:none;}
 }
 </style>
 </head>
@@ -109,6 +141,71 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--primary);li
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
       <button class="btn btn-primary" id="m_save" onclick="saveDept()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Bulk Import Modal ─── -->
+<div class="bulk-modal" id="bulkModal">
+  <div class="bulk-card">
+    <h3>📥 Bulk Import Departments</h3>
+    <p class="sub">Import multiple departments at once. Review and adjust wait times before saving.</p>
+
+    <div class="bulk-tabs">
+      <button class="bulk-tab active" onclick="switchBulkTab('paste')">📋 Paste List</button>
+      <button class="bulk-tab" onclick="switchBulkTab('csv')">📄 Upload CSV</button>
+    </div>
+
+    <!-- Paste tab -->
+    <div id="bulkPasteTab">
+      <textarea class="bulk-paste" id="bulkPasteInput" placeholder="Enter one department per line, e.g.:
+A&E Emergency
+Cardiology
+Radiology
+Paediatrics
+Maternity
+Orthopaedics"></textarea>
+      <p class="bulk-hint">💡 One department per line. You can set wait times and icons in the next step.<br>
+        Or use CSV format: <code>Name, Icon, Wait(min)</code> — e.g. <code>Cardiology, ❤️, 30</code></p>
+      <div style="margin-top:1rem;display:flex;gap:.6rem;justify-content:flex-end;">
+        <button class="btn btn-ghost" onclick="closeBulkModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="parsePasteInput()">Parse →</button>
+      </div>
+    </div>
+
+    <!-- CSV tab -->
+    <div id="bulkCsvTab" style="display:none;">
+      <div class="bulk-upload-zone" id="dropZone" onclick="document.getElementById('csvFileInput').click()" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="handleDrop(event)">
+        <input type="file" id="csvFileInput" accept=".csv,.txt" onchange="handleFileSelect(event)">
+        <div class="bulk-upload-icon">📄</div>
+        <div class="bulk-upload-text"><strong>Click to upload</strong> or drag &amp; drop your CSV file</div>
+        <div class="bulk-upload-text" style="font-size:.78rem;margin-top:.3rem;">Accepted: .csv or .txt · Max 500 rows</div>
+      </div>
+      <p class="bulk-hint" style="margin-top:.8rem;">CSV format: <code>Department Name, Icon (optional), Wait Minutes (optional)</code><br>
+        Header row is automatically detected and skipped.</p>
+      <div style="margin-top:1rem;display:flex;gap:.6rem;justify-content:flex-end;">
+        <button class="btn btn-ghost" onclick="closeBulkModal()">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Review table (shown after parsing) -->
+    <div id="bulkReview" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem;">
+        <strong id="reviewCount" style="font-size:.9rem;"></strong>
+        <button class="btn btn-ghost" style="font-size:.78rem;padding:.35rem .7rem;" onclick="addReviewRow()">+ Add row</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="review-table" id="reviewTable">
+          <thead><tr><th>Icon</th><th>Department Name</th><th>Wait (min)</th><th>Capacity</th><th></th></tr></thead>
+          <tbody id="reviewBody"></tbody>
+        </table>
+      </div>
+      <div class="bulk-progress" id="bulkProgress" style="display:none;"></div>
+      <div style="margin-top:1.2rem;display:flex;gap:.6rem;justify-content:flex-end;flex-wrap:wrap;">
+        <button class="btn btn-ghost" onclick="backToBulkInput()">← Back</button>
+        <button class="btn btn-ghost" onclick="closeBulkModal()">Cancel</button>
+        <button class="btn btn-primary" id="importBtn" onclick="importDepartments()">💾 Import All</button>
+      </div>
     </div>
   </div>
 </div>
@@ -144,7 +241,7 @@ async function init() {
   const { data: prov, error } = await sb.from('providers')
     .select('*')
     .eq('user_id', session.user.id)
-    .eq('is_hospital', true)
+    .or('is_hospital.eq.true,category.eq.Hospital')
     .maybeSingle();
 
   if (error) { toast('Failed to load: ' + error.message, 'error'); return; }
@@ -209,7 +306,10 @@ function render() {
     <div class="section">
       <div class="section-head">
         <h2>Departments &amp; Wait Times</h2>
-        <button class="btn btn-primary" onclick="openAddModal()">+ Add Department</button>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+          <button class="btn btn-ghost" onclick="openBulkModal()">📥 Bulk Import</button>
+          <button class="btn btn-primary" onclick="openAddModal()">+ Add Department</button>
+        </div>
       </div>
       <div id="deptList">
         ${departments.length ? departments.map(deptCard).join('') : `<div class="empty"><h3>No departments yet</h3><p>Click "Add Department" to get started.</p></div>`}
@@ -347,6 +447,200 @@ function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
 // Close modal on backdrop click
 document.getElementById('addModal').addEventListener('click', e => {
   if (e.target.id === 'addModal') closeModal();
+});
+
+/* ════════════════════════════════════════════════
+   BULK IMPORT  –  paste list or upload CSV
+════════════════════════════════════════════════ */
+const DEPT_ICONS = {'a&e':'🚨','emergency':'🚨','cardiology':'❤️','cardiac':'❤️','radiology':'🔬','xray':'🔬','x-ray':'🔬','paediatric':'👶','pediatric':'👶','maternity':'🤰','obstetric':'🤰','orthopaedic':'🦴','orthopedic':'🦴','neurology':'🧠','neuro':'🧠','oncology':'🎗️','cancer':'🎗️','ophthalmology':'👁️','eye':'👁️','dermatology':'🩹','skin':'🩹','ent':'👂','ear':'👂','gastro':'🏥','renal':'🩺','kidney':'🩺','pharmacy':'💊','physiotherapy':'🏃','physio':'🏃','psychiatry':'🧘','mental':'🧘','dental':'🦷','diabetes':'💉','dietetics':'🥗','surgery':'🔪','icu':'⚕️','intensive':'⚕️','general':'🏥','reception':'📋','admissions':'📋'};
+
+function guessIcon(name) {
+  const lower = name.toLowerCase();
+  for (const [key, icon] of Object.entries(DEPT_ICONS)) {
+    if (lower.includes(key)) return icon;
+  }
+  return '🏥';
+}
+
+function openBulkModal() {
+  document.getElementById('bulkModal').classList.add('show');
+  document.getElementById('bulkPasteInput').value = '';
+  document.getElementById('bulkReview').style.display = 'none';
+  document.getElementById('bulkPasteTab').style.display = 'block';
+  document.getElementById('bulkCsvTab').style.display = 'none';
+  switchBulkTab('paste');
+}
+
+function closeBulkModal() {
+  document.getElementById('bulkModal').classList.remove('show');
+}
+
+function switchBulkTab(tab) {
+  document.querySelectorAll('.bulk-tab').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('bulkPasteTab').style.display = tab === 'paste' ? 'block' : 'none';
+  document.getElementById('bulkCsvTab').style.display   = tab === 'csv'   ? 'block' : 'none';
+  document.getElementById('bulkReview').style.display   = 'none';
+}
+
+function parseCsvLine(line) {
+  // Simple CSV parser (handles quoted fields)
+  const result = [];
+  let current = '', inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') { inQuotes = !inQuotes; }
+    else if (c === ',' && !inQuotes) { result.push(current.trim()); current = ''; }
+    else { current += c; }
+  }
+  result.push(current.trim());
+  return result;
+}
+
+function parseRawText(text) {
+  const rows = [];
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+  // Detect if it's CSV (has commas)
+  const hasCsv = lines.some(l => l.includes(','));
+
+  for (const line of lines) {
+    const parts = hasCsv ? parseCsvLine(line) : [line];
+    const name  = (parts[0] || '').trim();
+    if (!name || name.toLowerCase() === 'name' || name.toLowerCase() === 'department') continue; // skip header
+    const rawIcon = (parts[1] || '').trim();
+    const rawWait = parseInt(parts[2]) || 15;
+    const rawCap  = parseInt(parts[3]) || 2;
+    const icon = rawIcon || guessIcon(name);
+    rows.push({ name, icon, wait: rawWait, capacity: rawCap });
+  }
+  return rows;
+}
+
+function parsePasteInput() {
+  const text = document.getElementById('bulkPasteInput').value;
+  const rows = parseRawText(text);
+  if (!rows.length) { toast('No valid departments found. Check your input.', 'error'); return; }
+  showReviewTable(rows);
+}
+
+function showReviewTable(rows) {
+  document.getElementById('bulkPasteTab').style.display = 'none';
+  document.getElementById('bulkCsvTab').style.display   = 'none';
+  document.getElementById('bulkReview').style.display   = 'block';
+  document.getElementById('reviewCount').textContent     = rows.length + ' department' + (rows.length===1?'':'s') + ' ready to import';
+  document.getElementById('bulkProgress').style.display = 'none';
+
+  const tbody = document.getElementById('reviewBody');
+  tbody.innerHTML = '';
+  rows.forEach((r, i) => tbody.appendChild(makeReviewRow(i, r)));
+}
+
+function makeReviewRow(i, r) {
+  const tr = document.createElement('tr');
+  tr.dataset.idx = i;
+  tr.innerHTML = `
+    <td class="icon-td"><input type="text" value="${esc(r.icon)}" placeholder="🏥" maxlength="2" title="Icon emoji"></td>
+    <td><input type="text" value="${esc(r.name)}" placeholder="Department name" required></td>
+    <td class="wait-td"><input type="number" value="${r.wait}" min="0" max="999" title="Wait time in minutes"></td>
+    <td class="wait-td"><input type="number" value="${r.capacity||2}" min="1" max="999" title="Capacity"></td>
+    <td class="rm-td" onclick="this.closest('tr').remove();updateReviewCount();" title="Remove">×</td>`;
+  return tr;
+}
+
+function addReviewRow() {
+  const tbody = document.getElementById('reviewBody');
+  const i = tbody.rows.length;
+  tbody.appendChild(makeReviewRow(i, { name:'', icon:'🏥', wait:15, capacity:2 }));
+}
+
+function updateReviewCount() {
+  const count = document.getElementById('reviewBody').rows.length;
+  document.getElementById('reviewCount').textContent = count + ' department' + (count===1?'':'s') + ' ready to import';
+}
+
+function backToBulkInput() {
+  document.getElementById('bulkReview').style.display = 'none';
+  document.getElementById('bulkPasteTab').style.display = 'block';
+}
+
+async function importDepartments() {
+  const rows = [];
+  document.querySelectorAll('#reviewBody tr').forEach(tr => {
+    const inputs = tr.querySelectorAll('input');
+    const icon   = inputs[0].value.trim() || '🏥';
+    const name   = inputs[1].value.trim();
+    const wait   = Math.max(0, parseInt(inputs[2].value)||15);
+    const cap    = Math.max(1, parseInt(inputs[3].value)||2);
+    if (name) rows.push({ icon, name, wait_minutes: wait, capacity: cap });
+  });
+
+  if (!rows.length) { toast('No departments to import.', 'error'); return; }
+
+  const btn = document.getElementById('importBtn');
+  btn.disabled = true; btn.textContent = '⏳ Importing…';
+  const progress = document.getElementById('bulkProgress');
+  progress.style.display = 'block';
+
+  let success = 0, failed = 0;
+  const startOrder = departments.length;
+
+  for (let i = 0; i < rows.length; i++) {
+    progress.innerHTML = `Importing <b>${i+1} of ${rows.length}</b>: ${esc(rows[i].name)}…`;
+    const { error } = await sb.from('departments').insert({
+      provider_id:   provider.id,
+      icon:          rows[i].icon,
+      name:          rows[i].name,
+      wait_minutes:  rows[i].wait_minutes,
+      capacity:      rows[i].capacity,
+      display_order: startOrder + i,
+      is_open:       true,
+      avg_consult_minutes: rows[i].wait_minutes
+    });
+    if (error) { console.error('Import error:', error); failed++; }
+    else success++;
+  }
+
+  progress.style.display = 'none';
+  btn.disabled = false; btn.textContent = '💾 Import All';
+  closeBulkModal();
+
+  if (failed > 0) {
+    toast(`Imported ${success} departments · ${failed} failed`, 'error');
+  } else {
+    toast(`✓ ${success} department${success===1?'':'s'} imported successfully!`);
+  }
+}
+
+/* ── CSV file upload handling ── */
+function handleFileSelect(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  readCsvFile(file);
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('dropZone').classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if (!file) return;
+  readCsvFile(file);
+}
+
+function readCsvFile(file) {
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const text = ev.target.result;
+    const rows = parseRawText(text);
+    if (!rows.length) { toast('No valid departments found in file.', 'error'); return; }
+    showReviewTable(rows);
+  };
+  reader.readAsText(file);
+}
+
+// Close bulk modal on backdrop click
+document.getElementById('bulkModal').addEventListener('click', e => {
+  if (e.target.id === 'bulkModal') closeBulkModal();
 });
 
 init();

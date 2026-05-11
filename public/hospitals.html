@@ -10,7 +10,7 @@
 </head>
 <body data-category="Hospital">
 
-<header>
+<header style="position:relative;">
   <div class="container">
     <div class="header-content">
       <a href="index.html" class="logo">skip<span>Qs</span></a>
@@ -25,7 +25,22 @@
       <div class="spacer"></div>
       <div class="header-actions">
         <a href="login.html" class="btn btn-ghost">Login</a>
-        <a href="#" data-signup-link class="btn btn-primary">+ List Hospital</a>
+        <a href="hospital-signup.html" class="btn btn-primary">+ Register Hospital</a>
+      </div>
+      <button class="hamburger" onclick="document.querySelector('.mobile-nav').classList.toggle('open')" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+    <div class="mobile-nav">
+      <a href="hospitals.html" class="active">🏥 Hospitals</a>
+      <a href="clinics.html">🩺 Clinics</a>
+      <a href="salons.html">💇 Salons</a>
+      <a href="banks.html">🏦 Banks</a>
+      <a href="restaurants.html">🍽️ Restaurants</a>
+      <a href="nearby.html">📍 All Services</a>
+      <div class="mobile-actions">
+        <a href="login.html" class="btn btn-ghost">Login</a>
+        <a href="hospital-signup.html" class="btn btn-primary">Register</a>
       </div>
     </div>
   </div>
@@ -73,8 +88,8 @@
         <a href="index.html" class="logo" style="color:white;">skip<span>Qs</span></a>
         <p style="font-size:.85rem;opacity:.65;margin-top:.6rem;max-width:280px;">Skip the queue. Save your time.</p>
       </div>
-      <div><h4>Patients</h4><a href="hospitals.html">Hospitals</a><a href="clinics.html">Clinics</a><a href="nearby.html">Find Services</a><a href="my-queues.html">My Queues</a></div>
-      <div><h4>For Hospitals</h4><a href="#" data-signup-link>Register Hospital</a><a href="business-dashboard.html">Dashboard</a><a href="business-pricing.html">Pricing</a></div>
+      <div><h4>Patients</h4><a href="hospitals.html">Hospitals</a><a href="clinics.html">Clinics</a><a href="nearby.html">Find Services</a><a href="dashboard.html">My Queues</a></div>
+      <div><h4>For Hospitals</h4><a href="hospital-signup.html">Register Hospital</a><a href="hospital-dashboard.html">Hospital Dashboard</a><a href="business-pricing.html">Pricing</a></div>
       <div><h4>Company</h4><a href="about.html">About</a><a href="contact.html">Contact</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a></div>
     </div>
     <div class="footer-bot">© <span id="year"></span> skipQs · Powered by OpenStreetMap &amp; Supabase</div>

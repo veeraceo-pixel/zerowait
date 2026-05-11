@@ -76,13 +76,41 @@ footer{background:var(--primary);color:white;padding:2.4rem 0 1.4rem;margin-top:
 .footer-grid a:hover{color:white;}
 .footer-bot{padding-top:1rem;border-top:1px solid rgba(255,255,255,.1);font-size:.78rem;opacity:.5;text-align:center;}
 
+/* ─── Smooth tap targets on mobile ─── */
+@media(hover:none){
+  .btn,.h-card,.dept-row{-webkit-tap-highlight-color:transparent;}
+}
+/* ─── Mobile hamburger nav ─── */
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:4px;margin-left:auto;}
+.hamburger span{width:22px;height:2px;background:var(--primary);border-radius:2px;transition:.2s;}
+.mobile-nav{display:none;position:absolute;top:100%;left:0;right:0;background:white;border-top:1px solid var(--border);z-index:999;box-shadow:0 8px 20px rgba(0,0,0,.1);padding:.8rem 1.2rem;}
+.mobile-nav.open{display:block;}
+.mobile-nav a{display:block;padding:.6rem 0;color:var(--text-muted);text-decoration:none;font-size:.95rem;font-weight:600;border-bottom:1px solid var(--border);}
+.mobile-nav a:last-child{border-bottom:none;}
+.mobile-nav a.active,.mobile-nav a:hover{color:var(--primary);}
+.mobile-nav .mobile-actions{display:flex;gap:.6rem;margin-top:1rem;flex-wrap:wrap;}
+.mobile-nav .mobile-actions a{flex:1;text-align:center;min-width:100px;}
+
 @media(max-width:900px){
   .hero-inner{grid-template-columns:1fr;}.hero-img{display:none;}
   .grid{grid-template-columns:repeat(2,1fr);}
   .footer-grid{grid-template-columns:1fr 1fr;}
+  .search-card{grid-template-columns:1fr auto;}
 }
 @media(max-width:600px){
   .grid{grid-template-columns:1fr;}
   .hero h1{font-size:1.8rem;}
+  .hero{padding:36px 0 48px;}
+  .hero-stats{grid-template-columns:repeat(2,1fr);}
+  .hero-stat-value{font-size:1.4rem;}
   .nav{display:none;}
+  .header-actions{display:none;}
+  .hamburger{display:flex;}
+  .footer-grid{grid-template-columns:1fr;}
+  .footer-grid > div:first-child{margin-bottom:.5rem;}
+  .container{padding:0 14px;}
+  .search-section{margin:-20px 0 1rem;}
+  .search-input{font-size:.85rem;}
+  .h-card-top h3{font-size:1rem;}
+  .dept-row{font-size:.82rem;}
 }

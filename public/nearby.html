@@ -51,7 +51,8 @@
 <nav class="navbar">
   <a href="index.html" class="logo">skipQs</a>
   <div class="nav-right">
-    <a href="dashboard.html">My Visits</a>
+    <a href="hospitals.html">Hospitals</a>
+    <a href="dashboard.html">My Queues</a>
     <a href="login.html" id="authBtn" class="pill">Login</a>
   </div>
 </nav>
@@ -241,7 +242,7 @@ async function executePlacesSearch() {
   /* 1. Registered providers from Supabase */
   const supaPlaces = [];
   try {
-    const { data: providers } = await sb.from('providers').select('id,business_name,lat,lng,address,category,capacity,is_open');
+    const { data: providers } = await sb.from('providers').select('id,business_name,lat,lng,address,category,is_hospital,capacity,is_open');
     for (const prov of (providers||[])) {
       if (!prov.lat||!prov.lng) continue;
       const cat = (prov.category||'').toLowerCase();
@@ -259,6 +260,7 @@ async function executePlacesSearch() {
 
       supaPlaces.push({
         id:prov.id, displayName:prov.business_name||'Local Partner',
+        category:prov.category, is_hospital:prov.is_hospital,
         location:{lat:prov.lat,lng:prov.lng},
         calculatedDistance:dist, shortFormattedAddress:prov.address||'',
         isRegistered:true, waitTime:waitMins, peopleInQueue:qRows?.length||0,
@@ -318,7 +320,8 @@ function renderList(places) {
     if (p.isRegistered) {
       const d=p.liveData;
       card.dataset.live='true';
-      card.innerHTML=`<div onclick="selectPlace(${i})"><div class="card-top"><img src="/images/skipqs-logo.png" class="thumb"><div style="flex:1"><strong style="color:var(--primary);">★ ${esc(p.displayName)}</strong><div class="info-tags"><span class="dist-tag">${miles} mi</span><span class="time-tag">🚗 ${drive}m</span></div><div class="q-badge q-live">LIVE: ${d.peopleInLine} in line</div><div class="est-box">⌛ Wait: ~${d.queueLoadMins}m</div></div></div></div><div class="action-row"><a href="${osmDir}" target="_blank" rel="noopener" class="btn btn-dir">🗺️ Directions</a><button onclick="window.location.href='join-queue.html?id=${p.id}'" class="btn btn-join">JOIN</button></div>`;
+      const detailPage = (p.category === 'Hospital' || p.is_hospital) ? `hospital-detail.html?id=${p.id}` : `business-detail.html?id=${p.id}`;
+      card.innerHTML=`<div onclick="window.location.href='${detailPage}'"><div class="card-top"><div class="thumb" style="background:linear-gradient(135deg,#002f34,#004d57);display:flex;align-items:center;justify-content:center;font-size:1.8rem;">🏥</div><div style="flex:1"><strong style="color:var(--primary);">★ ${esc(p.displayName)}</strong><div class="info-tags"><span class="dist-tag">${miles} mi</span><span class="time-tag">🚗 ${drive}m</span></div><div class="q-badge q-live">LIVE: ${d.peopleInLine} in line · ~${d.queueLoadMins}m wait</div></div></div></div><div class="action-row"><a href="${osmDir}" target="_blank" rel="noopener" class="btn btn-dir">🗺️ Directions</a><a href="${detailPage}" class="btn btn-join">VIEW →</a></div>`;
     } else {
       card.dataset.live='false';
       card.innerHTML=`<div onclick="selectPlace(${i})"><div class="card-top"><img src="/images/skipqs-logo.png" class="thumb"><div style="flex:1"><strong>${esc(p.displayName)}</strong><div class="info-tags"><span class="dist-tag">${miles} mi</span><span class="time-tag">🚗 ${drive}m</span></div><div class="q-badge q-off">${p.fromCache?'Cached':'Queueing not enabled'}</div></div></div></div><div class="action-row"><a href="${osmDir}" target="_blank" rel="noopener" class="btn btn-dir">🗺️ Directions</a><button onclick="window.location.href='provider-signup.html'" class="btn btn-reg">BUSINESS OWNER?<br>REGISTER FREE</button></div>`;

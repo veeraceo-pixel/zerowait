@@ -3,325 +3,245 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>How It Works | skipQs</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <title>How It Works — skipQs</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --primary: #2563eb;
-      --primary-soft: #eff6ff;
-      --secondary: #64748b;
-      --dark: #0f172a;
-      --bg-light: #f8fafc;
-      --white: #ffffff;
-      --border: #e2e8f0;
-      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-    }
-
-    * { box-sizing: border-box; }
-
-    body {
-      font-family: 'Inter', sans-serif;
-      margin: 0;
-      color: var(--dark);
-      background-color: var(--bg-light);
-      line-height: 1.6;
-      overflow-x: hidden;
-    }
-
-    .container {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 0 1.5rem;
-    }
-
-    /* --- Navbar --- */
-    .navbar {
-      background: var(--white);
-      padding: 0.75rem 0;
-      border-bottom: 1px solid var(--border);
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-    }
-
-    .nav-content {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .logo {
-      font-size: 1.5rem;
-      font-weight: 800;
-      color: var(--primary);
-      text-decoration: none;
-      letter-spacing: -0.5px;
-    }
-
-    .menu-toggle {
-      display: none;
-      flex-direction: column;
-      gap: 5px;
-      cursor: pointer;
-      border: none;
-      background: none;
-    }
-
-    .menu-toggle span {
-      width: 25px; height: 3px; background: var(--primary); border-radius: 2px;
-    }
-
-    .nav-links { display: flex; gap: 1.5rem; align-items: center; }
-    .nav-links a { text-decoration: none; color: var(--secondary); font-weight: 500; font-size: 0.95rem; transition: 0.2s; }
-    .nav-links a:hover, .nav-links a.active { color: var(--primary); }
-
-    /* --- Hero Section --- */
-    .hero {
-      background: var(--white);
-      padding: clamp(3rem, 10vw, 5rem) 0;
-      text-align: center;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .badge {
-      background: var(--primary-soft);
-      color: var(--primary);
-      padding: 0.5rem 1rem;
-      border-radius: 2rem;
-      font-size: 0.85rem;
-      font-weight: 600;
-      display: inline-block;
-      margin-bottom: 1.5rem;
-    }
-
-    .hero h1 { font-size: clamp(2.2rem, 8vw, 3rem); font-weight: 800; margin: 0; line-height: 1.1; }
-    .hero p { font-size: clamp(1rem, 4vw, 1.2rem); color: var(--secondary); max-width: 700px; margin: 1.5rem auto 0; }
-
-    /* --- Grid Layouts --- */
-    .section-title { margin: 4rem 0 2rem; text-align: center; }
-    .section-title h2 { font-size: clamp(1.75rem, 5vw, 2.25rem); font-weight: 700; }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 2rem;
-      margin-bottom: 4rem;
-    }
-
-    .card {
-      background: var(--white);
-      padding: 3rem 2rem;
-      border-radius: 1.25rem;
-      text-align: center;
-      border: 1px solid var(--border);
-      position: relative;
-      transition: 0.3s;
-    }
-
-    .card:hover { transform: translateY(-10px); box-shadow: var(--shadow-md); border-color: var(--primary); }
-
-    .step-number {
-      position: absolute;
-      top: -16px; left: 50%; transform: translateX(-50%);
-      background: var(--primary); color: white;
-      width: 32px; height: 32px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center; font-weight: 700;
-    }
-
-    .icon-box { font-size: 3rem; margin-bottom: 1rem; }
-
-    /* --- CTA Card --- */
-    .cta-card {
-      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-      color: white;
-      padding: clamp(2.5rem, 8vw, 4rem);
-      border-radius: 2rem;
-      text-align: center;
-      margin: 4rem 0;
-    }
-
-    .cta-card h2 { font-size: clamp(1.6rem, 6vw, 2.5rem); margin-bottom: 1rem; }
-    .cta-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 2rem; }
-
-    .btn {
-      padding: 1rem 2.5rem;
-      border-radius: 0.75rem;
-      font-weight: 600;
-      text-decoration: none;
-      transition: 0.2s;
-      display: inline-block;
-      min-width: 200px;
-    }
-
-    .btn-white { background: white; color: var(--primary); }
-    .btn-outline-white { border: 2px solid white; color: white; }
-
-    /* --- Footer --- */
-    footer { background: var(--white); padding: 4rem 0 2rem; border-top: 1px solid var(--border); }
-    .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 3rem; }
-    .footer-col h5 { font-weight: 700; text-transform: uppercase; font-size: 0.8rem; margin-bottom: 1.25rem; }
-    .footer-col ul { list-style: none; padding: 0; margin: 0; }
-    .footer-col li { margin-bottom: 0.75rem; }
-    .footer-col a { color: var(--secondary); text-decoration: none; font-size: 0.95rem; }
-
-    /* --- Mobile Overrides --- */
-    @media (max-width: 768px) {
-      .menu-toggle { display: flex; }
-      .nav-links {
-        display: none;
-        flex-direction: column;
-        position: absolute;
-        top: 100%; left: 0; width: 100%;
-        background: white; padding: 2rem; gap: 1.25rem;
-        border-bottom: 1px solid var(--border);
-        box-shadow: var(--shadow-md);
-        text-align: center;
-      }
-      .nav-links.active { display: flex; }
-      .btn { width: 100%; }
-      .footer-grid { text-align: center; }
-    }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'Inter',sans-serif;background:#f7f8f8;color:#002f34;}
+    a{text-decoration:none;}
+    .step-line{position:relative;padding-left:68px;margin-bottom:36px;}
+    .step-line:not(:last-child)::before{content:'';position:absolute;left:23px;top:52px;width:2px;height:calc(100% - 12px);background:#e2e8f0;}
+    .step-num{position:absolute;left:0;top:0;width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0;}
+    .step-content h4{font-size:17px;font-weight:700;color:#002f34;margin-bottom:6px;margin-top:11px;}
+    .step-content p{font-size:14px;color:#406367;line-height:1.65;}
   </style>
 </head>
 <body>
 
-  <header class="navbar">
-    <div class="container nav-content">
-      <a href="index.html" class="logo">skipQs</a>
-      
-      <button class="menu-toggle" id="mobile-toggle" aria-label="Toggle Menu">
-        <span></span><span></span><span></span>
-      </button>
+<!-- NAV -->
+<header style="background:white;padding:14px 0;box-shadow:0 2px 8px rgba(0,0,0,.06);position:sticky;top:0;z-index:1000;">
+  <div style="max-width:1100px;margin:0 auto;padding:0 20px;display:flex;align-items:center;gap:16px;">
+    <a href="index.html" style="font-size:26px;font-weight:800;color:#002f34;text-decoration:none;letter-spacing:-1.5px;flex-shrink:0;">skip<span style="color:#23e5db;">Qs</span></a>
+    <div style="flex:1;"></div>
+    <a href="hospitals.html" style="color:#406367;text-decoration:none;font-size:13px;font-weight:600;">Hospitals</a>
+    <a href="how-it-works.html" style="color:#23e5db;text-decoration:none;font-size:13px;font-weight:700;">How It Works</a>
+    <a href="login.html" style="padding:9px 18px;border-radius:50px;font-size:13px;font-weight:700;text-decoration:none;background:#f7f8f8;color:#002f34;border:1.5px solid #e2e8f0;">Login</a>
+    <a href="signup.html" style="padding:9px 18px;border-radius:50px;font-size:13px;font-weight:700;text-decoration:none;background:#23e5db;color:#002f34;">Sign Up</a>
+  </div>
+</header>
 
-      <nav class="nav-links" id="nav-list">
-        <a href="index.html">Home</a>
-        <a href="about.html">About</a>
-        <a href="how-it-works.html" class="active">How It Works</a>
-        <a id="loginLogoutBtn" href="login.html">Login</a>
-        <a href="provider-signup.html" style="color: var(--primary); font-weight: 700;">For Business</a>
-      </nav>
+<!-- HERO -->
+<section style="background:linear-gradient(135deg,#002f34 0%,#004a52 60%,#005f6b 100%);padding:80px 20px 70px;text-align:center;">
+  <div style="max-width:650px;margin:0 auto;">
+    <span style="display:inline-block;background:rgba(35,229,219,.15);color:#23e5db;font-size:12px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;padding:6px 16px;border-radius:50px;margin-bottom:22px;border:1px solid rgba(35,229,219,.3);">Simple by design</span>
+    <h1 style="font-size:clamp(34px,5.5vw,54px);font-weight:900;color:white;line-height:1.1;letter-spacing:-2px;margin-bottom:18px;">How skipQs works</h1>
+    <p style="font-size:17px;color:rgba(255,255,255,.7);line-height:1.7;">Two flows. One goal — eliminate pointless waiting for everyone.</p>
+  </div>
+</section>
+
+<!-- ANCHOR LINKS -->
+<div style="background:white;border-bottom:1px solid #e2e8f0;">
+  <div style="max-width:1100px;margin:0 auto;padding:0 20px;display:flex;gap:0;">
+    <a href="#patients" style="padding:18px 28px;font-size:14px;font-weight:700;color:#002f34;border-bottom:3px solid #23e5db;text-decoration:none;">For Patients &amp; Customers</a>
+    <a href="#businesses" style="padding:18px 28px;font-size:14px;font-weight:600;color:#406367;border-bottom:3px solid transparent;text-decoration:none;">For Hospitals &amp; Businesses</a>
+  </div>
+</div>
+
+<!-- FOR PATIENTS -->
+<section id="patients" style="padding:70px 20px;background:#f7f8f8;">
+  <div style="max-width:1000px;margin:0 auto;">
+    <div style="text-align:center;margin-bottom:52px;">
+      <span style="display:inline-block;background:#e8fcfb;color:#008c86;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 14px;border-radius:50px;margin-bottom:12px;">Patients &amp; Customers</span>
+      <h2 style="font-size:32px;font-weight:800;color:#002f34;letter-spacing:-1px;">Skip the wait in 5 easy steps</h2>
     </div>
-  </header>
-
-  <section class="hero">
-    <div class="container">
-      <div class="badge">The skipQs Process</div>
-      <h1>Wait less. Do more.</h1>
-      <p>skipQs transforms your phone into a live ticket for every local queue. Join from your couch, track from the street, and arrive just in time.</p>
-    </div>
-  </section>
-
-  <main class="container">
-    
-    <section>
-      <div class="section-title">
-        <h2>For Customers</h2>
-        <p style="color: var(--secondary);">Reclaim the hours lost standing in line.</p>
-      </div>
-      <div class="grid">
-        <div class="card">
-          <div class="step-number">1</div>
-          <div class="icon-box">🔍</div>
-          <h3>Discover</h3>
-          <p style="color: var(--secondary); font-size: 0.95rem;">Search for local businesses and check live wait times before you leave home.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start;">
+      <div>
+        <div class="step-line">
+          <div class="step-num" style="background:#e8fcfb;color:#23e5db;">1</div>
+          <div class="step-content">
+            <h4>Find a service</h4>
+            <p>Search for hospitals, clinics, salons, banks, or any registered service near you. Browse by category or search by name — no account needed to browse.</p>
+          </div>
         </div>
-        <div class="card">
-          <div class="step-number">2</div>
-          <div class="icon-box">📱</div>
-          <h3>Join Virtually</h3>
-          <p style="color: var(--secondary); font-size: 0.95rem;">Join the line with one tap. Get your position number and real-time updates.</p>
+        <div class="step-line">
+          <div class="step-num" style="background:#e8fcfb;color:#23e5db;">2</div>
+          <div class="step-content">
+            <h4>See live wait times per department</h4>
+            <p>Each department or service shows a live wait time updated in real-time by staff. Choose the right department before you even leave home.</p>
+          </div>
         </div>
-        <div class="card">
-          <div class="step-number">3</div>
-          <div class="icon-box">☕</div>
-          <h3>Arrive Ready</h3>
-          <p style="color: var(--secondary); font-size: 0.95rem;">Wait where you want. We'll alert you exactly when it's your turn to head over.</p>
+        <div class="step-line">
+          <div class="step-num" style="background:#e8fcfb;color:#23e5db;">3</div>
+          <div class="step-content">
+            <h4>Join the virtual queue</h4>
+            <p>Tap "Join Queue" and you're in — remotely, from anywhere. You'll receive your queue position number and an estimated wait time immediately.</p>
+          </div>
         </div>
-      </div>
-    </section>
-
-    <section>
-      <div class="section-title">
-        <h2>For Businesses</h2>
-        <p style="color: var(--secondary);">Manage your customer flow with digital precision.</p>
-      </div>
-      <div class="grid">
-        <div class="card">
-          <div class="icon-box">🏢</div>
-          <h3>Quick Setup</h3>
-          <p style="color: var(--secondary); font-size: 0.95rem;">Create your profile and generate your unique QR code for walk-ins in under 5 minutes.</p>
+        <div class="step-line">
+          <div class="step-num" style="background:#e8fcfb;color:#23e5db;">4</div>
+          <div class="step-content">
+            <h4>Watch your live timer</h4>
+            <p>Your personal countdown displays on the homepage. Watch your position update in real-time as the queue moves. No refreshing needed.</p>
+          </div>
         </div>
-        <div class="card">
-          <div class="icon-box">📊</div>
-          <h3>Live Control</h3>
-          <p style="color: var(--secondary); font-size: 0.95rem;">Manage your queue from any tablet or phone. Handle delays and walk-ins instantly.</p>
-        </div>
-        <div class="card">
-          <div class="icon-box">📈</div>
-          <h3>Scale Up</h3>
-          <p style="color: var(--secondary); font-size: 0.95rem;">Eliminate crowded waiting rooms and use insights to optimize your staff scheduling.</p>
+        <div class="step-line">
+          <div class="step-num" style="background:#23e5db;color:#002f34;">5</div>
+          <div class="step-content">
+            <h4>Arrive when it's your turn</h4>
+            <p>Head to the venue only when it's nearly your turn. Walk in, get seen straight away, and leave. No waiting room stress, no wasted time.</p>
+          </div>
         </div>
       </div>
-    </section>
-
-    <section class="cta-card">
-      <h2>Ready to reclaim your time?</h2>
-      <p>Join the virtual queue revolution today. Better for users, smarter for businesses.</p>
-      <div class="cta-btns">
-        <a href="signup.html" class="btn btn-white">Join as Customer</a>
-        <a href="provider-signup.html" class="btn btn-outline-white">Register Business</a>
-      </div>
-    </section>
-  </main>
-
-  <footer>
-    <div class="container footer-grid">
-      <div class="footer-col">
-        <a href="#" class="logo">skipQs</a>
-        <p style="color: var(--secondary); font-size: 0.9rem; margin-top: 1rem;">The world's leading virtual queue platform.</p>
-      </div>
-      <div class="footer-col">
-        <h5>Product</h5>
-        <ul>
-          <li><a href="how-it-works.html">Features</a></li>
-          <li><a href="contact.html">Support</a></li>
-        </ul>
-      </div>
-      <div class="footer-col">
-        <h5>Company</h5>
-        <ul>
-          <li><a href="about.html">About Us</a></li>
-          <li><a href="#">Privacy</a></li>
-          <li><a href="#">Terms</a></li>
-        </ul>
+      <div style="background:white;border-radius:20px;padding:36px;border:1px solid #e2e8f0;position:sticky;top:100px;">
+        <p style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#406367;margin-bottom:16px;">Your queue card — live</p>
+        <div style="background:#f7f8f8;border-radius:14px;padding:24px;margin-bottom:16px;border:1px dashed #23e5db;">
+          <p style="font-size:12px;color:#406367;margin-bottom:4px;">City General Hospital · Cardiology</p>
+          <p style="font-size:50px;font-weight:900;color:#002f34;letter-spacing:-3px;line-height:1;margin-bottom:6px;">#47</p>
+          <p style="font-size:13px;color:#406367;">Your position in queue</p>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+          <div style="background:#e8fcfb;border-radius:10px;padding:14px;text-align:center;">
+            <p style="font-size:24px;font-weight:800;color:#002f34;letter-spacing:-0.5px;">~18</p>
+            <p style="font-size:11px;color:#406367;">minutes wait</p>
+          </div>
+          <div style="background:#fffbeb;border-radius:10px;padding:14px;text-align:center;">
+            <p style="font-size:24px;font-weight:800;color:#002f34;letter-spacing:-0.5px;">12</p>
+            <p style="font-size:11px;color:#406367;">people ahead</p>
+          </div>
+        </div>
+        <div style="background:#002f34;border-radius:10px;padding:12px;text-align:center;">
+          <p style="font-size:13px;font-weight:700;color:#23e5db;">Live · updating every 60 seconds</p>
+        </div>
       </div>
     </div>
-    <div class="container" style="border-top: 1px solid var(--border); margin-top: 3rem; padding-top: 2rem; text-align: center; color: var(--secondary); font-size: 0.85rem;">
-      © 2026 skipQs Inc. All rights reserved.
+  </div>
+</section>
+
+<!-- FOR BUSINESSES -->
+<section id="businesses" style="padding:70px 20px;background:white;">
+  <div style="max-width:1000px;margin:0 auto;">
+    <div style="text-align:center;margin-bottom:52px;">
+      <span style="display:inline-block;background:#fffbeb;color:#b38600;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 14px;border-radius:50px;margin-bottom:12px;">Hospitals &amp; Businesses</span>
+      <h2 style="font-size:32px;font-weight:800;color:#002f34;letter-spacing:-1px;">Set up your queue in minutes</h2>
+      <p style="font-size:16px;color:#406367;margin-top:10px;">No technical knowledge required. If you can send an email, you can manage skipQs.</p>
     </div>
-  </footer>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start;">
+      <div>
+        <div class="step-line">
+          <div class="step-num" style="background:#fffbeb;color:#b38600;">1</div>
+          <div class="step-content">
+            <h4>Register — it's free</h4>
+            <p>Create your business account in under 5 minutes. No credit card required. We'll walk you through setup step by step.</p>
+          </div>
+        </div>
+        <div class="step-line">
+          <div class="step-num" style="background:#fffbeb;color:#b38600;">2</div>
+          <div class="step-content">
+            <h4>Add departments or services</h4>
+            <p>Create individual queues for each department (e.g., A&amp;E, Cardiology, Pharmacy) or service type. Set an initial estimated wait time for each.</p>
+          </div>
+        </div>
+        <div class="step-line">
+          <div class="step-num" style="background:#fffbeb;color:#b38600;">3</div>
+          <div class="step-content">
+            <h4>Update wait times in seconds</h4>
+            <p>From your dashboard, adjust wait times with a single tap. Changes are pushed instantly — no page reload, no delay, no confusion.</p>
+          </div>
+        </div>
+        <div class="step-line">
+          <div class="step-num" style="background:#fffbeb;color:#b38600;">4</div>
+          <div class="step-content">
+            <h4>Customers see live times instantly</h4>
+            <p>The moment you update, all customers currently browsing or queued see the new time. Full transparency builds trust and reduces no-shows.</p>
+          </div>
+        </div>
+        <div class="step-line">
+          <div class="step-num" style="background:#ffce32;color:#002f34;">5</div>
+          <div class="step-content">
+            <h4>Manage your queue in real-time</h4>
+            <p>See who's in queue, call the next patient, mark no-shows, and review analytics — all from one clean dashboard. No training required.</p>
+          </div>
+        </div>
+      </div>
+      <div style="background:#f7f8f8;border-radius:20px;padding:36px;border:1px solid #e2e8f0;position:sticky;top:100px;">
+        <p style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#406367;margin-bottom:16px;">Dashboard preview</p>
+        <div style="background:white;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;margin-bottom:14px;">
+          <div style="background:#002f34;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:13px;font-weight:700;color:white;">Cardiology · Queue</span>
+            <span style="font-size:11px;background:#23e5db;color:#002f34;padding:3px 10px;border-radius:50px;font-weight:700;">Live</span>
+          </div>
+          <div style="padding:16px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f0f0f0;">
+              <div><p style="font-size:13px;font-weight:600;color:#002f34;">#45 — Patient A</p><p style="font-size:11px;color:#406367;">Joined 9:12 AM</p></div>
+              <span style="font-size:11px;background:#e8fcfb;color:#008c86;padding:4px 10px;border-radius:50px;font-weight:700;">Being seen</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f0f0f0;">
+              <div><p style="font-size:13px;font-weight:600;color:#002f34;">#46 — Patient B</p><p style="font-size:11px;color:#406367;">Joined 9:31 AM</p></div>
+              <span style="font-size:11px;background:#fffbeb;color:#b38600;padding:4px 10px;border-radius:50px;font-weight:700;">Next up</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;">
+              <div><p style="font-size:13px;font-weight:600;color:#002f34;">#47 — Patient C</p><p style="font-size:11px;color:#406367;">Joined 9:45 AM</p></div>
+              <span style="font-size:11px;background:#f7f8f8;color:#406367;padding:4px 10px;border-radius:50px;font-weight:700;">Waiting</span>
+            </div>
+          </div>
+        </div>
+        <a href="hospital-signup.html" style="display:block;background:#23e5db;color:#002f34;text-align:center;font-size:14px;font-weight:800;padding:14px;border-radius:10px;">Register Your Business Free →</a>
+      </div>
+    </div>
+  </div>
+</section>
 
-  
-  
-  
-  <script>
-    // --- Mobile Menu Toggle ---
-    const mobileToggle = document.getElementById('mobile-toggle');
-    const navList = document.getElementById('nav-list');
-    mobileToggle.addEventListener('click', () => navList.classList.toggle('active'));
+<!-- FAQ TEASER -->
+<section style="padding:70px 20px;background:#f7f8f8;">
+  <div style="max-width:780px;margin:0 auto;">
+    <div style="text-align:center;margin-bottom:40px;">
+      <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:#23e5db;margin-bottom:10px;">Quick Answers</p>
+      <h2 style="font-size:30px;font-weight:800;color:#002f34;letter-spacing:-0.8px;">Common questions</h2>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <div style="background:white;border-radius:14px;padding:24px 28px;border:1px solid #e2e8f0;">
+        <p style="font-size:15px;font-weight:700;color:#002f34;margin-bottom:8px;">Do I need to download an app?</p>
+        <p style="font-size:14px;color:#406367;line-height:1.65;">No. skipQs works entirely in your browser on any device. Visit the site, find your service, and join — no installation required.</p>
+      </div>
+      <div style="background:white;border-radius:14px;padding:24px 28px;border:1px solid #e2e8f0;">
+        <p style="font-size:15px;font-weight:700;color:#002f34;margin-bottom:8px;">How accurate are the wait times?</p>
+        <p style="font-size:14px;color:#406367;line-height:1.65;">Wait times are updated directly by staff at each location. The more actively a business manages their dashboard, the more accurate the estimates will be.</p>
+      </div>
+      <div style="background:white;border-radius:14px;padding:24px 28px;border:1px solid #e2e8f0;">
+        <p style="font-size:15px;font-weight:700;color:#002f34;margin-bottom:8px;">What if I miss my turn?</p>
+        <p style="font-size:14px;color:#406367;line-height:1.65;">This depends on the service provider's policy. Some allow you to rejoin at the back, others may hold your spot briefly. The hospital or business decides.</p>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:28px;">
+      <a href="faq.html" style="display:inline-block;background:white;color:#002f34;font-size:14px;font-weight:700;padding:13px 28px;border-radius:50px;border:1.5px solid #e2e8f0;">View full FAQ →</a>
+    </div>
+  </div>
+</section>
 
-    // --- Authentication Sync ---
-    const loginBtn = document.getElementById('loginLogoutBtn');
-    
-  </script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="supabase-config.js"></script>
-<script>
-sb.auth.getSession().then(({data:{session}})=>{
-  const a=document.getElementById("authLink");
-  if(a&&session){a.textContent="Dashboard";a.href="dashboard.html";}
-  document.querySelectorAll(".logout-btn").forEach(b=>b.onclick=()=>sb.auth.signOut().then(()=>location.reload()));
-});
-</script>
+<!-- CTA -->
+<section style="padding:70px 20px;background:linear-gradient(135deg,#002f34,#004a52);text-align:center;">
+  <div style="max-width:560px;margin:0 auto;">
+    <h2 style="font-size:32px;font-weight:900;color:white;letter-spacing:-1px;margin-bottom:14px;">Ready to skip the queue?</h2>
+    <p style="font-size:16px;color:rgba(255,255,255,.7);margin-bottom:32px;">Find a hospital or business, join the virtual queue, and get your time back.</p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+      <a href="index.html" style="display:inline-block;background:#23e5db;color:#002f34;font-size:14px;font-weight:800;padding:14px 30px;border-radius:50px;">Find a Service</a>
+      <a href="hospital-signup.html" style="display:inline-block;background:rgba(255,255,255,.1);color:white;font-size:14px;font-weight:700;padding:14px 30px;border-radius:50px;border:1px solid rgba(255,255,255,.2);">Register Your Business</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer style="background:#002f34;color:white;padding:40px 0 20px;margin-top:0;">
+  <div style="max-width:1100px;margin:0 auto;padding:0 20px;">
+    <div style="display:grid;grid-template-columns:1.5fr repeat(3,1fr);gap:30px;margin-bottom:28px;">
+      <div><a href="index.html" style="font-size:22px;font-weight:800;color:white;text-decoration:none;letter-spacing:-1px;display:block;margin-bottom:8px;">skip<span style="color:#23e5db;">Qs</span></a><p style="font-size:13px;color:rgba(255,255,255,.55);max-width:220px;">Skip the queue, save your time.</p></div>
+      <div><p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.4);margin-bottom:12px;">Healthcare</p><a href="hospitals.html" style="color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;display:block;margin-bottom:7px;">Hospitals</a><a href="clinics.html" style="color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;display:block;margin-bottom:7px;">Clinics</a></div>
+      <div><p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.4);margin-bottom:12px;">Company</p><a href="about.html" style="color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;display:block;margin-bottom:7px;">About</a><a href="contact.html" style="color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;display:block;margin-bottom:7px;">Contact</a><a href="faq.html" style="color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;display:block;margin-bottom:7px;">FAQ</a></div>
+      <div><p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.4);margin-bottom:12px;">Legal</p><a href="privacy.html" style="color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;display:block;margin-bottom:7px;">Privacy Policy</a><a href="terms.html" style="color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;display:block;margin-bottom:7px;">Terms of Use</a></div>
+    </div>
+    <div style="border-top:1px solid rgba(255,255,255,.1);padding-top:16px;font-size:12px;color:rgba(255,255,255,.35);">© 2026 skipQs · All rights reserved.</div>
+  </div>
+</footer>
+
 </body>
 </html>

@@ -4,38 +4,179 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Privacy Policy | skipQs</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Inter', sans-serif; color: #1e293b; line-height: 1.7; padding: 40px 20px; max-width: 800px; margin: 0 auto; background: #f8fafc; }
-    .card { background: white; padding: 40px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
-    h1 { font-size: 2rem; font-weight: 800; color: #2563eb; margin-bottom: 24px; }
-    h2 { font-size: 1.25rem; font-weight: 700; margin-top: 32px; color: #0f172a; }
-    p { margin-bottom: 16px; color: #64748b; }
-    .back-link { display: inline-block; margin-bottom: 20px; color: #2563eb; text-decoration: none; font-weight: 600; }
+    :root{--primary:#002f34;--accent:#23e5db;--bg:#f7f8f8;--border:#e2e8f0;--text-muted:#406367;}
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--primary);line-height:1.7;}
+    .container{max-width:820px;margin:0 auto;padding:0 20px;}
+    /* nav */
+    header{background:white;padding:14px 0;box-shadow:0 2px 8px rgba(0,0,0,.06);position:sticky;top:0;z-index:1000;}
+    .nav-inner{max-width:1200px;margin:0 auto;padding:0 20px;display:flex;align-items:center;gap:16px;}
+    .logo{font-size:26px;font-weight:800;color:var(--primary);text-decoration:none;letter-spacing:-1.5px;}
+    .logo span{color:var(--accent);}
+    .nav-spacer{flex:1;}
+    .nav-link{color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:600;}
+    .nav-link:hover{color:var(--primary);}
+    .nav-btn{padding:9px 18px;border-radius:50px;font-size:13px;font-weight:700;text-decoration:none;}
+    .nav-btn-ghost{background:var(--bg);color:var(--primary);border:1.5px solid var(--border);}
+    .nav-btn-primary{background:var(--accent);color:var(--primary);}
+    /* hero */
+    .hero{background:linear-gradient(135deg,#002f34,#004d57);color:white;padding:50px 0;}
+    .hero h1{font-size:2.4rem;font-weight:800;letter-spacing:-.8px;margin-bottom:.5rem;}
+    .hero p{opacity:.75;font-size:1rem;}
+    /* content */
+    .content-wrap{padding:3rem 0 5rem;}
+    .policy-card{background:white;border-radius:16px;border:1px solid var(--border);padding:2.4rem;margin-bottom:1.2rem;}
+    .toc{background:var(--bg);border-radius:12px;padding:1.4rem;margin-bottom:2rem;}
+    .toc h3{font-size:.8rem;text-transform:uppercase;letter-spacing:.6px;font-weight:700;color:var(--text-muted);margin-bottom:.8rem;}
+    .toc ol{padding-left:1.2rem;}
+    .toc li{margin-bottom:.4rem;}
+    .toc a{color:var(--primary);text-decoration:none;font-size:.9rem;font-weight:600;}
+    .toc a:hover{text-decoration:underline;}
+    h2{font-size:1.2rem;font-weight:800;margin-bottom:.8rem;padding-top:1.2rem;border-top:1px solid var(--border);margin-top:1.4rem;}
+    h2:first-of-type{border-top:none;padding-top:0;margin-top:0;}
+    p{color:#374151;margin-bottom:1rem;font-size:.95rem;}
+    ul{padding-left:1.4rem;margin-bottom:1rem;}
+    li{color:#374151;font-size:.95rem;margin-bottom:.4rem;}
+    .updated{font-size:.82rem;color:var(--text-muted);margin-bottom:1.6rem;display:inline-block;background:var(--bg);padding:.3rem .8rem;border-radius:6px;}
+    /* footer */
+    footer{background:var(--primary);color:white;padding:40px 0 20px;}
+    .footer-inner{max-width:1200px;margin:0 auto;padding:0 20px;}
+    .footer-grid{display:grid;grid-template-columns:1.5fr repeat(3,1fr);gap:30px;margin-bottom:24px;}
+    .f-logo{font-size:22px;font-weight:800;color:white;text-decoration:none;letter-spacing:-1px;display:block;margin-bottom:8px;}
+    .f-logo span{color:var(--accent);}
+    .f-desc{font-size:13px;color:rgba(255,255,255,.5);max-width:200px;}
+    .f-head{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:rgba(255,255,255,.4);margin-bottom:10px;}
+    .f-link{color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;display:block;margin-bottom:6px;}
+    .f-link:hover{color:white;}
+    .f-bot{border-top:1px solid rgba(255,255,255,.1);padding-top:16px;font-size:12px;color:rgba(255,255,255,.3);}
+    @media(max-width:700px){.footer-grid{grid-template-columns:1fr 1fr;}.hero h1{font-size:1.8rem;}}
   </style>
 </head>
 <body>
-  <a href="index.html" class="back-link">← Back to Home</a>
-  <div class="card">
-    <h1>Privacy Policy</h1>
-    <p>Last Updated: January 2026</p>
-    
-    <p>At skipQs, we take your privacy seriously. This policy explains how we collect, use, and protect your information when you use our virtual queuing platform.</p>
 
-    <h2>1. Information We Collect</h2>
-    <p>We collect information you provide directly to us, such as your name, email address, and phone number when you register for an account or join a queue.</p>
-
-    <h2>2. How We Use Your Data</h2>
-    <p>Your data is used to manage your place in line, notify you of your turn via WhatsApp/SMS, and help business owners identify their customers.</p>
-
-    <h2>3. Location Data</h2>
-    <p>We use your location to show you nearby businesses with active queues. This data is only used while the app is active and is not stored permanently.</p>
-
-    <h2>4. Third-Party Services</h2>
-    <p>We use Firebase (Google) for data storage and authentication. We do not sell your personal data to third parties.</p>
-
-    <h2>5. Contact Us</h2>
-    <p>If you have questions about this policy, please contact us at support@skipqs.com.</p>
+<header>
+  <div class="nav-inner">
+    <a href="index.html" class="logo">skip<span>Qs</span></a>
+    <div class="nav-spacer"></div>
+    <a href="hospitals.html" class="nav-link" style="margin-right:10px;">Hospitals</a>
+    <a href="about.html" class="nav-link" style="margin-right:10px;">About</a>
+    <a href="login.html" class="nav-btn nav-btn-ghost" style="margin-right:8px;">Login</a>
+    <a href="signup.html" class="nav-btn nav-btn-primary">Sign Up</a>
   </div>
+</header>
+
+<section class="hero">
+  <div class="container">
+    <h1>Privacy Policy</h1>
+    <p>How we collect, use and protect your information.</p>
+  </div>
+</section>
+
+<div class="content-wrap">
+  <div class="container">
+
+    <span class="updated">Last updated: May 2026</span>
+
+    <!-- Table of contents -->
+    <div class="toc">
+      <h3>Contents</h3>
+      <ol>
+        <li><a href="#info-collect">Information We Collect</a></li>
+        <li><a href="#how-use">How We Use Your Data</a></li>
+        <li><a href="#location">Location Data</a></li>
+        <li><a href="#third-party">Third-Party Services</a></li>
+        <li><a href="#data-security">Data Security</a></li>
+        <li><a href="#your-rights">Your Rights</a></li>
+        <li><a href="#cookies">Cookies</a></li>
+        <li><a href="#children">Children's Privacy</a></li>
+        <li><a href="#changes">Changes to This Policy</a></li>
+        <li><a href="#contact">Contact Us</a></li>
+      </ol>
+    </div>
+
+    <div class="policy-card">
+
+      <p>At skipQs, we take your privacy seriously. This Privacy Policy explains how we collect, use, disclose and protect your personal information when you use our virtual queue management platform, available at skipqs.com.</p>
+
+      <h2 id="info-collect">1. Information We Collect</h2>
+      <p>We collect information you provide directly to us:</p>
+      <ul>
+        <li><strong>Account information:</strong> name, email address and password when you register</li>
+        <li><strong>Queue information:</strong> name and optional phone number when you join a queue</li>
+        <li><strong>Business information:</strong> hospital or business name, address, phone number and department details when you register as a provider</li>
+        <li><strong>Usage data:</strong> pages visited, features used, and interactions with the platform (collected automatically)</li>
+      </ul>
+
+      <h2 id="how-use">2. How We Use Your Data</h2>
+      <p>We use your information to:</p>
+      <ul>
+        <li>Manage your virtual queue position and send updates</li>
+        <li>Enable healthcare providers and businesses to manage customer wait times</li>
+        <li>Improve the skipQs platform and develop new features</li>
+        <li>Send important account notifications (e.g. password resets)</li>
+        <li>Respond to your enquiries and provide customer support</li>
+      </ul>
+      <p>We do <strong>not</strong> use your data for advertising or sell it to any third parties.</p>
+
+      <h2 id="location">3. Location Data</h2>
+      <p>When you search for nearby services, skipQs may request your browser's location to show you relevant results. Location data is used only to display nearby businesses and is never stored permanently on our servers. Geolocation lookup for business addresses is performed via the OpenStreetMap Nominatim API (open-source, privacy-respecting).</p>
+
+      <h2 id="third-party">4. Third-Party Services</h2>
+      <p>skipQs uses the following trusted third-party services:</p>
+      <ul>
+        <li><strong>Supabase</strong> — database, authentication and real-time data (servers in the EU)</li>
+        <li><strong>OpenStreetMap / Nominatim</strong> — open-source maps and address lookup</li>
+        <li><strong>Google Fonts</strong> — font delivery (no personal data shared)</li>
+      </ul>
+      <p>We do not use Google Analytics, Facebook Pixel, or any advertising trackers.</p>
+
+      <h2 id="data-security">5. Data Security</h2>
+      <p>All data is transmitted over HTTPS/TLS. Passwords are hashed using industry-standard algorithms and never stored in plain text. We apply row-level security policies in our database so that each user can only access their own data. Despite these measures, no system is 100% secure — please use a strong, unique password.</p>
+
+      <h2 id="your-rights">6. Your Rights</h2>
+      <p>You have the right to:</p>
+      <ul>
+        <li><strong>Access</strong> the personal data we hold about you</li>
+        <li><strong>Correct</strong> inaccurate or incomplete data</li>
+        <li><strong>Delete</strong> your account and associated data</li>
+        <li><strong>Export</strong> your data in a portable format</li>
+      </ul>
+      <p>To exercise any of these rights, contact us at <strong>support@skipqs.com</strong>.</p>
+
+      <h2 id="cookies">7. Cookies</h2>
+      <p>skipQs uses only essential session cookies required for authentication. We do not use tracking or analytics cookies. You can manage cookie settings in your browser, although disabling essential cookies will prevent you from logging in.</p>
+
+      <h2 id="children">8. Children's Privacy</h2>
+      <p>skipQs is not directed at children under 13. We do not knowingly collect personal information from children. If you believe a child has provided us with personal information, please contact us immediately.</p>
+
+      <h2 id="changes">9. Changes to This Policy</h2>
+      <p>We may update this Privacy Policy from time to time. We will notify registered users of significant changes by email or by a notice on the skipQs website. The "Last updated" date at the top of this page will always reflect the most recent revision.</p>
+
+      <h2 id="contact">10. Contact Us</h2>
+      <p>If you have any questions about this Privacy Policy or how we handle your data, please contact us:</p>
+      <ul>
+        <li>Email: <strong>support@skipqs.com</strong></li>
+        <li>Website: <a href="contact.html" style="color:var(--primary);font-weight:600;">skipqs.com/contact</a></li>
+      </ul>
+      <p>We aim to respond within 2 business days.</p>
+
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-grid">
+      <div><a href="index.html" class="f-logo">skip<span>Qs</span></a><p class="f-desc">Skip the queue, save your time.</p></div>
+      <div><p class="f-head">Healthcare</p><a href="hospitals.html" class="f-link">Hospitals</a><a href="clinics.html" class="f-link">Clinics</a><a href="pharmacies.html" class="f-link">Pharmacies</a></div>
+      <div><p class="f-head">Company</p><a href="about.html" class="f-link">About</a><a href="contact.html" class="f-link">Contact</a><a href="faq.html" class="f-link">FAQ</a><a href="how-it-works.html" class="f-link">How It Works</a></div>
+      <div><p class="f-head">Legal</p><a href="privacy.html" class="f-link" style="color:var(--accent);">Privacy Policy</a><a href="terms.html" class="f-link">Terms of Use</a></div>
+    </div>
+    <div class="f-bot">© 2026 skipQs · All rights reserved.</div>
+  </div>
+</footer>
+
 </body>
 </html>
