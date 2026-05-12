@@ -1,58 +1,247 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>London | skipQs</title>
-  <link rel="stylesheet" href="style.css"/>
-  
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>London Services | skipQs — Skip the Queue in London</title>
+  <meta name="description" content="Find live wait times at hospitals, salons, banks, clinics and more in London. Join virtual queues with skipQs.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="sector.css">
+  <style>
+    .city-hero{background:linear-gradient(135deg,#002f34 0%,#004d57 50%,#002f34 100%);color:white;padding:56px 0 64px;}
+    .city-hero h1{font-size:2.6rem;font-weight:800;letter-spacing:-1.2px;margin-bottom:.5rem;line-height:1.1;}
+    .city-hero h1 .accent{color:var(--accent);}
+    .city-hero p{font-size:1rem;opacity:.8;max-width:500px;margin-bottom:2rem;}
+    .city-hero-actions{display:flex;gap:.7rem;flex-wrap:wrap;}
+    .city-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:2rem;}
+    .city-stat{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:.9rem 1rem;}
+    .city-stat-value{font-size:1.6rem;font-weight:800;color:var(--accent);line-height:1;}
+    .city-stat-label{font-size:.7rem;color:rgba(255,255,255,.6);margin-top:.2rem;font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
+    .cat-filter{display:flex;gap:8px;flex-wrap:wrap;padding:1.4rem 0 0;}
+    .cat-chip{padding:7px 16px;border-radius:50px;border:1.5px solid var(--border);background:white;font-size:.8rem;font-weight:700;cursor:pointer;color:var(--text-muted);transition:.15s;}
+    .cat-chip:hover{border-color:var(--primary);color:var(--primary);}
+    .cat-chip.active{background:var(--primary);color:white;border-color:var(--primary);}
+    .results-section{padding:2rem 0 5rem;}
+    .results-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:1.2rem;flex-wrap:wrap;gap:.5rem;}
+    .results-header h2{font-size:1.3rem;font-weight:800;}
+    .results-count{font-size:.85rem;color:var(--text-muted);font-weight:600;}
+    .demo-notice{background:#fef9c3;border:1px solid #fde68a;border-radius:10px;padding:.7rem 1.2rem;font-size:.82rem;color:#92400e;font-weight:600;margin-bottom:1.2rem;display:flex;align-items:center;gap:.5rem;}
+    @media(max-width:600px){.city-stats{grid-template-columns:repeat(2,1fr);}.city-hero h1{font-size:1.9rem;}}
+  </style>
 </head>
-<body class="app-body">
-  <header class="app-header">
-    <div class="container header-inner">
-      <a href="index.html" class="logo"><span class="logo-mark">skip</span><span class="logo-accent">Qs</span></a>
+<body>
+
+<header style="position:relative;">
+  <div class="container">
+    <div class="header-content">
+      <a href="index.html" class="logo">skip<span>Qs</span></a>
       <nav class="nav">
-        <a href="find-services.html">Find Services</a>
-        <a href="my-queues.html">My Queues</a>
-        <a href="how-it-works.html">How It Works</a>
-        <a href="blog.html">Blog</a>
+        <a href="hospitals.html">Hospitals</a>
+        <a href="clinics.html">Clinics</a>
+        <a href="salons.html">Salons</a>
+        <a href="banks.html">Banks</a>
+        <a href="nearby.html">All Near Me</a>
       </nav>
+      <div class="spacer"></div>
       <div class="header-actions">
-        <a href="provider-dashboard.html" class="btn btn-ghost">For Businesses</a>
-        <a href="login.html" class="btn btn-outline" id="loginBtn">Log in</a>
-        <a href="signup.html" class="btn btn-primary">Sign up</a>
+        <a href="login.html" class="btn btn-ghost">Login</a>
+        <a href="business-signup.html" class="btn btn-primary">Register Your Business</a>
+      </div>
+      <button class="hamburger" onclick="document.querySelector('.mobile-nav').classList.toggle('open')" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+    <div class="mobile-nav">
+      <a href="hospitals.html">🏥 Hospitals</a>
+      <a href="clinics.html">🩺 Clinics</a>
+      <a href="salons.html">💇 Salons</a>
+      <a href="banks.html">🏦 Banks</a>
+      <a href="nearby.html">📍 All Near Me</a>
+      <div class="mobile-actions">
+        <a href="login.html" class="btn btn-ghost">Login</a>
+        <a href="business-signup.html" class="btn btn-primary">Register</a>
       </div>
     </div>
-  </header>
+  </div>
+</header>
 
-  <main class="app-main">
-
-    <section class="section">
-      <div class="container section-header"><h1>London</h1><p>Businesses in London where you can skip the queue with skipQs.</p></div>
-      <div class="container card-grid" id="city-results"></div>
-    </section>
-
-  </main>
-
-  <footer class="app-footer">
-    <div class="container footer-grid">
-      <div>
-        <div class="logo footer-logo"><span class="logo-mark">skip</span><span class="logo-accent">Qs</span></div>
-        <p class="footer-text">Skip the queue, save your time. Smart queue management for salons, clinics, banks and more.</p>
-      </div>
-      <div><h4>Product</h4><a href="find-services.html">Find services</a><a href="my-queues.html">My queues</a><a href="how-it-works.html">How it works</a></div>
-      <div><h4>For businesses</h4><a href="business-pricing.html">Pricing</a><a href="business-how-it-works.html">How it works</a><a href="provider-dashboard.html">Dashboard</a></div>
-      <div><h4>Company</h4><a href="about.html">About</a><a href="contact.html">Contact</a><a href="blog.html">Blog</a></div>
-      <div><h4>Legal</h4><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="cookie-policy.html">Cookies</a></div>
+<section class="city-hero">
+  <div class="container">
+    <h1>Skip queues in <span class="accent">London</span></h1>
+    <p>Find live wait times at hospitals, salons, banks, clinics and more across London. Join virtually — arrive when it's your turn.</p>
+    <div class="city-hero-actions">
+      <a href="nearby.html?type=clinic" class="btn btn-primary">🔍 Find Services Near Me</a>
+      <a href="hospital-signup.html" class="btn btn-ghost" style="border-color:rgba(255,255,255,.3);color:white;">Register Your Business</a>
     </div>
-    <div class="container footer-bottom">
-      <span>© <span id="year"></span> skipQs. All rights reserved.</span>
-      <span>Powered by OpenStreetMap · Supabase · No Google APIs</span>
+    <div class="city-stats">
+      <div class="city-stat"><div class="city-stat-value" id="statOpen">—</div><div class="city-stat-label">Open Now</div></div>
+      <div class="city-stat"><div class="city-stat-value" id="statQueue">—</div><div class="city-stat-label">In Queues</div></div>
+      <div class="city-stat"><div class="city-stat-value" id="statAvg">—</div><div class="city-stat-label">Avg Wait (min)</div></div>
+      <div class="city-stat"><div class="city-stat-value" id="statTypes">10+</div><div class="city-stat-label">Service Types</div></div>
     </div>
-  </footer>
+  </div>
+</section>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="supabase-config.js"></script>
-  <script src="script.js"></script>
+<div class="container">
+  <div class="cat-filter" id="catFilter">
+    <div class="cat-chip active" data-cat="">🏙️ All</div>
+    <div class="cat-chip" data-cat="Hospital">🏥 Hospitals</div>
+    <div class="cat-chip" data-cat="Clinic">🩺 Clinics</div>
+    <div class="cat-chip" data-cat="Salon">💇 Salons</div>
+    <div class="cat-chip" data-cat="Bank">🏦 Banks</div>
+    <div class="cat-chip" data-cat="Restaurant">🍽️ Restaurants</div>
+    <div class="cat-chip" data-cat="Gym">🏋️ Gyms</div>
+    <div class="cat-chip" data-cat="Pharmacy">💊 Pharmacies</div>
+  </div>
+</div>
+
+<main class="container results-section">
+  <div class="results-header">
+    <h2>Services in London</h2>
+    <span class="results-count" id="resultsCount">Loading…</span>
+  </div>
+  <div id="demoNotice" style="display:none" class="demo-notice">⚠️ Sample data shown — no London businesses registered yet. <a href="business-signup.html" style="color:#92400e;text-decoration:underline;margin-left:.4rem;">Be the first →</a></div>
+  <div class="grid" id="grid">
+    <div class="skel">Loading…</div>
+    <div class="skel">Loading…</div>
+    <div class="skel">Loading…</div>
+  </div>
+</main>
+
+<footer style="background:var(--primary);color:white;padding:2.5rem 0;">
+  <div class="container" style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:2rem;font-size:.85rem;">
+    <div>
+      <div style="font-size:1.5rem;font-weight:800;letter-spacing:-1px;margin-bottom:.5rem;">skip<span style="color:var(--accent);">Qs</span></div>
+      <p style="color:rgba(255,255,255,.6);line-height:1.6;">Skip the queue, save your time. Smart queue management across London and the UK.</p>
+    </div>
+    <div>
+      <div style="font-weight:700;margin-bottom:.8rem;font-size:.75rem;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.5);">Services</div>
+      <div style="display:flex;flex-direction:column;gap:.4rem;"><a href="hospitals.html" style="color:rgba(255,255,255,.7);text-decoration:none;">Hospitals</a><a href="clinics.html" style="color:rgba(255,255,255,.7);text-decoration:none;">Clinics</a><a href="salons.html" style="color:rgba(255,255,255,.7);text-decoration:none;">Salons</a><a href="nearby.html" style="color:rgba(255,255,255,.7);text-decoration:none;">Find Near Me</a></div>
+    </div>
+    <div>
+      <div style="font-weight:700;margin-bottom:.8rem;font-size:.75rem;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.5);">Cities</div>
+      <div style="display:flex;flex-direction:column;gap:.4rem;"><a href="london.html" style="color:var(--accent);text-decoration:none;font-weight:700;">London</a><a href="manchester.html" style="color:rgba(255,255,255,.7);text-decoration:none;">Manchester</a><a href="birmingham.html" style="color:rgba(255,255,255,.7);text-decoration:none;">Birmingham</a></div>
+    </div>
+    <div>
+      <div style="font-weight:700;margin-bottom:.8rem;font-size:.75rem;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.5);">Company</div>
+      <div style="display:flex;flex-direction:column;gap:.4rem;"><a href="about.html" style="color:rgba(255,255,255,.7);text-decoration:none;">About</a><a href="contact.html" style="color:rgba(255,255,255,.7);text-decoration:none;">Contact</a><a href="business-pricing.html" style="color:rgba(255,255,255,.7);text-decoration:none;">Pricing</a></div>
+    </div>
+  </div>
+  <div class="container" style="margin-top:2rem;padding-top:1.2rem;border-top:1px solid rgba(255,255,255,.1);display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem;font-size:.78rem;color:rgba(255,255,255,.4);">
+    <span>© 2026 skipQs. All rights reserved.</span>
+    <span><a href="terms.html" style="color:rgba(255,255,255,.4);text-decoration:none;margin-right:1rem;">Terms</a><a href="privacy.html" style="color:rgba(255,255,255,.4);text-decoration:none;">Privacy</a></span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="supabase-config.js"></script>
+<script src="sector-config.js"></script>
+<script src="auth-nav.js"></script>
+<script>
+const CITY = 'London';
+const CITY_KEYWORDS = ['london','wc','ec','sw','se','e1','e2','n1','n2','w1','w2','nw'];
+const ICONS = {Hospital:'🏥',Clinic:'🩺',Salon:'💇',Barber:'💈',Bank:'🏦',Restaurant:'🍽️',Gym:'🏋️',Pharmacy:'💊',Government:'🏛️',Repair:'🛠️',CarWash:'🧼'};
+
+// Demo data for London
+const DEMO = [
+  {id:'dl1',business_name:"St. Thomas's Hospital",category:'Hospital',address:'Westminster Bridge Rd, London SE1 7EH',is_open:true,minWait:30,deptCount:6,isDemo:true},
+  {id:'dl2',business_name:'Rush Hair & Beauty',category:'Salon',address:'Oxford Street, London W1C 2JL',is_open:true,minWait:10,deptCount:4,isDemo:true},
+  {id:'dl3',business_name:'Barclays London Central',category:'Bank',address:'Regent St, London W1B 5LT',is_open:true,minWait:15,deptCount:3,isDemo:true},
+  {id:'dl4',business_name:'The Lister Clinic',category:'Clinic',address:'Chelsea Bridge Rd, London SW1W 8RH',is_open:true,minWait:20,deptCount:5,isDemo:true},
+  {id:'dl5',business_name:"Dishoom Covent Garden",category:'Restaurant',address:'Monmouth St, London WC2H 9EP',is_open:true,minWait:25,deptCount:2,isDemo:true},
+  {id:'dl6',business_name:'Boots Oxford Street',category:'Pharmacy',address:'Oxford St, London W1A 1AB',is_open:true,minWait:8,deptCount:2,isDemo:true},
+];
+
+let allProviders = [];
+let activeCat = '';
+
+function esc(s){ const d=document.createElement('div'); d.textContent=String(s||''); return d.innerHTML; }
+
+async function load() {
+  // Fetch providers
+  const {data: providers} = await sb.from('providers').select('id,business_name,address,category,is_hospital,is_open').eq('is_open',true);
+
+  // Filter to London
+  const londonProvs = (providers||[]).filter(p => {
+    const addr = (p.address||'').toLowerCase();
+    return CITY_KEYWORDS.some(k => addr.includes(k));
+  });
+
+  allProviders = londonProvs;
+
+  // Stats
+  const openCount = londonProvs.length;
+  document.getElementById('statOpen').textContent = openCount || DEMO.length;
+  if (openCount) {
+    const ids = londonProvs.map(p=>p.id);
+    const {count:qCount} = await sb.from('queues').select('id',{count:'exact',head:true}).in('provider_id',ids).in('status',['waiting','serving']);
+    document.getElementById('statQueue').textContent = qCount || 0;
+    const {data:depts} = await sb.from('departments').select('wait_minutes').in('provider_id',ids).eq('is_open',true);
+    const waits = (depts||[]).map(d=>d.wait_minutes||0).filter(v=>v>0);
+    document.getElementById('statAvg').textContent = waits.length ? Math.round(waits.reduce((a,b)=>a+b,0)/waits.length) : '—';
+  } else {
+    document.getElementById('statQueue').textContent = 34;
+    document.getElementById('statAvg').textContent = 18;
+  }
+
+  renderGrid(activeCat);
+}
+
+function renderGrid(cat) {
+  const filtered = allProviders.filter(p => !cat || p.category === cat || (cat === 'Hospital' && p.is_hospital));
+  const isDemo = filtered.length === 0;
+  const items = isDemo ? (cat ? DEMO.filter(d => d.category === cat) : DEMO) : filtered;
+  const grid = document.getElementById('grid');
+
+  document.getElementById('demoNotice').style.display = isDemo ? 'block' : 'none';
+  document.getElementById('resultsCount').textContent = isDemo ? `${items.length} sample locations` : `${items.length} location${items.length===1?'':'s'} open now`;
+
+  if (!items.length) {
+    grid.innerHTML = `<div class="empty" style="grid-column:1/-1;text-align:center;padding:3rem 1rem;"><h3 style="margin-bottom:.5rem;">No ${cat||'services'} in London yet</h3><p style="color:var(--text-muted);margin-bottom:1rem;">Be the first to register!</p><a href="business-signup.html?category=${encodeURIComponent(cat||'')}" class="btn btn-primary">Register →</a></div>`;
+    return;
+  }
+
+  grid.innerHTML = items.map(p => {
+    const icon = ICONS[p.category] || (p.is_hospital ? '🏥' : '🏪');
+    const isHosp = p.is_hospital || p.category === 'Hospital';
+    const href = p.isDemo
+      ? (isHosp ? 'hospital-signup.html' : `business-signup.html?category=${encodeURIComponent(p.category||'')}`)
+      : (isHosp ? `hospital-detail.html?id=${p.id}` : `business-detail.html?id=${p.id}`);
+    const wait = p.minWait;
+    const waitLabel = wait == null ? '—' : (wait === 0 ? 'No wait' : wait + ' min');
+    const demoTag = p.isDemo ? `<span style="background:var(--accent2);color:var(--primary);font-size:.6rem;font-weight:800;padding:2px 7px;border-radius:20px;letter-spacing:.5px;text-transform:uppercase;margin-left:.4rem;">SAMPLE</span>` : '';
+    return `
+      <a href="${href}" class="h-card" style="text-decoration:none;display:flex;flex-direction:column;background:white;border-radius:16px;border:1.5px solid var(--border);padding:1.2rem 1.4rem;transition:.2s;cursor:pointer;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.7rem;">
+          <div>
+            <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:.2rem;">${icon} ${esc(p.category||'Service')}</div>
+            <div style="font-size:1rem;font-weight:800;color:var(--primary);">${esc(p.business_name)}${demoTag}</div>
+            <div style="font-size:.8rem;color:var(--text-muted);margin-top:.2rem;">📍 ${esc(p.address||'London')}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;margin-left:.5rem;">
+            <div style="font-size:1.5rem;font-weight:800;color:${wait>30?'var(--danger)':wait>15?'var(--warning)':'var(--success)'};">${wait!=null?wait:'—'}</div>
+            <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:var(--text-muted);">min wait</div>
+          </div>
+        </div>
+        <div style="margin-top:auto;display:flex;justify-content:space-between;align-items:center;font-size:.78rem;font-weight:700;color:var(--text-muted);">
+          <span style="background:#f0fffe;color:var(--success);padding:3px 10px;border-radius:20px;font-size:.7rem;">● Open</span>
+          <span style="color:var(--primary);">${p.isDemo ? 'Register →' : 'View & Join →'}</span>
+        </div>
+      </a>`;
+  }).join('');
+}
+
+// Category filter
+document.querySelectorAll('.cat-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('.cat-chip').forEach(c=>c.classList.remove('active'));
+    chip.classList.add('active');
+    activeCat = chip.dataset.cat;
+    renderGrid(activeCat);
+  });
+});
+
+load();
+</script>
 </body>
 </html>

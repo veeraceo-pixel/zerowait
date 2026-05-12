@@ -18,159 +18,100 @@
     .container{max-width:1280px;margin:0 auto;padding:0 20px;}
 
     /* ── QUEUE TIMER BANNER ── */
-    #queueBanner{
-      display:none;
-      background:var(--accent2); /* bright yellow — stands out from dark nav */
-      border-bottom:3px solid rgba(0,47,52,.2);
-      color:var(--primary);padding:0;
-      position:sticky;top:0;z-index:1001; /* sits above header */
-    }
-    .qb-inner{
-      display:flex;align-items:center;gap:0;min-height:60px;
-    }
-    .qb-icon{
-      background:var(--primary);color:var(--accent2);
-      display:flex;align-items:center;justify-content:center;
-      width:60px;min-height:60px;font-size:1.5rem;flex-shrink:0;
-    }
-    .qb-info{
-      flex:1;padding:.6rem 1.2rem;
-    }
+    #queueBanner{display:none;background:var(--accent2);border-bottom:3px solid rgba(0,47,52,.2);color:var(--primary);padding:0;position:sticky;top:0;z-index:1001;}
+    .qb-inner{display:flex;align-items:center;gap:0;min-height:60px;}
+    .qb-icon{background:var(--primary);color:var(--accent2);display:flex;align-items:center;justify-content:center;width:60px;min-height:60px;font-size:1.5rem;flex-shrink:0;}
+    .qb-info{flex:1;padding:.6rem 1.2rem;}
     .qb-label{font-size:.65rem;text-transform:uppercase;letter-spacing:.6px;font-weight:700;color:rgba(0,47,52,.55);margin-bottom:.1rem;}
     .qb-title{font-size:.95rem;font-weight:800;letter-spacing:-.2px;color:var(--primary);}
     .qb-sub{font-size:.78rem;color:rgba(0,47,52,.65);margin-top:.08rem;}
-    .qb-timer{
-      padding:.6rem 1.4rem;text-align:center;border-left:1px solid rgba(0,47,52,.15);
-    }
-    .qb-timer-value{
-      font-size:1.9rem;font-weight:800;color:var(--primary);line-height:1;letter-spacing:-1px;
-      font-variant-numeric:tabular-nums;
-    }
+    .qb-timer{padding:.6rem 1.4rem;text-align:center;border-left:1px solid rgba(0,47,52,.15);}
+    .qb-timer-value{font-size:1.9rem;font-weight:800;color:var(--primary);line-height:1;letter-spacing:-1px;font-variant-numeric:tabular-nums;}
     .qb-timer-label{font-size:.58rem;text-transform:uppercase;letter-spacing:.5px;color:rgba(0,47,52,.5);font-weight:700;margin-top:.1rem;}
-    .qb-actions{
-      padding:.6rem 1rem;display:flex;align-items:center;gap:.5rem;border-left:1px solid rgba(0,47,52,.15);flex-shrink:0;
-    }
-    .qb-btn{
-      padding:.45rem .9rem;border-radius:8px;font-weight:700;font-size:.78rem;
-      text-decoration:none;white-space:nowrap;cursor:pointer;border:none;font-family:inherit;
-      display:inline-flex;align-items:center;gap:.3rem;
-    }
+    .qb-actions{padding:.6rem 1rem;display:flex;align-items:center;gap:.5rem;border-left:1px solid rgba(0,47,52,.15);flex-shrink:0;}
+    .qb-btn{padding:.45rem .9rem;border-radius:8px;font-weight:700;font-size:.78rem;text-decoration:none;white-space:nowrap;cursor:pointer;border:none;font-family:inherit;display:inline-flex;align-items:center;gap:.3rem;}
     .qb-btn-primary{background:var(--primary);color:white;}
-    .qb-btn-primary:hover{background:#001f24;}
     .qb-btn-ghost{background:rgba(0,47,52,.12);color:var(--primary);}
-    .qb-btn-ghost:hover{background:rgba(0,47,52,.2);}
-    .qb-pulse{
-      width:9px;height:9px;border-radius:50%;background:var(--primary);
-      animation:qbPulse 1.4s ease-in-out infinite;display:inline-block;margin-right:.3rem;
-    }
+    .qb-pulse{width:9px;height:9px;border-radius:50%;background:var(--primary);animation:qbPulse 1.4s ease-in-out infinite;display:inline-block;margin-right:.3rem;}
     @keyframes qbPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.7)}}
 
-    /* ── TOP BAR ── */
-    .top-bar{background:var(--primary);color:white;padding:7px 0;font-size:12px;}
-    .top-bar .container{display:flex;justify-content:space-between;align-items:center;}
-    .top-bar a{color:rgba(255,255,255,.8);text-decoration:none;margin-left:18px;font-weight:500;}
-    .top-bar a:hover{color:white;}
-
     /* ── HEADER ── */
-    header{background:white;padding:14px 0;box-shadow:0 2px 8px rgba(0,0,0,.06);position:sticky;top:0;z-index:1000;}
-    .header-content{display:flex;align-items:center;gap:16px;}
-    .logo{font-size:28px;font-weight:800;color:var(--primary);text-decoration:none;letter-spacing:-1.5px;flex-shrink:0;}
-    .logo span{color:var(--accent);}
-    .search-wrapper{flex:1;display:flex;border:2px solid var(--primary);border-radius:8px;overflow:hidden;max-width:600px;}
-    .search-input{flex:1;border:none;padding:12px 16px;font-size:15px;outline:none;font-family:inherit;background:#fff;}
-    .search-input::placeholder{color:#9cb3b7;}
-    .search-btn{background:var(--primary);color:white;border:none;padding:0 26px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;}
-    .search-btn:hover{background:#004050;}
-    .header-right{display:flex;gap:10px;align-items:center;flex-shrink:0;}
-    .btn-header{padding:10px 20px;border-radius:50px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;border:none;white-space:nowrap;display:inline-block;}
-    .btn-header-ghost{background:var(--bg);color:var(--primary);border:1.5px solid var(--border);}
-    .btn-header-ghost:hover{background:#eef2f3;}
-    .btn-header-accent{background:var(--accent);color:var(--primary);}
-    .btn-header-accent:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(35,229,219,.35);}
-    #userMenuBtn{
-      width:36px;height:36px;border-radius:50%;background:var(--bg);border:2px solid var(--border);
-      display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;
-      text-decoration:none;color:var(--primary);
-    }
+    header{background:var(--primary);padding:0;position:sticky;top:0;z-index:1000;box-shadow:0 2px 12px rgba(0,0,0,.25);}
+    .header-inner{display:flex;align-items:center;gap:16px;padding:13px 20px;max-width:1280px;margin:0 auto;}
+    .logo{font-size:1.5rem;font-weight:800;color:var(--accent);text-decoration:none;letter-spacing:-1px;flex-shrink:0;}
+    .logo span{color:var(--accent2);}
+    /* Search */
+    .search-wrapper{flex:1;display:flex;border:2px solid rgba(255,255,255,.2);border-radius:10px;overflow:hidden;max-width:560px;background:rgba(255,255,255,.08);position:relative;}
+    .search-wrapper:focus-within{border-color:var(--accent);background:rgba(255,255,255,.12);}
+    .search-input{flex:1;border:none;padding:11px 16px;font-size:.92rem;outline:none;font-family:inherit;background:transparent;color:white;}
+    .search-input::placeholder{color:rgba(255,255,255,.45);}
+    .search-btn{background:var(--accent);color:var(--primary);border:none;padding:0 22px;font-size:.85rem;font-weight:800;cursor:pointer;white-space:nowrap;transition:.15s;}
+    .search-btn:hover{background:#1bcabf;}
+    /* Autocomplete */
+    .search-suggestions{position:absolute;top:calc(100% + 6px);left:0;right:0;background:white;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18);z-index:200;display:none;overflow:hidden;}
+    .search-suggestions.open{display:block;}
+    .sugg-item{padding:.75rem 1rem;font-size:.88rem;cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.6rem;color:var(--text-dark);}
+    .sugg-item:last-child{border-bottom:none;}
+    .sugg-item:hover{background:var(--bg);}
+    .sugg-cat{font-size:.7rem;color:var(--text-muted);margin-left:auto;font-weight:600;}
+    /* Nav links */
+    .nav-links{display:flex;gap:4px;align-items:center;flex-shrink:0;}
+    .nav-links a{color:rgba(255,255,255,.75);text-decoration:none;font-size:.82rem;font-weight:600;padding:7px 12px;border-radius:8px;transition:.15s;white-space:nowrap;}
+    .nav-links a:hover{color:white;background:rgba(255,255,255,.1);}
+    .nav-links a.pill{background:var(--accent);color:var(--primary);padding:8px 18px;border-radius:50px;font-weight:800;}
+    .nav-links a.pill:hover{opacity:.9;background:var(--accent);}
 
     /* ── HERO ── */
-    .hero{
-      background:linear-gradient(135deg,#002f34 0%,#004d57 50%,#002f34 100%);
-      color:white;padding:60px 0 70px;position:relative;overflow:hidden;
-    }
-    .hero::before{
-      content:'';position:absolute;inset:0;
-      background:radial-gradient(ellipse at 70% 50%,rgba(35,229,219,.12) 0%,transparent 70%);
-    }
+    .hero{background:linear-gradient(135deg,#002f34 0%,#004d57 50%,#002f34 100%);color:white;padding:60px 0 70px;position:relative;overflow:hidden;}
+    .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 70% 50%,rgba(35,229,219,.12) 0%,transparent 70%);}
     .hero-inner{display:grid;grid-template-columns:1fr 1fr;gap:50px;align-items:center;position:relative;}
-    .hero-eyebrow{font-size:.75rem;text-transform:uppercase;letter-spacing:1px;font-weight:700;color:var(--accent);margin-bottom:.8rem;}
+    .hero-eyebrow{font-size:.72rem;text-transform:uppercase;letter-spacing:1px;font-weight:700;color:var(--accent);margin-bottom:.8rem;}
     .hero h1{font-size:3rem;font-weight:800;line-height:1.1;letter-spacing:-1.5px;margin-bottom:1rem;}
     .hero h1 span{color:var(--accent);}
-    .hero-sub{font-size:1.05rem;opacity:.85;max-width:480px;line-height:1.7;margin-bottom:1.8rem;}
+    .hero-sub{font-size:1rem;opacity:.85;max-width:480px;line-height:1.7;margin-bottom:1.8rem;}
     .hero-btns{display:flex;gap:.8rem;flex-wrap:wrap;}
     .btn-hero-primary{background:var(--accent);color:var(--primary);padding:14px 28px;border-radius:50px;font-weight:800;font-size:.95rem;text-decoration:none;display:inline-block;transition:.2s;}
     .btn-hero-primary:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(35,229,219,.4);}
     .btn-hero-outline{background:transparent;color:white;padding:14px 28px;border-radius:50px;font-weight:700;font-size:.95rem;text-decoration:none;border:2px solid rgba(255,255,255,.4);display:inline-block;transition:.2s;}
     .btn-hero-outline:hover{border-color:white;}
-    /* Live stats on hero right */
-    .hero-stats-panel{
-      background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
-      border-radius:20px;padding:1.8rem;backdrop-filter:blur(8px);
-    }
-    .hero-stats-title{font-size:.7rem;text-transform:uppercase;letter-spacing:.7px;font-weight:700;color:rgba(255,255,255,.45);margin-bottom:1.2rem;}
+    /* Location bar */
+    .hero-location{font-size:.8rem;color:rgba(255,255,255,.55);margin-top:1rem;display:flex;align-items:center;gap:.4rem;}
+    .loc-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:qbPulse 1.5s infinite;flex-shrink:0;}
+    /* Live stats panel */
+    .hero-stats-panel{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:1.8rem;backdrop-filter:blur(8px);}
+    .hero-stats-title{font-size:.68rem;text-transform:uppercase;letter-spacing:.7px;font-weight:700;color:rgba(255,255,255,.45);margin-bottom:1.2rem;}
     .hero-stat-row{display:flex;align-items:center;gap:1rem;padding:.7rem 0;border-bottom:1px solid rgba(255,255,255,.07);}
     .hero-stat-row:last-child{border-bottom:none;padding-bottom:0;}
     .hero-stat-icon{font-size:1.4rem;width:36px;text-align:center;flex-shrink:0;}
     .hero-stat-info{flex:1;}
     .hero-stat-val{font-size:1.4rem;font-weight:800;color:var(--accent);line-height:1;}
-    .hero-stat-lbl{font-size:.7rem;color:rgba(255,255,255,.5);font-weight:600;text-transform:uppercase;letter-spacing:.3px;}
-    .live-pill{
-      display:inline-flex;align-items:center;gap:.4rem;
-      background:#dc2626;color:white;padding:4px 10px;border-radius:50px;
-      font-size:.65rem;font-weight:800;letter-spacing:.6px;text-transform:uppercase;margin-bottom:.8rem;
-    }
+    .hero-stat-lbl{font-size:.68rem;color:rgba(255,255,255,.5);font-weight:600;text-transform:uppercase;letter-spacing:.3px;}
+    .live-pill{display:inline-flex;align-items:center;gap:.4rem;background:#dc2626;color:white;padding:4px 10px;border-radius:50px;font-size:.65rem;font-weight:800;letter-spacing:.6px;text-transform:uppercase;margin-bottom:.8rem;}
     .live-dot{width:7px;height:7px;border-radius:50%;background:white;animation:qbPulse 1.2s ease-in-out infinite;}
 
     /* ── CATEGORIES ── */
-    .categories-section{background:white;padding:28px 0;margin:24px 0;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.05);}
-    .section-title{font-size:18px;font-weight:700;margin-bottom:18px;}
+    .categories-section{background:white;padding:26px 0;border-bottom:1px solid var(--border);}
+    .section-title{font-size:1.1rem;font-weight:800;margin-bottom:16px;color:var(--primary);}
     .categories-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;}
-    .cat-card{
-      text-align:center;padding:18px 8px;border-radius:10px;text-decoration:none;
-      color:var(--text-dark);transition:.2s;border:1.5px solid transparent;
-    }
-    .cat-card:hover{background:var(--bg);border-color:var(--border);transform:translateY(-2px);}
-    .cat-icon{font-size:2.2rem;display:block;margin-bottom:8px;}
-    .cat-name{font-size:12px;font-weight:700;}
+    .cat-card{text-align:center;padding:16px 8px;border-radius:12px;text-decoration:none;color:var(--text-dark);transition:.2s;border:1.5px solid transparent;}
+    .cat-card:hover{background:var(--bg);border-color:var(--accent);transform:translateY(-2px);}
+    .cat-icon{font-size:2rem;display:block;margin-bottom:6px;}
+    .cat-name{font-size:11px;font-weight:700;}
 
-    /* ── LISTINGS SECTION ── */
+    /* ── LISTINGS ── */
     .section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
-    .view-all{color:var(--primary);text-decoration:none;font-weight:600;font-size:13px;}
-    .view-all:hover{text-decoration:underline;}
+    .view-all{color:var(--primary);text-decoration:none;font-weight:700;font-size:.82rem;background:var(--bg);padding:6px 14px;border-radius:50px;border:1px solid var(--border);transition:.15s;}
+    .view-all:hover{background:var(--accent);color:var(--primary);border-color:var(--accent);}
     .listings-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
-
-    /* ── LISTING CARD ── */
-    .listing-card{
-      background:white;border-radius:10px;overflow:hidden;text-decoration:none;
-      color:inherit;box-shadow:0 1px 4px rgba(0,0,0,.08);transition:.2s;border:1.5px solid transparent;
-      display:block;
-    }
+    .listing-card{background:white;border-radius:12px;overflow:hidden;text-decoration:none;color:inherit;box-shadow:0 1px 4px rgba(0,0,0,.08);transition:.2s;border:1.5px solid transparent;display:block;}
     .listing-card:hover{box-shadow:0 8px 24px rgba(0,0,0,.12);transform:translateY(-3px);border-color:var(--accent);}
-    .listing-img{
-      width:100%;height:150px;background:linear-gradient(135deg,#002f34,#004d57);
-      display:flex;align-items:center;justify-content:center;font-size:3.2rem;position:relative;
-    }
-    .wait-badge{
-      position:absolute;top:10px;right:10px;background:var(--accent2);color:var(--primary);
-      padding:4px 12px;border-radius:50px;font-size:11px;font-weight:800;
-    }
+    .listing-card.demo-card{opacity:.85;}
+    .listing-img{width:100%;height:140px;background:linear-gradient(135deg,#002f34,#004d57);display:flex;align-items:center;justify-content:center;font-size:3rem;position:relative;}
+    .wait-badge{position:absolute;top:10px;right:10px;background:var(--accent2);color:var(--primary);padding:4px 10px;border-radius:50px;font-size:11px;font-weight:800;}
     .wait-badge.high{background:#fee2e2;color:var(--danger);}
     .wait-badge.med{background:#fef9c3;color:#854d0e;}
-    .open-badge{
-      position:absolute;bottom:10px;left:10px;background:rgba(5,150,105,.9);
-      color:white;padding:3px 10px;border-radius:50px;font-size:10px;font-weight:700;
-      display:flex;align-items:center;gap:4px;
-    }
+    .demo-badge{position:absolute;top:10px;left:10px;background:rgba(0,0,0,.45);color:white;padding:3px 8px;border-radius:50px;font-size:10px;font-weight:700;}
+    .open-badge{position:absolute;bottom:10px;left:10px;background:rgba(5,150,105,.9);color:white;padding:3px 10px;border-radius:50px;font-size:10px;font-weight:700;display:flex;align-items:center;gap:4px;}
     .open-dot{width:5px;height:5px;border-radius:50%;background:#4ade80;animation:qbPulse 1.5s infinite;}
     .listing-info{padding:14px;}
     .listing-name{font-size:14px;font-weight:700;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -180,17 +121,21 @@
     .listing-cat{font-size:11px;color:var(--text-muted);background:var(--bg);padding:3px 8px;border-radius:4px;font-weight:600;}
     .listing-queue{font-size:12px;color:var(--green);font-weight:700;}
     /* skeleton */
-    .skel{background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:10px;height:240px;}
+    .skel{background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:12px;height:240px;}
     @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 
-    /* ── PROMO BANNER ── */
-    .promo{
-      background:linear-gradient(135deg,var(--primary) 0%,#005959 100%);
-      color:white;padding:50px 44px;border-radius:14px;
-      display:grid;grid-template-columns:1fr auto;align-items:center;gap:40px;
-    }
+    /* ── LOCATION BANNER ── */
+    .loc-banner{background:white;border:1.5px solid var(--border);border-radius:12px;padding:1.2rem 1.4rem;margin-bottom:1rem;display:flex;align-items:center;gap:.8rem;}
+    .loc-banner .loc-icon{font-size:1.6rem;flex-shrink:0;}
+    .loc-banner h4{font-size:.9rem;font-weight:700;margin-bottom:.15rem;}
+    .loc-banner p{font-size:.78rem;color:var(--text-muted);}
+    .loc-banner button{margin-left:auto;background:var(--primary);color:white;border:none;padding:9px 20px;border-radius:50px;font-weight:700;font-size:.8rem;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+    .loc-banner button:hover{background:#004050;}
+
+    /* ── PROMO ── */
+    .promo{background:linear-gradient(135deg,var(--primary) 0%,#005959 100%);color:white;padding:50px 44px;border-radius:14px;display:grid;grid-template-columns:1fr auto;align-items:center;gap:40px;}
     .promo h2{font-size:1.7rem;font-weight:800;margin-bottom:.5rem;letter-spacing:-.5px;}
-    .promo p{opacity:.85;font-size:.95rem;max-width:480px;}
+    .promo p{opacity:.85;font-size:.9rem;max-width:480px;}
     .promo-btns{display:flex;gap:.8rem;flex-shrink:0;flex-wrap:wrap;}
     .btn-white{background:white;color:var(--primary);padding:12px 26px;border-radius:50px;font-weight:800;font-size:.9rem;text-decoration:none;white-space:nowrap;display:inline-block;}
     .btn-white:hover{transform:translateY(-2px);}
@@ -198,28 +143,29 @@
     .btn-outline-white:hover{border-color:white;}
 
     /* ── HOW IT WORKS ── */
-    .how-section{background:white;border-radius:14px;padding:40px;box-shadow:0 1px 4px rgba(0,0,0,.06);}
-    .steps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin-top:24px;}
+    .how-section{background:white;border-radius:14px;padding:36px;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+    .steps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin-top:20px;}
     .step-card{text-align:center;padding:20px 16px;}
-    .step-num{
-      width:44px;height:44px;border-radius:50%;background:var(--primary);color:var(--accent);
-      display:inline-flex;align-items:center;justify-content:center;
-      font-size:1.1rem;font-weight:800;margin-bottom:14px;
-    }
     .step-icon{font-size:2.4rem;display:block;margin-bottom:10px;}
     .step-title{font-size:15px;font-weight:700;margin-bottom:8px;}
     .step-desc{font-size:13px;color:var(--text-muted);line-height:1.65;}
 
+    /* ── EMPTY STATE ── */
+    .empty-state{grid-column:1/-1;text-align:center;padding:3rem 1rem;color:var(--text-muted);background:white;border-radius:12px;border:1.5px dashed var(--border);}
+    .empty-state h4{font-size:.95rem;font-weight:700;color:var(--primary);margin-bottom:.4rem;}
+    .empty-state p{font-size:.82rem;margin-bottom:1rem;}
+    .empty-state a{display:inline-block;background:var(--primary);color:white;padding:9px 22px;border-radius:50px;text-decoration:none;font-size:.82rem;font-weight:700;}
+
     /* ── FOOTER ── */
-    footer{background:var(--primary);color:white;padding:50px 0 24px;margin-top:60px;}
-    .footer-grid{display:grid;grid-template-columns:1.5fr repeat(3,1fr);gap:40px;margin-bottom:36px;}
-    .footer-brand-logo{font-size:24px;font-weight:800;letter-spacing:-1px;color:white;text-decoration:none;display:block;margin-bottom:10px;}
+    footer{background:var(--primary);color:white;padding:44px 0 22px;margin-top:60px;}
+    .footer-grid{display:grid;grid-template-columns:1.5fr repeat(3,1fr);gap:36px;margin-bottom:30px;}
+    .footer-brand-logo{font-size:1.4rem;font-weight:800;letter-spacing:-1px;color:white;text-decoration:none;display:block;margin-bottom:8px;}
     .footer-brand-logo span{color:var(--accent);}
-    .footer-brand p{font-size:13px;color:rgba(255,255,255,.55);line-height:1.7;max-width:240px;}
-    .footer-col h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.4);margin-bottom:14px;}
-    .footer-col a{color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;display:block;margin-bottom:8px;}
+    .footer-brand p{font-size:13px;color:rgba(255,255,255,.5);line-height:1.7;max-width:220px;}
+    .footer-col h4{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.35);margin-bottom:12px;}
+    .footer-col a{color:rgba(255,255,255,.65);text-decoration:none;font-size:13px;display:block;margin-bottom:7px;}
     .footer-col a:hover{color:white;}
-    .footer-bot{padding-top:20px;border-top:1px solid rgba(255,255,255,.1);font-size:12px;color:rgba(255,255,255,.35);display:flex;justify-content:space-between;align-items:center;}
+    .footer-bot{padding-top:18px;border-top:1px solid rgba(255,255,255,.08);font-size:12px;color:rgba(255,255,255,.3);display:flex;justify-content:space-between;align-items:center;}
 
     /* ── MOBILE NAV ── */
     .mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--border);z-index:999;box-shadow:0 -4px 20px rgba(0,0,0,.08);}
@@ -229,12 +175,12 @@
     .mobile-nav-item span{display:block;font-size:20px;margin-bottom:2px;}
     .mobile-nav-item p{font-size:10px;margin:0;font-weight:600;}
 
-    /* ── CONTENT WRAPPER ── */
-    .content-wrap{display:flex;flex-direction:column;gap:28px;margin:20px 0;}
+    /* ── LAYOUT ── */
+    .content-wrap{display:flex;flex-direction:column;gap:28px;margin:24px 0;}
 
     /* ── RESPONSIVE ── */
     @media(max-width:1100px){.listings-grid{grid-template-columns:repeat(3,1fr)}.categories-grid{grid-template-columns:repeat(4,1fr)}.hero h1{font-size:2.4rem}}
-    @media(max-width:900px){.hero-inner{grid-template-columns:1fr}.hero-stats-panel{display:none}.promo{grid-template-columns:1fr;gap:20px}.footer-grid{grid-template-columns:1fr 1fr}}
+    @media(max-width:900px){.hero-inner{grid-template-columns:1fr}.hero-stats-panel{display:none}.promo{grid-template-columns:1fr;gap:20px}.footer-grid{grid-template-columns:1fr 1fr}.nav-links .hide-md{display:none}}
     @media(max-width:760px){
       .listings-grid{grid-template-columns:repeat(2,1fr);gap:12px}
       .categories-grid{grid-template-columns:repeat(3,1fr)}
@@ -243,187 +189,143 @@
       .mobile-nav{display:block}
       body{padding-bottom:66px}
       .qb-timer,.qb-actions{display:none}
-      /* hide desktop nav links — bottom nav handles it */
-      .top-bar{display:none}
-      .header-right{display:none}
-      .header-content{gap:10px}
-      /* compact hero */
+      .header-inner{padding:10px 14px;gap:10px}
       .hero{padding:36px 0 44px}
       .hero h1{font-size:2rem;letter-spacing:-.8px}
-      .hero-sub{font-size:.92rem;margin-bottom:1.2rem}
+      .hero-sub{font-size:.9rem;margin-bottom:1.2rem}
       .hero-btns{gap:.6rem}
       .btn-hero-primary,.btn-hero-outline{padding:12px 20px;font-size:.88rem}
-      /* compact promo */
-      .promo{padding:32px 24px}
+      .promo{padding:28px 20px}
       .promo h2{font-size:1.3rem}
-      /* categories */
-      .categories-section{margin:16px 0;padding:20px 0}
+      .nav-links{display:none}
     }
     @media(max-width:480px){
       .listings-grid{grid-template-columns:1fr}
       .categories-grid{grid-template-columns:repeat(3,1fr)}
       .footer-grid{grid-template-columns:1fr}
       .hero h1{font-size:1.75rem}
-      .search-wrapper{max-width:100%}
-      /* stack queue banner on tiny screens */
-      .qb-inner{flex-wrap:wrap;min-height:auto;padding:.4rem 0}
-      .qb-info{padding:.6rem 1rem}
     }
   </style>
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════════
-     ACTIVE QUEUE TIMER BANNER (shown when logged in + active queue)
-════════════════════════════════════════════════════ -->
+<!-- ══ QUEUE TIMER BANNER ══ -->
 <div id="queueBanner">
   <div class="container">
     <div class="qb-inner">
       <div class="qb-icon">🎫</div>
       <div class="qb-info">
         <div class="qb-label"><span class="qb-pulse"></span>Your Active Queue</div>
-        <div class="qb-title" id="qbTitle">Loading your queue…</div>
+        <div class="qb-title" id="qbTitle">Loading…</div>
         <div class="qb-sub" id="qbSub"></div>
       </div>
       <div class="qb-timer">
         <div class="qb-timer-value" id="qbTimerVal">—</div>
-        <div class="qb-timer-label">min left</div>
+        <div class="qb-timer-label">time left</div>
       </div>
       <div class="qb-actions">
-        <a href="dashboard.html" class="qb-btn qb-btn-primary" id="qbViewBtn">View My Queue</a>
-        <button class="qb-btn qb-btn-ghost" onclick="leaveQueue()">Leave Queue</button>
+        <a href="dashboard.html" class="qb-btn qb-btn-primary" id="qbViewBtn">View Queue</a>
+        <button class="qb-btn qb-btn-ghost" onclick="leaveQueue()">Leave</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════
-     TOP BAR
-════════════════════════════════════════════════════ -->
-<div class="top-bar">
-  <div class="container">
-    <span>🏥 Hospitals · 🏦 Banks · 💇 Salons · 🍽️ Restaurants · 🏋️ Gyms</span>
-    <div>
-      <a href="about.html">About</a>
-      <a href="how-it-works.html">How It Works</a>
-      <a href="business-signup.html">For Businesses</a>
-      <a href="login.html" id="loginLink">Login</a>
-      <a href="#" id="logoutLink" style="display:none" onclick="handleLogout(event)">Logout</a>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════════════
-     HEADER
-════════════════════════════════════════════════════ -->
+<!-- ══ HEADER ══ -->
 <header>
-  <div class="container">
-    <div class="header-content">
-      <a href="index.html" class="logo">skip<span>Qs</span></a>
-      <div class="search-wrapper">
-        <input type="text" class="search-input" id="searchInput" placeholder="Search hospitals, clinics, salons, banks…" autocomplete="off">
-        <button class="search-btn" onclick="performSearch()">Search</button>
-      </div>
-      <div class="header-right">
-        <a href="nearby.html" class="btn-header btn-header-ghost">🔍 Services</a>
-        <a href="hospitals.html" class="btn-header btn-header-ghost">🏥 Hospitals</a>
-        <a href="dashboard.html" class="btn-header btn-header-ghost" id="dashBtn" style="display:none">My Queues</a>
-        <a href="signup.html" class="btn-header btn-header-ghost" id="signupBtn">Sign Up</a>
-        <a href="business-signup.html" class="btn-header btn-header-accent">+ List Business</a>
-      </div>
+  <div class="header-inner">
+    <a href="index.html" class="logo">skip<span>Qs</span></a>
+
+    <!-- Search with autocomplete -->
+    <div class="search-wrapper" id="searchWrapper">
+      <input type="text" class="search-input" id="searchInput" placeholder="Search hospitals, salons, banks, clinics…" autocomplete="off">
+      <button class="search-btn" onclick="performSearch()">Search</button>
+      <div class="search-suggestions" id="searchSuggestions"></div>
+    </div>
+
+    <div class="nav-links">
+      <a href="find-services.html" class="hide-md">All Services</a>
+      <a href="hospitals.html" class="hide-md">Hospitals</a>
+      <a href="dashboard.html" id="dashBtn" style="display:none">My Queues</a>
+      <a href="login.html" id="loginLink" class="pill">Login</a>
+      <a href="#" id="logoutLink" style="display:none" onclick="handleLogout(event)">Logout</a>
     </div>
   </div>
 </header>
 
-<!-- ═══════════════════════════════════════════════
-     HERO
-════════════════════════════════════════════════════ -->
+<!-- ══ HERO ══ -->
 <section class="hero">
   <div class="container">
     <div class="hero-inner">
       <div>
         <div class="hero-eyebrow">Real-time Queue Management</div>
         <h1>Skip the Queue,<br><span>Save Your Time</span></h1>
-        <p class="hero-sub">See live wait times at hospitals, clinics, salons, banks and more. Join the queue from anywhere and arrive only when it's your turn.</p>
+        <p class="hero-sub">See live wait times at hospitals, clinics, salons, banks and more. Join the queue from anywhere — arrive only when it's your turn.</p>
         <div class="hero-btns">
-          <a href="nearby.html" class="btn-hero-primary">🔍 Find Services Near You</a>
+          <a href="find-services.html" class="btn-hero-primary">🔍 Find Services Near You</a>
           <a href="hospitals.html" class="btn-hero-outline">🏥 Hospitals →</a>
         </div>
+        <div class="hero-location" id="heroLocation">
+          <div class="loc-dot"></div>
+          <span id="locText">Detecting your location…</span>
+        </div>
       </div>
-      <!-- Live Stats Panel -->
       <div class="hero-stats-panel">
-        <div class="live-pill"><div class="live-dot"></div>Live Stats</div>
+        <div class="live-pill"><div class="live-dot"></div>Live</div>
         <div class="hero-stats-title">Right now on skipQs</div>
         <div class="hero-stat-row">
           <div class="hero-stat-icon">🏢</div>
-          <div class="hero-stat-info">
-            <div class="hero-stat-val" id="statOpen">—</div>
-            <div class="hero-stat-lbl">Businesses Open</div>
-          </div>
+          <div class="hero-stat-info"><div class="hero-stat-val" id="statOpen">—</div><div class="hero-stat-lbl">Businesses Open</div></div>
         </div>
         <div class="hero-stat-row">
           <div class="hero-stat-icon">👥</div>
-          <div class="hero-stat-info">
-            <div class="hero-stat-val" id="statQueue">—</div>
-            <div class="hero-stat-lbl">People in Queue</div>
-          </div>
+          <div class="hero-stat-info"><div class="hero-stat-val" id="statQueue">—</div><div class="hero-stat-lbl">People in Queue</div></div>
         </div>
         <div class="hero-stat-row">
           <div class="hero-stat-icon">⏱️</div>
-          <div class="hero-stat-info">
-            <div class="hero-stat-val" id="statAvg">—</div>
-            <div class="hero-stat-lbl">Avg Wait (minutes)</div>
-          </div>
+          <div class="hero-stat-info"><div class="hero-stat-val" id="statAvg">—</div><div class="hero-stat-lbl">Avg Wait (min)</div></div>
         </div>
         <div class="hero-stat-row">
           <div class="hero-stat-icon">✅</div>
-          <div class="hero-stat-info">
-            <div class="hero-stat-val" id="statServed">—</div>
-            <div class="hero-stat-lbl">Served Today</div>
-          </div>
+          <div class="hero-stat-info"><div class="hero-stat-val" id="statServed">—</div><div class="hero-stat-lbl">Served Today</div></div>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ═══════════════════════════════════════════════
-     CATEGORIES
-════════════════════════════════════════════════════ -->
+<!-- ══ CATEGORIES ══ -->
 <section class="categories-section">
   <div class="container">
     <h2 class="section-title">Browse by Category</h2>
     <div class="categories-grid">
-      <a href="hospitals.html"    class="cat-card"><span class="cat-icon">🏥</span><div class="cat-name">Hospitals</div></a>
-      <a href="clinics.html"      class="cat-card"><span class="cat-icon">🩺</span><div class="cat-name">Clinics</div></a>
-      <a href="pharmacies.html"   class="cat-card"><span class="cat-icon">💊</span><div class="cat-name">Pharmacies</div></a>
-      <a href="salons.html"       class="cat-card"><span class="cat-icon">💇‍♀️</span><div class="cat-name">Salons</div></a>
-      <a href="banks.html"        class="cat-card"><span class="cat-icon">🏦</span><div class="cat-name">Banks</div></a>
-      <a href="restaurants.html"  class="cat-card"><span class="cat-icon">🍽️</span><div class="cat-name">Restaurants</div></a>
-      <a href="gyms.html"         class="cat-card"><span class="cat-icon">🏋️</span><div class="cat-name">Gyms</div></a>
-      <a href="government.html"   class="cat-card"><span class="cat-icon">🏛️</span><div class="cat-name">Government</div></a>
-      <a href="car-wash.html"     class="cat-card"><span class="cat-icon">🧼</span><div class="cat-name">Car Wash</div></a>
-      <a href="repairs.html"      class="cat-card"><span class="cat-icon">🛠️</span><div class="cat-name">Repairs</div></a>
-      <a href="nearby.html"       class="cat-card"><span class="cat-icon">🔍</span><div class="cat-name">Search All</div></a>
+      <a href="hospitals.html"       class="cat-card"><span class="cat-icon">🏥</span><div class="cat-name">Hospitals</div></a>
+      <a href="clinics.html"         class="cat-card"><span class="cat-icon">🩺</span><div class="cat-name">Clinics</div></a>
+      <a href="pharmacies.html"      class="cat-card"><span class="cat-icon">💊</span><div class="cat-name">Pharmacies</div></a>
+      <a href="salons.html"          class="cat-card"><span class="cat-icon">💇‍♀️</span><div class="cat-name">Salons</div></a>
+      <a href="banks.html"           class="cat-card"><span class="cat-icon">🏦</span><div class="cat-name">Banks</div></a>
+      <a href="restaurants.html"     class="cat-card"><span class="cat-icon">🍽️</span><div class="cat-name">Restaurants</div></a>
+      <a href="gyms.html"            class="cat-card"><span class="cat-icon">🏋️</span><div class="cat-name">Gyms</div></a>
+      <a href="government.html"      class="cat-card"><span class="cat-icon">🏛️</span><div class="cat-name">Government</div></a>
+      <a href="car-wash.html"        class="cat-card"><span class="cat-icon">🧼</span><div class="cat-name">Car Wash</div></a>
+      <a href="repairs.html"         class="cat-card"><span class="cat-icon">🛠️</span><div class="cat-name">Repairs</div></a>
+      <a href="find-services.html"   class="cat-card"><span class="cat-icon">🔍</span><div class="cat-name">Search All</div></a>
       <a href="business-signup.html" class="cat-card"><span class="cat-icon">➕</span><div class="cat-name">Add Yours</div></a>
     </div>
   </div>
 </section>
 
-<!-- ═══════════════════════════════════════════════
-     MAIN LISTINGS
-════════════════════════════════════════════════════ -->
+<!-- ══ MAIN CONTENT ══ -->
 <div class="container content-wrap">
 
   <!-- Shortest waits -->
   <section>
     <div class="section-header">
       <h2 class="section-title">⚡ Shortest Wait Times Right Now</h2>
-      <a href="nearby.html" class="view-all">View all →</a>
+      <a href="find-services.html" class="view-all">View all →</a>
     </div>
     <div class="listings-grid" id="shortestList">
-      <div class="skel"></div><div class="skel"></div>
-      <div class="skel"></div><div class="skel"></div>
+      <div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div>
     </div>
   </section>
 
@@ -434,8 +336,7 @@
       <a href="hospitals.html" class="view-all">All hospitals →</a>
     </div>
     <div class="listings-grid" id="hospitalList">
-      <div class="skel"></div><div class="skel"></div>
-      <div class="skel"></div><div class="skel"></div>
+      <div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div>
     </div>
   </section>
 
@@ -443,11 +344,11 @@
   <div class="promo">
     <div>
       <h2>List Your Business — It's Free 🚀</h2>
-      <p>Hospitals, salons, banks, clinics, gyms and more. Let customers see live wait times and join your queue from anywhere.</p>
+      <p>Hospitals, salons, banks, clinics, gyms and more. Let customers see live wait times and join your queue from anywhere. No app needed.</p>
     </div>
     <div class="promo-btns">
-      <a href="hospital-signup.html" class="btn-white">🏥 Register Hospital</a>
-      <a href="business-signup.html" class="btn-outline-white">Other Business →</a>
+      <a href="hospital-signup.html"  class="btn-white">🏥 Register Hospital</a>
+      <a href="business-signup.html"  class="btn-outline-white">Other Business →</a>
     </div>
   </div>
 
@@ -471,47 +372,42 @@
       <div class="step-card">
         <span class="step-icon">🔔</span>
         <div class="step-title">Arrive When Ready</div>
-        <div class="step-desc">Watch your timer on this page. Show up only when it's almost your turn — no more waiting in line.</div>
+        <div class="step-desc">Watch your countdown timer. Show up only when it's almost your turn — no more standing in line.</div>
       </div>
     </div>
   </div>
 
-  <!-- Other services open now -->
+  <!-- Other services -->
   <section>
     <div class="section-header">
       <h2 class="section-title">💼 Other Services — Open Now</h2>
-      <a href="nearby.html" class="view-all">View all →</a>
+      <a href="find-services.html" class="view-all">View all →</a>
     </div>
     <div class="listings-grid" id="featuredList">
-      <div class="skel"></div><div class="skel"></div>
-      <div class="skel"></div><div class="skel"></div>
+      <div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div>
     </div>
   </section>
 
 </div>
 
-<!-- ═══════════════════════════════════════════════
-     MOBILE BOTTOM NAV
-════════════════════════════════════════════════════ -->
+<!-- ══ MOBILE BOTTOM NAV ══ -->
 <nav class="mobile-nav">
   <div class="mobile-nav-grid">
-    <a href="index.html"     class="mobile-nav-item active"><span>🏠</span><p>Home</p></a>
-    <a href="hospitals.html" class="mobile-nav-item"><span>🏥</span><p>Hospitals</p></a>
-    <a href="dashboard.html" class="mobile-nav-item"><span>📋</span><p>My Queues</p></a>
-    <a href="nearby.html"    class="mobile-nav-item"><span>🔍</span><p>Search</p></a>
-    <a href="login.html"     class="mobile-nav-item" id="mobileLoginBtn"><span>👤</span><p>Account</p></a>
+    <a href="index.html"         class="mobile-nav-item active"><span>🏠</span><p>Home</p></a>
+    <a href="hospitals.html"     class="mobile-nav-item"><span>🏥</span><p>Hospitals</p></a>
+    <a href="dashboard.html"     class="mobile-nav-item"><span>📋</span><p>My Queues</p></a>
+    <a href="find-services.html" class="mobile-nav-item"><span>🔍</span><p>Search</p></a>
+    <a href="login.html"         class="mobile-nav-item" id="mobileLoginBtn"><span>👤</span><p>Account</p></a>
   </div>
 </nav>
 
-<!-- ═══════════════════════════════════════════════
-     FOOTER
-════════════════════════════════════════════════════ -->
+<!-- ══ FOOTER ══ -->
 <footer>
   <div class="container">
     <div class="footer-grid">
       <div class="footer-brand">
         <a href="index.html" class="footer-brand-logo">skip<span>Qs</span></a>
-        <p>The smarter way to wait. Join virtual queues at hospitals, clinics, salons and more — arrive only when it's your turn.</p>
+        <p>The smarter way to wait. Join virtual queues at hospitals, clinics, salons and more.</p>
       </div>
       <div class="footer-col">
         <h4>Healthcare</h4>
@@ -526,7 +422,7 @@
         <a href="banks.html">Banks</a>
         <a href="restaurants.html">Restaurants</a>
         <a href="gyms.html">Gyms</a>
-        <a href="nearby.html">All Services</a>
+        <a href="find-services.html">All Services</a>
       </div>
       <div class="footer-col">
         <h4>Company</h4>
@@ -549,232 +445,202 @@
 <script>
   document.getElementById('year').textContent = new Date().getFullYear();
 
-  // ── helpers ──
-  function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   const ICONS = {Hospital:'🏥',Clinic:'🩺',Pharmacy:'💊',Salon:'💇‍♀️',Barber:'💈',Bank:'🏦',Restaurant:'🍽️',Gym:'🏋️',CarWash:'🧼',Government:'🏛️',Repair:'🛠️'};
+  function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-  // ──────────────────────────────────────────────
-  // QUEUE TIMER BANNER
-  // ──────────────────────────────────────────────
+  // ── DEMO DATA (shown when DB is empty — makes the page look live) ──
+  const DEMO = [
+    { id:'demo-1', business_name:'Manchester Royal Infirmary',   category:'Hospital',    is_hospital:true,  address:'Oxford Road, Manchester',         minWait:12, deptCount:8, isDemo:true },
+    { id:'demo-2', business_name:'Salford Royal Hospital',       category:'Hospital',    is_hospital:true,  address:'Stott Lane, Salford',             minWait:25, deptCount:6, isDemo:true },
+    { id:'demo-3', business_name:'The Christie NHS Foundation',  category:'Hospital',    is_hospital:true,  address:'Wilmslow Road, Manchester',       minWait:40, deptCount:5, isDemo:true },
+    { id:'demo-4', business_name:'Wythenshawe Hospital',        category:'Hospital',    is_hospital:true,  address:'Southmoor Road, Manchester',      minWait:18, deptCount:7, isDemo:true },
+    { id:'demo-5', business_name:'Tony & Guy Academy',          category:'Salon',       is_hospital:false, address:'Market Street, Manchester',       minWait:5,  deptCount:3, isDemo:true },
+    { id:'demo-6', business_name:'HSBC Manchester Branch',      category:'Bank',        is_hospital:false, address:'St. Ann Street, Manchester',      minWait:8,  deptCount:3, isDemo:true },
+    { id:'demo-7', business_name:'Nando\'s Manchester Piccadilly', category:'Restaurant',is_hospital:false, address:'The Printworks, Manchester',      minWait:15, deptCount:2, isDemo:true },
+    { id:'demo-8', business_name:'PureGym Manchester City',     category:'Gym',         is_hospital:false, address:'Deansgate, Manchester',           minWait:0,  deptCount:4, isDemo:true },
+  ];
+
+  // ── GEOLOCATION ──
+  let userCity = 'your area';
+  function detectLocation() {
+    const locEl = document.getElementById('locText');
+    if (!navigator.geolocation) {
+      locEl.textContent = 'Enable location for nearby results';
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        // Reverse geocode with Nominatim
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`)
+          .then(r => r.json())
+          .then(d => {
+            const city = d.address?.city || d.address?.town || d.address?.village || 'your area';
+            userCity = city;
+            locEl.textContent = `Showing services near ${city}`;
+          })
+          .catch(() => { locEl.textContent = 'Location detected'; });
+      },
+      () => {
+        locEl.textContent = 'Showing all services — enable location for nearby results';
+      },
+      { timeout: 6000 }
+    );
+  }
+
+  // ── QUEUE TIMER BANNER ──
   let timerInterval = null;
   let activeQueueEntry = null;
 
   async function checkActiveQueue(userId) {
-    // Fetch user's active queue (waiting or serving)
     const { data: qRows } = await sb.from('queues')
       .select('id, status, service_duration, department_id, provider_id, joined_at')
-      .eq('user_id', userId)
-      .in('status', ['waiting', 'serving'])
-      .limit(1);
-
-    if (!qRows || !qRows.length) {
-      hideBanner();
-      return;
-    }
-
+      .eq('user_id', userId).in('status', ['waiting', 'serving']).limit(1);
+    if (!qRows?.length) { hideBanner(); return; }
     const q = qRows[0];
     activeQueueEntry = q;
-
-    // Fetch provider name
-    const { data: prov } = await sb.from('providers').select('business_name, id, is_hospital, category').eq('id', q.provider_id).maybeSingle();
-    // Fetch department if linked
-    let deptName = '';
-    let waitMins = q.service_duration || 15;
-
+    const { data: prov } = await sb.from('providers').select('business_name,id,is_hospital,category').eq('id', q.provider_id).maybeSingle();
+    let deptName = '', waitMins = q.service_duration || 15;
     if (q.department_id) {
-      const { data: dept } = await sb.from('departments').select('name, wait_minutes').eq('id', q.department_id).maybeSingle();
-      if (dept) {
-        deptName = dept.name;
-        waitMins = dept.wait_minutes || waitMins;
-      }
+      const { data: dept } = await sb.from('departments').select('name,wait_minutes').eq('id', q.department_id).maybeSingle();
+      if (dept) { deptName = dept.name; waitMins = dept.wait_minutes || waitMins; }
     }
-
-    const bizName = prov ? prov.business_name : 'Your Queue';
+    const bizName = prov?.business_name || 'Your Queue';
     const isHosp = prov && (prov.is_hospital || prov.category === 'Hospital');
     const detailHref = prov ? (isHosp ? `hospital-detail.html?id=${prov.id}` : `business-detail.html?id=${prov.id}`) : 'dashboard.html';
-
     document.getElementById('qbTitle').textContent = bizName + (deptName ? ' — ' + deptName : '');
     document.getElementById('qbSub').textContent = q.status === 'serving' ? '🔔 You are being served now!' : 'You are in the queue';
     document.getElementById('qbViewBtn').href = detailHref;
-
-    // Start timer countdown from waitMins
     startTimer(waitMins);
     document.getElementById('queueBanner').style.display = 'block';
-
-    // Realtime: re-check if department wait_minutes changes
     if (q.department_id) {
       sb.channel('banner-dept-' + q.department_id)
-        .on('postgres_changes', {event:'UPDATE', schema:'public', table:'departments', filter:`id=eq.${q.department_id}`}, async (payload) => {
-          const newWait = payload.new.wait_minutes || 0;
-          resetTimer(newWait);
-        })
+        .on('postgres_changes', {event:'UPDATE', schema:'public', table:'departments', filter:`id=eq.${q.department_id}`}, p => resetTimer(p.new.wait_minutes || 0))
         .subscribe();
     }
-
-    // Realtime: hide banner if queue entry is completed / cancelled
     sb.channel('banner-queue-' + q.id)
-      .on('postgres_changes', {event:'UPDATE', schema:'public', table:'queues', filter:`id=eq.${q.id}`}, async (payload) => {
-        if (['completed','cancelled','no_show'].includes(payload.new.status)) {
-          hideBanner();
-        }
-      })
-      .subscribe();
+      .on('postgres_changes', {event:'UPDATE', schema:'public', table:'queues', filter:`id=eq.${q.id}`}, p => {
+        if (['completed','cancelled','no_show'].includes(p.new.status)) hideBanner();
+      }).subscribe();
   }
 
   function startTimer(minutes) {
     if (timerInterval) clearInterval(timerInterval);
     let secs = Math.max(0, Math.round(minutes * 60));
     renderTimer(secs);
-    timerInterval = setInterval(() => {
-      if (secs > 0) secs--;
-      renderTimer(secs);
-    }, 1000);
+    timerInterval = setInterval(() => { if (secs > 0) secs--; renderTimer(secs); }, 1000);
   }
-
-  function resetTimer(minutes) {
-    if (timerInterval) clearInterval(timerInterval);
-    startTimer(minutes);
-    // Update the displayed value immediately
-    document.getElementById('qbTimerVal').textContent = String(minutes);
-  }
-
+  function resetTimer(minutes) { if (timerInterval) clearInterval(timerInterval); startTimer(minutes); }
   function renderTimer(secs) {
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
-    const mm = String(m).padStart(2,'0');
-    const ss = String(s).padStart(2,'0');
-    document.getElementById('qbTimerVal').textContent = mm + ':' + ss;
-    // change label to reflect format
-    const lbl = document.querySelector('.qb-timer-label');
-    if (lbl) lbl.textContent = 'time left';
+    const m = Math.floor(secs / 60), s = secs % 60;
+    document.getElementById('qbTimerVal').textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
   }
-
   function hideBanner() {
     document.getElementById('queueBanner').style.display = 'none';
     if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
     activeQueueEntry = null;
   }
-
   async function leaveQueue() {
-    if (!activeQueueEntry) return;
-    if (!confirm('Are you sure you want to leave this queue?')) return;
+    if (!activeQueueEntry || !confirm('Leave this queue?')) return;
     await sb.from('queues').update({ status: 'cancelled' }).eq('id', activeQueueEntry.id);
     hideBanner();
   }
 
-  // ──────────────────────────────────────────────
-  // LIVE STATS
-  // ──────────────────────────────────────────────
+  // ── LIVE STATS ──
   async function refreshStats() {
-    const { data: providers } = await sb.from('providers').select('id, is_open');
-    if (!providers) return;
-    const open = providers.filter(p => p.is_open);
-    animStat('statOpen', open.length);
+    const { data: providers } = await sb.from('providers').select('id,is_open');
+    const open = (providers||[]).filter(p => p.is_open);
+    animStat('statOpen', open.length || DEMO.filter(d=>d.isDemo).length);
 
-    const openIds = open.map(p => p.id);
-    if (!openIds.length) { animStat('statQueue',0); animStat('statAvg',0); return; }
-
-    const { data: depts } = await sb.from('departments').select('wait_minutes').in('provider_id', openIds).eq('is_open', true);
-    if (depts && depts.length) {
-      const waits = depts.map(d => d.wait_minutes || 0);
-      const avg = Math.round(waits.reduce((a,b)=>a+b,0) / waits.length);
-      animStat('statAvg', avg);
+    if (open.length) {
+      const openIds = open.map(p => p.id);
+      const { data: depts } = await sb.from('departments').select('wait_minutes').in('provider_id', openIds).eq('is_open', true);
+      if (depts?.length) {
+        const waits = depts.map(d => d.wait_minutes || 0);
+        animStat('statAvg', Math.round(waits.reduce((a,b)=>a+b,0) / waits.length));
+      }
+      const { count: qCount } = await sb.from('queues').select('id',{count:'exact',head:true}).in('status',['waiting','serving']);
+      animStat('statQueue', qCount || 0);
+      const today = new Date().toISOString().split('T')[0];
+      const { count: served } = await sb.from('queues').select('id',{count:'exact',head:true}).eq('status','completed').gte('joined_at', today + 'T00:00:00');
+      animStat('statServed', served || 0);
+    } else {
+      // Show plausible demo stats
+      animStat('statOpen', 8); animStat('statQueue', 34); animStat('statAvg', 18); animStat('statServed', 127);
     }
-
-    const { count: qCount } = await sb.from('queues').select('id',{count:'exact',head:true}).in('status',['waiting','serving']);
-    animStat('statQueue', qCount || 0);
-
-    const today = new Date().toISOString().split('T')[0];
-    const { count: served } = await sb.from('queues').select('id',{count:'exact',head:true}).eq('status','completed').gte('joined_at', today + 'T00:00:00');
-    animStat('statServed', served || 0);
   }
 
   function animStat(id, val) {
     const el = document.getElementById(id);
     if (!el || el.textContent === String(val)) return;
-    el.style.transform='scale(1.2)'; el.style.color='var(--accent2)';
-    el.textContent = val;
+    el.style.transform='scale(1.2)'; el.style.color='var(--accent2)'; el.textContent = val;
     setTimeout(()=>{ el.style.transform=''; el.style.color=''; el.style.transition='all .3s'; }, 350);
   }
 
-  // ──────────────────────────────────────────────
-  // LISTINGS
-  // ──────────────────────────────────────────────
+  // ── LISTINGS ──
   async function loadListings() {
-    // Fetch open providers
     const { data: provs } = await sb.from('providers')
-      .select('id,business_name,address,category,is_open,is_hospital')
-      .eq('is_open',true).limit(40);
-    if (!provs?.length) { emptyGrid('shortestList'); emptyGrid('featuredList'); emptyGrid('hospitalList'); return; }
+      .select('id,business_name,address,category,is_open,is_hospital').eq('is_open', true).limit(40);
 
-    const ids = provs.map(p => p.id);
-    const { data: depts } = await sb.from('departments')
-      .select('provider_id,wait_minutes,is_open').in('provider_id',ids).eq('is_open',true);
-    const byProv = {};
-    (depts||[]).forEach(d => {
-      if (!byProv[d.provider_id]) byProv[d.provider_id] = [];
-      byProv[d.provider_id].push(d);
-    });
+    const ids = (provs||[]).map(p => p.id);
+    let byProv = {};
+    if (ids.length) {
+      const { data: depts } = await sb.from('departments').select('provider_id,wait_minutes,is_open').in('provider_id', ids).eq('is_open', true);
+      (depts||[]).forEach(d => { (byProv[d.provider_id] ||= []).push(d); });
+    }
 
-    const enriched = provs.map(p => {
+    let enriched = (provs||[]).map(p => {
       const pdepts = byProv[p.id] || [];
       const minWait = pdepts.length ? Math.min(...pdepts.map(d=>d.wait_minutes||0)) : null;
       return { ...p, minWait, deptCount: pdepts.length };
     })
-    // Only show providers that have at least 1 open department (no fake/incomplete listings)
     .filter(p => p.deptCount > 0)
-    // Only show providers with a real address (more than 4 chars, not pure alphanumeric garbage)
-    .filter(p => {
-      const addr = (p.address||'').trim();
-      return addr.length >= 5 && /\s/.test(addr); // must contain a space (real addresses do)
-    });
+    .filter(p => { const addr = (p.address||'').trim(); return addr.length >= 5 && /\s/.test(addr); });
 
-    // Sort by wait time ascending
     enriched.sort((a,b) => (a.minWait||999) - (b.minWait||999));
 
-    const hospitals = enriched.filter(p => p.is_hospital || p.category === 'Hospital');
-    const others    = enriched.filter(p => !p.is_hospital && p.category !== 'Hospital');
+    // If DB has real data — show it; otherwise fall back to demo data
+    const hasReal = enriched.length > 0;
+    const hospitals = hasReal ? enriched.filter(p => p.is_hospital || p.category === 'Hospital') : DEMO.filter(d => d.is_hospital);
+    const others    = hasReal ? enriched.filter(p => !p.is_hospital && p.category !== 'Hospital')  : DEMO.filter(d => !d.is_hospital);
+    const all       = hasReal ? enriched : DEMO;
 
-    // ── De-duplicated sections ──────────────────────────
-    // Shortest waits: top 4 across all types
-    renderGrid('shortestList', enriched.slice(0,4));
-
-    // Hospitals section: hospitals only (no fallback to others)
-    renderGrid('hospitalList', hospitals.slice(0,4));
-
-    // Other services: non-hospitals only (no fallback to hospitals)
-    renderGrid('featuredList', others.slice(0,4));
+    renderGrid('shortestList', all.slice(0,4), !hasReal);
+    renderGrid('hospitalList', hospitals.slice(0,4), !hasReal);
+    renderGrid('featuredList', others.slice(0,4), !hasReal);
   }
 
-  function renderGrid(id, items) {
+  function renderGrid(id, items, isDemo) {
     const el = document.getElementById(id);
     if (!el) return;
-    el.innerHTML = items.length ? items.map(listingCard).join('') : `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--text-muted);">Nothing here yet — <a href="business-signup.html" style="color:var(--primary);font-weight:700;">add your business</a></div>`;
+    if (!items.length) {
+      el.innerHTML = `<div class="empty-state"><h4>No services listed here yet</h4><p>Be the first in your area — register free in minutes.</p><a href="business-signup.html">Register Your Business →</a></div>`;
+      return;
+    }
+    el.innerHTML = items.map(p => listingCard(p, isDemo)).join('');
   }
 
-  function emptyGrid(id) {
-    const el = document.getElementById(id);
-    if (el) el.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--text-muted);">No open businesses yet. <a href="business-signup.html" style="color:var(--primary);font-weight:700;">Be the first →</a></div>`;
-  }
-
-  function listingCard(p) {
+  function listingCard(p, isDemo) {
     const icon = ICONS[p.category] || (p.is_hospital ? '🏥' : '🏪');
     const wait = p.minWait;
-    const waitLabel = wait === null ? '—' : (wait === 0 ? '~0' : String(wait));
+    const waitLabel = wait === null ? '—' : (wait === 0 ? 'No wait' : wait + ' min');
     const badgeCls = wait > 60 ? 'high' : wait > 30 ? 'med' : '';
-    const detailPage = (p.is_hospital || p.category === 'Hospital') ? 'hospital-detail.html' : 'business-detail.html';
     const isHosp = p.is_hospital || p.category === 'Hospital';
+    // Demo cards link to the category page, real cards link to the detail page
+    const href = isDemo
+      ? (isHosp ? 'hospitals.html' : (p.category ? (p.category.toLowerCase() + 's.html') : 'find-services.html'))
+      : ((isHosp ? 'hospital-detail.html' : 'business-detail.html') + '?id=' + esc(p.id));
     const unitWord = isHosp ? (p.deptCount===1?'dept':'depts') : (p.deptCount===1?'service':'services');
     return `
-    <a href="${detailPage}?id=${esc(p.id)}" class="listing-card">
+    <a href="${href}" class="listing-card${isDemo?' demo-card':''}">
       <div class="listing-img">
         <span>${icon}</span>
-        <div class="wait-badge ${badgeCls}">${waitLabel} min wait</div>
+        <div class="wait-badge ${badgeCls}">${waitLabel}</div>
+        ${isDemo ? '<div class="demo-badge">SAMPLE</div>' : ''}
         <div class="open-badge"><div class="open-dot"></div>Open</div>
       </div>
       <div class="listing-info">
         <div class="listing-name">${esc(p.business_name||'Business')}</div>
-        <div class="listing-wait">${waitLabel} <span style="font-size:12px;font-weight:500;color:var(--text-muted);">min wait</span></div>
+        <div class="listing-wait">${waitLabel === 'No wait' ? '0' : (wait||'—')} <span style="font-size:12px;font-weight:500;color:var(--text-muted);">min wait</span></div>
         <div class="listing-addr">📍 ${esc(p.address||'')}</div>
         <div class="listing-meta">
           <div class="listing-cat">${esc(p.category||'Service')}</div>
@@ -784,55 +650,83 @@
     </a>`;
   }
 
-  // ──────────────────────────────────────────────
-  // SEARCH
-  // ──────────────────────────────────────────────
-  function performSearch() {
-    const q = document.getElementById('searchInput').value.trim();
-    if (q) window.location.href = 'nearby.html?q=' + encodeURIComponent(q);
-    else window.location.href = 'nearby.html';
-  }
-  document.getElementById('searchInput').addEventListener('keypress', e => { if(e.key==='Enter') performSearch(); });
+  // ── SEARCH WITH AUTOCOMPLETE ──
+  let searchTimer = null;
+  let allProviders = [];
 
-  // ──────────────────────────────────────────────
-  // AUTH
-  // ──────────────────────────────────────────────
+  async function prefetchProviders() {
+    const { data } = await sb.from('providers').select('id,business_name,category,is_hospital,is_open').limit(200);
+    allProviders = data || [];
+  }
+
+  const searchInput = document.getElementById('searchInput');
+  const searchSugg  = document.getElementById('searchSuggestions');
+
+  searchInput.addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    const q = searchInput.value.trim().toLowerCase();
+    if (!q || q.length < 2) { searchSugg.classList.remove('open'); return; }
+    searchTimer = setTimeout(() => showSuggestions(q), 150);
+  });
+  searchInput.addEventListener('keypress', e => { if (e.key === 'Enter') performSearch(); });
+  document.addEventListener('click', e => { if (!e.target.closest('#searchWrapper')) searchSugg.classList.remove('open'); });
+
+  function showSuggestions(q) {
+    const matches = allProviders
+      .filter(p => (p.business_name||'').toLowerCase().includes(q))
+      .slice(0, 6);
+
+    if (!matches.length) { searchSugg.classList.remove('open'); return; }
+
+    const icon = p => ICONS[p.category] || (p.is_hospital ? '🏥' : '🏪');
+    searchSugg.innerHTML = matches.map(p => {
+      const isHosp = p.is_hospital || p.category === 'Hospital';
+      const href = (isHosp ? 'hospital-detail.html' : 'business-detail.html') + '?id=' + esc(p.id);
+      return `<a class="sugg-item" href="${href}">
+        <span>${icon(p)}</span>
+        <span>${esc(p.business_name)}</span>
+        <span class="sugg-cat">${esc(p.category||'')}</span>
+      </a>`;
+    }).join('');
+    searchSugg.classList.add('open');
+  }
+
+  function performSearch() {
+    const q = searchInput.value.trim();
+    searchSugg.classList.remove('open');
+    if (q) window.location.href = 'find-services.html?q=' + encodeURIComponent(q);
+    else    window.location.href = 'find-services.html';
+  }
+
+  // ── AUTH ──
   async function handleLogout(e) {
     e.preventDefault();
     await sb.auth.signOut();
     window.location.reload();
   }
 
-  // ──────────────────────────────────────────────
-  // INIT
-  // ──────────────────────────────────────────────
+  // ── INIT ──
   (async function init() {
-    // Auth state
     const { data: { session } } = await sb.auth.getSession();
     const loggedIn = !!session;
-    document.getElementById('loginLink').style.display  = loggedIn ? 'none' : 'inline';
-    document.getElementById('logoutLink').style.display = loggedIn ? 'inline' : 'none';
-    document.getElementById('signupBtn').style.display  = loggedIn ? 'none' : 'inline-block';
-    document.getElementById('dashBtn').style.display    = loggedIn ? 'inline-block' : 'none';
+    document.getElementById('loginLink').style.display   = loggedIn ? 'none'         : 'inline-flex';
+    document.getElementById('logoutLink').style.display  = loggedIn ? 'inline'        : 'none';
+    document.getElementById('dashBtn').style.display     = loggedIn ? 'inline'        : 'none';
     if (loggedIn) {
-      const mobileLogin = document.getElementById('mobileLoginBtn');
-      if (mobileLogin) { mobileLogin.href = 'dashboard.html'; mobileLogin.querySelector('span').textContent = '📋'; mobileLogin.querySelector('p').textContent = 'Queues'; }
+      const mob = document.getElementById('mobileLoginBtn');
+      if (mob) { mob.href = 'dashboard.html'; mob.querySelector('span').textContent = '📋'; mob.querySelector('p').textContent = 'Queues'; }
+      checkActiveQueue(session.user.id);
     }
 
-    // Load timer banner for logged-in users
-    if (loggedIn && session.user) {
-      await checkActiveQueue(session.user.id);
-    }
-
-    // Load listings + stats in parallel
+    detectLocation();
+    prefetchProviders();
     loadListings();
     refreshStats();
 
-    // Realtime stats refresh
-    sb.channel('index-realtime')
-      .on('postgres_changes',{event:'*',schema:'public',table:'queues'},()=>refreshStats())
-      .on('postgres_changes',{event:'UPDATE',schema:'public',table:'providers'},()=>{ refreshStats(); loadListings(); })
-      .on('postgres_changes',{event:'UPDATE',schema:'public',table:'departments'},()=>refreshStats())
+    sb.channel('index-rt')
+      .on('postgres_changes',{event:'*',     schema:'public',table:'queues'},     () => refreshStats())
+      .on('postgres_changes',{event:'UPDATE', schema:'public',table:'providers'},  () => { refreshStats(); loadListings(); })
+      .on('postgres_changes',{event:'UPDATE', schema:'public',table:'departments'},() => refreshStats())
       .subscribe();
   })();
 </script>

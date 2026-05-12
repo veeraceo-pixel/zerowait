@@ -378,7 +378,10 @@ async function register() {
     if (!uid) { showError('Could not establish a session. Please log in.'); resetBtn(); return; }
 
     const totalCapacity = units.reduce((s,d)=>s+d.capacity, 0);
+    // Explicitly supply id because the DB column may not have a DEFAULT uuid set
+    const providerId = crypto.randomUUID();
     const { data: providerRow, error: provErr } = await sb.from('providers').insert({
+      id: providerId,
       user_id: uid,
       business_name: bizName,
       category: cat,

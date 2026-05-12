@@ -184,6 +184,7 @@
 <nav class="navbar">
   <a href="index.html" class="logo">skip<span>Qs</span></a>
   <div class="nav-links">
+    <a href="find-services.html">All Services</a>
     <a href="hospitals.html">Hospitals</a>
     <a href="dashboard.html">My Queues</a>
     <a href="login.html" id="authBtn" class="pill">Login</a>
@@ -409,16 +410,45 @@ async function writeCache(svcType,lat,lng,places){
 
 /* ─── Init ─── */
 function init(){
-  initLeafletMap(userLat, userLng); // init map immediately
+  initLeafletMap(userLat, userLng); // init map with default Manchester location immediately
+
+  // Start search after 3s even if geolocation hasn't resolved (prevents infinite "Locating you…")
+  let geoResolved = false;
+  const geoTimeout = setTimeout(()=>{
+    if (!geoResolved){
+      geoResolved = true;
+      document.getElementById('counter').textContent = '📍 Showing Manchester area — enable location for nearby results';
+      executePlacesSearch();
+    }
+  }, 3000);
+
+  if (!navigator.geolocation){
+    clearTimeout(geoTimeout);
+    geoResolved = true;
+    document.getElementById('counter').textContent = '📍 Location not supported — showing Manchester area';
+    executePlacesSearch();
+    return;
+  }
+
   navigator.geolocation.getCurrentPosition(
     pos=>{
+      if (geoResolved) return; // timeout already fired
+      geoResolved = true;
+      clearTimeout(geoTimeout);
       userLat=pos.coords.latitude; userLng=pos.coords.longitude;
       leafletMap.setView([userLat,userLng],14);
       const userIcon=L.divIcon({html:`<div style="background:var(--accent);width:14px;height:14px;border-radius:50%;border:3px solid var(--primary);box-shadow:0 2px 8px rgba(0,0,0,.4);"></div>`,iconSize:[20,20],iconAnchor:[10,10],className:''});
       L.marker([userLat,userLng],{icon:userIcon}).addTo(leafletMap).bindPopup('<strong>📍 You are here</strong>');
       executePlacesSearch();
     },
-    ()=>executePlacesSearch()
+    ()=>{
+      if (geoResolved) return;
+      geoResolved = true;
+      clearTimeout(geoTimeout);
+      document.getElementById('counter').textContent = '📍 Location unavailable — showing Manchester area';
+      executePlacesSearch();
+    },
+    { timeout: 8000, maximumAge: 60000 }
   );
 }
 
