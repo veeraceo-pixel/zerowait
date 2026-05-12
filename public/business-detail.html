@@ -173,6 +173,10 @@ async function init() {
       await loadDepartments(); renderDepartments();
       document.getElementById('lastSync').textContent = 'Updated ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
     })
+    .on('postgres_changes', {event:'*', schema:'public', table:'services', filter:`provider_id=eq.${providerId}`}, async ()=>{
+      await loadDepartments(); renderDepartments();
+      document.getElementById('lastSync').textContent = 'Updated ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    })
     .on('postgres_changes', {event:'UPDATE', schema:'public', table:'providers', filter:`id=eq.${providerId}`}, async ()=>{
       await loadProvider(); renderHero();
     })
@@ -205,8 +209,26 @@ async function loadProvider() {
 }
 
 async function loadDepartments() {
-  const { data } = await sb.from('departments').select('*').eq('provider_id', providerId).order('display_order',{ascending:true});
-  departments = data || [];
+  // Try modern departments table first
+  const { data: depts } = await sb.from('departments').select('*').eq('provider_id', providerId).order('display_order',{ascending:true});
+  if (depts && depts.length > 0) {
+    departments = depts;
+    return;
+  }
+  // Fallback: legacy 'services' table (older provider-dashboard registrations)
+  const { data: svcs } = await sb.from('services').select('*').eq('provider_id', providerId).order('created_at',{ascending:true});
+  departments = (svcs || []).map((s, i) => ({
+    id:                 s.id,
+    provider_id:        s.provider_id,
+    name:               s.name,
+    wait_minutes:       0,
+    is_open:            true,
+    capacity:           1,
+    avg_consult_minutes: s.duration || 15,
+    icon:               null,
+    display_order:      i,
+    _legacy:            true
+  }));
 }
 
 function renderHero() {
