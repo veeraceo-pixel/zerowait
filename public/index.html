@@ -3,8 +3,48 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>skipQs — Skip the Queue, Save Your Time</title>
-  <meta name="description" content="See live wait times at hospitals, clinics, salons, banks and more. Join virtual queues from anywhere.">
+  <title>skipQs — See Live Wait Times &amp; Join Virtual Queues</title>
+  <meta name="description" content="skipQs shows live wait times at hospitals, clinics, salons, banks and more. Join the virtual queue from anywhere — arrive only when it's your turn. Free for patients, free for businesses.">
+  <meta name="keywords" content="live wait times, virtual queue, hospital queue, skip the queue, queue management, NHS wait times">
+  <link rel="canonical" href="https://skipqs.com/">
+
+  <!-- Open Graph / Social -->
+  <meta property="og:type"        content="website">
+  <meta property="og:url"         content="https://skipqs.com/">
+  <meta property="og:title"       content="skipQs — Skip the Queue, Save Your Time">
+  <meta property="og:description" content="See live wait times at hospitals, clinics, salons, banks and more. Join the virtual queue from your phone — no app needed.">
+  <meta property="og:image"       content="https://skipqs.com/og-image.png">
+  <meta name="twitter:card"       content="summary_large_image">
+  <meta name="twitter:title"      content="skipQs — Skip the Queue">
+  <meta name="twitter:description" content="Live wait times &amp; virtual queues at hospitals, clinics, salons, banks and more.">
+
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "skipQs",
+    "url": "https://skipqs.com",
+    "description": "Real-time queue management and live wait times for hospitals, clinics, salons, banks and more.",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://skipqs.com/find-services.html?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "skipQs",
+    "applicationCategory": "HealthcareApplication",
+    "operatingSystem": "Web",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "GBP" },
+    "description": "Virtual queue management system with live wait times for healthcare and service businesses."
+  }
+  </script>
+
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root{
@@ -16,6 +56,16 @@
     *{margin:0;padding:0;box-sizing:border-box;}
     body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text-dark);line-height:1.6;}
     .container{max-width:1280px;margin:0 auto;padding:0 20px;}
+    a{text-decoration:none;}
+
+    /* ── COOKIE BANNER ── */
+    #cookieBanner{display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;background:var(--primary);color:white;padding:14px 20px;box-shadow:0 -4px 20px rgba(0,0,0,.25);}
+    .cookie-inner{max-width:1280px;margin:0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+    .cookie-inner p{font-size:.82rem;opacity:.85;flex:1;min-width:200px;}
+    .cookie-inner p a{color:var(--accent);text-decoration:underline;}
+    .cookie-btns{display:flex;gap:.5rem;flex-shrink:0;}
+    .cookie-accept{background:var(--accent);color:var(--primary);border:none;padding:8px 20px;border-radius:50px;font-weight:800;font-size:.82rem;cursor:pointer;font-family:inherit;}
+    .cookie-decline{background:rgba(255,255,255,.12);color:white;border:1px solid rgba(255,255,255,.25);padding:8px 16px;border-radius:50px;font-size:.82rem;cursor:pointer;font-family:inherit;}
 
     /* ── QUEUE TIMER BANNER ── */
     #queueBanner{display:none;background:var(--accent2);border-bottom:3px solid rgba(0,47,52,.2);color:var(--primary);padding:0;position:sticky;top:0;z-index:1001;}
@@ -40,21 +90,18 @@
     .header-inner{display:flex;align-items:center;gap:16px;padding:13px 20px;max-width:1280px;margin:0 auto;}
     .logo{font-size:1.5rem;font-weight:800;color:var(--accent);text-decoration:none;letter-spacing:-1px;flex-shrink:0;}
     .logo span{color:var(--accent2);}
-    /* Search */
     .search-wrapper{flex:1;display:flex;border:2px solid rgba(255,255,255,.2);border-radius:10px;overflow:hidden;max-width:560px;background:rgba(255,255,255,.08);position:relative;}
     .search-wrapper:focus-within{border-color:var(--accent);background:rgba(255,255,255,.12);}
     .search-input{flex:1;border:none;padding:11px 16px;font-size:.92rem;outline:none;font-family:inherit;background:transparent;color:white;}
     .search-input::placeholder{color:rgba(255,255,255,.45);}
     .search-btn{background:var(--accent);color:var(--primary);border:none;padding:0 22px;font-size:.85rem;font-weight:800;cursor:pointer;white-space:nowrap;transition:.15s;}
     .search-btn:hover{background:#1bcabf;}
-    /* Autocomplete */
     .search-suggestions{position:absolute;top:calc(100% + 6px);left:0;right:0;background:white;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18);z-index:200;display:none;overflow:hidden;}
     .search-suggestions.open{display:block;}
     .sugg-item{padding:.75rem 1rem;font-size:.88rem;cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.6rem;color:var(--text-dark);}
     .sugg-item:last-child{border-bottom:none;}
     .sugg-item:hover{background:var(--bg);}
     .sugg-cat{font-size:.7rem;color:var(--text-muted);margin-left:auto;font-weight:600;}
-    /* Nav links */
     .nav-links{display:flex;gap:4px;align-items:center;flex-shrink:0;}
     .nav-links a{color:rgba(255,255,255,.75);text-decoration:none;font-size:.82rem;font-weight:600;padding:7px 12px;border-radius:8px;transition:.15s;white-space:nowrap;}
     .nav-links a:hover{color:white;background:rgba(255,255,255,.1);}
@@ -74,10 +121,8 @@
     .btn-hero-primary:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(35,229,219,.4);}
     .btn-hero-outline{background:transparent;color:white;padding:14px 28px;border-radius:50px;font-weight:700;font-size:.95rem;text-decoration:none;border:2px solid rgba(255,255,255,.4);display:inline-block;transition:.2s;}
     .btn-hero-outline:hover{border-color:white;}
-    /* Location bar */
     .hero-location{font-size:.8rem;color:rgba(255,255,255,.55);margin-top:1rem;display:flex;align-items:center;gap:.4rem;}
     .loc-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:qbPulse 1.5s infinite;flex-shrink:0;}
-    /* Live stats panel */
     .hero-stats-panel{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:1.8rem;backdrop-filter:blur(8px);}
     .hero-stats-title{font-size:.68rem;text-transform:uppercase;letter-spacing:.7px;font-weight:700;color:rgba(255,255,255,.45);margin-bottom:1.2rem;}
     .hero-stat-row{display:flex;align-items:center;gap:1rem;padding:.7rem 0;border-bottom:1px solid rgba(255,255,255,.07);}
@@ -88,6 +133,22 @@
     .hero-stat-lbl{font-size:.68rem;color:rgba(255,255,255,.5);font-weight:600;text-transform:uppercase;letter-spacing:.3px;}
     .live-pill{display:inline-flex;align-items:center;gap:.4rem;background:#dc2626;color:white;padding:4px 10px;border-radius:50px;font-size:.65rem;font-weight:800;letter-spacing:.6px;text-transform:uppercase;margin-bottom:.8rem;}
     .live-dot{width:7px;height:7px;border-radius:50%;background:white;animation:qbPulse 1.2s ease-in-out infinite;}
+    /* ── MY QUEUE ROW ── */
+    .my-queue-row{background:rgba(35,229,219,.08);border:1px solid rgba(35,229,219,.2);border-radius:12px;padding:.75rem 1rem;margin-top:.6rem;display:flex;align-items:center;gap:.8rem;}
+    .my-queue-row.active{background:rgba(255,206,50,.12);border-color:rgba(255,206,50,.35);}
+    .mqr-icon{font-size:1.3rem;flex-shrink:0;}
+    .mqr-info{flex:1;min-width:0;}
+    .mqr-label{font-size:.6rem;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.45);font-weight:700;margin-bottom:.1rem;}
+    .mqr-val{font-size:.88rem;font-weight:700;color:rgba(255,255,255,.85);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .mqr-val a{color:var(--accent);text-decoration:none;font-size:.82rem;}
+    .mqr-val a:hover{text-decoration:underline;}
+    .mqr-timer{font-size:1.5rem;font-weight:800;color:var(--accent2);letter-spacing:-1px;font-variant-numeric:tabular-nums;flex-shrink:0;}
+    .mqr-timer.serving{color:#4ade80;animation:qbPulse .8s ease-in-out infinite;}
+    /* Mobile hero stats */
+    .mobile-hero-stats{display:none;grid-template-columns:1fr 1fr;gap:.65rem;margin-top:1.4rem;}
+    .mhs-box{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:.8rem 1rem;}
+    .mhs-val{display:block;font-size:1.45rem;font-weight:800;color:var(--accent);line-height:1;}
+    .mhs-lbl{display:block;font-size:.6rem;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.5);font-weight:700;margin-top:.25rem;}
 
     /* ── CATEGORIES ── */
     .categories-section{background:white;padding:26px 0;border-bottom:1px solid var(--border);}
@@ -103,14 +164,12 @@
     .view-all{color:var(--primary);text-decoration:none;font-weight:700;font-size:.82rem;background:var(--bg);padding:6px 14px;border-radius:50px;border:1px solid var(--border);transition:.15s;}
     .view-all:hover{background:var(--accent);color:var(--primary);border-color:var(--accent);}
     .listings-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
-    .listing-card{background:white;border-radius:12px;overflow:hidden;text-decoration:none;color:inherit;box-shadow:0 1px 4px rgba(0,0,0,.08);transition:.2s;border:1.5px solid transparent;display:block;}
+    .listing-card{background:white;border-radius:12px;overflow:hidden;text-decoration:none;color:inherit;box-shadow:0 1px 4px rgba(0,0,0,.08);transition:.2s;border:1.5px solid transparent;display:block;position:relative;}
     .listing-card:hover{box-shadow:0 8px 24px rgba(0,0,0,.12);transform:translateY(-3px);border-color:var(--accent);}
-    .listing-card.demo-card{opacity:.85;}
     .listing-img{width:100%;height:140px;background:linear-gradient(135deg,#002f34,#004d57);display:flex;align-items:center;justify-content:center;font-size:3rem;position:relative;}
     .wait-badge{position:absolute;top:10px;right:10px;background:var(--accent2);color:var(--primary);padding:4px 10px;border-radius:50px;font-size:11px;font-weight:800;}
     .wait-badge.high{background:#fee2e2;color:var(--danger);}
     .wait-badge.med{background:#fef9c3;color:#854d0e;}
-    .demo-badge{position:absolute;top:10px;left:10px;background:rgba(0,0,0,.45);color:white;padding:3px 8px;border-radius:50px;font-size:10px;font-weight:700;}
     .open-badge{position:absolute;bottom:10px;left:10px;background:rgba(5,150,105,.9);color:white;padding:3px 10px;border-radius:50px;font-size:10px;font-weight:700;display:flex;align-items:center;gap:4px;}
     .open-dot{width:5px;height:5px;border-radius:50%;background:#4ade80;animation:qbPulse 1.5s infinite;}
     .listing-info{padding:14px;}
@@ -120,9 +179,19 @@
     .listing-meta{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--bg);}
     .listing-cat{font-size:11px;color:var(--text-muted);background:var(--bg);padding:3px 8px;border-radius:4px;font-weight:600;}
     .listing-queue{font-size:12px;color:var(--green);font-weight:700;}
+    /* Join Queue button on card */
+    .join-btn{display:block;margin:10px 14px 14px;background:var(--primary);color:white;border:none;border-radius:8px;padding:10px;font-size:.82rem;font-weight:800;text-align:center;cursor:pointer;text-decoration:none;transition:.15s;font-family:inherit;}
+    .join-btn:hover{background:#004050;color:white;}
+    .join-btn.demo{background:var(--bg);color:var(--text-muted);border:1.5px solid var(--border);cursor:default;}
     /* skeleton */
     .skel{background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:12px;height:240px;}
     @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+    /* empty / error state */
+    .empty-state{grid-column:1/-1;text-align:center;padding:3rem 1rem;color:var(--text-muted);background:white;border-radius:12px;border:1.5px dashed var(--border);}
+    .empty-state h4{font-size:.95rem;font-weight:700;color:var(--primary);margin-bottom:.4rem;}
+    .empty-state p{font-size:.82rem;margin-bottom:1rem;}
+    .empty-state a{display:inline-block;background:var(--primary);color:white;padding:9px 22px;border-radius:50px;text-decoration:none;font-size:.82rem;font-weight:700;}
+    .error-state{grid-column:1/-1;text-align:center;padding:2rem 1rem;color:var(--danger);background:#fff5f5;border-radius:12px;border:1.5px dashed #fecaca;font-size:.85rem;}
 
     /* ── LOCATION BANNER ── */
     .loc-banner{background:white;border:1.5px solid var(--border);border-radius:12px;padding:1.2rem 1.4rem;margin-bottom:1rem;display:flex;align-items:center;gap:.8rem;}
@@ -130,42 +199,70 @@
     .loc-banner h4{font-size:.9rem;font-weight:700;margin-bottom:.15rem;}
     .loc-banner p{font-size:.78rem;color:var(--text-muted);}
     .loc-banner button{margin-left:auto;background:var(--primary);color:white;border:none;padding:9px 20px;border-radius:50px;font-weight:700;font-size:.8rem;cursor:pointer;white-space:nowrap;flex-shrink:0;}
-    .loc-banner button:hover{background:#004050;}
 
-    /* ── PROMO ── */
-    .promo{background:linear-gradient(135deg,var(--primary) 0%,#005959 100%);color:white;padding:50px 44px;border-radius:14px;display:grid;grid-template-columns:1fr auto;align-items:center;gap:40px;}
-    .promo h2{font-size:1.7rem;font-weight:800;margin-bottom:.5rem;letter-spacing:-.5px;}
-    .promo p{opacity:.85;font-size:.9rem;max-width:480px;}
-    .promo-btns{display:flex;gap:.8rem;flex-shrink:0;flex-wrap:wrap;}
-    .btn-white{background:white;color:var(--primary);padding:12px 26px;border-radius:50px;font-weight:800;font-size:.9rem;text-decoration:none;white-space:nowrap;display:inline-block;}
-    .btn-white:hover{transform:translateY(-2px);}
-    .btn-outline-white{background:transparent;color:white;padding:12px 26px;border-radius:50px;font-weight:700;font-size:.9rem;text-decoration:none;border:2px solid rgba(255,255,255,.45);white-space:nowrap;display:inline-block;}
+    /* ── PROMO / BUSINESS CTA ── */
+    .biz-cta{background:linear-gradient(135deg,var(--primary) 0%,#005959 100%);color:white;padding:50px 44px;border-radius:20px;display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;}
+    .biz-cta-left h2{font-size:1.9rem;font-weight:800;margin-bottom:.6rem;letter-spacing:-.5px;line-height:1.15;}
+    .biz-cta-left h2 span{color:var(--accent2);}
+    .biz-cta-left p{opacity:.85;font-size:.92rem;max-width:420px;line-height:1.7;margin-bottom:1.4rem;}
+    .biz-cta-perks{display:flex;flex-direction:column;gap:.55rem;margin-bottom:1.6rem;}
+    .biz-perk{display:flex;align-items:center;gap:.6rem;font-size:.88rem;opacity:.9;}
+    .biz-perk-icon{font-size:1.1rem;flex-shrink:0;}
+    .biz-cta-btns{display:flex;gap:.8rem;flex-wrap:wrap;}
+    .btn-white{background:white;color:var(--primary);padding:12px 26px;border-radius:50px;font-weight:800;font-size:.9rem;text-decoration:none;white-space:nowrap;display:inline-block;transition:.15s;}
+    .btn-white:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.2);}
+    .btn-outline-white{background:transparent;color:white;padding:12px 26px;border-radius:50px;font-weight:700;font-size:.9rem;text-decoration:none;border:2px solid rgba(255,255,255,.4);white-space:nowrap;display:inline-block;transition:.2s;}
     .btn-outline-white:hover{border-color:white;}
+    /* Right side of biz CTA — mini features */
+    .biz-cta-features{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+    .biz-feat{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:1.1rem;}
+    .biz-feat-icon{font-size:1.6rem;margin-bottom:.5rem;}
+    .biz-feat-title{font-size:.85rem;font-weight:700;margin-bottom:.2rem;}
+    .biz-feat-desc{font-size:.75rem;opacity:.65;line-height:1.45;}
+
+    /* ── TRUST SIGNALS ── */
+    .trust-section{background:white;border-radius:14px;padding:36px;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+    .trust-title{text-align:center;font-size:1rem;font-weight:700;color:var(--text-muted);margin-bottom:1.6rem;text-transform:uppercase;letter-spacing:.6px;font-size:.75rem;}
+    .trust-badges{display:flex;justify-content:center;gap:1rem;flex-wrap:wrap;margin-bottom:2rem;}
+    .trust-badge{display:flex;align-items:center;gap:.5rem;background:var(--bg);border:1.5px solid var(--border);border-radius:50px;padding:.55rem 1.2rem;font-size:.82rem;font-weight:700;color:var(--primary);}
+    .trust-badge-icon{font-size:1rem;}
+    .trust-divider{border:none;border-top:1px solid var(--border);margin:0 0 2rem;}
+    /* Testimonials */
+    .testimonials-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;}
+    .testimonial{background:var(--bg);border-radius:12px;padding:1.2rem;border:1px solid var(--border);}
+    .testimonial-text{font-size:.875rem;color:var(--text-dark);line-height:1.6;margin-bottom:.9rem;font-style:italic;}
+    .testimonial-author{display:flex;align-items:center;gap:.6rem;}
+    .testimonial-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--primary),#004d57);display:flex;align-items:center;justify-content:center;color:var(--accent);font-weight:800;font-size:.9rem;flex-shrink:0;}
+    .testimonial-name{font-size:.82rem;font-weight:700;color:var(--primary);}
+    .testimonial-role{font-size:.72rem;color:var(--text-muted);}
+    .stars{color:#f59e0b;font-size:.85rem;margin-bottom:.5rem;}
 
     /* ── HOW IT WORKS ── */
     .how-section{background:white;border-radius:14px;padding:36px;box-shadow:0 1px 4px rgba(0,0,0,.06);}
     .steps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin-top:20px;}
     .step-card{text-align:center;padding:20px 16px;}
+    .step-num{width:32px;height:32px;border-radius:50%;background:var(--primary);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:.82rem;font-weight:800;margin:0 auto 10px;}
     .step-icon{font-size:2.4rem;display:block;margin-bottom:10px;}
     .step-title{font-size:15px;font-weight:700;margin-bottom:8px;}
     .step-desc{font-size:13px;color:var(--text-muted);line-height:1.65;}
 
-    /* ── EMPTY STATE ── */
-    .empty-state{grid-column:1/-1;text-align:center;padding:3rem 1rem;color:var(--text-muted);background:white;border-radius:12px;border:1.5px dashed var(--border);}
-    .empty-state h4{font-size:.95rem;font-weight:700;color:var(--primary);margin-bottom:.4rem;}
-    .empty-state p{font-size:.82rem;margin-bottom:1rem;}
-    .empty-state a{display:inline-block;background:var(--primary);color:white;padding:9px 22px;border-radius:50px;text-decoration:none;font-size:.82rem;font-weight:700;}
-
     /* ── FOOTER ── */
     footer{background:var(--primary);color:white;padding:44px 0 22px;margin-top:60px;}
-    .footer-grid{display:grid;grid-template-columns:1.5fr repeat(3,1fr);gap:36px;margin-bottom:30px;}
+    .footer-grid{display:grid;grid-template-columns:1.6fr repeat(4,1fr);gap:32px;margin-bottom:30px;}
     .footer-brand-logo{font-size:1.4rem;font-weight:800;letter-spacing:-1px;color:white;text-decoration:none;display:block;margin-bottom:8px;}
     .footer-brand-logo span{color:var(--accent);}
-    .footer-brand p{font-size:13px;color:rgba(255,255,255,.5);line-height:1.7;max-width:220px;}
+    .footer-brand p{font-size:13px;color:rgba(255,255,255,.5);line-height:1.7;max-width:220px;margin-bottom:1rem;}
+    .footer-social{display:flex;gap:.6rem;}
+    .footer-social a{width:34px;height:34px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:8px;display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:.95rem;color:rgba(255,255,255,.7);transition:.15s;}
+    .footer-social a:hover{background:var(--accent);color:var(--primary);border-color:var(--accent);}
     .footer-col h4{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.35);margin-bottom:12px;}
-    .footer-col a{color:rgba(255,255,255,.65);text-decoration:none;font-size:13px;display:block;margin-bottom:7px;}
+    .footer-col a{color:rgba(255,255,255,.65);text-decoration:none;font-size:13px;display:block;margin-bottom:7px;transition:.1s;}
     .footer-col a:hover{color:white;}
-    .footer-bot{padding-top:18px;border-top:1px solid rgba(255,255,255,.08);font-size:12px;color:rgba(255,255,255,.3);display:flex;justify-content:space-between;align-items:center;}
+    .footer-bot{padding-top:18px;border-top:1px solid rgba(255,255,255,.08);font-size:12px;color:rgba(255,255,255,.3);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;}
+    .footer-bot-links{display:flex;gap:14px;}
+    .footer-bot-links a{color:rgba(255,255,255,.35);text-decoration:none;font-size:12px;}
+    .footer-bot-links a:hover{color:rgba(255,255,255,.7);}
+    .footer-gdpr{display:flex;align-items:center;gap:.4rem;font-size:.72rem;color:rgba(255,255,255,.25);}
 
     /* ── MOBILE NAV ── */
     .mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--border);z-index:999;box-shadow:0 -4px 20px rgba(0,0,0,.08);}
@@ -177,15 +274,6 @@
 
     /* ── LAYOUT ── */
     .content-wrap{display:flex;flex-direction:column;gap:28px;margin:24px 0;}
-
-    /* ── RESPONSIVE ── */
-    @media(max-width:1100px){.listings-grid{grid-template-columns:repeat(3,1fr)}.categories-grid{grid-template-columns:repeat(4,1fr)}.hero h1{font-size:2.4rem}}
-    @media(max-width:900px){.hero-inner{grid-template-columns:1fr}.hero-stats-panel{display:none}.promo{grid-template-columns:1fr;gap:20px}.footer-grid{grid-template-columns:1fr 1fr}.nav-links .hide-md{display:none}}
-    /* ── MOBILE HERO STATS (2×2 grid, visible only on mobile) ── */
-    .mobile-hero-stats{display:none;grid-template-columns:1fr 1fr;gap:.65rem;margin-top:1.4rem;}
-    .mhs-box{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:.8rem 1rem;}
-    .mhs-val{display:block;font-size:1.45rem;font-weight:800;color:var(--accent);line-height:1;}
-    .mhs-lbl{display:block;font-size:.6rem;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.5);font-weight:700;margin-top:.25rem;}
 
     /* ── INDEX HAMBURGER + MOBILE DROPDOWN ── */
     .idx-hamburger{display:none;flex-direction:column;justify-content:center;gap:5px;cursor:pointer;background:none;border:none;padding:6px 4px;flex-shrink:0;margin-left:4px;}
@@ -201,10 +289,16 @@
     .idx-mob-actions a{flex:1;text-align:center;padding:.75rem;border-radius:50px;font-weight:700;font-size:.88rem;text-decoration:none;}
     .idx-mob-actions a.ghost{background:rgba(255,255,255,.1);color:white;border:1.5px solid rgba(255,255,255,.3);}
     .idx-mob-actions a.solid{background:var(--accent);color:var(--primary);}
-    /* Backdrop */
     .idx-nav-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:997;}
     .idx-nav-backdrop.open{display:block;}
 
+    /* ── RESPONSIVE ── */
+    @media(max-width:1100px){.listings-grid{grid-template-columns:repeat(3,1fr)}.categories-grid{grid-template-columns:repeat(4,1fr)}.hero h1{font-size:2.4rem}.footer-grid{grid-template-columns:1fr 1fr}}
+    @media(max-width:900px){
+      .hero-inner{grid-template-columns:1fr}.hero-stats-panel{display:none}
+      .biz-cta{grid-template-columns:1fr;gap:20px}.biz-cta-features{display:none}
+      .nav-links .hide-md{display:none}.testimonials-grid{grid-template-columns:1fr 1fr}
+    }
     @media(max-width:760px){
       .listings-grid{grid-template-columns:repeat(2,1fr);gap:12px}
       .categories-grid{grid-template-columns:repeat(3,1fr)}
@@ -212,7 +306,6 @@
       .footer-grid{grid-template-columns:1fr 1fr}
       .mobile-nav{display:block}
       body{padding-bottom:66px}
-      /* Keep timer on mobile — just compact it */
       .qb-timer{padding:.35rem .7rem;}
       .qb-timer-value{font-size:1.45rem;letter-spacing:-.5px;}
       .qb-timer-label{display:none;}
@@ -227,22 +320,37 @@
       .hero-sub{font-size:.9rem;margin-bottom:1.2rem}
       .hero-btns{gap:.6rem}
       .btn-hero-primary,.btn-hero-outline{padding:12px 20px;font-size:.88rem}
-      .promo{padding:28px 20px}
-      .promo h2{font-size:1.3rem}
+      .biz-cta{padding:28px 20px}
+      .biz-cta-left h2{font-size:1.4rem}
       .nav-links{display:none}
       .search-wrapper{max-width:none;}
       .idx-hamburger{display:flex;}
       .mobile-hero-stats{display:grid;}
+      .testimonials-grid{grid-template-columns:1fr}
+      .trust-badges{gap:.5rem}
+      .trust-badge{font-size:.75rem;padding:.4rem .8rem}
     }
     @media(max-width:480px){
       .listings-grid{grid-template-columns:1fr}
       .categories-grid{grid-template-columns:repeat(3,1fr)}
       .footer-grid{grid-template-columns:1fr}
       .hero h1{font-size:1.75rem}
+      .cookie-inner{flex-direction:column;align-items:flex-start}
     }
   </style>
 </head>
 <body>
+
+<!-- ══ GDPR COOKIE BANNER ══ -->
+<div id="cookieBanner">
+  <div class="cookie-inner">
+    <p>🍪 We use cookies to keep your queue session active and show nearby services. No advertising cookies. See our <a href="privacy.html">Privacy Policy</a>.</p>
+    <div class="cookie-btns">
+      <button class="cookie-accept" onclick="acceptCookies()">Accept</button>
+      <button class="cookie-decline" onclick="declineCookies()">Decline</button>
+    </div>
+  </div>
+</div>
 
 <!-- ══ QUEUE TIMER BANNER ══ -->
 <div id="queueBanner">
@@ -271,11 +379,10 @@
   <div class="header-inner">
     <a href="index.html" class="logo">skip<span>Qs</span></a>
 
-    <!-- Search with autocomplete -->
     <div class="search-wrapper" id="searchWrapper">
-      <input type="text" class="search-input" id="searchInput" placeholder="Search hospitals, salons, banks, clinics…" autocomplete="off">
+      <input type="text" class="search-input" id="searchInput" placeholder="Search hospitals, salons, banks, clinics…" autocomplete="off" aria-label="Search services">
       <button class="search-btn" onclick="performSearch()">Search</button>
-      <div class="search-suggestions" id="searchSuggestions"></div>
+      <div class="search-suggestions" id="searchSuggestions" role="listbox"></div>
     </div>
 
     <div class="nav-links">
@@ -286,27 +393,27 @@
       <a href="#" id="logoutLink" style="display:none" onclick="handleLogout(event)">Logout</a>
     </div>
 
-    <!-- Hamburger (mobile only) -->
     <button class="idx-hamburger" id="idxHamburger" onclick="toggleMobileMenu()" aria-label="Open menu">
       <span></span><span></span><span></span>
     </button>
   </div>
 
-  <!-- Mobile dropdown nav -->
   <div class="idx-mobile-dropdown" id="idxMobileDropdown">
     <a href="hospitals.html">🏥 Hospitals</a>
     <a href="clinics.html">🩺 Clinics</a>
     <a href="salons.html">💇 Salons &amp; Barbers</a>
     <a href="banks.html">🏦 Banks</a>
     <a href="find-services.html">🔍 All Services</a>
-    <a href="business-pricing.html">🏢 For Businesses</a>
+    <div style="border-top:1px solid rgba(255,255,255,.12);margin:.4rem 0;"></div>
+    <a href="provider-signup.html" style="color:var(--accent);font-weight:700;">➕ Register Your Business — Free</a>
+    <a href="hospital-signup.html">🏥 Register Hospital / Clinic</a>
+    <a href="business-pricing.html">💰 Pricing</a>
     <div class="idx-mob-actions">
       <a href="login.html" class="ghost" id="mobNavLoginBtn">Login</a>
-      <a href="signup.html" class="solid">Sign Up Free</a>
+      <a href="signup.html" class="solid">Sign Up</a>
     </div>
   </div>
 </header>
-<!-- Backdrop for mobile nav -->
 <div class="idx-nav-backdrop" id="idxNavBackdrop" onclick="toggleMobileMenu()"></div>
 
 <!-- ══ HERO ══ -->
@@ -316,17 +423,16 @@
       <div>
         <div class="hero-eyebrow">Real-time Queue Management</div>
         <h1>Skip the Queue,<br><span>Save Your Time</span></h1>
-        <p class="hero-sub">See live wait times at hospitals, clinics, salons, banks and more. Join the queue from anywhere — arrive only when it's your turn.</p>
+        <p class="hero-sub">See live wait times at hospitals, clinics, salons, banks and more. Join the queue from your phone — arrive only when it's your turn.</p>
         <div class="hero-btns">
           <a href="find-services.html" class="btn-hero-primary">🔍 Find Services Near You</a>
-          <a href="business-signup.html" class="btn-hero-outline">🏢 Register Free →</a>
+          <a href="provider-signup.html" class="btn-hero-outline">🏢 Register Free →</a>
         </div>
         <div class="hero-location" id="heroLocation">
           <div class="loc-dot"></div>
           <span id="locText">Detecting your location…</span>
         </div>
-
-        <!-- Mobile-only stats grid (shown below hero text on phones) -->
+        <!-- Mobile-only stats -->
         <div class="mobile-hero-stats" id="mobileHeroStats">
           <div class="mhs-box"><span class="mhs-val" id="mStatOpen">—</span><span class="mhs-lbl">Open Now</span></div>
           <div class="mhs-box"><span class="mhs-val" id="mStatQueue">—</span><span class="mhs-lbl">In Queue</span></div>
@@ -334,23 +440,23 @@
           <div class="mhs-box"><span class="mhs-val" id="mStatServed">—</span><span class="mhs-lbl">Served Today</span></div>
         </div>
       </div>
-      <div class="hero-stats-panel">
+      <div class="hero-stats-panel" aria-label="Live statistics">
         <div class="live-pill"><div class="live-dot"></div>Live</div>
         <div class="hero-stats-title">Right now on skipQs</div>
         <div class="hero-stat-row">
-          <div class="hero-stat-icon">🏢</div>
+          <div class="hero-stat-icon" aria-hidden="true">🏢</div>
           <div class="hero-stat-info"><div class="hero-stat-val" id="statOpen">—</div><div class="hero-stat-lbl">Businesses Open</div></div>
         </div>
         <div class="hero-stat-row">
-          <div class="hero-stat-icon">👥</div>
+          <div class="hero-stat-icon" aria-hidden="true">👥</div>
           <div class="hero-stat-info"><div class="hero-stat-val" id="statQueue">—</div><div class="hero-stat-lbl">People in Queue</div></div>
         </div>
         <div class="hero-stat-row">
-          <div class="hero-stat-icon">⏱️</div>
+          <div class="hero-stat-icon" aria-hidden="true">⏱️</div>
           <div class="hero-stat-info"><div class="hero-stat-val" id="statAvg">—</div><div class="hero-stat-lbl">Avg Wait (min)</div></div>
         </div>
         <div class="hero-stat-row">
-          <div class="hero-stat-icon">✅</div>
+          <div class="hero-stat-icon" aria-hidden="true">✅</div>
           <div class="hero-stat-info"><div class="hero-stat-val" id="statServed">—</div><div class="hero-stat-lbl">Served Today</div></div>
         </div>
       </div>
@@ -363,18 +469,18 @@
   <div class="container">
     <h2 class="section-title">Browse by Category</h2>
     <div class="categories-grid">
-      <a href="hospitals.html"       class="cat-card"><span class="cat-icon">🏥</span><div class="cat-name">Hospitals</div></a>
-      <a href="clinics.html"         class="cat-card"><span class="cat-icon">🩺</span><div class="cat-name">Clinics</div></a>
-      <a href="pharmacies.html"      class="cat-card"><span class="cat-icon">💊</span><div class="cat-name">Pharmacies</div></a>
-      <a href="salons.html"          class="cat-card"><span class="cat-icon">💇‍♀️</span><div class="cat-name">Salons</div></a>
-      <a href="banks.html"           class="cat-card"><span class="cat-icon">🏦</span><div class="cat-name">Banks</div></a>
-      <a href="restaurants.html"     class="cat-card"><span class="cat-icon">🍽️</span><div class="cat-name">Restaurants</div></a>
-      <a href="gyms.html"            class="cat-card"><span class="cat-icon">🏋️</span><div class="cat-name">Gyms</div></a>
-      <a href="government.html"      class="cat-card"><span class="cat-icon">🏛️</span><div class="cat-name">Government</div></a>
-      <a href="car-wash.html"        class="cat-card"><span class="cat-icon">🧼</span><div class="cat-name">Car Wash</div></a>
-      <a href="repairs.html"         class="cat-card"><span class="cat-icon">🛠️</span><div class="cat-name">Repairs</div></a>
-      <a href="find-services.html"   class="cat-card"><span class="cat-icon">🔍</span><div class="cat-name">Search All</div></a>
-      <a href="business-signup.html" class="cat-card"><span class="cat-icon">➕</span><div class="cat-name">Add Yours</div></a>
+      <a href="hospitals.html"       class="cat-card"><span class="cat-icon" aria-hidden="true">🏥</span><div class="cat-name">Hospitals</div></a>
+      <a href="clinics.html"         class="cat-card"><span class="cat-icon" aria-hidden="true">🩺</span><div class="cat-name">Clinics</div></a>
+      <a href="pharmacies.html"      class="cat-card"><span class="cat-icon" aria-hidden="true">💊</span><div class="cat-name">Pharmacies</div></a>
+      <a href="salons.html"          class="cat-card"><span class="cat-icon" aria-hidden="true">💇‍♀️</span><div class="cat-name">Salons</div></a>
+      <a href="banks.html"           class="cat-card"><span class="cat-icon" aria-hidden="true">🏦</span><div class="cat-name">Banks</div></a>
+      <a href="restaurants.html"     class="cat-card"><span class="cat-icon" aria-hidden="true">🍽️</span><div class="cat-name">Restaurants</div></a>
+      <a href="gyms.html"            class="cat-card"><span class="cat-icon" aria-hidden="true">🏋️</span><div class="cat-name">Gyms</div></a>
+      <a href="government.html"      class="cat-card"><span class="cat-icon" aria-hidden="true">🏛️</span><div class="cat-name">Government</div></a>
+      <a href="car-wash.html"        class="cat-card"><span class="cat-icon" aria-hidden="true">🧼</span><div class="cat-name">Car Wash</div></a>
+      <a href="repairs.html"         class="cat-card"><span class="cat-icon" aria-hidden="true">🛠️</span><div class="cat-name">Repairs</div></a>
+      <a href="find-services.html"   class="cat-card"><span class="cat-icon" aria-hidden="true">🔍</span><div class="cat-name">Search All</div></a>
+      <a href="provider-signup.html" class="cat-card"><span class="cat-icon" aria-hidden="true">➕</span><div class="cat-name">Add Yours</div></a>
     </div>
   </div>
 </section>
@@ -382,41 +488,111 @@
 <!-- ══ MAIN CONTENT ══ -->
 <div class="container content-wrap">
 
-  <!-- Shortest waits -->
+  <!-- ① Shortest waits — all categories -->
   <section>
     <div class="section-header">
       <h2 class="section-title">⚡ Shortest Wait Times Right Now</h2>
       <a href="find-services.html" class="view-all">View all →</a>
     </div>
     <div class="listings-grid" id="shortestList">
-      <div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div>
+      <div class="skel" aria-hidden="true"></div><div class="skel" aria-hidden="true"></div>
+      <div class="skel" aria-hidden="true"></div><div class="skel" aria-hidden="true"></div>
     </div>
   </section>
 
-  <!-- Hospitals section -->
+  <!-- ② Hospitals only -->
   <section>
     <div class="section-header">
       <h2 class="section-title">🏥 Hospitals Near You</h2>
       <a href="hospitals.html" class="view-all">All hospitals →</a>
     </div>
     <div class="listings-grid" id="hospitalList">
-      <div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div>
+      <div class="skel" aria-hidden="true"></div><div class="skel" aria-hidden="true"></div>
+      <div class="skel" aria-hidden="true"></div><div class="skel" aria-hidden="true"></div>
     </div>
   </section>
 
-  <!-- Promo -->
-  <div class="promo">
-    <div>
-      <h2>List Your Business — It's Free 🚀</h2>
-      <p>Hospitals, salons, banks, clinics, gyms and more. Let customers see live wait times and join your queue from anywhere. No app needed.</p>
+  <!-- ③ Business CTA — improved -->
+  <div class="biz-cta">
+    <div class="biz-cta-left">
+      <h2>List Your Business.<br><span>It's Free.</span> Forever.</h2>
+      <p>Hospitals, clinics, salons, banks, restaurants, gyms and more. Let customers see live wait times and join your queue from anywhere — no app needed, live in under 5 minutes.</p>
+      <div class="biz-cta-perks">
+        <div class="biz-perk"><span class="biz-perk-icon">✅</span> No credit card — completely free to start</div>
+        <div class="biz-perk"><span class="biz-perk-icon">⚡</span> Live in under 5 minutes</div>
+        <div class="biz-perk"><span class="biz-perk-icon">📱</span> Patients join via link or QR — no app needed</div>
+        <div class="biz-perk"><span class="biz-perk-icon">💬</span> WhatsApp patients when it's their turn</div>
+      </div>
+      <div class="biz-cta-btns">
+        <a href="provider-signup.html"  class="btn-white">🏢 Register Your Business</a>
+        <a href="hospital-signup.html"  class="btn-outline-white">🏥 Hospital / Clinic →</a>
+      </div>
     </div>
-    <div class="promo-btns">
-      <a href="hospital-signup.html"  class="btn-white">🏥 Register Hospital</a>
-      <a href="business-signup.html"  class="btn-outline-white">Other Business →</a>
+    <div class="biz-cta-features">
+      <div class="biz-feat">
+        <div class="biz-feat-icon">⏱️</div>
+        <div class="biz-feat-title">Live Wait Times</div>
+        <div class="biz-feat-desc">Real-time department wait times customers trust.</div>
+      </div>
+      <div class="biz-feat">
+        <div class="biz-feat-icon">📋</div>
+        <div class="biz-feat-title">Smart Dashboard</div>
+        <div class="biz-feat-desc">Manage queues, call patients, track flow.</div>
+      </div>
+      <div class="biz-feat">
+        <div class="biz-feat-icon">📱</div>
+        <div class="biz-feat-title">QR Check-in</div>
+        <div class="biz-feat-desc">Walk-ins scan and join — no staff needed.</div>
+      </div>
+      <div class="biz-feat">
+        <div class="biz-feat-icon">💬</div>
+        <div class="biz-feat-title">WhatsApp Alerts</div>
+        <div class="biz-feat-desc">One tap to notify patients when ready.</div>
+      </div>
     </div>
   </div>
 
-  <!-- How it works -->
+  <!-- ④ Trust signals + testimonials -->
+  <div class="trust-section">
+    <div class="trust-title">Why businesses and patients trust skipQs</div>
+    <div class="trust-badges">
+      <div class="trust-badge"><span class="trust-badge-icon">🆓</span> Free for Patients</div>
+      <div class="trust-badge"><span class="trust-badge-icon">📵</span> No App Download</div>
+      <div class="trust-badge"><span class="trust-badge-icon">⚡</span> Real-time Updates</div>
+      <div class="trust-badge"><span class="trust-badge-icon">🔒</span> GDPR Compliant</div>
+      <div class="trust-badge"><span class="trust-badge-icon">🌐</span> Works on Any Device</div>
+      <div class="trust-badge"><span class="trust-badge-icon">🛠️</span> Powered by Supabase</div>
+    </div>
+    <hr class="trust-divider">
+    <div class="testimonials-grid">
+      <div class="testimonial">
+        <div class="stars">★★★★★</div>
+        <div class="testimonial-text">"We reduced our waiting room capacity by 60% in the first week. Patients love knowing their exact wait time from home."</div>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">DR</div>
+          <div><div class="testimonial-name">Dr. Rashid Ahmed</div><div class="testimonial-role">Clinic Manager, Manchester</div></div>
+        </div>
+      </div>
+      <div class="testimonial">
+        <div class="stars">★★★★★</div>
+        <div class="testimonial-text">"Setting up was incredibly fast. My customers can see the live queue on their phone and show up right on time. Game changer."</div>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">SK</div>
+          <div><div class="testimonial-name">Sarah K.</div><div class="testimonial-role">Salon Owner, Birmingham</div></div>
+        </div>
+      </div>
+      <div class="testimonial">
+        <div class="stars">★★★★★</div>
+        <div class="testimonial-text">"Finally a system that works without making patients download yet another app. Simple, real-time, and completely free."</div>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">JM</div>
+          <div><div class="testimonial-name">James M.</div><div class="testimonial-role">GP Practice Manager, Leeds</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑤ How it works -->
   <div class="how-section">
     <div class="section-header" style="margin-bottom:0">
       <h2 class="section-title">How skipQs Works</h2>
@@ -424,44 +600,48 @@
     </div>
     <div class="steps-grid">
       <div class="step-card">
-        <span class="step-icon">🔍</span>
+        <div class="step-num">1</div>
+        <span class="step-icon" aria-hidden="true">🔍</span>
         <div class="step-title">Find a Service</div>
         <div class="step-desc">Browse hospitals, clinics, salons and more. See real-time wait times for every department before you leave home.</div>
       </div>
       <div class="step-card">
-        <span class="step-icon">📱</span>
+        <div class="step-num">2</div>
+        <span class="step-icon" aria-hidden="true">📱</span>
         <div class="step-title">Join the Queue</div>
-        <div class="step-desc">Tap "Join Queue" to secure your spot instantly. Your live timer starts counting down automatically.</div>
+        <div class="step-desc">Tap "Join Queue" to secure your spot instantly. Your live countdown starts — no app download needed.</div>
       </div>
       <div class="step-card">
-        <span class="step-icon">🔔</span>
+        <div class="step-num">3</div>
+        <span class="step-icon" aria-hidden="true">🔔</span>
         <div class="step-title">Arrive When Ready</div>
-        <div class="step-desc">Watch your countdown timer. Show up only when it's almost your turn — no more standing in line.</div>
+        <div class="step-desc">Watch your countdown. Show up only when it's almost your turn — no more standing in line or crowded waiting rooms.</div>
       </div>
     </div>
   </div>
 
-  <!-- Other services -->
+  <!-- ⑥ Other services -->
   <section>
     <div class="section-header">
       <h2 class="section-title">💼 Other Services — Open Now</h2>
       <a href="find-services.html" class="view-all">View all →</a>
     </div>
     <div class="listings-grid" id="featuredList">
-      <div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div>
+      <div class="skel" aria-hidden="true"></div><div class="skel" aria-hidden="true"></div>
+      <div class="skel" aria-hidden="true"></div><div class="skel" aria-hidden="true"></div>
     </div>
   </section>
 
 </div>
 
 <!-- ══ MOBILE BOTTOM NAV ══ -->
-<nav class="mobile-nav">
+<nav class="mobile-nav" aria-label="Mobile navigation">
   <div class="mobile-nav-grid">
-    <a href="index.html"         class="mobile-nav-item active"><span>🏠</span><p>Home</p></a>
-    <a href="hospitals.html"     class="mobile-nav-item"><span>🏥</span><p>Hospitals</p></a>
-    <a href="dashboard.html"     class="mobile-nav-item"><span>📋</span><p>My Queues</p></a>
-    <a href="find-services.html" class="mobile-nav-item"><span>🔍</span><p>Search</p></a>
-    <a href="login.html"         class="mobile-nav-item" id="mobileLoginBtn"><span>👤</span><p>Account</p></a>
+    <a href="index.html"         class="mobile-nav-item active"><span aria-hidden="true">🏠</span><p>Home</p></a>
+    <a href="hospitals.html"     class="mobile-nav-item"><span aria-hidden="true">🏥</span><p>Hospitals</p></a>
+    <a href="dashboard.html"     class="mobile-nav-item"><span aria-hidden="true">📋</span><p>My Queues</p></a>
+    <a href="find-services.html" class="mobile-nav-item"><span aria-hidden="true">🔍</span><p>Search</p></a>
+    <a href="login.html"         class="mobile-nav-item" id="mobileLoginBtn"><span aria-hidden="true">👤</span><p>Account</p></a>
   </div>
 </nav>
 
@@ -471,7 +651,12 @@
     <div class="footer-grid">
       <div class="footer-brand">
         <a href="index.html" class="footer-brand-logo">skip<span>Qs</span></a>
-        <p>The smarter way to wait. Join virtual queues at hospitals, clinics, salons and more.</p>
+        <p>The smarter way to wait. Join virtual queues at hospitals, clinics, salons and more — from anywhere, on any device.</p>
+        <div class="footer-social">
+          <a href="#" aria-label="Twitter/X" title="Twitter">𝕏</a>
+          <a href="#" aria-label="LinkedIn" title="LinkedIn">in</a>
+          <a href="#" aria-label="Instagram" title="Instagram">📷</a>
+        </div>
       </div>
       <div class="footer-col">
         <h4>Healthcare</h4>
@@ -489,40 +674,68 @@
         <a href="find-services.html">All Services</a>
       </div>
       <div class="footer-col">
-        <h4>Company</h4>
-        <a href="about.html">About</a>
+        <h4>For Businesses</h4>
+        <a href="provider-signup.html">Register Free</a>
+        <a href="business-pricing.html">Pricing</a>
         <a href="how-it-works.html">How It Works</a>
-        <a href="contact.html">Contact</a>
-        <a href="privacy.html">Privacy</a>
-        <a href="terms.html">Terms</a>
+        <a href="hospital-dashboard.html">Hospital Dashboard</a>
+        <a href="business-dashboard.html">Business Dashboard</a>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <a href="about.html">About skipQs</a>
+        <a href="contact.html">Contact Us</a>
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="terms.html">Terms of Use</a>
       </div>
     </div>
     <div class="footer-bot">
       <span>© <span id="year"></span> skipQs · Skip the queue, save your time.</span>
-      <span>Powered by Supabase · OpenStreetMap</span>
+      <div class="footer-bot-links">
+        <a href="privacy.html">Privacy</a>
+        <a href="terms.html">Terms</a>
+        <a href="contact.html">Contact</a>
+      </div>
+      <div class="footer-gdpr">🔒 GDPR Compliant · Powered by Supabase</div>
     </div>
   </div>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="supabase-config.js"></script>
+<script src="auth-nav.js"></script>
 <script>
   document.getElementById('year').textContent = new Date().getFullYear();
 
   const ICONS = {Hospital:'🏥',Clinic:'🩺',Pharmacy:'💊',Salon:'💇‍♀️',Barber:'💈',Bank:'🏦',Restaurant:'🍽️',Gym:'🏋️',CarWash:'🧼',Government:'🏛️',Repair:'🛠️'};
   function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-  // ── DEMO DATA (shown when DB is empty — makes the page look live) ──
+  // ── DEMO DATA (fallback when DB has no providers yet) ──
   const DEMO = [
-    { id:'demo-1', business_name:'Manchester Royal Infirmary',   category:'Hospital',    is_hospital:true,  address:'Oxford Road, Manchester',         minWait:12, deptCount:8, isDemo:true },
-    { id:'demo-2', business_name:'Salford Royal Hospital',       category:'Hospital',    is_hospital:true,  address:'Stott Lane, Salford',             minWait:25, deptCount:6, isDemo:true },
-    { id:'demo-3', business_name:'The Christie NHS Foundation',  category:'Hospital',    is_hospital:true,  address:'Wilmslow Road, Manchester',       minWait:40, deptCount:5, isDemo:true },
-    { id:'demo-4', business_name:'Wythenshawe Hospital',        category:'Hospital',    is_hospital:true,  address:'Southmoor Road, Manchester',      minWait:18, deptCount:7, isDemo:true },
-    { id:'demo-5', business_name:'Tony & Guy Academy',          category:'Salon',       is_hospital:false, address:'Market Street, Manchester',       minWait:5,  deptCount:3, isDemo:true },
-    { id:'demo-6', business_name:'HSBC Manchester Branch',      category:'Bank',        is_hospital:false, address:'St. Ann Street, Manchester',      minWait:8,  deptCount:3, isDemo:true },
-    { id:'demo-7', business_name:'Nando\'s Manchester Piccadilly', category:'Restaurant',is_hospital:false, address:'The Printworks, Manchester',      minWait:15, deptCount:2, isDemo:true },
-    { id:'demo-8', business_name:'PureGym Manchester City',     category:'Gym',         is_hospital:false, address:'Deansgate, Manchester',           minWait:0,  deptCount:4, isDemo:true },
+    { id:'demo-1', business_name:'Manchester Royal Infirmary',   category:'Hospital',    is_hospital:true,  address:'Oxford Road, Manchester',         minWait:12, deptCount:8,  isDemo:true },
+    { id:'demo-2', business_name:'Salford Royal Hospital',       category:'Hospital',    is_hospital:true,  address:'Stott Lane, Salford',             minWait:25, deptCount:6,  isDemo:true },
+    { id:'demo-3', business_name:'The Christie NHS Foundation',  category:'Hospital',    is_hospital:true,  address:'Wilmslow Road, Manchester',       minWait:40, deptCount:5,  isDemo:true },
+    { id:'demo-4', business_name:'Wythenshawe Hospital',         category:'Hospital',    is_hospital:true,  address:'Southmoor Road, Manchester',      minWait:18, deptCount:7,  isDemo:true },
+    { id:'demo-5', business_name:'Tony & Guy Academy',           category:'Salon',       is_hospital:false, address:'Market Street, Manchester',       minWait:5,  deptCount:3,  isDemo:true },
+    { id:'demo-6', business_name:'HSBC Manchester Branch',       category:'Bank',        is_hospital:false, address:'St. Ann Street, Manchester',      minWait:8,  deptCount:3,  isDemo:true },
+    { id:'demo-7', business_name:'Nando\'s Manchester Piccadilly',category:'Restaurant', is_hospital:false, address:'The Printworks, Manchester',      minWait:15, deptCount:2,  isDemo:true },
+    { id:'demo-8', business_name:'PureGym Manchester City',      category:'Gym',         is_hospital:false, address:'Deansgate, Manchester',           minWait:0,  deptCount:4,  isDemo:true },
   ];
+
+  // ── COOKIE BANNER ──
+  function initCookieBanner() {
+    if (!localStorage.getItem('sq_cookie_consent')) {
+      document.getElementById('cookieBanner').style.display = 'block';
+    }
+  }
+  function acceptCookies() {
+    localStorage.setItem('sq_cookie_consent', 'accepted');
+    document.getElementById('cookieBanner').style.display = 'none';
+  }
+  function declineCookies() {
+    localStorage.setItem('sq_cookie_consent', 'declined');
+    document.getElementById('cookieBanner').style.display = 'none';
+  }
 
   // ── GEOLOCATION ──
   let userCity = 'your area';
@@ -534,7 +747,6 @@
     }
     navigator.geolocation.getCurrentPosition(
       pos => {
-        // Reverse geocode with Nominatim
         fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`)
           .then(r => r.json())
           .then(d => {
@@ -544,9 +756,7 @@
           })
           .catch(() => { locEl.textContent = 'Location detected'; });
       },
-      () => {
-        locEl.textContent = 'Showing all services — enable location for nearby results';
-      },
+      () => { locEl.textContent = 'Showing all services — enable location for nearby results'; },
       { timeout: 6000 }
     );
   }
@@ -569,15 +779,13 @@
       if (dept) { deptName = dept.name; waitMins = dept.wait_minutes || waitMins; }
     }
     const bizName = prov?.business_name || 'Your Queue';
-    const isHosp = prov && (prov.is_hospital || prov.category === 'Hospital');
+    const isHosp  = prov && (prov.is_hospital || prov.category === 'Hospital');
     const detailHref = prov ? (isHosp ? `hospital-detail.html?id=${prov.id}` : `business-detail.html?id=${prov.id}`) : 'dashboard.html';
     document.getElementById('qbTitle').textContent = bizName + (deptName ? ' — ' + deptName : '');
     document.getElementById('qbSub').textContent = q.status === 'serving' ? '🔔 You are being served now!' : 'You are in the queue';
     document.getElementById('qbViewBtn').href = detailHref;
     startTimer(waitMins);
     document.getElementById('queueBanner').style.display = 'block';
-
-    // Set up lock-screen notification for this queue
     setupQueueNotif(bizName, deptName, waitMins, q.status);
     if (q.department_id) {
       sb.channel('banner-dept-' + q.department_id)
@@ -587,13 +795,10 @@
     sb.channel('banner-queue-' + q.id)
       .on('postgres_changes', {event:'UPDATE', schema:'public', table:'queues', filter:`id=eq.${q.id}`}, p => {
         if (['completed','cancelled','no_show'].includes(p.new.status)) {
-          hideBanner();
-          clearQueueNotif();
-          queueNotifActive = false;
+          hideBanner(); clearQueueNotif(); queueNotifActive = false;
           document.removeEventListener('visibilitychange', onVisibilityChange);
         } else if (p.new.status === 'serving') {
           document.getElementById('qbSub').textContent = '🔔 You are being served now!';
-          // Push urgent notification immediately (even if page is visible)
           updateQueueNotifState(lastQueueState.bizName, lastQueueState.deptName, 0, 'serving');
           pushQueueNotif();
         }
@@ -609,10 +814,7 @@
   function resetTimer(minutes) {
     if (timerInterval) clearInterval(timerInterval);
     startTimer(minutes);
-    // Keep the SW notification in sync when wait time changes
-    if (lastQueueState.bizName) {
-      updateQueueNotifState(lastQueueState.bizName, lastQueueState.deptName, minutes, lastQueueState.status);
-    }
+    if (lastQueueState.bizName) updateQueueNotifState(lastQueueState.bizName, lastQueueState.deptName, minutes, lastQueueState.status);
   }
   function renderTimer(secs) {
     const m = Math.floor(secs / 60), s = secs % 60;
@@ -631,33 +833,35 @@
 
   // ── LIVE STATS ──
   async function refreshStats() {
-    const { data: providers } = await sb.from('providers').select('id,is_open');
-    const open = (providers||[]).filter(p => p.is_open);
-    animStat('statOpen', open.length || DEMO.filter(d=>d.isDemo).length);
-
-    if (open.length) {
-      const openIds = open.map(p => p.id);
-      const { data: depts } = await sb.from('departments').select('wait_minutes').in('provider_id', openIds).eq('is_open', true);
-      if (depts?.length) {
-        const waits = depts.map(d => d.wait_minutes || 0);
-        animStat('statAvg', Math.round(waits.reduce((a,b)=>a+b,0) / waits.length));
+    try {
+      const { data: providers } = await sb.from('providers').select('id,is_open');
+      const open = (providers||[]).filter(p => p.is_open !== false);
+      const openCount = open.length;
+      animStat('statOpen', openCount || 0);
+      if (openCount) {
+        const openIds = open.map(p => p.id);
+        const { data: depts } = await sb.from('departments').select('wait_minutes').in('provider_id', openIds).eq('is_open', true);
+        if (depts?.length) {
+          const waits = depts.map(d => d.wait_minutes || 0);
+          animStat('statAvg', Math.round(waits.reduce((a,b)=>a+b,0) / waits.length));
+        } else {
+          animStat('statAvg', 0);
+        }
+        const { count: qCount } = await sb.from('queues').select('id',{count:'exact',head:true}).in('status',['waiting','serving']);
+        animStat('statQueue', qCount || 0);
+        const today = new Date().toISOString().split('T')[0];
+        const { count: served } = await sb.from('queues').select('id',{count:'exact',head:true}).eq('status','completed').gte('joined_at', today + 'T00:00:00');
+        animStat('statServed', served || 0);
+      } else {
+        animStat('statQueue', 0); animStat('statAvg', 0); animStat('statServed', 0);
       }
-      const { count: qCount } = await sb.from('queues').select('id',{count:'exact',head:true}).in('status',['waiting','serving']);
-      animStat('statQueue', qCount || 0);
-      const today = new Date().toISOString().split('T')[0];
-      const { count: served } = await sb.from('queues').select('id',{count:'exact',head:true}).eq('status','completed').gte('joined_at', today + 'T00:00:00');
-      animStat('statServed', served || 0);
-    } else {
-      // Show plausible demo stats
-      animStat('statOpen', 8); animStat('statQueue', 34); animStat('statAvg', 18); animStat('statServed', 127);
+    } catch(err) {
+      console.warn('Stats load failed:', err);
     }
   }
 
-  // Maps desktop stat IDs → matching mobile stat IDs
   const MOBILE_STAT = { statOpen:'mStatOpen', statQueue:'mStatQueue', statAvg:'mStatAvg', statServed:'mStatServed' };
-
   function animStat(id, val) {
-    // Update both desktop and mobile elements
     [id, MOBILE_STAT[id]].filter(Boolean).forEach(eid => {
       const el = document.getElementById(eid);
       if (!el || el.textContent === String(val)) return;
@@ -666,77 +870,117 @@
     });
   }
 
-  // ── LISTINGS ──
+  // ── LISTINGS — fetches departments + services fallback ──
   async function loadListings() {
-    const { data: provs } = await sb.from('providers')
-      .select('id,business_name,address,category,is_open,is_hospital').eq('is_open', true).limit(40);
+    try {
+      // Fetch all providers
+      const { data: provs, error: provErr } = await sb.from('providers')
+        .select('id,business_name,address,category,is_open,is_hospital')
+        .limit(100);
 
-    const ids = (provs||[]).map(p => p.id);
-    let byProv = {};
-    if (ids.length) {
-      const { data: depts } = await sb.from('departments').select('provider_id,wait_minutes,is_open').in('provider_id', ids).eq('is_open', true);
-      (depts||[]).forEach(d => { (byProv[d.provider_id] ||= []).push(d); });
+      if (provErr) throw provErr;
+
+      const ids = (provs||[]).map(p => p.id);
+      let byProv = {};
+
+      if (ids.length) {
+        // Departments table — no is_open filter so we catch null/false rows too
+        const { data: depts } = await sb.from('departments')
+          .select('provider_id,wait_minutes,is_open')
+          .in('provider_id', ids);
+        (depts||[]).forEach(d => {
+          (byProv[d.provider_id] ||= []).push({ wait_minutes: d.wait_minutes });
+        });
+
+        // Services table fallback (legacy providers) — may be blocked by RLS for anon,
+        // so we only use this to bump deptCount if the departments query returned nothing
+        try {
+          const { data: svcs } = await sb.from('services')
+            .select('provider_id')
+            .in('provider_id', ids);
+          (svcs||[]).forEach(s => {
+            if (!byProv[s.provider_id]?.length) {
+              (byProv[s.provider_id] ||= []).push({ wait_minutes: null, _fromSvc: true });
+            }
+          });
+        } catch (_) { /* RLS may block anon reads — not fatal */ }
+      }
+
+      // Enrich all providers — keep even those with no dept/service data (show "—" wait time)
+      let enriched = (provs||[]).map(p => {
+        const pdepts   = byProv[p.id] || [];
+        const realWaits = pdepts.map(d => d.wait_minutes).filter(w => w !== null && w !== undefined);
+        const minWait   = realWaits.length ? Math.min(...realWaits) : null;
+        return { ...p, minWait, deptCount: pdepts.length };
+      });
+
+      enriched.sort((a,b) => {
+        if (a.minWait === null && b.minWait === null) return 0;
+        if (a.minWait === null) return 1;
+        if (b.minWait === null) return -1;
+        return a.minWait - b.minWait;
+      });
+
+      // hasReal = any provider row exists in the DB, regardless of dept data
+      const hasReal   = (provs||[]).length > 0;
+      const hospitals = hasReal ? enriched.filter(p => p.is_hospital || p.category === 'Hospital') : DEMO.filter(d => d.is_hospital);
+      const others    = hasReal ? enriched.filter(p => !p.is_hospital && p.category !== 'Hospital')  : DEMO.filter(d => !d.is_hospital);
+      const all       = hasReal ? enriched : DEMO;
+      const isDemo    = !hasReal;
+
+      renderGrid('shortestList', all.slice(0,4), isDemo);
+      renderGrid('hospitalList', hospitals.length ? hospitals.slice(0,4) : (isDemo ? DEMO.filter(d=>d.is_hospital).slice(0,4) : []), isDemo && !hospitals.length);
+      renderGrid('featuredList', others.length  ? others.slice(0,4)    : (isDemo ? DEMO.filter(d=>!d.is_hospital).slice(0,4) : []), isDemo && !others.length);
+
+    } catch(err) {
+      console.error('loadListings error:', err);
+      ['shortestList','hospitalList','featuredList'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = `<div class="error-state">⚠️ Unable to load listings right now. <a href="find-services.html" style="color:var(--danger);text-decoration:underline">Try searching</a> or refresh the page.</div>`;
+      });
     }
-
-    let enriched = (provs||[]).map(p => {
-      const pdepts = byProv[p.id] || [];
-      const minWait = pdepts.length ? Math.min(...pdepts.map(d=>d.wait_minutes||0)) : null;
-      return { ...p, minWait, deptCount: pdepts.length };
-    })
-    .filter(p => p.deptCount > 0)
-    .filter(p => { const addr = (p.address||'').trim(); return addr.length >= 5 && /\s/.test(addr); });
-
-    enriched.sort((a,b) => (a.minWait||999) - (b.minWait||999));
-
-    // If DB has real data — show it; otherwise fall back to demo data
-    const hasReal = enriched.length > 0;
-    const hospitals = hasReal ? enriched.filter(p => p.is_hospital || p.category === 'Hospital') : DEMO.filter(d => d.is_hospital);
-    const others    = hasReal ? enriched.filter(p => !p.is_hospital && p.category !== 'Hospital')  : DEMO.filter(d => !d.is_hospital);
-    const all       = hasReal ? enriched : DEMO;
-
-    renderGrid('shortestList', all.slice(0,4), !hasReal);
-    renderGrid('hospitalList', hospitals.slice(0,4), !hasReal);
-    renderGrid('featuredList', others.slice(0,4), !hasReal);
   }
 
   function renderGrid(id, items, isDemo) {
     const el = document.getElementById(id);
     if (!el) return;
     if (!items.length) {
-      el.innerHTML = `<div class="empty-state"><h4>No services listed here yet</h4><p>Be the first in your area — register free in minutes.</p><a href="business-signup.html">Register Your Business →</a></div>`;
+      el.innerHTML = `<div class="empty-state"><h4>No services listed here yet</h4><p>Be the first in your area — register free in minutes.</p><a href="provider-signup.html">Register Your Business →</a></div>`;
       return;
     }
     el.innerHTML = items.map(p => listingCard(p, isDemo)).join('');
   }
 
   function listingCard(p, isDemo) {
-    const icon = ICONS[p.category] || (p.is_hospital ? '🏥' : '🏪');
-    const wait = p.minWait;
-    const waitLabel = wait === null ? '—' : (wait === 0 ? 'No wait' : wait + ' min');
-    const badgeCls = wait > 60 ? 'high' : wait > 30 ? 'med' : '';
-    const isHosp = p.is_hospital || p.category === 'Hospital';
-    // Demo cards link to the category page, real cards link to the detail page
-    const href = isDemo
-      ? (isHosp ? 'hospitals.html' : (p.category ? (p.category.toLowerCase() + 's.html') : 'find-services.html'))
+    const icon      = ICONS[p.category] || (p.is_hospital ? '🏥' : '🏪');
+    const wait      = p.minWait;
+    const waitLabel = wait === null ? 'See dept' : (wait === 0 ? 'No wait' : wait + ' min');
+    const badgeCls  = wait > 60 ? 'high' : wait > 30 ? 'med' : '';
+    const isHosp    = p.is_hospital || p.category === 'Hospital';
+    const href      = isDemo
+      ? (isHosp ? 'hospitals.html' : (p.category ? (p.category.toLowerCase().replace(/\s/g,'') + 's.html') : 'find-services.html'))
       : ((isHosp ? 'hospital-detail.html' : 'business-detail.html') + '?id=' + esc(p.id));
-    const unitWord = isHosp ? (p.deptCount===1?'dept':'depts') : (p.deptCount===1?'service':'services');
+    const unitWord  = isHosp ? (p.deptCount===1?'dept':'depts') : (p.deptCount===1?'service':'services');
+    const joinHref  = isDemo ? href : href;
     return `
-    <a href="${href}" class="listing-card${isDemo?' demo-card':''}">
+    <a href="${href}" class="listing-card">
       <div class="listing-img">
-        <span>${icon}</span>
+        <span role="img" aria-label="${esc(p.category||'Business')}">${icon}</span>
         <div class="wait-badge ${badgeCls}">${waitLabel}</div>
-        ${isDemo ? '<div class="demo-badge">SAMPLE</div>' : ''}
         <div class="open-badge"><div class="open-dot"></div>Open</div>
       </div>
       <div class="listing-info">
-        <div class="listing-name">${esc(p.business_name||'Business')}</div>
-        <div class="listing-wait">${waitLabel === 'No wait' ? '0' : (wait||'—')} <span style="font-size:12px;font-weight:500;color:var(--text-muted);">min wait</span></div>
+        <div class="listing-name" title="${esc(p.business_name||'Business')}">${esc(p.business_name||'Business')}</div>
+        <div class="listing-wait">${wait === null ? '—' : (wait === 0 ? '0' : wait)} <span style="font-size:12px;font-weight:500;color:var(--text-muted);">min wait</span></div>
         <div class="listing-addr">📍 ${esc(p.address||'')}</div>
         <div class="listing-meta">
           <div class="listing-cat">${esc(p.category||'Service')}</div>
           <div class="listing-queue">${p.deptCount} ${unitWord}</div>
         </div>
       </div>
+      <a href="${joinHref}" class="join-btn${isDemo?' demo':''}" onclick="event.stopPropagation()" aria-label="View queue at ${esc(p.business_name||'Business')}">
+        ${isDemo ? '📋 View Details' : '📋 View &amp; Join Queue →'}
+      </a>
     </a>`;
   }
 
@@ -762,18 +1006,14 @@
   document.addEventListener('click', e => { if (!e.target.closest('#searchWrapper')) searchSugg.classList.remove('open'); });
 
   function showSuggestions(q) {
-    const matches = allProviders
-      .filter(p => (p.business_name||'').toLowerCase().includes(q))
-      .slice(0, 6);
-
+    const matches = allProviders.filter(p => (p.business_name||'').toLowerCase().includes(q)).slice(0, 6);
     if (!matches.length) { searchSugg.classList.remove('open'); return; }
-
     const icon = p => ICONS[p.category] || (p.is_hospital ? '🏥' : '🏪');
     searchSugg.innerHTML = matches.map(p => {
       const isHosp = p.is_hospital || p.category === 'Hospital';
       const href = (isHosp ? 'hospital-detail.html' : 'business-detail.html') + '?id=' + esc(p.id);
-      return `<a class="sugg-item" href="${href}">
-        <span>${icon(p)}</span>
+      return `<a class="sugg-item" href="${href}" role="option">
+        <span aria-hidden="true">${icon(p)}</span>
         <span>${esc(p.business_name)}</span>
         <span class="sugg-cat">${esc(p.category||'')}</span>
       </a>`;
@@ -784,11 +1024,10 @@
   function performSearch() {
     const q = searchInput.value.trim();
     searchSugg.classList.remove('open');
-    if (q) window.location.href = 'find-services.html?q=' + encodeURIComponent(q);
-    else    window.location.href = 'find-services.html';
+    window.location.href = q ? 'find-services.html?q=' + encodeURIComponent(q) : 'find-services.html';
   }
 
-  // ── HAMBURGER TOGGLE ──
+  // ── HAMBURGER ──
   function toggleMobileMenu() {
     const btn      = document.getElementById('idxHamburger');
     const dropdown = document.getElementById('idxMobileDropdown');
@@ -804,51 +1043,25 @@
   let queueNotifActive = false;
   let lastQueueState   = {};
 
-  // Register the service worker once
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js')
-      .then(reg => { swReg = reg; })
-      .catch(() => {});
+    navigator.serviceWorker.register('/sw.js').then(reg => { swReg = reg; }).catch(() => {});
   }
 
-  // Ask for notification permission and set up visibility-based notifications
   async function setupQueueNotif(bizName, deptName, waitMins, status) {
     if (!('Notification' in window) || !swReg) return;
     lastQueueState = { bizName, deptName, waitMins, status };
-
     if (!queueNotifActive) {
-      // Request permission only once
       const perm = await Notification.requestPermission().catch(() => 'denied');
       if (perm !== 'granted') return;
       queueNotifActive = true;
-
-      // Show notification when tab/screen goes background
       document.addEventListener('visibilitychange', onVisibilityChange);
     }
   }
-
-  function onVisibilityChange() {
-    if (document.hidden) {
-      pushQueueNotif();
-    } else {
-      clearQueueNotif();
-    }
-  }
-
-  async function pushQueueNotif() {
-    if (!swReg?.active || !lastQueueState.bizName) return;
-    swReg.active.postMessage({ type: 'SHOW_QUEUE_NOTIFICATION', ...lastQueueState });
-  }
-
-  async function clearQueueNotif() {
-    if (!swReg?.active) return;
-    swReg.active.postMessage({ type: 'HIDE_QUEUE_NOTIFICATION' });
-  }
-
-  // Called whenever the banner timer ticks — keeps the SW notification in sync
+  function onVisibilityChange() { if (document.hidden) pushQueueNotif(); else clearQueueNotif(); }
+  async function pushQueueNotif() { if (!swReg?.active || !lastQueueState.bizName) return; swReg.active.postMessage({ type: 'SHOW_QUEUE_NOTIFICATION', ...lastQueueState }); }
+  async function clearQueueNotif() { if (!swReg?.active) return; swReg.active.postMessage({ type: 'HIDE_QUEUE_NOTIFICATION' }); }
   function updateQueueNotifState(bizName, deptName, waitMins, status) {
     lastQueueState = { bizName, deptName, waitMins, status };
-    // If page is already in background (e.g. screen locked), push updated notification
     if (document.hidden && queueNotifActive) pushQueueNotif();
   }
 
@@ -861,26 +1074,25 @@
 
   // ── INIT ──
   (async function init() {
+    initCookieBanner();
+    detectLocation();
+
     const { data: { session } } = await sb.auth.getSession();
-    const loggedIn = !!session;
-    document.getElementById('loginLink').style.display   = loggedIn ? 'none'         : 'inline-flex';
-    document.getElementById('logoutLink').style.display  = loggedIn ? 'inline'        : 'none';
-    document.getElementById('dashBtn').style.display     = loggedIn ? 'inline'        : 'none';
-    if (loggedIn) {
+    if (session) {
       const mob = document.getElementById('mobileLoginBtn');
       if (mob) { mob.href = 'dashboard.html'; mob.querySelector('span').textContent = '📋'; mob.querySelector('p').textContent = 'Queues'; }
       checkActiveQueue(session.user.id);
     }
 
-    detectLocation();
     prefetchProviders();
     loadListings();
     refreshStats();
 
     sb.channel('index-rt')
-      .on('postgres_changes',{event:'*',     schema:'public',table:'queues'},     () => refreshStats())
-      .on('postgres_changes',{event:'UPDATE', schema:'public',table:'providers'},  () => { refreshStats(); loadListings(); })
-      .on('postgres_changes',{event:'UPDATE', schema:'public',table:'departments'},() => refreshStats())
+      .on('postgres_changes',{event:'*',      schema:'public',table:'queues'},      () => refreshStats())
+      .on('postgres_changes',{event:'UPDATE',  schema:'public',table:'providers'},   () => { refreshStats(); loadListings(); })
+      .on('postgres_changes',{event:'UPDATE',  schema:'public',table:'departments'}, () => refreshStats())
+      .on('postgres_changes',{event:'INSERT',  schema:'public',table:'providers'},   () => loadListings())
       .subscribe();
   })();
 </script>
