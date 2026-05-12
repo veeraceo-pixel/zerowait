@@ -181,6 +181,30 @@
     /* ── RESPONSIVE ── */
     @media(max-width:1100px){.listings-grid{grid-template-columns:repeat(3,1fr)}.categories-grid{grid-template-columns:repeat(4,1fr)}.hero h1{font-size:2.4rem}}
     @media(max-width:900px){.hero-inner{grid-template-columns:1fr}.hero-stats-panel{display:none}.promo{grid-template-columns:1fr;gap:20px}.footer-grid{grid-template-columns:1fr 1fr}.nav-links .hide-md{display:none}}
+    /* ── MOBILE HERO STATS (2×2 grid, visible only on mobile) ── */
+    .mobile-hero-stats{display:none;grid-template-columns:1fr 1fr;gap:.65rem;margin-top:1.4rem;}
+    .mhs-box{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:.8rem 1rem;}
+    .mhs-val{display:block;font-size:1.45rem;font-weight:800;color:var(--accent);line-height:1;}
+    .mhs-lbl{display:block;font-size:.6rem;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.5);font-weight:700;margin-top:.25rem;}
+
+    /* ── INDEX HAMBURGER + MOBILE DROPDOWN ── */
+    .idx-hamburger{display:none;flex-direction:column;justify-content:center;gap:5px;cursor:pointer;background:none;border:none;padding:6px 4px;flex-shrink:0;margin-left:4px;}
+    .idx-hamburger span{width:22px;height:2.5px;background:rgba(255,255,255,.85);border-radius:2px;transition:transform .2s,opacity .2s;}
+    .idx-hamburger.open span:nth-child(1){transform:translateY(7.5px) rotate(45deg);}
+    .idx-hamburger.open span:nth-child(2){opacity:0;}
+    .idx-hamburger.open span:nth-child(3){transform:translateY(-7.5px) rotate(-45deg);}
+    .idx-mobile-dropdown{display:none;position:absolute;top:100%;left:0;right:0;background:var(--primary);z-index:998;border-top:1px solid rgba(255,255,255,.1);box-shadow:0 8px 24px rgba(0,0,0,.45);padding:.8rem 1.4rem 1.2rem;}
+    .idx-mobile-dropdown.open{display:block;}
+    .idx-mobile-dropdown a{display:block;padding:.65rem 0;color:rgba(255,255,255,.8);text-decoration:none;font-size:.95rem;font-weight:600;border-bottom:1px solid rgba(255,255,255,.07);}
+    .idx-mobile-dropdown a:hover{color:white;}
+    .idx-mob-actions{display:flex;gap:.6rem;margin-top:1rem;}
+    .idx-mob-actions a{flex:1;text-align:center;padding:.75rem;border-radius:50px;font-weight:700;font-size:.88rem;text-decoration:none;}
+    .idx-mob-actions a.ghost{background:rgba(255,255,255,.1);color:white;border:1.5px solid rgba(255,255,255,.3);}
+    .idx-mob-actions a.solid{background:var(--accent);color:var(--primary);}
+    /* Backdrop */
+    .idx-nav-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:997;}
+    .idx-nav-backdrop.open{display:block;}
+
     @media(max-width:760px){
       .listings-grid{grid-template-columns:repeat(2,1fr);gap:12px}
       .categories-grid{grid-template-columns:repeat(3,1fr)}
@@ -188,8 +212,16 @@
       .footer-grid{grid-template-columns:1fr 1fr}
       .mobile-nav{display:block}
       body{padding-bottom:66px}
-      .qb-timer,.qb-actions{display:none}
-      .header-inner{padding:10px 14px;gap:10px}
+      /* Keep timer on mobile — just compact it */
+      .qb-timer{padding:.35rem .7rem;}
+      .qb-timer-value{font-size:1.45rem;letter-spacing:-.5px;}
+      .qb-timer-label{display:none;}
+      .qb-actions{display:none;}
+      .qb-icon{width:40px;min-height:50px;font-size:1.2rem;}
+      .qb-info{padding:.4rem .7rem;}
+      .qb-title{font-size:.82rem;}
+      .qb-sub{font-size:.65rem;}
+      .header-inner{padding:10px 14px;gap:8px;position:relative;}
       .hero{padding:36px 0 44px}
       .hero h1{font-size:2rem;letter-spacing:-.8px}
       .hero-sub{font-size:.9rem;margin-bottom:1.2rem}
@@ -198,6 +230,9 @@
       .promo{padding:28px 20px}
       .promo h2{font-size:1.3rem}
       .nav-links{display:none}
+      .search-wrapper{max-width:none;}
+      .idx-hamburger{display:flex;}
+      .mobile-hero-stats{display:grid;}
     }
     @media(max-width:480px){
       .listings-grid{grid-template-columns:1fr}
@@ -244,14 +279,36 @@
     </div>
 
     <div class="nav-links">
-      <a href="find-services.html" class="hide-md">All Services</a>
-      <a href="hospitals.html" class="hide-md">Hospitals</a>
+      <a href="find-services.html" class="hide-md">Find Services</a>
+      <a href="business-pricing.html" class="hide-md">For Businesses</a>
+      <a href="enterprise.html" class="hide-md">Enterprise</a>
       <a href="dashboard.html" id="dashBtn" style="display:none">My Queues</a>
       <a href="login.html" id="loginLink" class="pill">Login</a>
       <a href="#" id="logoutLink" style="display:none" onclick="handleLogout(event)">Logout</a>
     </div>
+
+    <!-- Hamburger (mobile only) -->
+    <button class="idx-hamburger" id="idxHamburger" onclick="toggleMobileMenu()" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+
+  <!-- Mobile dropdown nav -->
+  <div class="idx-mobile-dropdown" id="idxMobileDropdown">
+    <a href="hospitals.html">🏥 Hospitals</a>
+    <a href="clinics.html">🩺 Clinics</a>
+    <a href="salons.html">💇 Salons &amp; Barbers</a>
+    <a href="banks.html">🏦 Banks</a>
+    <a href="find-services.html">🔍 All Services</a>
+    <a href="business-pricing.html">🏢 For Businesses</a>
+    <div class="idx-mob-actions">
+      <a href="login.html" class="ghost" id="mobNavLoginBtn">Login</a>
+      <a href="signup.html" class="solid">Sign Up Free</a>
+    </div>
   </div>
 </header>
+<!-- Backdrop for mobile nav -->
+<div class="idx-nav-backdrop" id="idxNavBackdrop" onclick="toggleMobileMenu()"></div>
 
 <!-- ══ HERO ══ -->
 <section class="hero">
@@ -263,11 +320,19 @@
         <p class="hero-sub">See live wait times at hospitals, clinics, salons, banks and more. Join the queue from anywhere — arrive only when it's your turn.</p>
         <div class="hero-btns">
           <a href="find-services.html" class="btn-hero-primary">🔍 Find Services Near You</a>
-          <a href="hospitals.html" class="btn-hero-outline">🏥 Hospitals →</a>
+          <a href="business-signup.html" class="btn-hero-outline">🏢 Register Free →</a>
         </div>
         <div class="hero-location" id="heroLocation">
           <div class="loc-dot"></div>
           <span id="locText">Detecting your location…</span>
+        </div>
+
+        <!-- Mobile-only stats grid (shown below hero text on phones) -->
+        <div class="mobile-hero-stats" id="mobileHeroStats">
+          <div class="mhs-box"><span class="mhs-val" id="mStatOpen">—</span><span class="mhs-lbl">Open Now</span></div>
+          <div class="mhs-box"><span class="mhs-val" id="mStatQueue">—</span><span class="mhs-lbl">In Queue</span></div>
+          <div class="mhs-box"><span class="mhs-val" id="mStatAvg">—</span><span class="mhs-lbl">Avg Wait (min)</span></div>
+          <div class="mhs-box"><span class="mhs-val" id="mStatServed">—</span><span class="mhs-lbl">Served Today</span></div>
         </div>
       </div>
       <div class="hero-stats-panel">
@@ -512,6 +577,9 @@
     document.getElementById('qbViewBtn').href = detailHref;
     startTimer(waitMins);
     document.getElementById('queueBanner').style.display = 'block';
+
+    // Set up lock-screen notification for this queue
+    setupQueueNotif(bizName, deptName, waitMins, q.status);
     if (q.department_id) {
       sb.channel('banner-dept-' + q.department_id)
         .on('postgres_changes', {event:'UPDATE', schema:'public', table:'departments', filter:`id=eq.${q.department_id}`}, p => resetTimer(p.new.wait_minutes || 0))
@@ -519,7 +587,17 @@
     }
     sb.channel('banner-queue-' + q.id)
       .on('postgres_changes', {event:'UPDATE', schema:'public', table:'queues', filter:`id=eq.${q.id}`}, p => {
-        if (['completed','cancelled','no_show'].includes(p.new.status)) hideBanner();
+        if (['completed','cancelled','no_show'].includes(p.new.status)) {
+          hideBanner();
+          clearQueueNotif();
+          queueNotifActive = false;
+          document.removeEventListener('visibilitychange', onVisibilityChange);
+        } else if (p.new.status === 'serving') {
+          document.getElementById('qbSub').textContent = '🔔 You are being served now!';
+          // Push urgent notification immediately (even if page is visible)
+          updateQueueNotifState(lastQueueState.bizName, lastQueueState.deptName, 0, 'serving');
+          pushQueueNotif();
+        }
       }).subscribe();
   }
 
@@ -529,7 +607,14 @@
     renderTimer(secs);
     timerInterval = setInterval(() => { if (secs > 0) secs--; renderTimer(secs); }, 1000);
   }
-  function resetTimer(minutes) { if (timerInterval) clearInterval(timerInterval); startTimer(minutes); }
+  function resetTimer(minutes) {
+    if (timerInterval) clearInterval(timerInterval);
+    startTimer(minutes);
+    // Keep the SW notification in sync when wait time changes
+    if (lastQueueState.bizName) {
+      updateQueueNotifState(lastQueueState.bizName, lastQueueState.deptName, minutes, lastQueueState.status);
+    }
+  }
   function renderTimer(secs) {
     const m = Math.floor(secs / 60), s = secs % 60;
     document.getElementById('qbTimerVal').textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
@@ -569,11 +654,17 @@
     }
   }
 
+  // Maps desktop stat IDs → matching mobile stat IDs
+  const MOBILE_STAT = { statOpen:'mStatOpen', statQueue:'mStatQueue', statAvg:'mStatAvg', statServed:'mStatServed' };
+
   function animStat(id, val) {
-    const el = document.getElementById(id);
-    if (!el || el.textContent === String(val)) return;
-    el.style.transform='scale(1.2)'; el.style.color='var(--accent2)'; el.textContent = val;
-    setTimeout(()=>{ el.style.transform=''; el.style.color=''; el.style.transition='all .3s'; }, 350);
+    // Update both desktop and mobile elements
+    [id, MOBILE_STAT[id]].filter(Boolean).forEach(eid => {
+      const el = document.getElementById(eid);
+      if (!el || el.textContent === String(val)) return;
+      el.style.transform = 'scale(1.15)'; el.style.color = 'var(--accent2)'; el.textContent = val;
+      setTimeout(() => { el.style.transform = ''; el.style.color = ''; el.style.transition = 'all .3s'; }, 350);
+    });
   }
 
   // ── LISTINGS ──
@@ -696,6 +787,70 @@
     searchSugg.classList.remove('open');
     if (q) window.location.href = 'find-services.html?q=' + encodeURIComponent(q);
     else    window.location.href = 'find-services.html';
+  }
+
+  // ── HAMBURGER TOGGLE ──
+  function toggleMobileMenu() {
+    const btn      = document.getElementById('idxHamburger');
+    const dropdown = document.getElementById('idxMobileDropdown');
+    const backdrop = document.getElementById('idxNavBackdrop');
+    const isOpen   = dropdown.classList.toggle('open');
+    backdrop.classList.toggle('open', isOpen);
+    btn.classList.toggle('open', isOpen);
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+  }
+
+  // ── SERVICE WORKER + LOCK-SCREEN NOTIFICATIONS ──
+  let swReg = null;
+  let queueNotifActive = false;
+  let lastQueueState   = {};
+
+  // Register the service worker once
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => { swReg = reg; })
+      .catch(() => {});
+  }
+
+  // Ask for notification permission and set up visibility-based notifications
+  async function setupQueueNotif(bizName, deptName, waitMins, status) {
+    if (!('Notification' in window) || !swReg) return;
+    lastQueueState = { bizName, deptName, waitMins, status };
+
+    if (!queueNotifActive) {
+      // Request permission only once
+      const perm = await Notification.requestPermission().catch(() => 'denied');
+      if (perm !== 'granted') return;
+      queueNotifActive = true;
+
+      // Show notification when tab/screen goes background
+      document.addEventListener('visibilitychange', onVisibilityChange);
+    }
+  }
+
+  function onVisibilityChange() {
+    if (document.hidden) {
+      pushQueueNotif();
+    } else {
+      clearQueueNotif();
+    }
+  }
+
+  async function pushQueueNotif() {
+    if (!swReg?.active || !lastQueueState.bizName) return;
+    swReg.active.postMessage({ type: 'SHOW_QUEUE_NOTIFICATION', ...lastQueueState });
+  }
+
+  async function clearQueueNotif() {
+    if (!swReg?.active) return;
+    swReg.active.postMessage({ type: 'HIDE_QUEUE_NOTIFICATION' });
+  }
+
+  // Called whenever the banner timer ticks — keeps the SW notification in sync
+  function updateQueueNotifState(bizName, deptName, waitMins, status) {
+    lastQueueState = { bizName, deptName, waitMins, status };
+    // If page is already in background (e.g. screen locked), push updated notification
+    if (document.hidden && queueNotifActive) pushQueueNotif();
   }
 
   // ── AUTH ──

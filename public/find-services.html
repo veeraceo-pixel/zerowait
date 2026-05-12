@@ -65,11 +65,11 @@
         <a href="login.html" class="btn btn-ghost">Login</a>
         <a href="provider-signup.html" class="btn btn-primary">+ Register Business</a>
       </div>
-      <button class="hamburger" onclick="document.querySelector('.mobile-nav').classList.toggle('open')" aria-label="Menu">
+      <button class="hamburger" id="secHamburger" onclick="toggleSectorNav()" aria-label="Menu">
         <span></span><span></span><span></span>
       </button>
     </div>
-    <div class="mobile-nav">
+    <div class="mobile-nav" id="sectorMobileNav">
       <a href="hospitals.html">🏥 Hospitals</a>
       <a href="clinics.html">🩺 Clinics</a>
       <a href="salons.html">💇 Salons</a>
@@ -83,6 +83,7 @@
     </div>
   </div>
 </header>
+<div class="nav-backdrop" id="sectorBackdrop" onclick="toggleSectorNav()"></div>
 
 <section class="hero" style="padding:40px 0;">
   <div class="container">
@@ -146,6 +147,17 @@
 <script src="supabase-config.js"></script>
 <script src="auth-nav.js"></script>
 <script src="sector-config.js"></script>
+<script>
+function toggleSectorNav() {
+  const nav      = document.getElementById('sectorMobileNav');
+  const backdrop = document.getElementById('sectorBackdrop');
+  const btn      = document.getElementById('secHamburger');
+  const open     = nav.classList.toggle('open');
+  backdrop.classList.toggle('open', open);
+  btn.classList.toggle('open', open);
+  document.body.style.overflow = open ? 'hidden' : '';
+}
+</script>
 
 <script>
 (function(){

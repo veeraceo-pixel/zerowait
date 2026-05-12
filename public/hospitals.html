@@ -27,11 +27,11 @@
         <a href="login.html" class="btn btn-ghost">Login</a>
         <a href="hospital-signup.html" data-signup-link class="btn btn-primary">+ Register Hospital</a>
       </div>
-      <button class="hamburger" onclick="document.querySelector('.mobile-nav').classList.toggle('open')" aria-label="Menu">
+      <button class="hamburger" id="secHamburger" onclick="toggleSectorNav()" aria-label="Menu">
         <span></span><span></span><span></span>
       </button>
     </div>
-    <div class="mobile-nav">
+    <div class="mobile-nav" id="sectorMobileNav">
       <a href="hospitals.html" class="active">🏥 Hospitals</a>
       <a href="clinics.html">🩺 Clinics</a>
       <a href="salons.html">💇 Salons</a>
@@ -45,6 +45,7 @@
     </div>
   </div>
 </header>
+<div class="nav-backdrop" id="sectorBackdrop" onclick="toggleSectorNav()"></div>
 
 <section class="hero">
   <div class="container">
@@ -100,6 +101,17 @@
 <script src="supabase-config.js"></script>
 <script src="sector-config.js"></script>
 <script src="sector-listing.js"></script>
-<script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+<script>
+document.getElementById('year').textContent = new Date().getFullYear();
+function toggleSectorNav() {
+  const nav      = document.getElementById('sectorMobileNav');
+  const backdrop = document.getElementById('sectorBackdrop');
+  const btn      = document.getElementById('secHamburger');
+  const open     = nav.classList.toggle('open');
+  backdrop.classList.toggle('open', open);
+  btn.classList.toggle('open', open);
+  document.body.style.overflow = open ? 'hidden' : '';
+}
+</script>
 </body>
 </html>
