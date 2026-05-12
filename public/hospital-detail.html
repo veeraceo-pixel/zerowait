@@ -109,30 +109,28 @@ main{padding:1.6rem 0 4rem;}
   </div>
 </div>
 
+<div style="background:#fffbeb;border-bottom:2px solid #fde68a;padding:.85rem 0;">
+  <div class="container" style="display:flex;align-items:flex-start;gap:.9rem;">
+    <span style="font-size:1.4rem;flex-shrink:0;margin-top:.05rem;">🏥</span>
+    <div>
+      <strong style="font-size:.88rem;color:#92400e;display:block;margin-bottom:.2rem;">How to join a queue at this hospital</strong>
+      <span style="font-size:.82rem;color:#a16207;line-height:1.55;">
+        Visit the <strong>hospital reception</strong> first. Staff will verify you, collect your consultation fee, and assign you to the right department.
+        You'll receive a <strong>personal tracking link</strong> — use it from anywhere to watch your position in real time.
+      </span>
+    </div>
+  </div>
+</div>
+
 <main>
   <div class="container">
     <h2 class="section-title">Departments</h2>
-    <div class="subtle">Tap a department to join its queue. Wait times come straight from the hospital staff.</div>
+    <div class="subtle">Wait times are updated live by hospital staff. Visit reception to be registered and added to a department queue.</div>
     <div class="dept-grid" id="deptGrid">
       <div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--text-muted);">Loading departments…</div>
     </div>
   </div>
 </main>
-
-<div class="modal" id="joinModal">
-  <div class="modal-card">
-    <h3 id="joinTitle">Join Queue</h3>
-    <p id="joinSub">You'll get a virtual ticket — no need to wait at the hospital.</p>
-    <label for="patientName">Patient Name</label>
-    <input type="text" id="patientName" placeholder="Full name">
-    <label for="patientPhone">Phone (for SMS updates)</label>
-    <input type="tel" id="patientPhone" placeholder="07xxx xxxxxx">
-    <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="closeJoin()">Cancel</button>
-      <button class="btn btn-primary" id="joinSubmitBtn" onclick="confirmJoin()">Join Queue</button>
-    </div>
-  </div>
-</div>
 
 <div class="toast" id="toast"></div>
 
@@ -145,7 +143,6 @@ const hospitalId = params.get('id');
 let provider = null;
 let departments = [];
 let session = null;
-let pendingDept = null;
 
 function toast(msg, kind='success') {
   const t = document.getElementById('toast');
@@ -272,67 +269,10 @@ function deptCard(d) {
         <span>⏱ ${d.avg_consult_minutes||15} min/visit</span>
       </div>
       ${isOpen
-        ? `<button class="dept-cta" onclick="openJoin('${d.id}')">Join Queue →</button>`
+        ? `<div style="background:#f0fdfc;border:1.5px solid #6ee7b7;border-radius:10px;padding:.7rem;text-align:center;font-size:.82rem;font-weight:700;color:#065f46;letter-spacing:.2px;">📋 Register at Reception to Join</div>`
         : `<button class="dept-cta disabled">Closed</button>`}
     </div>`;
 }
-
-function openJoin(deptId) {
-  pendingDept = departments.find(d => d.id === deptId);
-  if (!pendingDept) return;
-  if (!session) {
-    sessionStorage.setItem('redirectAfterLogin', location.href);
-    toast('Please log in to join a queue', 'error');
-    setTimeout(()=>{ window.location.href = 'login.html'; }, 1200);
-    return;
-  }
-  document.getElementById('joinTitle').textContent = 'Join ' + pendingDept.name + ' Queue';
-  document.getElementById('joinSub').textContent = `Wait time right now: ~${pendingDept.wait_minutes||0} minutes`;
-  document.getElementById('patientName').value = (session.user.user_metadata?.full_name) || '';
-  document.getElementById('patientPhone').value = '';
-  document.getElementById('joinModal').classList.add('show');
-}
-
-function closeJoin() { document.getElementById('joinModal').classList.remove('show'); }
-
-async function confirmJoin() {
-  const name = document.getElementById('patientName').value.trim();
-  const phone = document.getElementById('patientPhone').value.trim();
-  if (!name) { toast('Please enter your name', 'error'); return; }
-  if (!phone) { toast('Please enter your phone number', 'error'); return; }
-
-  const btn = document.getElementById('joinSubmitBtn');
-  btn.disabled = true; btn.textContent = 'Joining…';
-
-  try {
-    const { error } = await sb.from('queues').insert({
-      provider_id: provider.id,
-      department_id: pendingDept.id,
-      user_id: session.user.id,
-      customer_name: name,
-      customer_phone: phone,
-      service_duration: pendingDept.avg_consult_minutes || 15,
-      status: 'waiting'
-    });
-    if (error) {
-      if (error.code === '23505' || /one_active_queue_per_user/.test(error.message)) {
-        toast('You already have an active queue', 'error');
-      } else {
-        toast('Could not join: ' + error.message, 'error');
-      }
-      return;
-    }
-    closeJoin();
-    toast('🎉 You are in the queue! Redirecting to your dashboard…', 'success');
-    setTimeout(()=>{ window.location.href = 'dashboard.html'; }, 1800);
-  } finally {
-    btn.disabled = false; btn.textContent = 'Join Queue';
-  }
-}
-
-document.getElementById('joinModal').addEventListener('click', e => {
-  if (e.target.id === 'joinModal') closeJoin();
-});
 
 init();
 </script>

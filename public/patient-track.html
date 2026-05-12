@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Your Queue Status | skipQs</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --primary:#002f34;
+  --accent:#23e5db;
+  --success:#059669;
+  --warning:#d97706;
+  --danger:#dc2626;
+  --bg:#f7f8f8;
+  --border:#e2e8f0;
+  --muted:#64748b;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--primary);min-height:100vh;}
+
+/* NAV */
+.nav{background:var(--primary);padding:.9rem 1.2rem;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-size:1.35rem;font-weight:800;color:white;text-decoration:none;letter-spacing:-1px;}
+.logo span{color:var(--accent);}
+.nav-link{font-size:.82rem;color:rgba(255,255,255,.75);text-decoration:none;font-weight:600;}
+.nav-link:hover{color:white;}
+
+/* LAYOUT */
+.page{min-height:calc(100vh - 56px);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:1.6rem 1rem 3rem;}
+
+/* STATES */
+.state-center{width:100%;max-width:440px;text-align:center;}
+
+/* LOADING */
+.skeleton{background:#e2e8f0;border-radius:8px;animation:shimmer 1.4s infinite;}
+@keyframes shimmer{0%,100%{opacity:.6}50%{opacity:1}}
+
+/* MAIN CARD */
+.track-card{background:white;border-radius:20px;box-shadow:0 8px 30px rgba(0,0,0,.07);width:100%;max-width:440px;overflow:hidden;}
+
+/* HOSPITAL HEADER */
+.card-header{background:linear-gradient(135deg,#002f34,#004d57);padding:1.4rem 1.6rem;color:white;}
+.hosp-name{font-size:1.15rem;font-weight:800;letter-spacing:-.3px;margin-bottom:.2rem;}
+.dept-badge{display:inline-flex;align-items:center;gap:.4rem;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:50px;padding:.3rem .9rem;font-size:.78rem;font-weight:700;margin-top:.4rem;}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 1.5s infinite;flex-shrink:0;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* STATUS SECTION */
+.card-body{padding:1.6rem;}
+.status-badge{display:inline-flex;align-items:center;gap:.5rem;border-radius:50px;padding:.45rem 1rem;font-size:.78rem;font-weight:800;letter-spacing:.3px;margin-bottom:1.2rem;}
+.status-badge.waiting{background:#dbeafe;color:#1e40af;}
+.status-badge.serving{background:#d1fae5;color:#065f46;}
+.status-badge.completed{background:#dcfce7;color:#166534;}
+.status-badge.cancelled{background:#fee2e2;color:#991b1b;}
+
+/* BIG WAIT NUMBER */
+.wait-block{background:var(--bg);border-radius:14px;padding:1.4rem;text-align:center;margin-bottom:1.2rem;}
+.wait-num{font-size:4.5rem;font-weight:800;line-height:1;letter-spacing:-3px;}
+.wait-num.low{color:var(--success);}
+.wait-num.med{color:var(--warning);}
+.wait-num.high{color:var(--danger);}
+.wait-num.zero{color:var(--success);}
+.wait-label{font-size:.82rem;color:var(--muted);font-weight:600;margin-top:.3rem;}
+.wait-note{font-size:.72rem;color:#94a3b8;margin-top:.2rem;}
+
+/* INFO ROWS */
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:.6rem 0;border-bottom:1px solid #f1f5f9;}
+.info-row:last-child{border-bottom:none;}
+.info-label{font-size:.8rem;color:var(--muted);font-weight:600;}
+.info-value{font-size:.85rem;font-weight:700;color:var(--primary);}
+
+/* SERVING STATE */
+.serving-banner{background:#d1fae5;border:2px solid #6ee7b7;border-radius:14px;padding:1.4rem;text-align:center;margin-bottom:1.2rem;}
+.serving-title{font-size:1.4rem;font-weight:800;color:#065f46;margin-bottom:.3rem;}
+.serving-sub{font-size:.88rem;color:#047857;}
+
+/* COMPLETED STATE */
+.done-banner{text-align:center;padding:2rem 1rem;}
+.done-icon{font-size:4rem;margin-bottom:.8rem;}
+.done-title{font-size:1.5rem;font-weight:800;color:var(--success);margin-bottom:.4rem;}
+.done-sub{font-size:.9rem;color:var(--muted);}
+
+/* FOOTER */
+.card-footer{background:var(--bg);border-top:1px solid var(--border);padding:1rem 1.6rem;font-size:.75rem;color:#94a3b8;text-align:center;}
+
+/* ERROR */
+.error-card{background:white;border-radius:20px;box-shadow:0 8px 30px rgba(0,0,0,.07);width:100%;max-width:440px;padding:2rem;text-align:center;}
+.error-icon{font-size:3rem;margin-bottom:.8rem;}
+.error-title{font-size:1.1rem;font-weight:800;color:var(--danger);margin-bottom:.4rem;}
+.error-sub{font-size:.88rem;color:var(--muted);line-height:1.55;}
+.btn{display:inline-flex;align-items:center;gap:.4rem;padding:.7rem 1.4rem;border-radius:50px;font-weight:700;font-size:.85rem;text-decoration:none;border:none;cursor:pointer;font-family:inherit;margin-top:1.2rem;}
+.btn-primary{background:var(--primary);color:white;}
+.btn-primary:hover{background:#001f24;}
+.hidden{display:none;}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="index.html" class="logo">skip<span>Qs</span></a>
+  <a href="hospitals.html" class="nav-link">Browse Hospitals →</a>
+</nav>
+
+<div class="page">
+
+  <!-- LOADING -->
+  <div id="loadingState" class="state-center">
+    <div style="background:white;border-radius:20px;padding:2rem;box-shadow:0 8px 30px rgba(0,0,0,.07);">
+      <div class="skeleton" style="height:18px;width:60%;margin:0 auto .8rem;"></div>
+      <div class="skeleton" style="height:80px;border-radius:12px;margin-bottom:.8rem;"></div>
+      <div class="skeleton" style="height:14px;width:80%;margin:0 auto .5rem;"></div>
+      <div class="skeleton" style="height:14px;width:50%;margin:0 auto;"></div>
+    </div>
+  </div>
+
+  <!-- ERROR -->
+  <div id="errorState" class="error-card hidden">
+    <div class="error-icon">🔍</div>
+    <h2 class="error-title">Tracking link not found</h2>
+    <p class="error-sub">This link may have expired or been entered incorrectly. Please ask the reception staff for a new tracking link.</p>
+    <a href="hospitals.html" class="btn btn-primary">← Back to Hospitals</a>
+  </div>
+
+  <!-- MAIN TRACKING CARD -->
+  <div id="trackCard" class="track-card hidden">
+    <div class="card-header">
+      <div class="hosp-name" id="hospName">—</div>
+      <div id="deptBadge" class="dept-badge">
+        <span class="live-dot"></span>
+        <span id="deptName">—</span>
+      </div>
+    </div>
+
+    <div class="card-body" id="cardBody">
+      <!-- Filled dynamically -->
+    </div>
+
+    <div class="card-footer" id="cardFooter">
+      Live · auto-updates when staff change queue status
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="supabase-config.js"></script>
+<script>
+const params = new URLSearchParams(location.search);
+const token  = params.get('t');
+
+let queueEntry = null;
+let department = null;
+let provider   = null;
+let channel1   = null;
+let channel2   = null;
+
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function hide(id){ document.getElementById(id).classList.add('hidden'); }
+function show(id){ document.getElementById(id).classList.remove('hidden'); }
+
+async function init() {
+  if (!token) {
+    hide('loadingState');
+    show('errorState');
+    return;
+  }
+
+  // 1. Fetch queue entry by tracking token (anon-safe via RLS)
+  const { data: qRow, error: qErr } = await sb
+    .from('queues')
+    .select('*')
+    .eq('tracking_token', token)
+    .maybeSingle();
+
+  if (qErr || !qRow) {
+    hide('loadingState');
+    show('errorState');
+    return;
+  }
+  queueEntry = qRow;
+
+  // 2. Fetch department
+  if (qRow.department_id) {
+    const { data: dRow } = await sb
+      .from('departments')
+      .select('*')
+      .eq('id', qRow.department_id)
+      .maybeSingle();
+    department = dRow || null;
+  }
+
+  // 3. Fetch hospital/provider
+  const { data: pRow } = await sb
+    .from('providers')
+    .select('business_name, address')
+    .eq('id', qRow.provider_id)
+    .maybeSingle();
+  provider = pRow || null;
+
+  // 4. Render
+  hide('loadingState');
+  show('trackCard');
+  renderCard();
+
+  // 5. Realtime: queue status changes
+  channel1 = sb.channel('pt-queue-' + qRow.id)
+    .on('postgres_changes', {
+      event: 'UPDATE',
+      schema: 'public',
+      table: 'queues',
+      filter: `id=eq.${qRow.id}`
+    }, payload => {
+      queueEntry = { ...queueEntry, ...payload.new };
+      renderCard();
+    })
+    .subscribe();
+
+  // 6. Realtime: department wait-time changes
+  if (department) {
+    channel2 = sb.channel('pt-dept-' + department.id)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'departments',
+        filter: `id=eq.${department.id}`
+      }, payload => {
+        department = { ...department, ...payload.new };
+        renderCard();
+      })
+      .subscribe();
+  }
+}
+
+function renderCard() {
+  // Update header
+  document.getElementById('hospName').textContent = provider?.business_name || 'Hospital';
+  document.getElementById('deptName').textContent = (department?.icon || '🏥') + ' ' + (department?.name || 'Department');
+
+  const status = queueEntry?.status || 'waiting';
+  const body   = document.getElementById('cardBody');
+
+  if (status === 'completed') {
+    body.innerHTML = `
+      <div class="done-banner">
+        <div class="done-icon">🎉</div>
+        <div class="done-title">All done!</div>
+        <div class="done-sub">You have been seen. Thank you for your patience.</div>
+      </div>`;
+    document.getElementById('cardFooter').textContent = 'Visit complete · ' + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    if (channel1) sb.removeChannel(channel1);
+    if (channel2) sb.removeChannel(channel2);
+    return;
+  }
+
+  if (status === 'serving') {
+    body.innerHTML = `
+      <div class="status-badge serving">● YOU'RE BEING SEEN</div>
+      <div class="serving-banner">
+        <div class="serving-title">Please come in 🚪</div>
+        <div class="serving-sub">The staff is ready for you right now. Please proceed to ${esc(department?.name || 'the department')}.</div>
+      </div>
+      ${infoRows()}`;
+    return;
+  }
+
+  // Waiting
+  const waitMins = department?.wait_minutes ?? 0;
+  const waitClass = waitMins === 0 ? 'zero' : waitMins > 60 ? 'high' : waitMins > 30 ? 'med' : 'low';
+  const waitText  = waitMins === 0 ? 'See you soon!' : waitMins > 90 ? 'Please stay nearby' : 'Estimated wait';
+
+  body.innerHTML = `
+    <div class="status-badge waiting">⏳ IN QUEUE · WAITING</div>
+
+    <div class="wait-block">
+      <div class="wait-num ${waitClass}">${waitMins}</div>
+      <div class="wait-label">${waitText}</div>
+      <div class="wait-note">minutes · set live by hospital staff</div>
+    </div>
+
+    ${infoRows()}
+
+    <p style="font-size:.75rem;color:#94a3b8;margin-top:1rem;text-align:center;line-height:1.5;">
+      You don't need to stay at reception. Keep this page open anywhere —<br>it'll update automatically when your turn is near.
+    </p>`;
+}
+
+function infoRows() {
+  const addedAt = queueEntry?.joined_at
+    ? new Date(queueEntry.joined_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})
+    : '—';
+  return `
+    <div style="border-top:1px solid var(--border);margin-top:1rem;padding-top:.8rem;">
+      <div class="info-row">
+        <span class="info-label">Patient</span>
+        <span class="info-value">${esc(queueEntry?.customer_name || '—')}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Department</span>
+        <span class="info-value">${esc(department?.name || '—')}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Registered at</span>
+        <span class="info-value">${addedAt}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Hospital</span>
+        <span class="info-value">${esc(provider?.business_name || '—')}</span>
+      </div>
+    </div>`;
+}
+
+init();
+</script>
+</body>
+</html>

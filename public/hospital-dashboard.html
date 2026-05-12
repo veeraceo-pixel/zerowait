@@ -210,6 +210,55 @@ Orthopaedics"></textarea>
   </div>
 </div>
 
+<!-- ─── Add Patient Modal ─────────────────────────────────────────────────── -->
+<div class="modal" id="addPatientModal">
+  <div class="modal-card" style="max-width:420px;">
+    <h3 style="margin-bottom:.3rem;">+ Add Patient to Queue</h3>
+    <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:1.2rem;">Reception staff only. The patient will receive a private tracking link.</p>
+
+    <label style="font-size:.78rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:.3rem;">Department</label>
+    <select id="apDept" style="width:100%;padding:.75rem;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:.93rem;margin-bottom:1rem;background:white;outline:none;color:var(--primary);">
+      <option value="">— Select department —</option>
+    </select>
+
+    <label style="font-size:.78rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:.3rem;">Patient Name</label>
+    <input type="text" id="apName" placeholder="Full name" style="width:100%;padding:.75rem;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:.93rem;margin-bottom:1rem;outline:none;transition:border-color .2s;">
+
+    <label style="font-size:.78rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:.3rem;">Phone Number</label>
+    <input type="tel" id="apPhone" placeholder="07xxx xxxxxx" style="width:100%;padding:.75rem;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:.93rem;margin-bottom:1.4rem;outline:none;transition:border-color .2s;">
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeAddPatient()">Cancel</button>
+      <button class="btn btn-primary" id="apSubmitBtn" onclick="submitAddPatient()">Add to Queue</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Tracking Info Modal (shown after patient is added) ────────────────── -->
+<div class="modal" id="trackingInfoModal">
+  <div class="modal-card" style="max-width:460px;">
+    <div style="text-align:center;margin-bottom:1.2rem;">
+      <div style="font-size:2.6rem;margin-bottom:.5rem;">✅</div>
+      <h3 style="font-size:1.15rem;">Patient Added to Queue!</h3>
+      <p style="font-size:.85rem;color:var(--text-muted);margin-top:.3rem;"><strong id="tiPatientName"></strong> → <strong id="tiDeptName"></strong></p>
+    </div>
+
+    <div style="background:var(--bg);border-radius:12px;padding:1rem;margin-bottom:1rem;border:1px solid var(--border);">
+      <p style="font-size:.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.6rem;">Patient Tracking Link</p>
+      <div style="display:flex;gap:.5rem;">
+        <input type="text" id="tiLink" readonly style="flex:1;padding:.65rem .8rem;border:1.5px solid var(--border);border-radius:8px;font-size:.75rem;font-family:monospace;background:white;color:var(--primary);outline:none;">
+        <button class="btn btn-quick" onclick="copyTrackingLink()" style="flex-shrink:0;padding:.65rem 1rem;font-size:.82rem;border-radius:8px;">Copy</button>
+      </div>
+    </div>
+
+    <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:.8rem 1rem;margin-bottom:1.2rem;">
+      <p style="font-size:.82rem;color:#92400e;font-weight:600;">💡 Show this on screen or text it to the patient. They can track their position from anywhere — no login needed.</p>
+    </div>
+
+    <button class="btn btn-primary" style="width:100%;justify-content:center;border-radius:10px;" onclick="closeTrackingInfo()">Done</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -337,7 +386,30 @@ function render() {
         <a class="btn btn-ghost" href="hospitals.html" target="_blank">📋 Browse all hospitals</a>
       </div>
     </div>
+
+    <div class="section">
+      <div class="section-head">
+        <h2>👥 Queue Management</h2>
+        <button class="btn btn-primary" onclick="openAddPatient()">+ Add Patient</button>
+      </div>
+      <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:1rem;">
+        Reception staff adds patients here. Each patient gets a private tracking link — no scanning, no self-join.
+      </p>
+      <select id="qDeptSel"
+        onchange="loadDeptQueue(this.value)"
+        style="width:100%;padding:.75rem 1rem;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:.93rem;background:white;color:var(--primary);outline:none;cursor:pointer;margin-bottom:1rem;">
+        <option value="">— Select a department to view its queue —</option>
+        ${departments.map(d => `<option value="${d.id}">${esc(d.icon||'🏥')} ${esc(d.name)} &nbsp;(${queueCounts[d.id]||0} in queue)</option>`).join('')}
+      </select>
+      <div id="queuePanel"></div>
+    </div>
   `;
+
+  // Restore selected department view after re-render
+  if (selectedDeptId) {
+    const sel = document.getElementById('qDeptSel');
+    if (sel) { sel.value = selectedDeptId; loadDeptQueue(selectedDeptId); }
+  }
 }
 
 function deptCard(d) {
@@ -666,6 +738,225 @@ function readCsvFile(file) {
 document.getElementById('bulkModal').addEventListener('click', e => {
   if (e.target.id === 'bulkModal') closeBulkModal();
 });
+
+/* ════════════════════════════════════════════════════════════════
+   PATIENT QUEUE MANAGEMENT
+════════════════════════════════════════════════════════════════ */
+
+let selectedDeptId = null;
+let queueChannel2  = null;
+
+// ─── Add Patient ──────────────────────────────────────────────────────────────
+
+function openAddPatient(deptId = null) {
+  const sel = document.getElementById('apDept');
+  sel.innerHTML = '<option value="">— Select department —</option>' +
+    departments.filter(d => d.is_open).map(d =>
+      `<option value="${d.id}" ${deptId === d.id ? 'selected' : ''}>${esc(d.icon||'🏥')} ${esc(d.name)}</option>`
+    ).join('');
+  if (deptId) sel.value = deptId;
+  document.getElementById('apName').value  = '';
+  document.getElementById('apPhone').value = '';
+  document.getElementById('addPatientModal').classList.add('show');
+  setTimeout(() => document.getElementById('apName').focus(), 60);
+}
+
+function closeAddPatient() {
+  document.getElementById('addPatientModal').classList.remove('show');
+}
+
+async function submitAddPatient() {
+  const deptId = document.getElementById('apDept').value;
+  const name   = document.getElementById('apName').value.trim();
+  const phone  = document.getElementById('apPhone').value.trim();
+
+  if (!deptId) { toast('Please select a department', 'error'); return; }
+  if (!name)   { toast('Please enter patient name', 'error'); return; }
+  if (!phone)  { toast('Please enter phone number', 'error'); return; }
+
+  const btn = document.getElementById('apSubmitBtn');
+  btn.disabled = true; btn.textContent = 'Adding…';
+
+  const token = crypto.randomUUID();
+  const dept  = departments.find(d => d.id === deptId);
+
+  try {
+    const { error } = await sb.from('queues').insert({
+      provider_id:      provider.id,
+      department_id:    deptId,
+      business_name:    provider.business_name,
+      customer_name:    name,
+      customer_phone:   phone,
+      service_duration: dept?.avg_consult_minutes || 15,
+      status:           'waiting',
+      added_by_staff:   true,
+      tracking_token:   token,
+      joined_at:        new Date().toISOString()
+    });
+
+    if (error) { toast('Error: ' + error.message, 'error'); return; }
+
+    closeAddPatient();
+    showTrackingInfo(token, name, dept?.name || 'Department');
+
+    // Refresh queue panel if this dept is selected
+    if (selectedDeptId === deptId) loadDeptQueue(deptId);
+
+  } finally {
+    btn.disabled = false; btn.textContent = 'Add to Queue';
+  }
+}
+
+// ─── Tracking Info Modal ──────────────────────────────────────────────────────
+
+function showTrackingInfo(token, patientName, deptName) {
+  const base     = window.location.origin + window.location.pathname.replace(/[^/]*$/, '');
+  const trackUrl = base + 'patient-track.html?t=' + token;
+  document.getElementById('tiPatientName').textContent = patientName;
+  document.getElementById('tiDeptName').textContent    = deptName;
+  document.getElementById('tiLink').value = trackUrl;
+  document.getElementById('trackingInfoModal').classList.add('show');
+}
+
+function closeTrackingInfo() {
+  document.getElementById('trackingInfoModal').classList.remove('show');
+}
+
+async function copyTrackingLink() {
+  const link = document.getElementById('tiLink').value;
+  try {
+    await navigator.clipboard.writeText(link);
+    toast('Tracking link copied!');
+  } catch {
+    document.getElementById('tiLink').select();
+    document.execCommand('copy');
+    toast('Tracking link copied!');
+  }
+}
+
+// Close modals on backdrop click
+document.getElementById('addPatientModal').addEventListener('click', e => {
+  if (e.target.id === 'addPatientModal') closeAddPatient();
+});
+document.getElementById('trackingInfoModal').addEventListener('click', e => {
+  if (e.target.id === 'trackingInfoModal') closeTrackingInfo();
+});
+
+// ─── Live Queue View ──────────────────────────────────────────────────────────
+
+async function loadDeptQueue(deptId) {
+  if (!deptId) {
+    selectedDeptId = null;
+    const panel = document.getElementById('queuePanel');
+    if (panel) panel.innerHTML = '';
+    return;
+  }
+  selectedDeptId = deptId;
+  const panel = document.getElementById('queuePanel');
+  if (!panel) return;
+  panel.innerHTML = '<p style="font-size:.85rem;color:var(--text-muted);padding:.8rem 0;">Loading queue…</p>';
+
+  const { data: entries, error } = await sb.from('queues')
+    .select('*')
+    .eq('department_id', deptId)
+    .in('status', ['waiting', 'serving'])
+    .order('joined_at', { ascending: true });
+
+  if (error) {
+    panel.innerHTML = `<p style="color:var(--danger);font-size:.85rem;">Error: ${esc(error.message)}</p>`;
+    return;
+  }
+
+  renderQueuePanel(entries || []);
+
+  // Realtime subscription for this dept's queue
+  if (queueChannel2) sb.removeChannel(queueChannel2);
+  queueChannel2 = sb.channel('qm-' + deptId)
+    .on('postgres_changes', {
+      event: '*', schema: 'public', table: 'queues',
+      filter: `department_id=eq.${deptId}`
+    }, async () => {
+      const { data: updated } = await sb.from('queues')
+        .select('*')
+        .eq('department_id', deptId)
+        .in('status', ['waiting','serving'])
+        .order('joined_at', { ascending: true });
+      renderQueuePanel(updated || []);
+      // Also refresh the dept selector counts
+      await loadDepartments(); render();
+    })
+    .subscribe();
+}
+
+function renderQueuePanel(entries) {
+  const panel = document.getElementById('queuePanel');
+  if (!panel) return;
+  const dept = departments.find(d => d.id === selectedDeptId);
+
+  if (!entries.length) {
+    panel.innerHTML = `
+      <div style="text-align:center;padding:1.8rem;background:var(--bg);border-radius:12px;border:1.5px dashed var(--border);">
+        <p style="color:var(--text-muted);font-size:.88rem;margin-bottom:.8rem;">Queue is empty for <strong>${esc(dept?.name||'this department')}</strong></p>
+        <button class="btn btn-primary btn-sm" onclick="openAddPatient('${selectedDeptId}')">+ Add First Patient</button>
+      </div>`;
+    return;
+  }
+
+  panel.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;">
+      <strong style="font-size:.88rem;">${entries.length} patient${entries.length===1?'':'s'} · ${esc(dept?.name||'')}</strong>
+      <button class="btn btn-primary btn-sm" onclick="openAddPatient('${selectedDeptId}')">+ Add Patient</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:.55rem;">
+      ${entries.map((e, i) => queueEntryRow(e, i+1)).join('')}
+    </div>`;
+}
+
+function queueEntryRow(e, pos) {
+  const isServing = e.status === 'serving';
+  const addedAt = e.joined_at
+    ? new Date(e.joined_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})
+    : '—';
+  const tokenSnip = e.tracking_token
+    ? `<span style="font-size:.68rem;color:#94a3b8;font-family:monospace;">🔗 ${e.tracking_token.substring(0,8)}…</span>`
+    : '<span style="font-size:.68rem;color:#f59e0b;font-weight:600;">⚠ no token (walk-in)</span>';
+
+  return `
+    <div style="background:white;border:1.5px solid ${isServing ? 'var(--accent)' : 'var(--border)'};border-radius:12px;padding:.85rem 1rem;display:flex;align-items:center;gap:.8rem;flex-wrap:wrap;transition:.2s;">
+      <div style="width:30px;height:30px;border-radius:50%;background:${isServing ? 'var(--accent)' : 'var(--bg)'};color:var(--primary);font-weight:800;font-size:.82rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1.5px solid ${isServing ? 'var(--accent)' : 'var(--border)'};">${pos}</div>
+      <div style="flex:1;min-width:110px;">
+        <div style="font-weight:700;font-size:.93rem;">${esc(e.customer_name)}</div>
+        <div style="font-size:.74rem;color:var(--text-muted);margin-top:.1rem;">${esc(e.customer_phone||'')} · ${addedAt}</div>
+        <div style="margin-top:.2rem;">${tokenSnip}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;justify-content:flex-end;">
+        ${isServing
+          ? `<span style="background:#d1fae5;color:#065f46;padding:.3rem .75rem;border-radius:6px;font-size:.72rem;font-weight:800;letter-spacing:.3px;">● SERVING</span>`
+          : `<button class="btn btn-quick btn-sm" onclick="callPatient('${e.id}')" title="Mark as being served">📣 Call In</button>`}
+        <button class="btn btn-primary btn-sm" onclick="completePatient('${e.id}')" title="Mark as seen & remove from queue">✓ Done</button>
+        <button class="btn btn-danger btn-sm" onclick="removePatient('${e.id}','${esc(e.customer_name).replace(/'/g,"\\'")}')">×</button>
+      </div>
+    </div>`;
+}
+
+async function callPatient(queueId) {
+  const { error } = await sb.from('queues').update({ status: 'serving' }).eq('id', queueId);
+  if (error) toast('Error: ' + error.message, 'error');
+  else toast('Patient called in — status set to Serving');
+}
+
+async function completePatient(queueId) {
+  const { error } = await sb.from('queues').update({ status: 'completed' }).eq('id', queueId);
+  if (error) toast('Error: ' + error.message, 'error');
+  else toast('Patient marked complete ✓');
+}
+
+async function removePatient(queueId, name) {
+  if (!confirm('Remove ' + name + ' from the queue?')) return;
+  const { error } = await sb.from('queues').delete().eq('id', queueId);
+  if (error) toast('Error: ' + error.message, 'error');
+  else toast('Patient removed');
+}
 
 init();
 </script>
