@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pricing for Businesses | skipQs</title>
-<meta name="description" content="Simple, transparent pricing for hospitals, clinics, salons and businesses. Start free, no contracts.">
+<title>Pricing | skipQs — Free to Get Started</title>
+<meta name="description" content="skipQs is completely free during our launch. Register your hospital, clinic, salon or business and go live with live wait times — no credit card needed.">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{--primary:#002f34;--accent:#23e5db;--accent2:#ffce32;--bg:#f7f8f8;--border:#e2e8f0;--text-muted:#406367;--success:#059669;--danger:#dc2626;--warning:#d97706;}
@@ -28,33 +28,39 @@ header{background:white;padding:14px 0;box-shadow:0 2px 8px rgba(0,0,0,.06);posi
 .btn-ghost{background:var(--bg);color:var(--primary);border:1px solid var(--border);}
 
 /* ─── Hero ─── */
-.hero{background:linear-gradient(135deg,#002f34 0%,#004d57 50%,#002f34 100%);color:white;padding:56px 0 72px;text-align:center;}
-.hero h1{font-size:2.8rem;font-weight:800;letter-spacing:-1.5px;margin-bottom:.8rem;line-height:1.1;}
+.hero{background:linear-gradient(135deg,#002f34 0%,#004d57 50%,#002f34 100%);color:white;padding:64px 0 80px;text-align:center;}
+.hero-tag{display:inline-block;background:rgba(35,229,219,.15);border:1px solid rgba(35,229,219,.3);color:var(--accent);font-size:.78rem;font-weight:700;padding:.4rem 1rem;border-radius:50px;margin-bottom:1rem;letter-spacing:.5px;text-transform:uppercase;}
+.hero h1{font-size:3rem;font-weight:800;letter-spacing:-1.5px;margin-bottom:.8rem;line-height:1.1;}
 .hero h1 span{color:var(--accent);}
-.hero p{font-size:1.05rem;opacity:.85;max-width:540px;margin:0 auto 1.4rem;}
-.hero-badges{display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap;margin-top:1rem;}
+.hero p{font-size:1.1rem;opacity:.85;max-width:560px;margin:0 auto 2rem;}
+.hero-cta{display:inline-flex;align-items:center;gap:.5rem;background:var(--accent);color:var(--primary);padding:.85rem 2rem;border-radius:50px;font-weight:800;font-size:1rem;text-decoration:none;transition:.15s;}
+.hero-cta:hover{background:#1bcabf;transform:translateY(-1px);}
+.hero-note{margin-top:1rem;font-size:.85rem;opacity:.6;}
+.hero-badges{display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap;margin-top:1.6rem;}
 .badge{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:white;padding:.4rem .9rem;border-radius:50px;font-size:.8rem;font-weight:600;}
 
-/* ─── Toggle ─── */
-.billing-toggle{text-align:center;margin:-28px 0 2rem;position:relative;z-index:5;}
-.toggle-pill{display:inline-flex;background:white;border-radius:50px;padding:4px;box-shadow:0 4px 16px rgba(0,0,0,.1);}
-.toggle-pill button{border:none;background:none;padding:.5rem 1.2rem;border-radius:50px;font-weight:700;font-size:.85rem;cursor:pointer;font-family:inherit;color:var(--text-muted);transition:.2s;}
-.toggle-pill button.active{background:var(--primary);color:white;}
-.save-label{display:inline-block;background:#d1fae5;color:#065f46;font-size:.75rem;font-weight:700;padding:.2rem .6rem;border-radius:50px;margin-left:.5rem;}
+/* ─── Launch Banner ─── */
+.launch-banner{background:linear-gradient(90deg,#ffce32,#ffe580);padding:14px 0;text-align:center;}
+.launch-banner p{font-size:.9rem;font-weight:700;color:var(--primary);}
+.launch-banner p span{background:var(--primary);color:var(--accent2);padding:.1rem .5rem;border-radius:6px;margin-right:.4rem;font-size:.8rem;}
 
-/* ─── Pricing cards ─── */
-.pricing-section{padding:0 0 4rem;}
-.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-bottom:3rem;}
+/* ─── Pricing Cards ─── */
+.pricing-section{padding:3rem 0 4rem;}
+.section-title{text-align:center;font-size:1.6rem;font-weight:800;margin-bottom:.5rem;}
+.section-sub{text-align:center;color:var(--text-muted);font-size:.95rem;margin-bottom:2.5rem;max-width:560px;margin-left:auto;margin-right:auto;}
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-bottom:2.5rem;}
 .price-card{background:white;border-radius:20px;padding:2rem;border:1.5px solid var(--border);position:relative;transition:.2s;}
 .price-card:hover{transform:translateY(-4px);box-shadow:0 16px 40px rgba(0,0,0,.1);}
-.price-card.popular{border-color:var(--accent);box-shadow:0 0 0 3px rgba(35,229,219,.15);}
-.popular-badge{position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:var(--accent);color:var(--primary);font-size:.75rem;font-weight:800;padding:.35rem 1rem;border-radius:50px;white-space:nowrap;}
+.price-card.featured{border-color:var(--accent);box-shadow:0 0 0 3px rgba(35,229,219,.15);}
+.featured-badge{position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:var(--accent);color:var(--primary);font-size:.75rem;font-weight:800;padding:.35rem 1rem;border-radius:50px;white-space:nowrap;}
+.price-card.coming-soon{opacity:.75;}
 .plan-icon{font-size:2.2rem;margin-bottom:.8rem;}
 .plan-name{font-size:1.25rem;font-weight:800;margin-bottom:.25rem;}
 .plan-desc{font-size:.85rem;color:var(--text-muted);margin-bottom:1.4rem;line-height:1.4;}
-.price-val{font-size:2.8rem;font-weight:800;letter-spacing:-1.5px;line-height:1;margin-bottom:.25rem;}
-.price-val span{font-size:1rem;font-weight:500;color:var(--text-muted);}
-.price-period{font-size:.82rem;color:var(--text-muted);margin-bottom:1.4rem;}
+.free-badge{display:inline-block;background:#d1fae5;color:#065f46;font-size:1.8rem;font-weight:900;padding:.3rem 1rem;border-radius:12px;margin-bottom:.3rem;letter-spacing:-1px;}
+.price-note{font-size:.82rem;color:var(--text-muted);margin-bottom:1.4rem;}
+.coming-pill{display:inline-block;background:#f3f4f6;color:#6b7280;font-size:.78rem;font-weight:700;padding:.35rem 1rem;border-radius:50px;margin-bottom:1rem;letter-spacing:.3px;}
+.soon-price{font-size:2rem;font-weight:800;letter-spacing:-1px;color:#9ca3af;margin-bottom:.3rem;}
 .feature-list{list-style:none;margin-bottom:1.6rem;}
 .feature-list li{font-size:.875rem;padding:.45rem 0;border-bottom:1px solid var(--bg);display:flex;align-items:flex-start;gap:.6rem;line-height:1.35;}
 .feature-list li:last-child{border-bottom:none;}
@@ -67,21 +73,17 @@ header{background:white;padding:14px 0;box-shadow:0 2px 8px rgba(0,0,0,.06);posi
 .cta-accent{background:var(--accent);color:var(--primary);}
 .cta-accent:hover{background:#1bcabf;}
 .cta-outline{border:1.5px solid var(--border);color:var(--primary);}
-.cta-outline:hover{border-color:var(--primary);}
+.cta-disabled{background:#f3f4f6;color:#9ca3af;cursor:default;}
 
-/* ─── Compare table ─── */
-.compare-section{margin-bottom:4rem;}
-.compare-section h2{font-size:1.5rem;font-weight:800;margin-bottom:1.4rem;text-align:center;}
-.compare-table{background:white;border-radius:16px;overflow:hidden;border:1px solid var(--border);width:100%;}
-.compare-table table{width:100%;border-collapse:collapse;}
-.compare-table th{background:var(--primary);color:white;padding:1rem;font-size:.85rem;font-weight:700;text-align:center;}
-.compare-table th:first-child{text-align:left;}
-.compare-table td{padding:.85rem 1rem;font-size:.875rem;border-bottom:1px solid var(--bg);text-align:center;}
-.compare-table td:first-child{text-align:left;font-weight:600;color:var(--primary);}
-.compare-table tr:last-child td{border-bottom:none;}
-.compare-table tr:nth-child(even){background:#fafbfc;}
-.tick{color:var(--success);font-weight:800;}
-.dash{color:#d1d5db;}
+/* ─── Everything included box ─── */
+.all-included{background:white;border-radius:20px;padding:2.4rem;border:1.5px solid var(--accent);margin-bottom:3rem;}
+.all-included h3{font-size:1.25rem;font-weight:800;margin-bottom:.4rem;}
+.all-included p{color:var(--text-muted);font-size:.9rem;margin-bottom:1.6rem;}
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;}
+.feat-item{display:flex;align-items:flex-start;gap:.7rem;}
+.feat-icon{font-size:1.4rem;flex-shrink:0;}
+.feat-text strong{display:block;font-size:.875rem;font-weight:700;margin-bottom:.1rem;}
+.feat-text span{font-size:.8rem;color:var(--text-muted);line-height:1.4;}
 
 /* ─── FAQ ─── */
 .faq-section{margin-bottom:4rem;}
@@ -113,13 +115,14 @@ footer{background:var(--primary);color:white;padding:2.4rem 0 1.4rem;}
 /* ─── Mobile ─── */
 @media(max-width:900px){
   .pricing-grid{grid-template-columns:1fr;}
+  .features-grid{grid-template-columns:1fr 1fr;}
   .faq-grid{grid-template-columns:1fr;}
   .footer-grid{grid-template-columns:1fr 1fr;}
 }
 @media(max-width:600px){
-  .hero h1{font-size:2rem;}
+  .hero h1{font-size:2.2rem;}
   .nav{display:none;}
-  .compare-table{overflow-x:auto;}
+  .features-grid{grid-template-columns:1fr;}
 }
 </style>
 </head>
@@ -132,7 +135,7 @@ footer{background:var(--primary);color:white;padding:2.4rem 0 1.4rem;}
       <nav class="nav">
         <a href="hospitals.html">Hospitals</a>
         <a href="clinics.html">Clinics</a>
-        <a href="nearby.html">All Services</a>
+        <a href="find-services.html">All Services</a>
         <a href="about.html">About</a>
       </nav>
       <div class="spacer"></div>
@@ -144,119 +147,145 @@ footer{background:var(--primary);color:white;padding:2.4rem 0 1.4rem;}
   </div>
 </header>
 
+<!-- Launch offer banner -->
+<div class="launch-banner">
+  <p><span>🎉 LAUNCH OFFER</span> Everything is completely free while we grow — no credit card, no commitment. Get in early!</p>
+</div>
+
 <section class="hero">
   <div class="container">
-    <h1>Simple pricing, <span>zero surprises</span></h1>
-    <p>Start free and upgrade as you grow. No contracts, no hidden fees, cancel anytime.</p>
+    <div class="hero-tag">Pricing</div>
+    <h1>It's <span>free.</span><br>Simple as that.</h1>
+    <p>We're on a mission to eliminate waiting room frustration. During our launch, every feature is free for every business — forever, until we tell you otherwise.</p>
+    <a href="provider-signup.html" class="hero-cta">Register Your Business Free →</a>
+    <p class="hero-note">No credit card · No time limit · Live in under 5 minutes</p>
     <div class="hero-badges">
-      <span class="badge">✓ Free forever plan</span>
-      <span class="badge">✓ No credit card required</span>
-      <span class="badge">✓ Live in minutes</span>
+      <span class="badge">✓ Hospitals</span>
+      <span class="badge">✓ Clinics</span>
+      <span class="badge">✓ Salons &amp; Barbers</span>
+      <span class="badge">✓ Restaurants</span>
+      <span class="badge">✓ Banks</span>
+      <span class="badge">✓ Any business with queues</span>
     </div>
   </div>
 </section>
 
-<div class="billing-toggle">
-  <div class="toggle-pill">
-    <button class="active" id="btnMonthly" onclick="setBilling('monthly')">Monthly</button>
-    <button id="btnAnnual" onclick="setBilling('annual')">Annual <span class="save-label">Save 25%</span></button>
-  </div>
-</div>
-
 <section class="pricing-section">
   <div class="container">
+
+    <h2 class="section-title">What you get today</h2>
+    <p class="section-sub">One plan. All features. Zero cost. Paid plans will only launch once we have happy customers — and we'll give you plenty of notice.</p>
+
     <div class="pricing-grid">
 
-      <!-- Starter -->
-      <div class="price-card">
-        <div class="plan-icon">🌱</div>
-        <div class="plan-name">Starter</div>
-        <div class="plan-desc">Perfect for small businesses and single-location clinics or salons.</div>
-        <div class="price-val">Free<span> / forever</span></div>
-        <div class="price-period">No credit card needed</div>
-        <ul class="feature-list">
-          <li><span class="check">✓</span> 1 location</li>
-          <li><span class="check">✓</span> Up to 5 departments / services</li>
-          <li><span class="check">✓</span> Live wait time display</li>
-          <li><span class="check">✓</span> Patient join-queue flow</li>
-          <li><span class="check">✓</span> Basic dashboard</li>
-          <li><span class="cross">✕</span> <span class="muted">Analytics & reports</span></li>
-          <li><span class="cross">✕</span> <span class="muted">Bulk CSV import</span></li>
-          <li><span class="cross">✕</span> <span class="muted">Priority support</span></li>
-        </ul>
-        <a href="provider-signup.html" class="cta-btn cta-outline">Get Started Free</a>
-      </div>
-
-      <!-- Growth (popular) -->
-      <div class="price-card popular">
-        <div class="popular-badge">⭐ Most Popular</div>
+      <!-- Free Now -->
+      <div class="price-card featured" style="grid-column:1/2;">
+        <div class="featured-badge">✓ Active Now — Free</div>
         <div class="plan-icon">🚀</div>
-        <div class="plan-name">Growth</div>
-        <div class="plan-desc">For growing hospitals, clinics and multi-service businesses.</div>
-        <div class="price-val" id="growthPrice">£29<span> / month</span></div>
-        <div class="price-period" id="growthPeriod">Billed monthly · cancel anytime</div>
+        <div class="plan-name">Launch Plan</div>
+        <div class="plan-desc">Everything skipQs offers, open to every business, completely free.</div>
+        <div class="free-badge">FREE</div>
+        <div class="price-note">No credit card · No expiry</div>
         <ul class="feature-list">
-          <li><span class="check">✓</span> Up to 5 locations</li>
-          <li><span class="check">✓</span> Unlimited departments</li>
-          <li><span class="check">✓</span> Live wait time display</li>
-          <li><span class="check">✓</span> Realtime patient updates</li>
-          <li><span class="check">✓</span> Analytics & reports</li>
-          <li><span class="check">✓</span> <strong>Bulk CSV import</strong></li>
-          <li><span class="check">✓</span> Priority email support</li>
-          <li><span class="cross">✕</span> <span class="muted">Dedicated account manager</span></li>
+          <li><span class="check">✓</span> Unlimited departments &amp; services</li>
+          <li><span class="check">✓</span> Real-time live wait time board</li>
+          <li><span class="check">✓</span> Patient queue join (web, no app needed)</li>
+          <li><span class="check">✓</span> Hospital &amp; business dashboard</li>
+          <li><span class="check">✓</span> WhatsApp patient notifications</li>
+          <li><span class="check">✓</span> QR code for walk-in patients</li>
+          <li><span class="check">✓</span> Realtime queue updates</li>
+          <li><span class="check">✓</span> Basic analytics</li>
         </ul>
-        <a href="hospital-signup.html" class="cta-btn cta-accent">Start 14-day Trial</a>
+        <a href="provider-signup.html" class="cta-btn cta-accent">Get Started — It's Free</a>
       </div>
 
-      <!-- Enterprise -->
-      <div class="price-card">
-        <div class="plan-icon">🏢</div>
-        <div class="plan-name">Enterprise</div>
-        <div class="plan-desc">For NHS trusts, hospital networks, and multi-city operations.</div>
-        <div class="price-val">Custom</div>
-        <div class="price-period">Tailored to your scale</div>
+      <!-- Growth coming soon -->
+      <div class="price-card coming-soon">
+        <div class="plan-icon">📈</div>
+        <div class="plan-name">Growth</div>
+        <div class="plan-desc">For established businesses that want deeper analytics and multi-location support.</div>
+        <div class="coming-pill">Coming Soon</div>
+        <div class="soon-price">~£29<small style="font-size:.9rem;font-weight:500"> /mo</small></div>
+        <div class="price-note">Estimated · final pricing TBD</div>
         <ul class="feature-list">
-          <li><span class="check">✓</span> Unlimited locations</li>
-          <li><span class="check">✓</span> Unlimited departments</li>
-          <li><span class="check">✓</span> Custom integrations (EHR, PMS)</li>
-          <li><span class="check">✓</span> White-label option</li>
-          <li><span class="check">✓</span> SLA guarantee</li>
-          <li><span class="check">✓</span> Dedicated account manager</li>
-          <li><span class="check">✓</span> Staff training & onboarding</li>
-          <li><span class="check">✓</span> 24/7 phone support</li>
+          <li><span class="check">✓</span> Everything in Launch</li>
+          <li><span class="check">✓</span> Multi-location management</li>
+          <li><span class="check">✓</span> Advanced analytics &amp; reports</li>
+          <li><span class="check">✓</span> Bulk CSV department import</li>
+          <li><span class="check">✓</span> Priority email support</li>
+          <li><span class="check">✓</span> Custom queue branding</li>
         </ul>
-        <a href="contact.html" class="cta-btn cta-primary">Contact Sales →</a>
+        <a href="#notify" class="cta-btn cta-disabled" onclick="notifyMe(event)">Notify Me When Live</a>
+      </div>
+
+      <!-- Enterprise coming soon -->
+      <div class="price-card coming-soon">
+        <div class="plan-icon">🏥</div>
+        <div class="plan-name">Enterprise</div>
+        <div class="plan-desc">For corporate hospital chains and businesses that want API access or a white-label solution.</div>
+        <div class="coming-pill">Coming Soon</div>
+        <div class="soon-price">Custom</div>
+        <div class="price-note">Tailored to your scale · no lock-in</div>
+        <ul class="feature-list">
+          <li><span class="check">✓</span> Everything in Growth</li>
+          <li><span class="check">✓</span> Embeddable wait-time widget</li>
+          <li><span class="check">✓</span> REST API access</li>
+          <li><span class="check">✓</span> White-label / custom branding</li>
+          <li><span class="check">✓</span> Dedicated account manager</li>
+          <li><span class="check">✓</span> SLA guarantee + 24/7 support</li>
+        </ul>
+        <a href="contact.html" class="cta-btn cta-outline">Talk to Us</a>
       </div>
 
     </div>
 
-    <!-- Compare table -->
-    <div class="compare-section">
-      <h2>Feature comparison</h2>
-      <div class="compare-table">
-        <table>
-          <thead>
-            <tr>
-              <th>Feature</th>
-              <th>Starter</th>
-              <th>Growth</th>
-              <th>Enterprise</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td>Locations</td><td>1</td><td>5</td><td>Unlimited</td></tr>
-            <tr><td>Departments / services</td><td>5</td><td>Unlimited</td><td>Unlimited</td></tr>
-            <tr><td>Live wait time board</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td></tr>
-            <tr><td>Patient queue join</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td></tr>
-            <tr><td>Realtime updates</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td></tr>
-            <tr><td>Bulk CSV import</td><td class="dash">—</td><td class="tick">✓</td><td class="tick">✓</td></tr>
-            <tr><td>Analytics dashboard</td><td class="dash">—</td><td class="tick">✓</td><td class="tick">✓</td></tr>
-            <tr><td>Custom branding</td><td class="dash">—</td><td class="dash">—</td><td class="tick">✓</td></tr>
-            <tr><td>EHR / PMS integration</td><td class="dash">—</td><td class="dash">—</td><td class="tick">✓</td></tr>
-            <tr><td>SLA guarantee</td><td class="dash">—</td><td class="dash">—</td><td class="tick">✓</td></tr>
-            <tr><td>Support</td><td>Email</td><td>Priority email</td><td>24/7 phone + account manager</td></tr>
-          </tbody>
-        </table>
+    <!-- Everything included today -->
+    <div class="all-included">
+      <h3>Everything included in the free Launch Plan</h3>
+      <p>No feature gates, no artificial limits during launch. Here's what every registered business gets on day one:</p>
+      <div class="features-grid">
+        <div class="feat-item">
+          <div class="feat-icon">⏱️</div>
+          <div class="feat-text">
+            <strong>Live Wait Times</strong>
+            <span>Real-time department wait times visible to any patient — no app download needed.</span>
+          </div>
+        </div>
+        <div class="feat-item">
+          <div class="feat-icon">📋</div>
+          <div class="feat-text">
+            <strong>Virtual Queue</strong>
+            <span>Patients join remotely via your unique link or QR code and track their position live.</span>
+          </div>
+        </div>
+        <div class="feat-item">
+          <div class="feat-icon">🏥</div>
+          <div class="feat-text">
+            <strong>Full Dashboard</strong>
+            <span>Manage all departments, call next patients, view queue length — from any device.</span>
+          </div>
+        </div>
+        <div class="feat-item">
+          <div class="feat-icon">💬</div>
+          <div class="feat-text">
+            <strong>WhatsApp Notifications</strong>
+            <span>One-tap WhatsApp message or call to notify patients when it's their turn.</span>
+          </div>
+        </div>
+        <div class="feat-item">
+          <div class="feat-icon">📱</div>
+          <div class="feat-text">
+            <strong>QR Code Check-in</strong>
+            <span>Print your QR code at reception — walk-in patients scan and join instantly.</span>
+          </div>
+        </div>
+        <div class="feat-item">
+          <div class="feat-icon">🔒</div>
+          <div class="feat-text">
+            <strong>Secure by Default</strong>
+            <span>Built on Supabase with row-level security. Your data stays yours.</span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -265,39 +294,39 @@ footer{background:var(--primary);color:white;padding:2.4rem 0 1.4rem;}
       <h2>Frequently asked questions</h2>
       <div class="faq-grid">
         <div class="faq-item">
-          <h3>Is the free plan really free?</h3>
-          <p>Yes, the Starter plan is completely free — no credit card, no time limit. You can register your business and go live in minutes with up to 5 departments.</p>
+          <h3>Is it really free — no catch?</h3>
+          <p>Yes. We're in launch mode and our priority is getting real businesses on board and proving the product works. You get everything for free until we announce paid plans, with plenty of notice before that happens.</p>
         </div>
         <div class="faq-item">
-          <h3>Can I cancel anytime?</h3>
-          <p>Absolutely. There are no contracts or lock-in periods. Cancel your Growth subscription at any time from your dashboard and you won't be charged again.</p>
+          <h3>When will paid plans launch?</h3>
+          <p>We don't have a date yet. We'll only introduce paid plans once we have happy customers and a strong reason to. Early adopters will always get preferential rates.</p>
         </div>
         <div class="faq-item">
           <h3>Do patients pay to use skipQs?</h3>
-          <p>No. Patients always use skipQs for free. The platform is funded by provider subscriptions, not by the people waiting in queues.</p>
+          <p>Never. Patients always use skipQs completely free. They just open a link or scan a QR code — no account, no app, no payment.</p>
         </div>
         <div class="faq-item">
-          <h3>What is the bulk CSV import?</h3>
-          <p>Growth plan providers can upload a CSV file (or paste a list) of their departments or services. skipQs parses them instantly and lets you set wait times before saving — ideal for hospitals with 20+ departments.</p>
+          <h3>What type of business can register?</h3>
+          <p>Any business where people queue — hospitals, clinics, salons, barbers, restaurants, banks, government offices, repair shops, gyms, pharmacies. If you have waiting customers, skipQs is for you.</p>
+        </div>
+        <div class="faq-item">
+          <h3>How long does it take to go live?</h3>
+          <p>Under 5 minutes. Register, add your departments, share your link or QR code. That's it — patients can start joining your queue immediately.</p>
         </div>
         <div class="faq-item">
           <h3>What data does skipQs store?</h3>
-          <p>Only what's needed to run the queue: business name, department wait times, and anonymous queue counts. We never sell your data. See our <a href="privacy.html" style="color:var(--primary);font-weight:600;">Privacy Policy</a>.</p>
-        </div>
-        <div class="faq-item">
-          <h3>Does skipQs need an internet connection?</h3>
-          <p>Yes. skipQs is a real-time web app built on Supabase. All providers and patients need an internet connection for live updates to work.</p>
+          <p>Only what's needed to run the queue: business name, department wait times, and queue counts. We never sell your data. See our <a href="privacy.html" style="color:var(--primary);font-weight:600;">Privacy Policy</a>.</p>
         </div>
       </div>
     </div>
 
     <!-- CTA Banner -->
     <div class="cta-banner">
-      <h2>Ready to cut wait times?</h2>
-      <p>Join hundreds of providers already using skipQs to keep patients informed and reduce walk-outs.</p>
+      <h2>Zero cost. Zero excuses.</h2>
+      <p>Register your business today and start showing real-time wait times to your customers in minutes.</p>
       <div class="cta-banner-btns">
-        <a href="hospital-signup.html" class="b1">Register your Hospital — Free</a>
-        <a href="contact.html" class="b2">Talk to Sales</a>
+        <a href="provider-signup.html" class="b1">Register Free Now</a>
+        <a href="contact.html" class="b2">Questions? Talk to Us →</a>
       </div>
     </div>
 
@@ -315,14 +344,14 @@ footer{background:var(--primary);color:white;padding:2.4rem 0 1.4rem;}
         <h4>Patients</h4>
         <a href="hospitals.html">Hospitals</a>
         <a href="clinics.html">Clinics</a>
-        <a href="nearby.html">Find Services</a>
+        <a href="find-services.html">Find Services</a>
         <a href="dashboard.html">My Queues</a>
       </div>
       <div>
         <h4>For Providers</h4>
         <a href="hospital-signup.html">Register Hospital</a>
+        <a href="provider-signup.html">Register Business</a>
         <a href="hospital-dashboard.html">Hospital Dashboard</a>
-        <a href="business-dashboard.html">Business Dashboard</a>
         <a href="business-pricing.html">Pricing</a>
       </div>
       <div>
@@ -333,23 +362,19 @@ footer{background:var(--primary);color:white;padding:2.4rem 0 1.4rem;}
         <a href="terms.html">Terms</a>
       </div>
     </div>
-    <div class="footer-bot">© <span id="year"></span> skipQs · Powered by OpenStreetMap &amp; Supabase · No Google APIs</div>
+    <div class="footer-bot">© <span id="year"></span> skipQs · Powered by OpenStreetMap &amp; Supabase</div>
   </div>
 </footer>
 
 <script>
 document.getElementById('year').textContent = new Date().getFullYear();
 
-const prices = {
-  monthly: { growth: '£29<span> / month</span>', period: 'Billed monthly · cancel anytime' },
-  annual:  { growth: '£22<span> / month</span>', period: 'Billed £264/year · save 25%' }
-};
-
-function setBilling(type) {
-  document.getElementById('btnMonthly').classList.toggle('active', type==='monthly');
-  document.getElementById('btnAnnual').classList.toggle('active', type==='annual');
-  document.getElementById('growthPrice').innerHTML = prices[type].growth;
-  document.getElementById('growthPeriod').textContent = prices[type].period;
+function notifyMe(e) {
+  e.preventDefault();
+  const email = prompt('Enter your email and we\'ll notify you when Growth plans launch:');
+  if (email && email.includes('@')) {
+    alert('Thanks! We\'ll let you know at ' + email + ' when Growth plans go live.');
+  }
 }
 </script>
 </body>

@@ -329,14 +329,19 @@ async function confirmJoin() {
   btn.disabled = true; btn.textContent = 'Joining…';
 
   try {
+    // For legacy services (from old `services` table) the id doesn't exist in
+    // `departments`, so we pass null to avoid the FK constraint violation.
+    const deptId = pendingDept._legacy ? null : pendingDept.id;
+
     const { error } = await sb.from('queues').insert({
-      provider_id: provider.id,
-      department_id: pendingDept.id,
-      user_id: session.user.id,
-      customer_name: name,
-      customer_phone: phone,
+      provider_id:      provider.id,
+      department_id:    deptId,
+      user_id:          session.user.id,
+      customer_name:    name,
+      customer_phone:   phone,
       service_duration: pendingDept.avg_consult_minutes || 15,
-      status: 'waiting'
+      status:           'waiting',
+      ...(pendingDept._legacy ? { notes: 'Service: ' + pendingDept.name } : {})
     });
     if (error) {
       if (error.code === '23505' || /one_active_queue_per_user/.test(error.message)) {

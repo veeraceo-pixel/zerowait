@@ -292,9 +292,10 @@ async function init() {
 
   document.getElementById('userEmail').textContent = session.user.email;
 
+  const uid = session.user.id;
   const { data: prov, error } = await sb.from('providers')
     .select('*')
-    .eq('user_id', session.user.id)
+    .or(`user_id.eq.${uid},id.eq.${uid}`)
     .or('is_hospital.eq.true,category.eq.Hospital')
     .maybeSingle();
 

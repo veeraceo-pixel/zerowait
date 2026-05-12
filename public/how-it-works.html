@@ -1,32 +1,160 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>How It Works — skipQs</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box;}
-    body{font-family:'Inter',sans-serif;background:#f7f8f8;color:#002f34;}
-    a{text-decoration:none;}
-    .step-line{position:relative;padding-left:68px;margin-bottom:36px;}
-    .step-line:not(:last-child)::before{content:'';position:absolute;left:23px;top:52px;width:2px;height:calc(100% - 12px);background:#e2e8f0;}
-    .step-num{position:absolute;left:0;top:0;width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0;}
-    .step-content h4{font-size:17px;font-weight:700;color:#002f34;margin-bottom:6px;margin-top:11px;}
-    .step-content p{font-size:14px;color:#406367;line-height:1.65;}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How It Works — skipQs</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--primary:#002f34;--accent:#23e5db;--accent2:#ffce32;--bg:#f7f8f8;--border:#e2e8f0;--success:#059669;--warning:#d97706;--danger:#dc2626;--muted:#406367;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--primary);line-height:1.55;}
+a{text-decoration:none;}
+
+/* ── Step list ── */
+.step-line{position:relative;padding-left:68px;margin-bottom:32px;cursor:pointer;}
+.step-line:not(:last-child)::before{content:'';position:absolute;left:22px;top:52px;width:2px;height:calc(100% - 12px);background:var(--border);transition:background .4s;}
+.step-line.active:not(:last-child)::before{background:var(--accent);}
+.step-num{position:absolute;left:0;top:0;width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;transition:all .35s;}
+.step-content h4{font-size:17px;font-weight:700;color:var(--primary);margin-bottom:6px;margin-top:12px;transition:color .3s;}
+.step-content p{font-size:14px;color:var(--muted);line-height:1.65;}
+.step-line.active .step-content h4{color:#008c86;}
+
+/* ── Phone mockup ── */
+.phone-wrap{position:sticky;top:90px;display:flex;flex-direction:column;align-items:center;gap:20px;}
+.phone{width:258px;background:#111827;border-radius:44px;padding:14px 10px 18px;box-shadow:0 40px 80px rgba(0,0,0,.28),0 0 0 2px #1f2937,inset 0 0 0 1px rgba(255,255,255,.06);position:relative;}
+.phone-notch{width:72px;height:22px;background:#111827;border-radius:0 0 14px 14px;position:absolute;top:0;left:50%;transform:translateX(-50%);z-index:3;}
+.phone-screen{background:#f7f8f8;border-radius:32px;height:500px;overflow:hidden;position:relative;}
+.ph-slide{position:absolute;inset:0;opacity:0;transform:translateY(18px);transition:opacity .45s ease,transform .45s ease;padding:0;}
+.ph-slide.on{opacity:1;transform:translateY(0);}
+.ph-bar{background:var(--primary);padding:12px 14px 10px;display:flex;align-items:center;gap:8px;}
+.ph-bar-title{font-size:12px;font-weight:700;color:white;flex:1;}
+.ph-bar-dot{width:6px;height:6px;border-radius:50%;background:#23e5db;animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.ph-body{padding:12px;}
+.ph-card{background:white;border-radius:12px;border:1px solid var(--border);padding:12px;margin-bottom:8px;}
+.ph-card-head{font-size:11px;font-weight:800;color:var(--primary);margin-bottom:4px;}
+.ph-card-sub{font-size:10px;color:var(--muted);}
+.ph-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px dashed var(--border);font-size:11px;}
+.ph-row:last-child{border-bottom:none;}
+.ph-row-name{font-weight:700;color:var(--primary);}
+.ph-wait{font-weight:800;font-size:12px;}
+.ph-wait.low{color:var(--success);}
+.ph-wait.med{color:var(--warning);}
+.ph-wait.high{color:var(--danger);}
+.ph-big{text-align:center;padding:16px 12px;}
+.ph-num{font-size:54px;font-weight:900;color:var(--primary);letter-spacing:-3px;line-height:1;}
+.ph-label{font-size:11px;color:var(--muted);margin-top:4px;}
+.ph-stat-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
+.ph-stat{background:var(--bg);border-radius:10px;padding:10px;text-align:center;}
+.ph-stat-val{font-size:22px;font-weight:800;color:var(--primary);}
+.ph-stat-lbl{font-size:10px;color:var(--muted);}
+.ph-pill{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:50px;font-size:10px;font-weight:800;}
+.ph-pill.open{background:#d1fae5;color:#065f46;}
+.ph-pill.closed{background:#f3f4f6;color:#6b7280;}
+.ph-notify{background:linear-gradient(135deg,#002f34,#004d57);border-radius:12px;padding:16px;margin-bottom:8px;text-align:center;}
+.ph-notify-icon{font-size:32px;margin-bottom:8px;}
+.ph-notify-title{font-size:13px;font-weight:800;color:var(--accent);margin-bottom:4px;}
+.ph-notify-sub{font-size:11px;color:rgba(255,255,255,.7);}
+.ph-btn{display:block;background:var(--accent);color:var(--primary);text-align:center;font-size:12px;font-weight:800;padding:10px;border-radius:10px;margin-top:10px;border:none;cursor:pointer;width:100%;}
+.ph-input{width:100%;padding:9px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:11px;font-family:inherit;color:var(--primary);background:white;margin-bottom:7px;}
+.ph-input:focus{outline:none;border-color:var(--accent);}
+.ph-timer-wrap{text-align:center;padding:20px 12px;}
+.ph-timer{font-size:52px;font-weight:900;color:var(--primary);letter-spacing:-3px;font-variant-numeric:tabular-nums;}
+.ph-timer-label{font-size:11px;color:var(--muted);margin-top:2px;}
+.ph-live{display:inline-flex;align-items:center;gap:5px;background:#d1fae5;color:#065f46;font-size:10px;font-weight:800;padding:4px 10px;border-radius:50px;margin-top:10px;}
+
+/* ── Step dots ── */
+.step-dots{display:flex;gap:6px;justify-content:center;}
+.step-dot{width:8px;height:8px;border-radius:50%;background:var(--border);transition:all .3s;cursor:pointer;}
+.step-dot.on{background:var(--accent);transform:scale(1.3);}
+
+/* ── Video placeholder ── */
+.vid-section{background:linear-gradient(135deg,#001a1e 0%,#002f34 60%,#003d47 100%);padding:70px 20px;}
+.vid-inner{max-width:820px;margin:0 auto;text-align:center;}
+.vid-tag{display:inline-block;background:rgba(35,229,219,.15);color:var(--accent);font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;padding:5px 14px;border-radius:50px;border:1px solid rgba(35,229,219,.25);margin-bottom:18px;}
+.vid-inner h2{font-size:28px;font-weight:800;color:white;letter-spacing:-.8px;margin-bottom:10px;}
+.vid-inner p{font-size:15px;color:rgba(255,255,255,.65);margin-bottom:28px;}
+.vid-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:40px 32px;position:relative;overflow:hidden;}
+.vid-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(35,229,219,.04),transparent);pointer-events:none;}
+.play-btn{width:76px;height:76px;background:var(--accent);border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;transition:transform .2s,box-shadow .2s;position:relative;z-index:1;}
+.play-btn:hover{transform:scale(1.1);box-shadow:0 0 0 12px rgba(35,229,219,.18);}
+.play-icon{width:0;height:0;border-top:16px solid transparent;border-bottom:16px solid transparent;border-left:26px solid var(--primary);margin-left:5px;}
+.vid-title{font-size:18px;font-weight:800;color:white;margin-bottom:8px;}
+.vid-sub{font-size:13px;color:rgba(255,255,255,.55);margin-bottom:20px;}
+.vid-coming{display:inline-flex;align-items:center;gap:6px;background:rgba(255,206,50,.12);color:var(--accent2);font-size:11px;font-weight:700;padding:6px 14px;border-radius:50px;border:1px solid rgba(255,206,50,.2);}
+.yt-wrap{display:none;width:100%;border-radius:14px;overflow:hidden;margin-top:20px;aspect-ratio:16/9;}
+.yt-wrap.show{display:block;}
+.yt-wrap iframe{width:100%;height:100%;display:block;}
+
+/* ── Browser mockup (provider) ── */
+.browser-wrap{position:sticky;top:90px;display:flex;flex-direction:column;align-items:center;gap:20px;}
+.browser{width:380px;background:white;border-radius:16px;box-shadow:0 30px 70px rgba(0,0,0,.14),0 0 0 1px var(--border);overflow:hidden;}
+.browser-bar{background:#f1f5f9;padding:10px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);}
+.browser-dots{display:flex;gap:5px;}
+.browser-dot{width:10px;height:10px;border-radius:50%;}
+.browser-url{flex:1;background:white;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:10px;color:var(--muted);font-family:monospace;}
+.br-slide{display:none;padding:16px;}
+.br-slide.on{display:block;}
+.br-section{background:var(--bg);border-radius:10px;border:1px solid var(--border);padding:12px;margin-bottom:10px;}
+.br-section-title{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:8px;}
+.br-input{width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:11px;font-family:inherit;margin-bottom:7px;color:var(--primary);}
+.br-btn{width:100%;padding:10px;background:var(--primary);color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+.br-btn.accent{background:var(--accent);color:var(--primary);}
+.br-dept-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:white;border-radius:8px;border:1px solid var(--border);margin-bottom:6px;}
+.br-dept-icon{font-size:18px;}
+.br-dept-info{flex:1;min-width:0;}
+.br-dept-name{font-size:11px;font-weight:700;color:var(--primary);}
+.br-dept-wait{font-size:10px;color:var(--muted);}
+.br-dept-ctrl{display:flex;align-items:center;gap:4px;}
+.br-ctrl-btn{width:22px;height:22px;border-radius:5px;border:1px solid var(--border);background:var(--bg);font-size:10px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.br-ctrl-val{font-size:11px;font-weight:800;color:var(--primary);min-width:28px;text-align:center;}
+.br-q-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:white;border-radius:8px;border:1px solid var(--border);margin-bottom:6px;}
+.br-q-num{width:26px;height:26px;border-radius:50%;background:var(--bg);font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;color:var(--primary);flex-shrink:0;}
+.br-q-info{flex:1;min-width:0;}
+.br-q-name{font-size:11px;font-weight:700;color:var(--primary);}
+.br-q-time{font-size:9px;color:var(--muted);}
+.br-q-actions{display:flex;gap:4px;}
+.br-action{padding:3px 7px;border-radius:5px;font-size:9px;font-weight:700;border:none;cursor:pointer;}
+.br-action.wa{background:#25D366;color:white;}
+.br-action.call{background:var(--accent);color:var(--primary);}
+.br-action.done{background:var(--primary);color:white;}
+.br-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.br-stat{background:white;border-radius:8px;border:1px solid var(--border);padding:10px;text-align:center;}
+.br-stat-val{font-size:22px;font-weight:800;color:var(--primary);}
+.br-stat-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;}
+
+/* ── Progress bar ── */
+.anim-progress{width:100%;height:3px;background:rgba(35,229,219,.2);border-radius:2px;overflow:hidden;margin-top:12px;}
+.anim-bar{height:100%;background:var(--accent);border-radius:2px;width:0%;transition:width linear;}
+
+/* ── Responsive ── */
+@media(max-width:900px){
+  .two-col{grid-template-columns:1fr!important;}
+  .phone-wrap,.browser-wrap{position:static;align-items:center;}
+  .phone{width:240px;}
+  .phone-screen{height:460px;}
+  .browser{width:100%;max-width:400px;}
+}
+@media(max-width:600px){
+  .two-col{gap:28px!important;}
+  .phone{width:220px;}
+  .phone-screen{height:420px;}
+}
+</style>
 </head>
 <body>
 
 <!-- NAV -->
 <header style="background:white;padding:14px 0;box-shadow:0 2px 8px rgba(0,0,0,.06);position:sticky;top:0;z-index:1000;">
-  <div style="max-width:1100px;margin:0 auto;padding:0 20px;display:flex;align-items:center;gap:16px;">
-    <a href="index.html" style="font-size:26px;font-weight:800;color:#002f34;text-decoration:none;letter-spacing:-1.5px;flex-shrink:0;">skip<span style="color:#23e5db;">Qs</span></a>
+  <div style="max-width:1100px;margin:0 auto;padding:0 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+    <a href="index.html" style="font-size:26px;font-weight:800;color:#002f34;letter-spacing:-1.5px;flex-shrink:0;">skip<span style="color:#23e5db;">Qs</span></a>
     <div style="flex:1;"></div>
-    <a href="hospitals.html" style="color:#406367;text-decoration:none;font-size:13px;font-weight:600;">Hospitals</a>
-    <a href="how-it-works.html" style="color:#23e5db;text-decoration:none;font-size:13px;font-weight:700;">How It Works</a>
-    <a href="login.html" style="padding:9px 18px;border-radius:50px;font-size:13px;font-weight:700;text-decoration:none;background:#f7f8f8;color:#002f34;border:1.5px solid #e2e8f0;">Login</a>
-    <a href="signup.html" style="padding:9px 18px;border-radius:50px;font-size:13px;font-weight:700;text-decoration:none;background:#23e5db;color:#002f34;">Sign Up</a>
+    <a href="hospitals.html" style="color:#406367;font-size:13px;font-weight:600;">Hospitals</a>
+    <a href="how-it-works.html" style="color:#23e5db;font-size:13px;font-weight:700;">How It Works</a>
+    <a href="business-how-it-works.html" style="color:#406367;font-size:13px;font-weight:600;">For Businesses</a>
+    <a href="login.html" style="padding:9px 18px;border-radius:50px;font-size:13px;font-weight:700;background:#f7f8f8;color:#002f34;border:1.5px solid #e2e8f0;">Login</a>
+    <a href="signup.html" style="padding:9px 18px;border-radius:50px;font-size:13px;font-weight:700;background:#23e5db;color:#002f34;">Sign Up</a>
   </div>
 </header>
 
@@ -39,154 +167,414 @@
   </div>
 </section>
 
-<!-- ANCHOR LINKS -->
-<div style="background:white;border-bottom:1px solid #e2e8f0;">
+<!-- ANCHOR TABS -->
+<div style="background:white;border-bottom:1px solid #e2e8f0;position:sticky;top:60px;z-index:999;">
   <div style="max-width:1100px;margin:0 auto;padding:0 20px;display:flex;gap:0;">
-    <a href="#patients" style="padding:18px 28px;font-size:14px;font-weight:700;color:#002f34;border-bottom:3px solid #23e5db;text-decoration:none;">For Patients &amp; Customers</a>
-    <a href="#businesses" style="padding:18px 28px;font-size:14px;font-weight:600;color:#406367;border-bottom:3px solid transparent;text-decoration:none;">For Hospitals &amp; Businesses</a>
+    <a href="#patients" style="padding:18px 28px;font-size:14px;font-weight:700;color:#002f34;border-bottom:3px solid #23e5db;">For Patients &amp; Customers</a>
+    <a href="#businesses" style="padding:18px 28px;font-size:14px;font-weight:600;color:#406367;border-bottom:3px solid transparent;">For Hospitals &amp; Businesses</a>
   </div>
 </div>
 
-<!-- FOR PATIENTS -->
+<!-- ══════════════════════════════════════════════
+     SECTION 1 — FOR PATIENTS
+══════════════════════════════════════════════ -->
 <section id="patients" style="padding:70px 20px;background:#f7f8f8;">
-  <div style="max-width:1000px;margin:0 auto;">
+  <div style="max-width:1060px;margin:0 auto;">
     <div style="text-align:center;margin-bottom:52px;">
       <span style="display:inline-block;background:#e8fcfb;color:#008c86;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 14px;border-radius:50px;margin-bottom:12px;">Patients &amp; Customers</span>
       <h2 style="font-size:32px;font-weight:800;color:#002f34;letter-spacing:-1px;">Skip the wait in 5 easy steps</h2>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start;">
-      <div>
-        <div class="step-line">
+
+    <div class="two-col" style="display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start;">
+
+      <!-- Steps -->
+      <div id="userSteps">
+        <div class="step-line active" data-step="0">
           <div class="step-num" style="background:#e8fcfb;color:#23e5db;">1</div>
           <div class="step-content">
-            <h4>Find a service</h4>
-            <p>Search for hospitals, clinics, salons, banks, or any registered service near you. Browse by category or search by name — no account needed to browse.</p>
+            <h4>Find a service near you</h4>
+            <p>Search for hospitals, clinics, salons, banks, or any registered service. Browse by category or search by name — no account needed to browse.</p>
           </div>
         </div>
-        <div class="step-line">
+        <div class="step-line" data-step="1">
           <div class="step-num" style="background:#e8fcfb;color:#23e5db;">2</div>
           <div class="step-content">
             <h4>See live wait times per department</h4>
-            <p>Each department or service shows a live wait time updated in real-time by staff. Choose the right department before you even leave home.</p>
+            <p>Each department shows a live wait time updated in real-time by staff. Choose the right department before you even leave home.</p>
           </div>
         </div>
-        <div class="step-line">
+        <div class="step-line" data-step="2">
           <div class="step-num" style="background:#e8fcfb;color:#23e5db;">3</div>
           <div class="step-content">
             <h4>Join the virtual queue</h4>
-            <p>Tap "Join Queue" and you're in — remotely, from anywhere. You'll receive your queue position number and an estimated wait time immediately.</p>
+            <p>Tap "Join Queue" and you're in — remotely, from anywhere. You'll receive your queue position and an estimated wait time instantly.</p>
           </div>
         </div>
-        <div class="step-line">
+        <div class="step-line" data-step="3">
           <div class="step-num" style="background:#e8fcfb;color:#23e5db;">4</div>
           <div class="step-content">
-            <h4>Watch your live timer</h4>
-            <p>Your personal countdown displays on the homepage. Watch your position update in real-time as the queue moves. No refreshing needed.</p>
+            <h4>Watch your live countdown</h4>
+            <p>Your personal timer runs on the homepage. Watch your position update in real-time as the queue moves — no refreshing needed.</p>
           </div>
         </div>
-        <div class="step-line">
+        <div class="step-line" data-step="4">
           <div class="step-num" style="background:#23e5db;color:#002f34;">5</div>
           <div class="step-content">
-            <h4>Arrive when it's your turn</h4>
-            <p>Head to the venue only when it's nearly your turn. Walk in, get seen straight away, and leave. No waiting room stress, no wasted time.</p>
+            <h4>Arrive only when it's your turn</h4>
+            <p>Head to the venue when it's nearly your turn. Walk in, get seen straight away, and leave. No waiting room stress, no wasted time.</p>
           </div>
         </div>
       </div>
-      <div style="background:white;border-radius:20px;padding:36px;border:1px solid #e2e8f0;position:sticky;top:100px;">
-        <p style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#406367;margin-bottom:16px;">Your queue card — live</p>
-        <div style="background:#f7f8f8;border-radius:14px;padding:24px;margin-bottom:16px;border:1px dashed #23e5db;">
-          <p style="font-size:12px;color:#406367;margin-bottom:4px;">City General Hospital · Cardiology</p>
-          <p style="font-size:50px;font-weight:900;color:#002f34;letter-spacing:-3px;line-height:1;margin-bottom:6px;">#47</p>
-          <p style="font-size:13px;color:#406367;">Your position in queue</p>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
-          <div style="background:#e8fcfb;border-radius:10px;padding:14px;text-align:center;">
-            <p style="font-size:24px;font-weight:800;color:#002f34;letter-spacing:-0.5px;">~18</p>
-            <p style="font-size:11px;color:#406367;">minutes wait</p>
-          </div>
-          <div style="background:#fffbeb;border-radius:10px;padding:14px;text-align:center;">
-            <p style="font-size:24px;font-weight:800;color:#002f34;letter-spacing:-0.5px;">12</p>
-            <p style="font-size:11px;color:#406367;">people ahead</p>
-          </div>
-        </div>
-        <div style="background:#002f34;border-radius:10px;padding:12px;text-align:center;">
-          <p style="font-size:13px;font-weight:700;color:#23e5db;">Live · updating every 60 seconds</p>
+
+      <!-- Animated phone -->
+      <div class="phone-wrap">
+        <div class="phone">
+          <div class="phone-notch"></div>
+          <div class="phone-screen">
+
+            <!-- Screen 1: Search / browse -->
+            <div class="ph-slide on" id="us0">
+              <div class="ph-bar">
+                <span style="font-size:14px;">🔍</span>
+                <span class="ph-bar-title">Find a service</span>
+              </div>
+              <div class="ph-body">
+                <input class="ph-input" value="hospitals near me" readonly>
+                <div class="ph-card">
+                  <div class="ph-card-head">🏥 City General Hospital</div>
+                  <div class="ph-card-sub">📍 0.8 miles · <span style="color:#059669;font-weight:700;">OPEN</span></div>
+                  <div class="ph-row"><span class="ph-row-name">A&amp;E</span><span class="ph-wait high">45 min</span></div>
+                  <div class="ph-row"><span class="ph-row-name">Cardiology</span><span class="ph-wait med">18 min</span></div>
+                  <div class="ph-row"><span class="ph-row-name">Pharmacy</span><span class="ph-wait low">5 min</span></div>
+                </div>
+                <div class="ph-card">
+                  <div class="ph-card-head">🩺 Trafford Clinic</div>
+                  <div class="ph-card-sub">📍 1.2 miles · <span style="color:#059669;font-weight:700;">OPEN</span></div>
+                  <div class="ph-row"><span class="ph-row-name">GP</span><span class="ph-wait low">12 min</span></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Screen 2: Dept wait times -->
+            <div class="ph-slide" id="us1">
+              <div class="ph-bar">
+                <span class="ph-bar-title">City General Hospital</span>
+                <div class="ph-bar-dot"></div>
+              </div>
+              <div class="ph-body">
+                <div style="margin-bottom:8px;"><span class="ph-pill open">● OPEN NOW</span></div>
+                <div class="ph-card">
+                  <div class="ph-row"><span class="ph-row-name">🫀 Cardiology</span><span class="ph-wait med">18 min</span></div>
+                  <div class="ph-row"><span class="ph-row-name">🚑 A&amp;E</span><span class="ph-wait high">45 min</span></div>
+                  <div class="ph-row"><span class="ph-row-name">💊 Pharmacy</span><span class="ph-wait low">5 min</span></div>
+                  <div class="ph-row"><span class="ph-row-name">🩻 Radiology</span><span class="ph-wait med">22 min</span></div>
+                </div>
+                <button class="ph-btn">Join Cardiology Queue →</button>
+              </div>
+            </div>
+
+            <!-- Screen 3: Joined confirmation -->
+            <div class="ph-slide" id="us2">
+              <div class="ph-bar">
+                <span class="ph-bar-title">Queue Confirmed ✓</span>
+              </div>
+              <div class="ph-body">
+                <div class="ph-notify" style="background:linear-gradient(135deg,#065f46,#059669);">
+                  <div class="ph-notify-icon">🎫</div>
+                  <div class="ph-notify-title">You're in the queue!</div>
+                  <div class="ph-notify-sub">City General · Cardiology</div>
+                </div>
+                <div class="ph-big">
+                  <div class="ph-num">#7</div>
+                  <div class="ph-label">Your queue position</div>
+                </div>
+                <div class="ph-stat-row">
+                  <div class="ph-stat"><div class="ph-stat-val">~18</div><div class="ph-stat-lbl">min wait</div></div>
+                  <div class="ph-stat"><div class="ph-stat-val">6</div><div class="ph-stat-lbl">ahead</div></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Screen 4: Live timer -->
+            <div class="ph-slide" id="us3">
+              <div class="ph-bar">
+                <span class="ph-bar-title">Live Timer</span>
+                <div class="ph-bar-dot"></div>
+              </div>
+              <div class="ph-body">
+                <div class="ph-timer-wrap">
+                  <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:8px;">City General · Cardiology</div>
+                  <div class="ph-timer" id="liveTimer">14:32</div>
+                  <div class="ph-timer-label">minutes remaining</div>
+                  <div style="margin-top:12px;font-size:11px;color:var(--muted);">Position <strong>#7</strong> → <strong>#5</strong> → <strong>#3</strong></div>
+                  <div class="ph-live"><div style="width:6px;height:6px;border-radius:50%;background:#059669;"></div> Live · auto-updating</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Screen 5: Your turn -->
+            <div class="ph-slide" id="us4">
+              <div class="ph-bar" style="background:#059669;">
+                <span class="ph-bar-title">🔔 Your Turn!</span>
+              </div>
+              <div class="ph-body">
+                <div class="ph-notify">
+                  <div class="ph-notify-icon">🔔</div>
+                  <div class="ph-notify-title">IT'S YOUR TURN!</div>
+                  <div class="ph-notify-sub">Please come to Cardiology reception now.</div>
+                </div>
+                <div class="ph-card" style="text-align:center;">
+                  <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">City General Hospital</div>
+                  <div style="font-size:13px;font-weight:800;color:var(--primary);margin-bottom:4px;">Cardiology Department</div>
+                  <div style="font-size:11px;color:var(--muted);">Reception is ready for you</div>
+                </div>
+                <button class="ph-btn" style="background:#059669;">✓ I'm on my way</button>
+              </div>
+            </div>
+
+          </div><!-- /phone-screen -->
+        </div><!-- /phone -->
+
+        <!-- Progress & dots -->
+        <div class="anim-progress"><div class="anim-bar" id="userBar"></div></div>
+        <div class="step-dots" id="userDots">
+          <div class="step-dot on" data-idx="0"></div>
+          <div class="step-dot" data-idx="1"></div>
+          <div class="step-dot" data-idx="2"></div>
+          <div class="step-dot" data-idx="3"></div>
+          <div class="step-dot" data-idx="4"></div>
         </div>
       </div>
+
+    </div><!-- /two-col -->
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     VIDEO PLACEHOLDER — PATIENT
+══════════════════════════════════════════════ -->
+<section class="vid-section">
+  <div class="vid-inner">
+    <div class="vid-tag">Patient Walkthrough</div>
+    <h2>Watch how it works in 2 minutes</h2>
+    <p>See the full customer journey — from finding a service to being called in.</p>
+    <div class="vid-card">
+      <button class="play-btn" id="userPlayBtn" onclick="playVideo('userYt','userPlayBtn')">
+        <div class="play-icon"></div>
+      </button>
+      <div class="vid-title">skipQs — Patient Walkthrough</div>
+      <div class="vid-sub">Search · Join queue · Live timer · Get notified</div>
+      <div class="vid-coming">🎬 Video dropping soon — animated demo above in the meantime</div>
+      <div class="yt-wrap" id="userYt"></div>
     </div>
   </div>
 </section>
 
-<!-- FOR BUSINESSES -->
+<!-- ══════════════════════════════════════════════
+     SECTION 2 — FOR BUSINESSES
+══════════════════════════════════════════════ -->
 <section id="businesses" style="padding:70px 20px;background:white;">
-  <div style="max-width:1000px;margin:0 auto;">
+  <div style="max-width:1060px;margin:0 auto;">
     <div style="text-align:center;margin-bottom:52px;">
       <span style="display:inline-block;background:#fffbeb;color:#b38600;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 14px;border-radius:50px;margin-bottom:12px;">Hospitals &amp; Businesses</span>
       <h2 style="font-size:32px;font-weight:800;color:#002f34;letter-spacing:-1px;">Set up your queue in minutes</h2>
       <p style="font-size:16px;color:#406367;margin-top:10px;">No technical knowledge required. If you can send an email, you can manage skipQs.</p>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start;">
-      <div>
-        <div class="step-line">
+
+    <div class="two-col" style="display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start;">
+
+      <!-- Steps -->
+      <div id="bizSteps">
+        <div class="step-line active" data-step="0" style="--c:#fffbeb;--cc:#b38600;">
           <div class="step-num" style="background:#fffbeb;color:#b38600;">1</div>
           <div class="step-content">
             <h4>Register — it's free</h4>
-            <p>Create your business account in under 5 minutes. No credit card required. We'll walk you through setup step by step.</p>
+            <p>Create your business or hospital account in under 5 minutes. No credit card required. We walk you through every step.</p>
           </div>
         </div>
-        <div class="step-line">
+        <div class="step-line" data-step="1">
           <div class="step-num" style="background:#fffbeb;color:#b38600;">2</div>
           <div class="step-content">
             <h4>Add departments or services</h4>
-            <p>Create individual queues for each department (e.g., A&amp;E, Cardiology, Pharmacy) or service type. Set an initial estimated wait time for each.</p>
+            <p>Create individual queues for each department (A&amp;E, Cardiology, Pharmacy) or service type. Set estimated wait times for each.</p>
           </div>
         </div>
-        <div class="step-line">
+        <div class="step-line" data-step="2">
           <div class="step-num" style="background:#fffbeb;color:#b38600;">3</div>
           <div class="step-content">
             <h4>Update wait times in seconds</h4>
-            <p>From your dashboard, adjust wait times with a single tap. Changes are pushed instantly — no page reload, no delay, no confusion.</p>
+            <p>Adjust wait times with a single tap. Changes are pushed live instantly — every patient sees the update immediately.</p>
           </div>
         </div>
-        <div class="step-line">
+        <div class="step-line" data-step="3">
           <div class="step-num" style="background:#fffbeb;color:#b38600;">4</div>
           <div class="step-content">
-            <h4>Customers see live times instantly</h4>
-            <p>The moment you update, all customers currently browsing or queued see the new time. Full transparency builds trust and reduces no-shows.</p>
+            <h4>Manage your queue live</h4>
+            <p>See every patient in the queue, call them with one click, or reach them instantly via WhatsApp — no phone-number hunting needed.</p>
           </div>
         </div>
-        <div class="step-line">
+        <div class="step-line" data-step="4">
           <div class="step-num" style="background:#ffce32;color:#002f34;">5</div>
           <div class="step-content">
-            <h4>Manage your queue in real-time</h4>
-            <p>See who's in queue, call the next patient, mark no-shows, and review analytics — all from one clean dashboard. No training required.</p>
+            <h4>View stats &amp; grow</h4>
+            <p>See served counts, average wait times, and peak hours in your dashboard — helping you staff better and reduce bottlenecks.</p>
           </div>
         </div>
       </div>
-      <div style="background:#f7f8f8;border-radius:20px;padding:36px;border:1px solid #e2e8f0;position:sticky;top:100px;">
-        <p style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#406367;margin-bottom:16px;">Dashboard preview</p>
-        <div style="background:white;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;margin-bottom:14px;">
-          <div style="background:#002f34;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;">
-            <span style="font-size:13px;font-weight:700;color:white;">Cardiology · Queue</span>
-            <span style="font-size:11px;background:#23e5db;color:#002f34;padding:3px 10px;border-radius:50px;font-weight:700;">Live</span>
+
+      <!-- Animated browser/dashboard mockup -->
+      <div class="browser-wrap">
+        <div class="browser">
+          <div class="browser-bar">
+            <div class="browser-dots">
+              <div class="browser-dot" style="background:#ef4444;"></div>
+              <div class="browser-dot" style="background:#f59e0b;"></div>
+              <div class="browser-dot" style="background:#22c55e;"></div>
+            </div>
+            <div class="browser-url">skipqs.com/hospital-dashboard</div>
           </div>
-          <div style="padding:16px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f0f0f0;">
-              <div><p style="font-size:13px;font-weight:600;color:#002f34;">#45 — Patient A</p><p style="font-size:11px;color:#406367;">Joined 9:12 AM</p></div>
-              <span style="font-size:11px;background:#e8fcfb;color:#008c86;padding:4px 10px;border-radius:50px;font-weight:700;">Being seen</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f0f0f0;">
-              <div><p style="font-size:13px;font-weight:600;color:#002f34;">#46 — Patient B</p><p style="font-size:11px;color:#406367;">Joined 9:31 AM</p></div>
-              <span style="font-size:11px;background:#fffbeb;color:#b38600;padding:4px 10px;border-radius:50px;font-weight:700;">Next up</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;">
-              <div><p style="font-size:13px;font-weight:600;color:#002f34;">#47 — Patient C</p><p style="font-size:11px;color:#406367;">Joined 9:45 AM</p></div>
-              <span style="font-size:11px;background:#f7f8f8;color:#406367;padding:4px 10px;border-radius:50px;font-weight:700;">Waiting</span>
+
+          <!-- Slide 1: Register -->
+          <div class="br-slide on" id="bs0">
+            <div class="br-section">
+              <div class="br-section-title">Register Your Business</div>
+              <input class="br-input" value="City General Hospital" readonly>
+              <select class="br-input" style="appearance:none;"><option>🏥 Hospital</option></select>
+              <input class="br-input" value="Manchester, UK" readonly>
+              <input class="br-input" value="+44 7825 040186" readonly>
+              <button class="br-btn accent">Create Free Account →</button>
             </div>
           </div>
+
+          <!-- Slide 2: Add department -->
+          <div class="br-slide" id="bs1">
+            <div class="br-section">
+              <div class="br-section-title">Add Department</div>
+              <input class="br-input" value="Cardiology" readonly>
+              <input class="br-input" value="18 minutes avg wait" readonly>
+              <select class="br-input" style="appearance:none;"><option>🫀 Heart icon</option></select>
+              <button class="br-btn accent">Add Department →</button>
+            </div>
+            <div style="font-size:10px;color:var(--muted);text-align:center;padding:4px 0;">3 departments added so far</div>
+          </div>
+
+          <!-- Slide 3: Manage wait times -->
+          <div class="br-slide" id="bs2">
+            <div class="br-section">
+              <div class="br-section-title">Live Wait Times</div>
+              <div class="br-dept-row">
+                <div class="br-dept-icon">🚑</div>
+                <div class="br-dept-info"><div class="br-dept-name">A&amp;E</div><div class="br-dept-wait">● Open</div></div>
+                <div class="br-dept-ctrl">
+                  <div class="br-ctrl-btn">−</div>
+                  <div class="br-ctrl-val">45</div>
+                  <div class="br-ctrl-btn">+</div>
+                </div>
+              </div>
+              <div class="br-dept-row">
+                <div class="br-dept-icon">🫀</div>
+                <div class="br-dept-info"><div class="br-dept-name">Cardiology</div><div class="br-dept-wait">● Open</div></div>
+                <div class="br-dept-ctrl">
+                  <div class="br-ctrl-btn">−</div>
+                  <div class="br-ctrl-val">18</div>
+                  <div class="br-ctrl-btn">+</div>
+                </div>
+              </div>
+              <div class="br-dept-row">
+                <div class="br-dept-icon">💊</div>
+                <div class="br-dept-info"><div class="br-dept-name">Pharmacy</div><div class="br-dept-wait">● Open</div></div>
+                <div class="br-dept-ctrl">
+                  <div class="br-ctrl-btn">−</div>
+                  <div class="br-ctrl-val">5</div>
+                  <div class="br-ctrl-btn">+</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Slide 4: Queue management -->
+          <div class="br-slide" id="bs3">
+            <div class="br-section">
+              <div class="br-section-title">Cardiology Queue · 3 waiting</div>
+              <div class="br-q-row">
+                <div class="br-q-num">#45</div>
+                <div class="br-q-info"><div class="br-q-name">Ahmed Hassan</div><div class="br-q-time">07:12 AM · 🔗 token</div></div>
+                <div class="br-q-actions">
+                  <div class="br-action wa">💬</div>
+                  <div class="br-action call">📣</div>
+                  <div class="br-action done">✓</div>
+                </div>
+              </div>
+              <div class="br-q-row">
+                <div class="br-q-num">#46</div>
+                <div class="br-q-info"><div class="br-q-name">Sarah M.</div><div class="br-q-time">07:31 AM · 🔗 token</div></div>
+                <div class="br-q-actions">
+                  <div class="br-action wa">💬</div>
+                  <div class="br-action call">📣</div>
+                  <div class="br-action done">✓</div>
+                </div>
+              </div>
+              <div class="br-q-row">
+                <div class="br-q-num">#47</div>
+                <div class="br-q-info"><div class="br-q-name">James P.</div><div class="br-q-time">07:45 AM · 🔗 token</div></div>
+                <div class="br-q-actions">
+                  <div class="br-action wa">💬</div>
+                  <div class="br-action call">📣</div>
+                  <div class="br-action done">✓</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Slide 5: Stats -->
+          <div class="br-slide" id="bs4">
+            <div class="br-section">
+              <div class="br-section-title">Today's Stats</div>
+              <div class="br-stat-grid">
+                <div class="br-stat"><div class="br-stat-val">12</div><div class="br-stat-lbl">Served</div></div>
+                <div class="br-stat"><div class="br-stat-val">18m</div><div class="br-stat-lbl">Avg Wait</div></div>
+                <div class="br-stat"><div class="br-stat-val">3</div><div class="br-stat-lbl">In Queue</div></div>
+                <div class="br-stat"><div class="br-stat-val">9am</div><div class="br-stat-lbl">Peak Hour</div></div>
+              </div>
+            </div>
+            <div style="padding:0 12px 12px;">
+              <a href="hospital-signup.html" class="br-btn accent" style="display:block;text-align:center;text-decoration:none;">Register Your Hospital Free →</a>
+            </div>
+          </div>
+
+        </div><!-- /browser -->
+
+        <!-- Progress & dots -->
+        <div class="anim-progress" style="width:380px;max-width:100%;"><div class="anim-bar" id="bizBar"></div></div>
+        <div class="step-dots" id="bizDots">
+          <div class="step-dot on" data-idx="0"></div>
+          <div class="step-dot" data-idx="1"></div>
+          <div class="step-dot" data-idx="2"></div>
+          <div class="step-dot" data-idx="3"></div>
+          <div class="step-dot" data-idx="4"></div>
         </div>
-        <a href="hospital-signup.html" style="display:block;background:#23e5db;color:#002f34;text-align:center;font-size:14px;font-weight:800;padding:14px;border-radius:10px;">Register Your Business Free →</a>
       </div>
+
+    </div><!-- /two-col -->
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     VIDEO PLACEHOLDER — PROVIDER
+══════════════════════════════════════════════ -->
+<section class="vid-section" style="background:linear-gradient(135deg,#001a1e,#002f34,#1a1000);">
+  <div class="vid-inner">
+    <div class="vid-tag" style="background:rgba(255,206,50,.12);color:#ffce32;border-color:rgba(255,206,50,.25);">Provider Walkthrough</div>
+    <h2>See the dashboard in action</h2>
+    <p>A 2-minute tour of how you register, manage departments, and handle your queue.</p>
+    <div class="vid-card">
+      <button class="play-btn" id="bizPlayBtn" onclick="playVideo('bizYt','bizPlayBtn')" style="background:#ffce32;">
+        <div class="play-icon" style="border-left-color:#002f34;"></div>
+      </button>
+      <div class="vid-title">skipQs — Provider Dashboard Tour</div>
+      <div class="vid-sub">Register · Add depts · Manage queue · WhatsApp patients · View stats</div>
+      <div class="vid-coming" style="background:rgba(255,206,50,.12);color:#ffce32;border-color:rgba(255,206,50,.2);">🎬 Video dropping soon — animated demo above in the meantime</div>
+      <div class="yt-wrap" id="bizYt"></div>
     </div>
   </div>
 </section>
@@ -196,20 +584,20 @@
   <div style="max-width:780px;margin:0 auto;">
     <div style="text-align:center;margin-bottom:40px;">
       <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:#23e5db;margin-bottom:10px;">Quick Answers</p>
-      <h2 style="font-size:30px;font-weight:800;color:#002f34;letter-spacing:-0.8px;">Common questions</h2>
+      <h2 style="font-size:30px;font-weight:800;color:#002f34;letter-spacing:-.8px;">Common questions</h2>
     </div>
     <div style="display:flex;flex-direction:column;gap:16px;">
       <div style="background:white;border-radius:14px;padding:24px 28px;border:1px solid #e2e8f0;">
-        <p style="font-size:15px;font-weight:700;color:#002f34;margin-bottom:8px;">Do I need to download an app?</p>
+        <p style="font-size:15px;font-weight:700;margin-bottom:8px;">Do I need to download an app?</p>
         <p style="font-size:14px;color:#406367;line-height:1.65;">No. skipQs works entirely in your browser on any device. Visit the site, find your service, and join — no installation required.</p>
       </div>
       <div style="background:white;border-radius:14px;padding:24px 28px;border:1px solid #e2e8f0;">
-        <p style="font-size:15px;font-weight:700;color:#002f34;margin-bottom:8px;">How accurate are the wait times?</p>
-        <p style="font-size:14px;color:#406367;line-height:1.65;">Wait times are updated directly by staff at each location. The more actively a business manages their dashboard, the more accurate the estimates will be.</p>
+        <p style="font-size:15px;font-weight:700;margin-bottom:8px;">How accurate are the wait times?</p>
+        <p style="font-size:14px;color:#406367;line-height:1.65;">Wait times are updated directly by staff at each location in real-time. The more actively a business manages their dashboard, the more accurate the estimates.</p>
       </div>
       <div style="background:white;border-radius:14px;padding:24px 28px;border:1px solid #e2e8f0;">
-        <p style="font-size:15px;font-weight:700;color:#002f34;margin-bottom:8px;">What if I miss my turn?</p>
-        <p style="font-size:14px;color:#406367;line-height:1.65;">This depends on the service provider's policy. Some allow you to rejoin at the back, others may hold your spot briefly. The hospital or business decides.</p>
+        <p style="font-size:15px;font-weight:700;margin-bottom:8px;">Is skipQs free to use?</p>
+        <p style="font-size:14px;color:#406367;line-height:1.65;">Free for patients and customers — always. Businesses have a free tier to get started, with paid plans for advanced features. <a href="business-pricing.html" style="color:#23e5db;font-weight:700;">See pricing →</a></p>
       </div>
     </div>
     <div style="text-align:center;margin-top:28px;">
@@ -224,24 +612,136 @@
     <h2 style="font-size:32px;font-weight:900;color:white;letter-spacing:-1px;margin-bottom:14px;">Ready to skip the queue?</h2>
     <p style="font-size:16px;color:rgba(255,255,255,.7);margin-bottom:32px;">Find a hospital or business, join the virtual queue, and get your time back.</p>
     <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-      <a href="index.html" style="display:inline-block;background:#23e5db;color:#002f34;font-size:14px;font-weight:800;padding:14px 30px;border-radius:50px;">Find a Service</a>
-      <a href="hospital-signup.html" style="display:inline-block;background:rgba(255,255,255,.1);color:white;font-size:14px;font-weight:700;padding:14px 30px;border-radius:50px;border:1px solid rgba(255,255,255,.2);">Register Your Business</a>
+      <a href="find-services.html" style="background:#23e5db;color:#002f34;font-size:14px;font-weight:800;padding:14px 30px;border-radius:50px;display:inline-block;">Find a Service →</a>
+      <a href="hospital-signup.html" style="background:rgba(255,255,255,.1);color:white;font-size:14px;font-weight:700;padding:14px 30px;border-radius:50px;border:1px solid rgba(255,255,255,.2);display:inline-block;">Register Your Business</a>
     </div>
   </div>
 </section>
 
 <!-- FOOTER -->
-<footer style="background:#002f34;color:white;padding:40px 0 20px;margin-top:0;">
+<footer style="background:#002f34;color:white;padding:40px 0 20px;">
   <div style="max-width:1100px;margin:0 auto;padding:0 20px;">
     <div style="display:grid;grid-template-columns:1.5fr repeat(3,1fr);gap:30px;margin-bottom:28px;">
-      <div><a href="index.html" style="font-size:22px;font-weight:800;color:white;text-decoration:none;letter-spacing:-1px;display:block;margin-bottom:8px;">skip<span style="color:#23e5db;">Qs</span></a><p style="font-size:13px;color:rgba(255,255,255,.55);max-width:220px;">Skip the queue, save your time.</p></div>
-      <div><p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.4);margin-bottom:12px;">Healthcare</p><a href="hospitals.html" style="color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;display:block;margin-bottom:7px;">Hospitals</a><a href="clinics.html" style="color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;display:block;margin-bottom:7px;">Clinics</a></div>
-      <div><p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.4);margin-bottom:12px;">Company</p><a href="about.html" style="color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;display:block;margin-bottom:7px;">About</a><a href="contact.html" style="color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;display:block;margin-bottom:7px;">Contact</a><a href="faq.html" style="color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;display:block;margin-bottom:7px;">FAQ</a></div>
-      <div><p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.4);margin-bottom:12px;">Legal</p><a href="privacy.html" style="color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;display:block;margin-bottom:7px;">Privacy Policy</a><a href="terms.html" style="color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;display:block;margin-bottom:7px;">Terms of Use</a></div>
+      <div><a href="index.html" style="font-size:22px;font-weight:800;color:white;letter-spacing:-1px;display:block;margin-bottom:8px;">skip<span style="color:#23e5db;">Qs</span></a><p style="font-size:13px;color:rgba(255,255,255,.55);max-width:220px;">Skip the queue, save your time.</p></div>
+      <div><p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.4);margin-bottom:12px;">Services</p><a href="hospitals.html" style="color:rgba(255,255,255,.7);font-size:13px;display:block;margin-bottom:7px;">Hospitals</a><a href="clinics.html" style="color:rgba(255,255,255,.7);font-size:13px;display:block;margin-bottom:7px;">Clinics</a><a href="find-services.html" style="color:rgba(255,255,255,.7);font-size:13px;display:block;">All Services</a></div>
+      <div><p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.4);margin-bottom:12px;">Company</p><a href="about.html" style="color:rgba(255,255,255,.7);font-size:13px;display:block;margin-bottom:7px;">About</a><a href="contact.html" style="color:rgba(255,255,255,.7);font-size:13px;display:block;margin-bottom:7px;">Contact</a><a href="faq.html" style="color:rgba(255,255,255,.7);font-size:13px;display:block;">FAQ</a></div>
+      <div><p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.4);margin-bottom:12px;">Legal</p><a href="privacy.html" style="color:rgba(255,255,255,.7);font-size:13px;display:block;margin-bottom:7px;">Privacy</a><a href="terms.html" style="color:rgba(255,255,255,.7);font-size:13px;display:block;">Terms</a></div>
     </div>
-    <div style="border-top:1px solid rgba(255,255,255,.1);padding-top:16px;font-size:12px;color:rgba(255,255,255,.35);">© 2026 skipQs · All rights reserved.</div>
+    <div style="border-top:1px solid rgba(255,255,255,.1);padding-top:16px;font-size:12px;color:rgba(255,255,255,.35);">© <span id="yr"></span> skipQs · All rights reserved.</div>
   </div>
 </footer>
 
+<script>
+document.getElementById('yr').textContent = new Date().getFullYear();
+
+/* ── Animated phone (user steps) ── */
+const USER_STEPS = 5;
+const BIZ_STEPS  = 5;
+const INTERVAL   = 3500; // ms per step
+
+function runAnim(opts) {
+  let cur = 0;
+  const { slides, stepEls, dotsEl, barEl, prefix } = opts;
+
+  function activate(i) {
+    // slides
+    slides.forEach((s, idx) => s.classList.toggle('on', idx === i));
+    // step highlights
+    stepEls.forEach((s, idx) => s.classList.toggle('active', idx === i));
+    // dots
+    dotsEl.querySelectorAll('.step-dot').forEach((d, idx) => d.classList.toggle('on', idx === i));
+    cur = i;
+  }
+
+  // Progress bar fill over INTERVAL ms
+  function startBar() {
+    const bar = document.getElementById(barEl);
+    if (!bar) return;
+    bar.style.transition = 'none';
+    bar.style.width = '0%';
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        bar.style.transition = `width ${INTERVAL}ms linear`;
+        bar.style.width = '100%';
+      });
+    });
+  }
+
+  // Dot click — jump to step
+  dotsEl.querySelectorAll('.step-dot').forEach(d => {
+    d.onclick = () => { activate(parseInt(d.dataset.idx)); startBar(); };
+  });
+  stepEls.forEach((s, idx) => {
+    s.onclick = () => { activate(idx); startBar(); };
+  });
+
+  activate(0);
+  startBar();
+  setInterval(() => {
+    activate((cur + 1) % slides.length);
+    startBar();
+  }, INTERVAL);
+}
+
+// User / patient animation
+runAnim({
+  slides:   Array.from({length: USER_STEPS}, (_, i) => document.getElementById('us' + i)),
+  stepEls:  Array.from(document.getElementById('userSteps').querySelectorAll('.step-line')),
+  dotsEl:   document.getElementById('userDots'),
+  barEl:    'userBar',
+  prefix:   'u'
+});
+
+// Business / provider animation
+runAnim({
+  slides:   Array.from({length: BIZ_STEPS}, (_, i) => document.getElementById('bs' + i)),
+  stepEls:  Array.from(document.getElementById('bizSteps').querySelectorAll('.step-line')),
+  dotsEl:   document.getElementById('bizDots'),
+  barEl:    'bizBar',
+  prefix:   'b'
+});
+
+/* ── Fake live timer on screen 4 ── */
+let timerMins = 14, timerSecs = 32;
+setInterval(() => {
+  timerSecs--;
+  if (timerSecs < 0) { timerSecs = 59; timerMins = Math.max(0, timerMins - 1); }
+  const el = document.getElementById('liveTimer');
+  if (el) el.textContent = String(timerMins).padStart(2,'0') + ':' + String(timerSecs).padStart(2,'0');
+}, 1000);
+
+/* ── Video placeholder ── */
+const USER_YT = 'YOUR_USER_VIDEO_ID';   // ← replace when ready
+const BIZ_YT  = 'YOUR_BIZ_VIDEO_ID';    // ← replace when ready
+
+function playVideo(frameId, btnId) {
+  const ytId = frameId === 'userYt' ? USER_YT : BIZ_YT;
+  const frame = document.getElementById(frameId);
+  const btn   = document.getElementById(btnId);
+
+  if (ytId.startsWith('YOUR_')) {
+    // Video not ready yet — show a friendly note
+    const label = frame.closest('.vid-card').querySelector('.vid-coming');
+    if (label) {
+      label.textContent = '📅 Video coming soon! In the meantime, watch the animated demo above.';
+      label.style.background = 'rgba(35,229,219,.15)';
+      label.style.color = '#23e5db';
+      label.style.animation = 'none';
+      setTimeout(() => { label.textContent = '🎬 Video dropping soon — animated demo above in the meantime'; label.style.background = ''; label.style.color = ''; }, 3000);
+    }
+    return;
+  }
+
+  if (frame.classList.contains('show')) {
+    frame.classList.remove('show');
+    frame.innerHTML = '';
+    btn.style.display = 'flex';
+  } else {
+    frame.innerHTML = `<iframe src="https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0" frameborder="0" allow="autoplay; fullscreen" allowfullscreen style="width:100%;height:100%;border-radius:12px;"></iframe>`;
+    frame.classList.add('show');
+    btn.style.display = 'none';
+  }
+}
+</script>
 </body>
 </html>

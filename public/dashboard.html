@@ -147,6 +147,24 @@
   // ── INIT ──
   sb.auth.getSession().then(async ({ data: { session } }) => {
     if (!session) { window.location.href = 'login.html'; return; }
+
+    // Guard: if this user is a provider, send them to their own dashboard
+    // Check BOTH user_id (new registrations) AND id (legacy registrations)
+    const _uid = session.user.id;
+    const { data: prov } = await sb
+      .from('providers')
+      .select('is_hospital, category')
+      .or(`user_id.eq.${_uid},id.eq.${_uid}`)
+      .maybeSingle();
+
+    if (prov) {
+      const dest = (prov.is_hospital || prov.category === 'Hospital')
+        ? 'hospital-dashboard.html'
+        : 'business-dashboard.html';
+      window.location.replace(dest);
+      return;
+    }
+
     currentUserId = session.user.id;
     await loadActiveQueueBanner();
     loadTab('active');

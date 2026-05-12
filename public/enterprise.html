@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Redirect: enterprise page not live yet — send to pricing -->
+  <meta http-equiv="refresh" content="0; url=business-pricing.html">
+  <title>skipQs for Enterprise & Corporate Hospitals | API & Widget Integration</title>
+  <meta name="description" content="Already have a website? skipQs plugs into your existing hospital systems. Embeddable wait-time widget, REST API, and QR-based virtual queue for walk-in patients.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root{--primary:#002f34;--accent:#23e5db;--accent2:#ffce32;--bg:#f7f8f8;--border:#e2e8f0;--text-muted:#406367;--success:#059669;}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--primary);line-height:1.6;}
+    .container{max-width:1100px;margin:0 auto;padding:0 24px;}
+
+    /* ── Nav ── */
+    header{background:var(--primary);padding:14px 0;position:sticky;top:0;z-index:1000;box-shadow:0 2px 12px rgba(0,0,0,.25);}
+    .header-inner{display:flex;align-items:center;gap:16px;}
+    .logo{font-size:1.5rem;font-weight:800;color:var(--accent);text-decoration:none;letter-spacing:-1px;}
+    .logo span{color:var(--accent2);}
+    .nav-links{display:flex;gap:6px;align-items:center;margin-left:auto;}
+    .nav-links a{color:rgba(255,255,255,.75);text-decoration:none;font-size:.85rem;font-weight:600;padding:6px 12px;border-radius:8px;transition:.15s;}
+    .nav-links a:hover{color:white;background:rgba(255,255,255,.1);}
+    .nav-links a.pill{background:var(--accent);color:var(--primary);border-radius:50px;padding:8px 18px;}
+
+    /* ── Hero ── */
+    .hero{background:linear-gradient(135deg,#002f34 0%,#00484f 50%,#002f34 100%);color:white;padding:80px 0 90px;text-align:center;}
+    .hero-tag{display:inline-block;background:rgba(35,229,219,.15);color:var(--accent);font-size:.75rem;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;padding:6px 16px;border-radius:50px;border:1px solid rgba(35,229,219,.3);margin-bottom:20px;}
+    .hero h1{font-size:clamp(2rem,5vw,3.4rem);font-weight:900;letter-spacing:-2px;line-height:1.08;margin-bottom:20px;}
+    .hero h1 span{color:var(--accent);}
+    .hero p{font-size:1.1rem;opacity:.8;max-width:600px;margin:0 auto 2rem;line-height:1.7;}
+    .hero-btns{display:flex;gap:.8rem;justify-content:center;flex-wrap:wrap;}
+    .btn-hero{padding:14px 28px;border-radius:50px;font-weight:800;font-size:.95rem;text-decoration:none;transition:.15s;display:inline-block;}
+    .btn-accent{background:var(--accent);color:var(--primary);}
+    .btn-accent:hover{background:#1bcabf;transform:translateY(-2px);}
+    .btn-outline{background:transparent;color:white;border:2px solid rgba(255,255,255,.35);}
+    .btn-outline:hover{border-color:white;}
+    .hero-note{margin-top:1.4rem;font-size:.82rem;opacity:.5;}
+
+    /* ── Problem section ── */
+    .problem{background:white;padding:70px 0;}
+    .section-tag{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--accent);margin-bottom:10px;}
+    .section-tag-dark{color:var(--text-muted);}
+    .section-title{font-size:clamp(1.6rem,3vw,2.4rem);font-weight:800;letter-spacing:-1px;line-height:1.15;margin-bottom:16px;}
+    .section-sub{font-size:1rem;color:var(--text-muted);max-width:580px;line-height:1.7;}
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;}
+    .pain-points{margin-top:1.8rem;display:flex;flex-direction:column;gap:14px;}
+    .pain-point{display:flex;gap:12px;align-items:flex-start;}
+    .pain-icon{font-size:1.4rem;flex-shrink:0;margin-top:.1rem;}
+    .pain-label{font-size:.95rem;font-weight:700;margin-bottom:.2rem;}
+    .pain-desc{font-size:.85rem;color:var(--text-muted);line-height:1.5;}
+    .callout{background:linear-gradient(135deg,#f0fffe 0%,#e8fcfb 100%);border:1.5px solid #b6f5f1;border-radius:20px;padding:2rem;}
+    .callout-quote{font-size:1.15rem;font-weight:700;color:var(--primary);line-height:1.45;margin-bottom:1rem;}
+    .callout-note{font-size:.8rem;color:var(--text-muted);}
+
+    /* ── How it works ── */
+    .how{background:var(--bg);padding:70px 0;}
+    .tabs-row{display:flex;gap:8px;margin-bottom:2.5rem;flex-wrap:wrap;}
+    .tab{padding:10px 20px;border-radius:50px;font-size:.85rem;font-weight:700;cursor:pointer;border:1.5px solid var(--border);background:white;color:var(--text-muted);transition:.15s;}
+    .tab.active{background:var(--primary);color:white;border-color:var(--primary);}
+    .tab-content{display:none;}
+    .tab-content.active{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;}
+    .steps{display:flex;flex-direction:column;gap:20px;}
+    .step{display:flex;gap:14px;align-items:flex-start;}
+    .step-num{width:34px;height:34px;border-radius:50%;background:var(--primary);color:white;font-weight:800;font-size:.85rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .step-body h4{font-size:.95rem;font-weight:700;margin-bottom:.2rem;}
+    .step-body p{font-size:.85rem;color:var(--text-muted);line-height:1.5;}
+    .code-block{background:#0f1923;color:#23e5db;font-family:'Courier New',monospace;font-size:.8rem;padding:1.4rem;border-radius:14px;line-height:1.65;overflow-x:auto;}
+    .code-block .comment{color:rgba(255,255,255,.3);}
+    .code-block .key{color:#ffce32;}
+    .code-block .val{color:#a8ffec;}
+    .visual-card{background:white;border-radius:16px;border:1.5px solid var(--border);padding:1.6rem;box-shadow:0 4px 20px rgba(0,0,0,.06);}
+    .visual-card h4{font-size:.82rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:1rem;}
+    .wait-row{display:flex;justify-content:space-between;align-items:center;padding:.6rem 0;border-bottom:1px solid var(--border);}
+    .wait-row:last-child{border-bottom:none;}
+    .wait-dept{font-size:.9rem;font-weight:600;}
+    .wait-badge-g{font-size:.82rem;font-weight:800;padding:4px 10px;border-radius:50px;}
+    .wg{background:#f0fdf4;color:#15803d;}
+    .ww{background:#fef9c3;color:#854d0e;}
+    .wr{background:#fef2f2;color:#b91c1c;}
+
+    /* ── Integration options ── */
+    .integrations{background:white;padding:70px 0;}
+    .int-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem;margin-top:2.5rem;}
+    .int-card{border:1.5px solid var(--border);border-radius:18px;padding:1.6rem;transition:.2s;}
+    .int-card:hover{border-color:var(--accent);box-shadow:0 8px 24px rgba(0,0,0,.08);}
+    .int-icon{font-size:2.2rem;margin-bottom:.8rem;}
+    .int-title{font-size:1.05rem;font-weight:800;margin-bottom:.4rem;}
+    .int-desc{font-size:.875rem;color:var(--text-muted);line-height:1.55;margin-bottom:1rem;}
+    .int-tag{display:inline-block;background:var(--bg);border:1px solid var(--border);font-size:.7rem;font-weight:700;padding:3px 10px;border-radius:50px;color:var(--text-muted);}
+
+    /* ── Why skipQs ── */
+    .why{background:var(--bg);padding:70px 0;}
+    .why-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.4rem;margin-top:2.5rem;}
+    .why-card{background:white;border-radius:16px;padding:1.4rem;border:1px solid var(--border);}
+    .why-icon{font-size:1.6rem;margin-bottom:.6rem;}
+    .why-title{font-size:.95rem;font-weight:800;margin-bottom:.4rem;}
+    .why-desc{font-size:.85rem;color:var(--text-muted);line-height:1.55;}
+
+    /* ── Social proof ── */
+    .social-proof{background:var(--primary);color:white;padding:70px 0;text-align:center;}
+    .sp-title{font-size:1.8rem;font-weight:800;letter-spacing:-.5px;margin-bottom:.6rem;}
+    .sp-sub{opacity:.7;font-size:.95rem;margin-bottom:2.5rem;}
+    .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1.2rem;max-width:800px;margin:0 auto 3rem;}
+    .stat-box{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:1.2rem;}
+    .stat-val{font-size:2rem;font-weight:800;color:var(--accent);margin-bottom:.2rem;}
+    .stat-lbl{font-size:.75rem;opacity:.6;font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
+
+    /* ── CTA ── */
+    .cta{background:linear-gradient(135deg,#002f34 0%,#004d57 100%);padding:80px 0;text-align:center;}
+    .cta h2{font-size:2.2rem;font-weight:800;letter-spacing:-1px;color:white;margin-bottom:.6rem;}
+    .cta p{color:rgba(255,255,255,.7);font-size:1rem;margin-bottom:2rem;max-width:500px;margin-left:auto;margin-right:auto;}
+    .cta-btns{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;}
+    .contact-form{max-width:520px;margin:2rem auto 0;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:2rem;}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+    .form-input{padding:11px 14px;border-radius:10px;border:1.5px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:white;font-family:inherit;font-size:.9rem;width:100%;}
+    .form-input::placeholder{color:rgba(255,255,255,.35);}
+    .form-input:focus{outline:none;border-color:var(--accent);}
+    .form-submit{width:100%;padding:13px;border-radius:10px;background:var(--accent);color:var(--primary);font-weight:800;font-size:.95rem;border:none;cursor:pointer;font-family:inherit;margin-top:4px;transition:.15s;}
+    .form-submit:hover{background:#1bcabf;}
+    .form-note{font-size:.75rem;color:rgba(255,255,255,.4);text-align:center;margin-top:.8rem;}
+
+    /* ── Footer ── */
+    footer{background:var(--primary);border-top:1px solid rgba(255,255,255,.08);padding:2rem 0;text-align:center;font-size:.82rem;color:rgba(255,255,255,.4);}
+    footer a{color:rgba(255,255,255,.5);text-decoration:none;margin:0 .6rem;}
+    footer a:hover{color:white;}
+
+    @media(max-width:800px){
+      .two-col,.tab-content.active,.int-grid,.why-grid{grid-template-columns:1fr;}
+      .stats-row{grid-template-columns:repeat(2,1fr);}
+      .form-row{grid-template-columns:1fr;}
+      .tabs-row{overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px;}
+    }
+    @media(max-width:600px){
+      .hero{padding:52px 0 60px;}
+      .stats-row{grid-template-columns:repeat(2,1fr);}
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="container header-inner">
+    <a href="index.html" class="logo">skip<span>Qs</span></a>
+    <div class="nav-links">
+      <a href="find-services.html">Find Services</a>
+      <a href="business-pricing.html">Pricing</a>
+      <a href="about.html">About</a>
+      <a href="login.html" class="pill">Login</a>
+    </div>
+  </div>
+</header>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-tag">Enterprise & API Solutions</div>
+    <h1>Your hospital already has<br>a website. <span>We just fix<br>the queues.</span></h1>
+    <p>skipQs doesn't replace your booking system or website. We add a virtual queue layer that lets walk-in patients wait from anywhere — their car, a café, home.</p>
+    <div class="hero-btns">
+      <a href="#contact" class="btn-hero btn-accent">Book a Demo →</a>
+      <a href="#how-it-works" class="btn-hero btn-outline">See How It Works</a>
+    </div>
+    <div class="hero-note">No disruption to existing systems · Live in days, not months</div>
+  </div>
+</section>
+
+<!-- ── PROBLEM ── -->
+<section class="problem">
+  <div class="container">
+    <div class="two-col">
+      <div>
+        <div class="section-tag">The Problem</div>
+        <h2 class="section-title">You have online booking.<br>You still have queues.</h2>
+        <p class="section-sub">Corporate hospitals have solved appointment booking. But walk-in patients, appointment over-runs, and multi-department visits still create crowded, stressful waiting rooms.</p>
+        <div class="pain-points">
+          <div class="pain-point">
+            <div class="pain-icon">😰</div>
+            <div>
+              <div class="pain-label">Overcrowded waiting rooms</div>
+              <div class="pain-desc">Patients sit together for 45–90 minutes not knowing when their turn is coming. Patient satisfaction drops.</div>
+            </div>
+          </div>
+          <div class="pain-point">
+            <div class="pain-icon">📵</div>
+            <div>
+              <div class="pain-label">No visibility for patients</div>
+              <div class="pain-desc">Your website shows appointment slots — but once a patient arrives, they're in the dark about actual wait times per department.</div>
+            </div>
+          </div>
+          <div class="pain-point">
+            <div class="pain-icon">🏃</div>
+            <div>
+              <div class="pain-label">Walk-outs and no-shows</div>
+              <div class="pain-desc">Patients who can't wait leave without being seen. Staff waste time chasing no-shows who are actually lost in the building.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="callout">
+        <div class="callout-quote">"We don't want to replace your HMS or booking system. We want to solve the 30 metres between your reception desk and your department doors."</div>
+        <div class="callout-note">— skipQs, built for healthcare operations</div>
+        <div style="margin-top:1.6rem;border-top:1px solid #c5f7f4;padding-top:1.2rem;">
+          <div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:.8rem;">What we solve:</div>
+          <div style="display:flex;flex-direction:column;gap:.5rem;font-size:.88rem;">
+            <div style="display:flex;gap:.5rem;"><span style="color:var(--success);font-weight:700;">✓</span> Walk-in queue management</div>
+            <div style="display:flex;gap:.5rem;"><span style="color:var(--success);font-weight:700;">✓</span> Real-time wait time display per dept</div>
+            <div style="display:flex;gap:.5rem;"><span style="color:var(--success);font-weight:700;">✓</span> Patient notified when their turn is near</div>
+            <div style="display:flex;gap:.5rem;"><span style="color:var(--success);font-weight:700;">✓</span> Reception staff manage from simple dashboard</div>
+            <div style="display:flex;gap:.5rem;"><span style="color:var(--success);font-weight:700;">✓</span> Embeds on your existing website</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── HOW IT WORKS ── -->
+<section class="how" id="how-it-works">
+  <div class="container">
+    <div class="section-tag">How It Works</div>
+    <h2 class="section-title">Three ways to integrate</h2>
+    <p class="section-sub">Choose the integration that fits your hospital's setup. All three can run simultaneously.</p>
+
+    <div class="tabs-row">
+      <div class="tab active" onclick="showTab('qr')">📱 QR Code at Reception</div>
+      <div class="tab" onclick="showTab('widget')">🌐 Website Widget</div>
+      <div class="tab" onclick="showTab('api')">⚙️ REST API</div>
+    </div>
+
+    <!-- QR tab -->
+    <div class="tab-content active" id="tab-qr">
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h4>Patient arrives at reception</h4>
+            <p>They see a printed QR code at the reception desk (or on a tablet/screen) with your hospital name and list of departments.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h4>Scan → select department → join queue</h4>
+            <p>In under 20 seconds, they're in the virtual queue for their department. No app install required — works on any phone browser.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h4>Patient waits anywhere</h4>
+            <p>They can sit in the café, their car, or the garden. Their phone shows a live countdown and buzzes when they're next.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <h4>Staff call next patient in one tap</h4>
+            <p>From the skipQs dashboard on a tablet or laptop, reception staff tap "Call Next" and the patient is notified instantly.</p>
+          </div>
+        </div>
+      </div>
+      <div class="visual-card">
+        <h4>Live Queue — Sri Sri Holistic Hospitals</h4>
+        <div class="wait-row"><div class="wait-dept">🚑 Emergency / Walk-In</div><div class="wait-badge-g wr">~45 min · 12 waiting</div></div>
+        <div class="wait-row"><div class="wait-dept">❤️ Cardiology OPD</div><div class="wait-badge-g ww">~22 min · 5 waiting</div></div>
+        <div class="wait-row"><div class="wait-dept">🦴 Orthopedics OPD</div><div class="wait-badge-g ww">~18 min · 4 waiting</div></div>
+        <div class="wait-row"><div class="wait-dept">🧪 Pathology Lab</div><div class="wait-badge-g wg">~8 min · 2 waiting</div></div>
+        <div class="wait-row"><div class="wait-dept">💊 Pharmacy</div><div class="wait-badge-g wg">~5 min · 1 waiting</div></div>
+        <div style="margin-top:1rem;text-align:center;">
+          <div style="display:inline-block;background:var(--primary);color:white;padding:10px 22px;border-radius:10px;font-size:.85rem;font-weight:700;">Tap to Join Your Department →</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Widget tab -->
+    <div class="tab-content" id="tab-widget">
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h4>We give you a one-line embed code</h4>
+            <p>A single &lt;script&gt; tag that your webmaster pastes into any page on your existing website — takes 5 minutes.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h4>Patients see live wait times on your website</h4>
+            <p>A clean widget shows current wait times for each department — styled to match your hospital's brand and colours.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h4>Patients join the queue before they even leave home</h4>
+            <p>They see "Cardiology: 35 min wait" on your site, tap Join Queue, and arrive at the right time — reducing waiting room crowding.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <h4>Your staff update wait times from a simple dashboard</h4>
+            <p>No integration with your HMS required. Staff use our tablet-friendly dashboard to call patients and update times.</p>
+          </div>
+        </div>
+      </div>
+      <div class="visual-card">
+        <h4>Embed preview — your website</h4>
+        <div style="border:1px solid var(--border);border-radius:10px;padding:1rem;background:#fafbfc;margin-bottom:.8rem;">
+          <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:.6rem;">Current Wait Times</div>
+          <div class="wait-row"><div class="wait-dept">❤️ Cardiology</div><div class="wait-badge-g ww">22 min</div></div>
+          <div class="wait-row"><div class="wait-dept">🦴 Orthopedics</div><div class="wait-badge-g wg">8 min</div></div>
+          <div class="wait-row"><div class="wait-dept">🚑 Emergency</div><div class="wait-badge-g wr">45 min</div></div>
+          <div style="margin-top:.8rem;font-size:.75rem;color:var(--text-muted);">Updates every 60 seconds · Powered by skipQs</div>
+        </div>
+        <div class="code-block" style="font-size:.72rem;">
+&lt;script src="https://skipqs.com/widget.js"<br>
+&nbsp;&nbsp;<span class="key">data-hospital-id</span>=<span class="val">"your-id"</span><br>
+&nbsp;&nbsp;<span class="key">data-theme</span>=<span class="val">"light"</span>&gt;<br>
+&lt;/script&gt;
+        </div>
+      </div>
+    </div>
+
+    <!-- API tab -->
+    <div class="tab-content" id="tab-api">
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h4>You get a secure API key</h4>
+            <p>Your development team receives REST API credentials. Full documentation provided with SDKs for Node, Python, and PHP.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h4>Pull live wait times into your app or HMS</h4>
+            <p>Call our API to get wait times per department. Display them in your patient app, your website, or your hospital management system.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h4>Push queue updates from your system</h4>
+            <p>If your HMS or reception system calls a patient, notify our API and we'll automatically update the queue position and patient's phone.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <h4>Webhooks for real-time events</h4>
+            <p>Subscribe to events like "patient joined", "patient called", "no-show" — pipe them into your own analytics or staff notification systems.</p>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="code-block">
+<span class="comment">// GET current wait times</span><br>
+GET /v1/providers/{id}/departments<br><br>
+<span class="comment">// Response</span><br>
+{<br>
+&nbsp;&nbsp;<span class="key">"departments"</span>: [<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"name"</span>: <span class="val">"Cardiology OPD"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"wait_minutes"</span>: <span class="val">22</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"people_in_queue"</span>: <span class="val">5</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"is_open"</span>: <span class="val">true</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;},<br>
+&nbsp;&nbsp;&nbsp;&nbsp;...<br>
+&nbsp;&nbsp;]<br>
+}
+        </div>
+        <div style="margin-top:.8rem;padding:.8rem;background:white;border-radius:10px;border:1px solid var(--border);font-size:.82rem;color:var(--text-muted);">
+          📚 Full API docs, sandbox environment, and code samples provided on signup.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── INTEGRATION OPTIONS ── -->
+<section class="integrations">
+  <div class="container">
+    <div class="section-tag section-tag-dark">What You Get</div>
+    <h2 class="section-title">Everything included in Enterprise</h2>
+    <div class="int-grid">
+      <div class="int-card">
+        <div class="int-icon">📱</div>
+        <div class="int-title">QR Queue System</div>
+        <div class="int-desc">Printed or digital QR codes at your reception. Patients scan and join the virtual queue in under 20 seconds. No app install needed.</div>
+        <span class="int-tag">Ready in 1 day</span>
+      </div>
+      <div class="int-card">
+        <div class="int-icon">🌐</div>
+        <div class="int-title">Website Widget</div>
+        <div class="int-desc">One line of code on your existing website shows live department wait times. Patients can join queues before leaving home.</div>
+        <span class="int-tag">5-minute setup</span>
+      </div>
+      <div class="int-card">
+        <div class="int-icon">⚙️</div>
+        <div class="int-title">REST API</div>
+        <div class="int-desc">Full API access so your development team can integrate skipQs into your hospital app, patient portal, or HMS.</div>
+        <span class="int-tag">Full docs provided</span>
+      </div>
+      <div class="int-card">
+        <div class="int-icon">🖥️</div>
+        <div class="int-title">Staff Dashboard</div>
+        <div class="int-desc">Simple tablet or desktop interface for reception staff. Call next patient, update wait times, manage departments — in 2 taps.</div>
+        <span class="int-tag">Zero training needed</span>
+      </div>
+      <div class="int-card">
+        <div class="int-icon">🏷️</div>
+        <div class="int-title">White-Label Option</div>
+        <div class="int-desc">Your hospital's name, logo, and colours throughout. Patients see your brand — not skipQs. Optional for enterprise clients.</div>
+        <span class="int-tag">Your brand, our engine</span>
+      </div>
+      <div class="int-card">
+        <div class="int-icon">📊</div>
+        <div class="int-title">Analytics Dashboard</div>
+        <div class="int-desc">Daily, weekly, and monthly reports on queue volumes, wait time trends, peak hours, and department performance.</div>
+        <span class="int-tag">Included</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── WHY skipQs ── -->
+<section class="why">
+  <div class="container">
+    <div class="section-tag">Why skipQs</div>
+    <h2 class="section-title">Built for healthcare, not just business</h2>
+    <div class="why-grid">
+      <div class="why-card">
+        <div class="why-icon">🔒</div>
+        <div class="why-title">No patient data stored</div>
+        <div class="why-desc">We don't store patient names or medical information. Queue tokens are anonymous. GDPR-compliant by design.</div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">⚡</div>
+        <div class="why-title">Live in days, not months</div>
+        <div class="why-desc">No big IT project required. The QR system goes live same day. Widget embed takes 5 minutes. API integration takes 1–2 weeks.</div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">🔌</div>
+        <div class="why-title">Zero disruption</div>
+        <div class="why-desc">Your existing booking system, HMS, and website stay exactly as they are. We add a layer — we don't replace anything.</div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">📶</div>
+        <div class="why-title">Works on any phone</div>
+        <div class="why-desc">Patients use their browser — no app download. Works on any smartphone, even older Android devices with slow data.</div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">👩‍⚕️</div>
+        <div class="why-title">Designed for busy staff</div>
+        <div class="why-desc">The staff dashboard is built for people who are already dealing with patients. One tap to call next. No complicated training.</div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">📈</div>
+        <div class="why-title">Proven ROI</div>
+        <div class="why-desc">Reduced waiting room crowding → higher patient satisfaction scores → lower walk-out rates → measurable improvement in throughput.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA / CONTACT ── -->
+<section class="cta" id="contact">
+  <div class="container">
+    <h2>Let's talk about your hospital</h2>
+    <p>Send us your details and we'll arrange a free 30-minute call to show you how skipQs works for your specific setup.</p>
+    <div class="contact-form">
+      <div class="form-row">
+        <input class="form-input" type="text" placeholder="Your name" id="ctaName">
+        <input class="form-input" type="text" placeholder="Hospital / Organisation" id="ctaOrg">
+      </div>
+      <div class="form-row">
+        <input class="form-input" type="email" placeholder="Email address" id="ctaEmail">
+        <input class="form-input" type="tel" placeholder="Phone number" id="ctaPhone">
+      </div>
+      <textarea class="form-input" rows="3" placeholder="Tell us about your hospital — number of departments, daily patient volume, biggest queue challenge…" id="ctaMsg" style="resize:vertical;margin-bottom:4px;"></textarea>
+      <button class="form-submit" onclick="submitEnquiry()">Request a Free Demo →</button>
+      <div class="form-note">We'll respond within 1 business day. No spam, no hard sell.</div>
+      <div id="formStatus" style="display:none;margin-top:.8rem;text-align:center;font-size:.85rem;font-weight:700;color:var(--accent);"></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <a href="index.html">skip<span style="color:var(--accent);">Qs</span></a> ·
+    <a href="business-pricing.html">Pricing</a>
+    <a href="about.html">About</a>
+    <a href="contact.html">Contact</a>
+    <a href="privacy.html">Privacy</a>
+    <a href="terms.html">Terms</a>
+    <div style="margin-top:.6rem;">© 2026 skipQs. Virtual queue management for healthcare and beyond.</div>
+  </div>
+</footer>
+
+<script>
+// Tab switcher
+function showTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+// Smooth scroll for hero CTA
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    const el = document.querySelector(a.getAttribute('href'));
+    if (el) { e.preventDefault(); el.scrollIntoView({ behavior:'smooth', block:'start' }); }
+  });
+});
+
+// Simple form handler (sends to contact.html flow for now)
+function submitEnquiry() {
+  const name  = document.getElementById('ctaName').value.trim();
+  const org   = document.getElementById('ctaOrg').value.trim();
+  const email = document.getElementById('ctaEmail').value.trim();
+  const msg   = document.getElementById('ctaMsg').value.trim();
+  const status = document.getElementById('formStatus');
+
+  if (!name || !email || !org) {
+    status.style.display = 'block';
+    status.style.color = '#f87171';
+    status.textContent = 'Please fill in your name, email and organisation.';
+    return;
+  }
+
+  // In production: send to your CRM / email via a serverless function
+  // For now: redirect to contact page with pre-filled message
+  const subject = encodeURIComponent('Enterprise enquiry from ' + org);
+  const body = encodeURIComponent(`Name: ${name}\nOrg: ${org}\nEmail: ${email}\nMessage: ${msg}`);
+  window.location.href = `contact.html?name=${encodeURIComponent(name)}&org=${encodeURIComponent(org)}&email=${encodeURIComponent(email)}`;
+}
+</script>
+</body>
+</html>

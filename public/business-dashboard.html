@@ -226,9 +226,10 @@ async function init() {
   if (!session) { window.location.href = 'login.html'; return; }
   document.getElementById('userEmail').textContent = session.user.email;
 
+  const uid = session.user.id;
   const { data: prov, error } = await sb.from('providers')
     .select('*')
-    .eq('user_id', session.user.id)
+    .or(`user_id.eq.${uid},id.eq.${uid}`)
     .maybeSingle();
 
   if (error) { toast('Failed to load: ' + error.message, 'error'); return; }
