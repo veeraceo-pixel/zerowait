@@ -97,6 +97,13 @@ textarea{resize:vertical;min-height:60px;}
       <div class="group">
         <label for="category">Category</label>
         <select id="category"></select>
+        <input type="text" id="otherCategoryInput"
+          placeholder="e.g. Laundry, Tailor, Flower Shop…"
+          autocomplete="off"
+          style="display:none;margin-top:.5rem;padding:.75rem 1rem;border-radius:10px;border:1.5px solid var(--border);font-family:inherit;font-size:.93rem;width:100%;">
+        <span id="otherCategoryHint" style="display:none;font-size:.78rem;color:#64748b;margin-top:.25rem;display:none;">
+          Type your business type — it helps us improve skipQs for everyone.
+        </span>
       </div>
     </div>
 
@@ -222,12 +229,19 @@ function populateCategorySelect() {
     if (!c) return;
     const opt = document.createElement('option');
     opt.value = k;
-    opt.textContent = c.label;
+    opt.textContent = k === 'Other' ? '🏷️ Other — Not listed here' : c.label;
     if (k === category) opt.selected = true;
     sel.appendChild(opt);
   });
   sel.addEventListener('change', () => {
     category = sel.value;
+    // Show/hide "Other" custom name field
+    const isOther = category === 'Other';
+    const otherInput = document.getElementById('otherCategoryInput');
+    const otherHint  = document.getElementById('otherCategoryHint');
+    otherInput.style.display = isOther ? 'block' : 'none';
+    otherHint.style.display  = isOther ? 'block' : 'none';
+    if (isOther) otherInput.focus();
     // Update URL so reload keeps state
     const u = new URL(location.href);
     u.searchParams.set('category', category);
@@ -334,10 +348,16 @@ async function register() {
   const lng = parseFloat(document.getElementById('lng').value);
   const email = document.getElementById('email').value.trim().toLowerCase();
   const password = document.getElementById('password').value;
-  const cat = document.getElementById('category').value;
+  const catRaw       = document.getElementById('category').value;
+  const otherCatName = (document.getElementById('otherCategoryInput') || {}).value?.trim() || '';
+  // If "Other" is selected, use the custom name they typed
+  const cat = (catRaw === 'Other') ? (otherCatName || 'Other') : catRaw;
 
   if (!bizName) { showError('Please enter your business name.'); return; }
-  if (!cat) { showError('Please choose a category.'); return; }
+  if (!catRaw)  { showError('Please choose a category.'); return; }
+  if (catRaw === 'Other' && !otherCatName) {
+    showError('Please describe your business type in the "Other" field.'); return;
+  }
   if (!phone) { showError('Please enter a phone number.'); return; }
   const digits = phone.replace(/\D/g,'');
   if (digits.length < 10 || digits.length > 15) { showError('Phone number must be 10–15 digits.'); return; }

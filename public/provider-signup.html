@@ -168,15 +168,15 @@ td input { padding:.6rem .7rem; font-size:.9rem; }
       </div>
       <div class="group">
         <label for="category">Category</label>
-        <select id="category">
+        <select id="category" onchange="toggleOtherCategory(this.value)">
           <option value="">Select category</option>
-          <option>Barber</option>
-          <option>Salon</option>
-          <option>Clinic</option>
-          <option>Restaurant</option>
-          <option>Gym</option>
-          <option>Pharmacy</option>
         </select>
+        <input type="text" id="otherCategory" placeholder="e.g. Laundry, Tailor, Flower Shop…" autocomplete="off"
+          style="display:none;margin-top:.5rem;"
+          oninput="this.value=this.value.replace(/[<>]/g,'')">
+        <span id="otherCategoryHint" style="display:none;font-size:.78rem;color:#64748b;margin-top:.25rem;">
+          Type your business type — it helps us improve skipQs for everyone.
+        </span>
       </div>
     </div>
 
@@ -255,6 +255,7 @@ td input { padding:.6rem .7rem; font-size:.9rem; }
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
+<script src="sector-config.js"></script>
 <script>
 // Guard: catch missing config early
 if (typeof SUPABASE_URL === 'undefined' || typeof SUPABASE_ANON_KEY === 'undefined') {
@@ -266,8 +267,32 @@ if (typeof SUPABASE_URL === 'undefined' || typeof SUPABASE_ANON_KEY === 'undefin
 }
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-let isSubmitting      = false;
+let isSubmitting        = false;
 let geocodingInProgress = false;
+
+// ── Populate category dropdown from sector-config.js ─────────────────────────
+(function populateCategorySelect() {
+  const sel = document.getElementById('category');
+  if (!sel || typeof SECTOR_ORDER === 'undefined' || typeof SECTOR_CONFIG === 'undefined') return;
+  SECTOR_ORDER.forEach(key => {
+    const cfg = SECTOR_CONFIG[key];
+    if (!cfg) return;
+    const opt       = document.createElement('option');
+    opt.value       = cfg.label;
+    // Show "Other – Not listed here" as the last option label
+    opt.textContent = key === 'Other'
+      ? '🏷️ Other — Not listed here'
+      : (cfg.icon ? cfg.icon + ' ' : '') + cfg.label;
+    sel.appendChild(opt);
+  });
+})();
+
+function toggleOtherCategory(val) {
+  const show = (val === 'Other');
+  document.getElementById('otherCategory').style.display      = show ? 'block' : 'none';
+  document.getElementById('otherCategoryHint').style.display  = show ? 'block' : 'none';
+  if (show) document.getElementById('otherCategory').focus();
+}
 
 // Clear verified coords if user edits address after looking it up
 document.getElementById('addressInput').addEventListener('input', () => {
@@ -394,8 +419,13 @@ async function register() {
   hideError();
 
   // Read all values
-  const bizName  = document.getElementById('bizName').value.trim();
-  const category = document.getElementById('category').value;
+  const bizName       = document.getElementById('bizName').value.trim();
+  const categoryRaw   = document.getElementById('category').value;
+  const otherCategory = document.getElementById('otherCategory').value.trim();
+  // If "Other" selected, use the custom name they typed; fall back to "Other"
+  const category = (categoryRaw === 'Other')
+    ? (otherCategory || 'Other')
+    : categoryRaw;
   const phone    = document.getElementById('phone').value.trim();
   const capacity = Math.max(1, parseInt(document.getElementById('capacity').value) || 1);
   const address  = document.getElementById('addressInput').value.trim();
@@ -405,8 +435,11 @@ async function register() {
   const password = document.getElementById('password').value;
 
   // Field-by-field validation with clear messages
-  if (!bizName)  { showError('Please enter your business name.');    return; }
-  if (!category) { showError('Please select a business category.');  return; }
+  if (!bizName)    { showError('Please enter your business name.');           return; }
+  if (!categoryRaw){ showError('Please select a business category.');         return; }
+  if (categoryRaw === 'Other' && !otherCategory) {
+    showError('Please describe your business type in the "Other" field.');    return;
+  }
   if (!phone)    { showError('Please enter your phone number.');     return; }
 
   const digitsOnly = phone.replace(/\D/g, '');

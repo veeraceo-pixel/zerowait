@@ -1,0 +1,19 @@
+{
+  "name": "skipQs — Skip the Queue",
+  "short_name": "skipQs",
+  "description": "Live wait times for hospitals, shops, autos and more. Join the queue from anywhere.",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#002f34",
+  "theme_color": "#002f34",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "screenshots": [
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "form_factor": "narrow" }
+  ],
+  "categories": ["productivity", "health", "lifestyle"],
+  "lang": "en-GB"
+}

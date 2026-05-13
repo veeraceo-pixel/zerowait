@@ -1,17 +1,88 @@
 /* ============================================================
-   skipQs Service Worker — Queue Timer Lock-Screen Notifications
-   Receives postMessage from the main page and shows/updates
-   a persistent notification that stays visible on the lock screen.
+   skipQs Service Worker — Queue Timer & Lock-Screen Notifications
+   v2: adds Web Push (server → locked screen), offline cache,
+       and generic SHOW_NOTIFICATION for Leave Now alerts.
    ============================================================ */
 
-const SW_VERSION = 'skipqs-sw-v1';
+const SW_VERSION  = 'skipqs-sw-v2';
+const CACHE_NAME  = 'skipqs-v2';
+const CACHE_URLS  = ['/index.html', '/dashboard.html', '/manifest.json'];
 
-self.addEventListener('install', () => self.skipWaiting());
-self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
+/* ── Install: pre-cache ──────────────────────────────── */
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(c => c.addAll(CACHE_URLS))
+      .catch(() => {})
+  );
+  self.skipWaiting();
+});
+
+/* ── Activate: prune old caches ──────────────────────── */
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))))
+  );
+  self.clients.claim();
+});
+
+/* ── Fetch: network-first, cache fallback ────────────── */
+self.addEventListener('fetch', event => {
+  if (event.request.method !== 'GET') return;
+  const url = new URL(event.request.url);
+  if (url.origin !== self.location.origin) return;
+  event.respondWith(
+    fetch(event.request)
+      .then(resp => {
+        if (resp.ok) {
+          const clone = resp.clone();
+          caches.open(CACHE_NAME).then(c => c.put(event.request, clone));
+        }
+        return resp;
+      })
+      .catch(() => caches.match(event.request))
+  );
+});
+
+/* ── Web Push (from server / Supabase Edge Fn) ───────── */
+self.addEventListener('push', event => {
+  let payload = { title: 'skipQs', body: 'You have a queue update', url: '/dashboard.html', tag: 'skipqs-queue' };
+  try { if (event.data) payload = { ...payload, ...event.data.json() }; } catch (_) {}
+  event.waitUntil(
+    self.registration.showNotification(payload.title, {
+      body:             payload.body,
+      icon:             '/icon-192.png',
+      badge:            '/icon-192.png',
+      tag:              payload.tag,
+      renotify:         true,
+      requireInteraction: payload.requireInteraction || false,
+      vibrate:          [200, 100, 200, 100, 200],
+      data:             { url: payload.url }
+    })
+  );
+});
 
 /* ── Message handler (called from main page) ─────────────────── */
 self.addEventListener('message', async e => {
   const msg = e.data || {};
+
+  // ── Generic notification (Leave Now, any alert) ──
+  if (msg.type === 'SHOW_NOTIFICATION') {
+    try {
+      await self.registration.showNotification(msg.title || 'skipQs', {
+        body:             msg.body || '',
+        icon:             '/icon-192.png',
+        badge:            '/icon-192.png',
+        tag:              msg.tag || 'skipqs',
+        renotify:         true,
+        requireInteraction: msg.requireInteraction || false,
+        vibrate:          [200, 100, 200],
+        data:             { url: msg.url || '/dashboard.html' }
+      });
+    } catch (err) { console.warn('[skipQs SW] showNotification:', err); }
+    return;
+  }
 
   // ── Show / update the queue notification ──
   if (msg.type === 'SHOW_QUEUE_NOTIFICATION') {

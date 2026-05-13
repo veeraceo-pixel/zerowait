@@ -371,6 +371,7 @@
       .hero h1{font-size:1.45rem}
     }
   </style>
+  <meta name="theme-color" content="#002f34">
 </head>
 <body>
 
@@ -757,10 +758,20 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="supabase-config.js"></script>
 <script src="auth-nav.js"></script>
+<script src="notify.js"></script>
 <script>
+  // Register service worker on first visit (enables PWA + notifications)
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  }
+
   document.getElementById('year').textContent = new Date().getFullYear();
 
-  const ICONS = {Hospital:'🏥',Clinic:'🩺',Pharmacy:'💊',Salon:'💇‍♀️',Barber:'💈',Bank:'🏦',Restaurant:'🍽️',Gym:'🏋️',CarWash:'🧼',Government:'🏛️',Repair:'🛠️'};
+  const ICONS = {
+    Hospital:'🏥',Clinic:'🩺',Pharmacy:'💊',Salon:'💇‍♀️',Barber:'💈',
+    Bank:'🏦',Restaurant:'🍽️',Gym:'🏋️',CarWash:'🧼',Government:'🏛️',
+    Repair:'🛠️',Kirana:'🛒',Bakery:'🍞',SweetShop:'🍬',LocalShop:'🏪',AutoStand:'🛺'
+  };
   function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
   // ── DEMO DATA (fallback when DB has no providers yet) ──

@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Queues | skipQs</title>
+  <meta name="theme-color" content="#002f34">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root{--primary:#002f34;--accent:#23e5db;--accent2:#ffce32;--bg:#f7f8f8;--border:#e2e8f0;--success:#059669;--danger:#dc2626;--warning:#d97706;--text-muted:#406367;}
@@ -93,6 +94,23 @@
     .toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
     .toast.success{background:var(--success);}
     .toast.error{background:var(--danger);}
+    /* ── LEAVE NOW BANNER ── */
+    .leave-banner{border-radius:14px;padding:1rem 1.2rem;margin-bottom:1rem;display:none;align-items:center;gap:.9rem;flex-wrap:wrap;animation:slideIn .4s ease;}
+    .leave-banner.go{background:linear-gradient(135deg,#064e3b,#065f46);border:1.5px solid #10b981;display:flex;}
+    .leave-banner.soon{background:linear-gradient(135deg,#78350f,#92400e);border:1.5px solid #f59e0b;display:flex;}
+    .leave-banner.tracking{background:rgba(0,47,52,.06);border:1.5px solid var(--border);display:flex;}
+    .lb-icon{font-size:1.8rem;flex-shrink:0;}
+    .lb-text{flex:1;min-width:160px;}
+    .lb-title{font-weight:800;font-size:.95rem;margin-bottom:.15rem;}
+    .leave-banner.go .lb-title,.leave-banner.go .lb-sub{color:white;}
+    .leave-banner.soon .lb-title,.leave-banner.soon .lb-sub{color:white;}
+    .leave-banner.tracking .lb-title{color:var(--primary);}
+    .lb-sub{font-size:.78rem;opacity:.8;}
+    .leave-banner.tracking .lb-sub{color:var(--text-muted);}
+    .lb-dist{font-size:.72rem;font-weight:700;padding:.25rem .7rem;border-radius:50px;background:rgba(255,255,255,.15);color:white;white-space:nowrap;flex-shrink:0;}
+    .leave-banner.tracking .lb-dist{background:var(--border);color:var(--text-muted);}
+    @keyframes slideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+    @media(max-width:500px){.leave-banner{padding:.8rem 1rem;}.lb-icon{font-size:1.5rem;}}
   </style>
 </head>
 <body>
@@ -107,6 +125,16 @@
 </header>
 
 <div class="page-wrap">
+
+  <!-- ── LEAVE NOW TRAVEL BANNER ── -->
+  <div class="leave-banner" id="leaveBanner">
+    <div class="lb-icon" id="lbIcon">📍</div>
+    <div class="lb-text">
+      <div class="lb-title" id="lbTitle">Checking your location…</div>
+      <div class="lb-sub"  id="lbSub"></div>
+    </div>
+    <span class="lb-dist" id="lbDist"></span>
+  </div>
 
   <!-- ── ACTIVE QUEUE SECTION ── -->
   <div id="activeQueueArea"></div>
@@ -131,6 +159,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="supabase-config.js"></script>
+<script src="notify.js"></script>
 <script>
   let currentTab = 'active';
   let timerInterval = null;
@@ -182,8 +211,8 @@
     if (!rows || !rows.length) { area.innerHTML=''; return; }
     const q = rows[0];
 
-    // Fetch provider
-    const { data: prov } = await sb.from('providers').select('business_name,id,is_hospital,category').eq('id',q.provider_id).maybeSingle();
+    // Fetch provider (include lat/lng for travel alert)
+    const { data: prov } = await sb.from('providers').select('business_name,id,is_hospital,category,lat,lng').eq('id',q.provider_id).maybeSingle();
     // Fetch department
     let deptName = '', waitMins = q.service_duration || 15;
     if (q.department_id) {
@@ -216,12 +245,33 @@
 
     startTimer(waitMins, q.joined_at);
 
+    // Start travel alert if provider has coordinates
+    if (prov && prov.lat && prov.lng) {
+      initTravelAlert(parseFloat(prov.lat), parseFloat(prov.lng), waitMins, q.joined_at);
+    }
+
+    // Ask for notification permission now that they have an active queue
+    if (window.skipQsNotify) {
+      window.skipQsNotify.init().then(() => {
+        window.skipQsNotify.requestPermission();
+        if (currentUserId) window.skipQsNotify.subscribePush(currentUserId);
+      });
+    }
+
     // Realtime updates
     if (q.department_id) {
       sb.channel('dash-dept-' + q.department_id)
         .on('postgres_changes',{event:'UPDATE',schema:'public',table:'departments',filter:`id=eq.${q.department_id}`}, payload => {
           const newWait = payload.new.wait_minutes || 0;
           resetTimer(newWait, q.joined_at);
+          // Notify if wait dropped to ≤ 3 min
+          if (newWait <= 3 && newWait > 0 && window.skipQsNotify && document.hidden) {
+            window.skipQsNotify.send(
+              '⏳ Almost your turn!',
+              `Less than 3 minutes left at ${bizName}. Head over now!`,
+              { tag: 'skipqs-queue', requireInteraction: false, url: '/dashboard.html' }
+            );
+          }
         })
         .subscribe();
     }
@@ -230,10 +280,26 @@
         if (['completed','cancelled','no_show'].includes(payload.new.status)) {
           area.innerHTML = '';
           if (timerInterval) clearInterval(timerInterval);
+          if (travelCheckInterval) clearInterval(travelCheckInterval);
           loadTab(currentTab);
         } else if (payload.new.status === 'serving') {
           const el = document.getElementById('aqStatus');
           if (el) el.textContent = '🔔 You are being served now!';
+          // Fire notification whether page is visible or not
+          if (window.skipQsNotify) {
+            window.skipQsNotify.send(
+              '🔔 Your turn — come in now!',
+              `${bizName}${deptName ? ' — ' + deptName : ''} is ready for you.`,
+              { tag: 'skipqs-serving', requireInteraction: true, url: '/dashboard.html' }
+            );
+          }
+          // Also use legacy SW message for older code path
+          if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({
+              type: 'SHOW_QUEUE_NOTIFICATION',
+              bizName, deptName, status: 'serving'
+            });
+          }
         }
       })
       .subscribe();
@@ -267,9 +333,23 @@
 
   async function cancelQueue(id) {
     if (!confirm('Leave this queue?')) return;
-    const { error } = await sb.from('queues').update({ status:'cancelled' }).eq('id', id);
-    if (error) { toast('Could not leave queue', 'error'); return; }
-    toast('You have left the queue');
+
+    // Always scope the update to the current user so RLS can match
+    const { error } = await sb
+      .from('queues')
+      .update({ status: 'cancelled' })
+      .eq('id', id)
+      .eq('user_id', currentUserId);
+
+    if (error) {
+      console.error('[skipQs] Leave queue error:', error);
+      // If RLS is blocking, the update returns no error but 0 rows affected.
+      // We handle that below. For a real error, show it.
+      toast('Could not leave queue — ' + (error.message || 'permission denied'), 'error');
+      return;
+    }
+
+    toast('You have left the queue ✓');
     document.getElementById('activeQueueArea').innerHTML = '';
     if (timerInterval) clearInterval(timerInterval);
     loadTab(currentTab);
@@ -358,6 +438,135 @@
           </div>
         </div>`;
     }).join('');
+  }
+
+  /* ══════════════════════════════════════════════
+     LEAVE NOW — SMART TRAVEL ALERT
+     Uses browser Geolocation + Haversine formula.
+     No external API needed — completely free.
+  ══════════════════════════════════════════════ */
+  let travelCheckInterval = null;
+  let travelAlertDismissed = false;
+
+  function haversineKm(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const toRad = x => x * Math.PI / 180;
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a = Math.sin(dLat/2)**2
+            + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  }
+
+  function estimateTravelMins(km) {
+    // < 0.4 km → walking @ 5 km/h
+    // 0.4–3 km → brisk walk / bike @ 12 km/h
+    // > 3 km  → driving @ 25 km/h (conservative urban)
+    if (km < 0.4)  return Math.ceil(km / 5  * 60);
+    if (km < 3)    return Math.ceil(km / 12 * 60);
+    return              Math.ceil(km / 25 * 60);
+  }
+
+  function remainingMins(waitMins, joinedAt) {
+    const elapsed = joinedAt
+      ? Math.floor((Date.now() - new Date(joinedAt).getTime()) / 1000 / 60)
+      : 0;
+    return Math.max(0, waitMins - elapsed);
+  }
+
+  function updateLeaveBanner(km, travelMins, remMins) {
+    const banner = document.getElementById('leaveBanner');
+    const icon   = document.getElementById('lbIcon');
+    const title  = document.getElementById('lbTitle');
+    const sub    = document.getElementById('lbSub');
+    const dist   = document.getElementById('lbDist');
+
+    if (travelAlertDismissed) { banner.style.display = 'none'; return; }
+
+    const distStr = km < 1
+      ? Math.round(km * 1000) + ' m away'
+      : km.toFixed(1) + ' km away';
+
+    dist.textContent = distStr;
+
+    if (remMins <= 0) {
+      // Queue done
+      banner.className = 'leave-banner';
+      return;
+    }
+
+    if (travelMins >= remMins) {
+      // 🚨 Leave NOW — travel time >= remaining wait
+      banner.className = 'leave-banner go';
+      icon.textContent  = '🚗';
+      title.textContent = 'Leave now to arrive just in time!';
+      sub.textContent   = `You're ${distStr}. Travel time ~${travelMins} min, wait left ~${remMins} min.`;
+      // Vibrate on mobile
+      if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+      // Push notification (works on locked screen if SW is running)
+      if (window.skipQsNotify) {
+        window.skipQsNotify.send(
+          '🚗 Leave now!',
+          `You're ${distStr} away. Travel time ~${travelMins} min, wait left ~${remMins} min.`,
+          { tag: 'skipqs-travel', requireInteraction: false, url: '/dashboard.html' }
+        );
+      }
+    } else if (travelMins >= remMins - 5) {
+      // ⚠️ Leave soon — within 5 min buffer
+      banner.className = 'leave-banner soon';
+      icon.textContent  = '⏰';
+      title.textContent = `Head over in ~${remMins - travelMins} min`;
+      sub.textContent   = `Travel time ~${travelMins} min · Wait left ~${remMins} min · ${distStr}`;
+    } else {
+      // 📍 Tracking — everything fine
+      banner.className = 'leave-banner tracking';
+      icon.textContent  = '📍';
+      title.textContent = 'Tracking your journey';
+      sub.textContent   = `Leave in ~${remMins - travelMins} min · Travel time ~${travelMins} min · ${distStr}`;
+    }
+  }
+
+  function initTravelAlert(bizLat, bizLng, waitMins, joinedAt) {
+    if (!navigator.geolocation) return; // Browser doesn't support geo
+
+    const banner = document.getElementById('leaveBanner');
+
+    // Add dismiss button once
+    if (!document.getElementById('lbDismiss')) {
+      const btn = document.createElement('button');
+      btn.id = 'lbDismiss';
+      btn.textContent = '✕';
+      btn.title = 'Dismiss';
+      btn.style.cssText = 'background:none;border:none;color:rgba(255,255,255,.6);font-size:1rem;cursor:pointer;padding:.2rem .4rem;flex-shrink:0;align-self:flex-start;';
+      btn.onclick = () => {
+        travelAlertDismissed = true;
+        banner.style.display = 'none';
+        if (travelCheckInterval) clearInterval(travelCheckInterval);
+      };
+      banner.appendChild(btn);
+    }
+
+    function check() {
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          const km       = haversineKm(pos.coords.latitude, pos.coords.longitude, bizLat, bizLng);
+          const travelM  = estimateTravelMins(km);
+          const remM     = remainingMins(waitMins, joinedAt);
+          updateLeaveBanner(km, travelM, remM);
+        },
+        _err => {
+          // Geo denied or unavailable — hide banner silently
+          banner.style.display = 'none';
+          if (travelCheckInterval) clearInterval(travelCheckInterval);
+        },
+        { timeout: 8000, maximumAge: 60000 }
+      );
+    }
+
+    // First check immediately, then every 90 seconds
+    check();
+    if (travelCheckInterval) clearInterval(travelCheckInterval);
+    travelCheckInterval = setInterval(check, 90000);
   }
 
   function doLogout() {

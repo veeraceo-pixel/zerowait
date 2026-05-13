@@ -178,6 +178,80 @@ window.SECTOR_CONFIG = {
       ['🩺','Consultation',15,1],
       ['💉','Vaccination',10,1]
     ]
+  },
+
+  /* ── LOCAL / VILLAGE CATEGORIES ── */
+  Kirana: {
+    label: 'Kirana Store',
+    plural: 'Kirana Stores',
+    icon: '🛒',
+    unitSingular: 'Counter',
+    unitPlural:   'Counters',
+    listPage: 'nearby.html',
+    tagline:  'Check if your local store is busy before you walk over.',
+    presets: [
+      ['🛒','General Counter',10,1],
+      ['🥛','Dairy & Eggs',5,1],
+      ['🌾','Grains & Pulses',5,1],
+      ['🧴','Household Items',5,1]
+    ]
+  },
+  Bakery: {
+    label: 'Bakery',
+    plural: 'Bakeries',
+    icon: '🍞',
+    unitSingular: 'Counter',
+    unitPlural:   'Counters',
+    listPage: 'nearby.html',
+    tagline:  'Fresh daily — know when to come for hot stock.',
+    presets: [
+      ['🍞','Bread & Loaves',5,1],
+      ['🎂','Cakes & Pastries',10,1],
+      ['🥐','Snacks & Biscuits',5,1],
+      ['🎁','Custom Orders',20,1]
+    ]
+  },
+  SweetShop: {
+    label: 'Sweet Shop',
+    plural: 'Sweet Shops',
+    icon: '🍬',
+    unitSingular: 'Counter',
+    unitPlural:   'Counters',
+    listPage: 'nearby.html',
+    tagline:  'Skip the festival rush at your favourite mithai shop.',
+    presets: [
+      ['🍬','Mithai Counter',10,2],
+      ['🧁','Namkeen & Snacks',5,1],
+      ['🎁','Gift Boxes (Pre-order)',15,1],
+      ['🍦','Ice Cream',5,1]
+    ]
+  },
+  LocalShop: {
+    label: 'Local Shop',
+    plural: 'Local Shops',
+    icon: '🏪',
+    unitSingular: 'Service',
+    unitPlural:   'Services',
+    listPage: 'nearby.html',
+    tagline:  'Any small shop — list your services, skip the crowd.',
+    presets: [
+      ['🏪','General Service',10,1],
+      ['📦','Order Pickup',5,1]
+    ]
+  },
+  AutoStand: {
+    label: 'Auto Stand',
+    plural: 'Auto Stands',
+    icon: '🛺',
+    unitSingular: 'Auto',
+    unitPlural:   'Autos',
+    listPage: 'nearby.html',
+    tagline:  'See live availability at your nearest auto stand.',
+    presets: [
+      ['🛺','Auto Available',0,3],
+      ['🚕','Cab Available',0,2],
+      ['🚲','E-Rickshaw',0,2]
+    ]
   }
 };
 
@@ -187,8 +261,19 @@ window.SECTOR_ORDER = [
   'Salon','Barber',
   'Bank','Government',
   'Restaurant',
-  'Gym','CarWash','Repair'
+  'Gym','CarWash','Repair',
+  'Kirana','Bakery','SweetShop','LocalShop','AutoStand',
+  'Other'
 ];
+
+window.SECTOR_CONFIG['Other'] = {
+  label: 'Other',
+  plural: 'Others',
+  icon: '🏷️',
+  unitSingular: 'Counter',
+  unitPlural: 'Counters',
+  presets: [['🏷️','General Counter',10,1]]
+};
 
 window.getSectorConfig = function (category) {
   return window.SECTOR_CONFIG[category] || {
