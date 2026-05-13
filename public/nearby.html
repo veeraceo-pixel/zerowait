@@ -203,6 +203,12 @@
   <div class="chip" data-type="repair">🛠️ Repairs</div>
   <div class="chip" data-type="gov">🏛️ Gov</div>
   <div class="chip" data-type="wash">🧼 Wash</div>
+  <div class="divider"></div>
+  <div class="chip" data-type="kirana">🛒 Kirana</div>
+  <div class="chip" data-type="bakery">🍞 Bakery</div>
+  <div class="chip" data-type="sweet">🍬 Sweets</div>
+  <div class="chip" data-type="localshop">🏪 Local Shop</div>
+  <div class="chip" data-type="auto">🛺 Auto Stand</div>
 </div>
 
 <!-- Mobile view toggle -->
@@ -252,34 +258,52 @@
 const LABELS = {
   salon:'Salons & Barbers', dining:'Restaurants & Dining', clinic:'Clinics & Health',
   banking:'Banking & Finance', gym:'Gyms & Fitness', repair:'Repairs & Services',
-  gov:'Gov & Public Services', wash:'Wash & Laundry'
+  gov:'Gov & Public Services', wash:'Wash & Laundry',
+  kirana:'Kirana Stores', bakery:'Bakeries', sweet:'Sweet Shops',
+  localshop:'Local Shops', auto:'Auto Stands'
 };
 const ICONS = {
   salon:'💇', dining:'🍽️', clinic:'🏥', banking:'🏦',
-  gym:'🏋️', repair:'🛠️', gov:'🏛️', wash:'🧼'
+  gym:'🏋️', repair:'🛠️', gov:'🏛️', wash:'🧼',
+  kirana:'🛒', bakery:'🍞', sweet:'🍬', localshop:'🏪', auto:'🛺'
 };
 const CATEGORY_MAP = {
-  salon:['salon','barber','beauty'], clinic:['clinic','hospital','medical','doctor'],
-  dining:['restaurant','cafe','food','dining'], banking:['bank'],
-  gym:['gym','fitness'], repair:['repair','mechanic'],
-  gov:['government','council'], wash:['wash','laundry']
+  salon:     ['salon','barber','beauty'],
+  clinic:    ['clinic','hospital','medical','doctor'],
+  dining:    ['restaurant','cafe','food','dining'],
+  banking:   ['bank'],
+  gym:       ['gym','fitness'],
+  repair:    ['repair','mechanic'],
+  gov:       ['government','council'],
+  wash:      ['wash','laundry'],
+  kirana:    ['kirana','kirana store','grocery','general store','convenience'],
+  bakery:    ['bakery','baker','bread'],
+  sweet:     ['sweet shop','sweet','mithai','confectionery','sweets'],
+  localshop: ['local shop','local','general','shop'],
+  auto:      ['auto stand','auto','rickshaw','e-rickshaw','cab']
 };
 const OVERPASS_TAGS = {
-  salon:  [['amenity','hairdresser'],['shop','beauty'],['shop','hairdresser']],
-  dining: [['amenity','restaurant'],['amenity','cafe'],['amenity','fast_food']],
-  clinic: [['amenity','clinic'],['amenity','doctors'],['amenity','hospital']],
-  banking:[['amenity','bank']],
-  gym:    [['leisure','fitness_centre'],['amenity','gym']],
-  repair: [['shop','car_repair'],['amenity','car_repair']],
-  gov:    [['office','government'],['amenity','townhall'],['office','council']],
-  wash:   [['amenity','car_wash'],['shop','laundry'],['shop','dry_cleaning']]
+  salon:     [['amenity','hairdresser'],['shop','beauty'],['shop','hairdresser']],
+  dining:    [['amenity','restaurant'],['amenity','cafe'],['amenity','fast_food']],
+  clinic:    [['amenity','clinic'],['amenity','doctors'],['amenity','hospital']],
+  banking:   [['amenity','bank']],
+  gym:       [['leisure','fitness_centre'],['amenity','gym']],
+  repair:    [['shop','car_repair'],['amenity','car_repair']],
+  gov:       [['office','government'],['amenity','townhall'],['office','council']],
+  wash:      [['amenity','car_wash'],['shop','laundry'],['shop','dry_cleaning']],
+  kirana:    [['shop','convenience'],['shop','general'],['shop','grocery'],['shop','supermarket']],
+  bakery:    [['shop','bakery'],['craft','bakery']],
+  sweet:     [['shop','confectionery'],['shop','sweets'],['shop','chocolate']],
+  localshop: [['shop','convenience'],['shop','general'],['shop','variety_store']],
+  auto:      [['amenity','taxi'],['amenity','auto_rickshaw'],['amenity','motorcycle_taxi']]
 };
 
 /* ─── State ─── */
 const params = new URLSearchParams(window.location.search);
 let serviceType = params.get('type') || 'salon';
 let liveOnly = false, currentPlaces = [];
-let userLat = 53.4808, userLng = -2.2426;
+// Default to centre of India (will be overridden immediately by geolocation)
+let userLat = 20.5937, userLng = 78.9629;
 
 /* ─── Auth ─── */
 sb.auth.getSession().then(({data:{session}})=>{
@@ -418,7 +442,7 @@ function init(){
   const geoTimeout = setTimeout(()=>{
     if (!geoResolved){
       geoResolved = true;
-      document.getElementById('counter').textContent = '📍 Showing Manchester area — enable location for nearby results';
+      document.getElementById('counter').textContent = '📍 Enable location for results near you';
       executePlacesSearch();
     }
   }, 3000);
@@ -426,7 +450,7 @@ function init(){
   if (!navigator.geolocation){
     clearTimeout(geoTimeout);
     geoResolved = true;
-    document.getElementById('counter').textContent = '📍 Location not supported — showing Manchester area';
+    document.getElementById('counter').textContent = '📍 Location not supported — enable GPS for nearby results';
     executePlacesSearch();
     return;
   }
@@ -446,7 +470,7 @@ function init(){
       if (geoResolved) return;
       geoResolved = true;
       clearTimeout(geoTimeout);
-      document.getElementById('counter').textContent = '📍 Location unavailable — showing Manchester area';
+      document.getElementById('counter').textContent = '📍 Location unavailable — please enable GPS';
       executePlacesSearch();
     },
     { timeout: 8000, maximumAge: 60000 }
