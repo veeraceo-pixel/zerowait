@@ -92,6 +92,7 @@ textarea{resize:vertical;min-height:60px;}
       <div class="group">
         <label for="bizName">Business Name</label>
         <input type="text" id="bizName" placeholder="Your business name" autocomplete="organization">
+        <div id="nameCheckMsg" style="display:none;padding:.65rem .9rem;border-radius:10px;font-size:.82rem;margin-top:.4rem;"></div>
       </div>
       <div class="group">
         <label for="category">Category</label>
@@ -417,6 +418,44 @@ async function register() {
     resetBtn();
   }
 }
+
+/* ---- DUPLICATE NAME CHECK ---- */
+function normaliseName(n) {
+  return n.toLowerCase()
+    .replace(/^(the|a|an)\s+/i, '')
+    .replace(/[^a-z0-9]/g, '')
+    .trim();
+}
+
+document.getElementById('bizName').addEventListener('blur', async function () {
+  const raw  = this.value.trim();
+  const msgEl = document.getElementById('nameCheckMsg');
+  msgEl.style.display = 'none';
+  if (raw.length < 3) return;
+
+  const norm   = normaliseName(raw);
+  const firstWord = raw.split(/\s+/)[0];
+
+  // Pull providers whose name contains the first word (case-insensitive)
+  const { data } = await sb.from('providers')
+    .select('business_name')
+    .ilike('business_name', '%' + firstWord + '%')
+    .limit(30);
+
+  if (!data) return;
+
+  const match = data.find(p => normaliseName(p.business_name) === norm);
+
+  if (match) {
+    msgEl.innerHTML = `⚠️ A business called <strong>"${match.business_name}"</strong> is already registered. Already yours? <a href="login.html" style="color:#92400e;font-weight:700;text-decoration:underline;">Log in instead →</a>`;
+    msgEl.style.cssText = 'display:block;background:#fef3c7;color:#92400e;padding:.65rem .9rem;border-radius:10px;font-size:.82rem;margin-top:.4rem;';
+  } else {
+    msgEl.innerHTML = '✓ Business name looks good!';
+    msgEl.style.cssText = 'display:block;background:#d1fae5;color:#065f46;padding:.65rem .9rem;border-radius:10px;font-size:.82rem;margin-top:.4rem;';
+    // Auto-hide the green confirmation after 3 s
+    setTimeout(() => { msgEl.style.display = 'none'; }, 3000);
+  }
+});
 
 // init
 populateCategorySelect();

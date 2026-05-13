@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Import Menu | skipQs</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--primary:#002f34;--accent:#23e5db;--accent2:#ffce32;--bg:#f7f8f8;--border:#e2e8f0;--success:#059669;--danger:#dc2626;--text-muted:#406367;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--primary);line-height:1.55;}
+.container{max-width:900px;margin:0 auto;padding:0 20px;}
+
+/* Header */
+header{background:var(--primary);padding:14px 0;position:sticky;top:0;z-index:100;}
+.header-inner{display:flex;align-items:center;gap:16px;}
+.logo{font-size:1.4rem;font-weight:800;color:var(--accent);text-decoration:none;letter-spacing:-1px;}
+.logo span{color:var(--accent2);}
+.spacer{flex:1;}
+.btn{padding:.55rem 1.1rem;border-radius:50px;font-weight:700;font-size:.85rem;text-decoration:none;border:none;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:.4rem;transition:.15s;}
+.btn-accent{background:var(--accent);color:var(--primary);}
+.btn-ghost{background:rgba(255,255,255,.1);color:white;border:1px solid rgba(255,255,255,.2);}
+.btn-primary{background:var(--primary);color:white;}
+.btn-primary:hover{background:#001f24;}
+.btn-danger{background:#fee2e2;color:var(--danger);border:none;}
+.btn-sm{padding:.35rem .75rem;font-size:.78rem;}
+
+/* Page layout */
+.page{padding:2rem 0 4rem;}
+.page-title{font-size:1.5rem;font-weight:800;margin-bottom:.3rem;}
+.page-sub{color:var(--text-muted);font-size:.9rem;margin-bottom:2rem;}
+
+/* Steps */
+.steps-row{display:flex;gap:0;margin-bottom:2rem;}
+.step-pill{display:flex;align-items:center;gap:.5rem;font-size:.8rem;font-weight:700;color:var(--text-muted);padding:.45rem 1rem;background:white;border:1.5px solid var(--border);flex:1;justify-content:center;}
+.step-pill:first-child{border-radius:10px 0 0 10px;}
+.step-pill:last-child{border-radius:0 10px 10px 0;}
+.step-pill.active{background:var(--primary);color:white;border-color:var(--primary);}
+.step-pill.done{background:#d1fae5;color:#065f46;border-color:#a7f3d0;}
+.step-num{width:20px;height:20px;border-radius:50%;background:currentColor;color:white;display:flex;align-items:center;justify-content:center;font-size:.7rem;flex-shrink:0;}
+.step-pill.active .step-num{background:var(--accent);color:var(--primary);}
+.step-pill.done .step-num{background:#059669;}
+
+/* Upload zone */
+.upload-card{background:white;border-radius:16px;border:2px dashed var(--border);padding:3rem 2rem;text-align:center;transition:.2s;cursor:pointer;position:relative;}
+.upload-card:hover,.upload-card.drag-over{border-color:var(--accent);background:#f0fffe;}
+.upload-card input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.upload-icon{font-size:3rem;margin-bottom:.8rem;}
+.upload-title{font-size:1.1rem;font-weight:700;margin-bottom:.4rem;}
+.upload-sub{font-size:.85rem;color:var(--text-muted);margin-bottom:1.2rem;}
+.upload-types{display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;}
+.type-pill{background:var(--bg);border:1px solid var(--border);border-radius:50px;padding:.3rem .8rem;font-size:.75rem;font-weight:600;color:var(--text-muted);}
+
+/* Progress */
+.progress-card{background:white;border-radius:16px;border:1.5px solid var(--border);padding:2rem;text-align:center;display:none;}
+.progress-bar-wrap{background:var(--bg);border-radius:50px;height:8px;margin:1rem 0;}
+.progress-bar{background:var(--accent);height:8px;border-radius:50px;transition:width .3s;width:0%;}
+.progress-label{font-size:.85rem;color:var(--text-muted);}
+
+/* Extracted table */
+.extract-card{background:white;border-radius:16px;border:1.5px solid var(--border);overflow:hidden;display:none;}
+.extract-header{padding:1.2rem 1.4rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.6rem;}
+.extract-header h3{font-size:1rem;font-weight:800;}
+.extract-header p{font-size:.82rem;color:var(--text-muted);}
+.extract-actions{display:flex;gap:.5rem;}
+
+table{width:100%;border-collapse:collapse;}
+thead th{background:var(--bg);padding:.7rem 1rem;font-size:.75rem;font-weight:700;text-align:left;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border);}
+tbody tr{border-bottom:1px solid var(--bg);}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:#fafffe;}
+td{padding:.6rem 1rem;font-size:.875rem;vertical-align:middle;}
+.td-name input{width:100%;border:1.5px solid transparent;border-radius:8px;padding:.45rem .7rem;font-size:.875rem;font-family:inherit;background:transparent;color:var(--primary);transition:.15s;}
+.td-name input:focus{outline:none;border-color:var(--accent);background:white;}
+.td-dur{width:130px;}
+.td-dur input{width:100%;border:1.5px solid var(--border);border-radius:8px;padding:.45rem .7rem;font-size:.875rem;font-family:inherit;text-align:center;color:var(--primary);}
+.td-dur input:focus{outline:none;border-color:var(--accent);}
+.td-del{width:44px;text-align:center;}
+.del-btn{background:none;border:none;cursor:pointer;color:#d1d5db;font-size:1.1rem;padding:.2rem;border-radius:6px;transition:.15s;}
+.del-btn:hover{color:var(--danger);background:#fee2e2;}
+
+/* Add row */
+.add-row-btn{display:flex;align-items:center;gap:.5rem;width:100%;padding:.8rem 1rem;background:none;border:none;cursor:pointer;font-size:.85rem;font-weight:600;color:var(--text-muted);border-top:1px dashed var(--border);font-family:inherit;transition:.15s;}
+.add-row-btn:hover{color:var(--primary);background:var(--bg);}
+
+/* Summary bar */
+.summary-bar{background:var(--bg);padding:1rem 1.4rem;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);flex-wrap:wrap;gap:.6rem;}
+.summary-text{font-size:.85rem;color:var(--text-muted);}
+.summary-text strong{color:var(--primary);}
+
+/* Save result */
+.result-card{background:white;border-radius:16px;border:1.5px solid var(--border);padding:2.5rem;text-align:center;display:none;}
+.result-icon{font-size:3.5rem;margin-bottom:.8rem;}
+.result-title{font-size:1.2rem;font-weight:800;margin-bottom:.4rem;}
+.result-sub{font-size:.9rem;color:var(--text-muted);margin-bottom:1.4rem;}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--primary);color:white;padding:.75rem 1.4rem;border-radius:50px;font-size:.875rem;font-weight:600;z-index:2000;transition:.3s;opacity:0;white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+.toast.success{background:var(--success);}
+.toast.error{background:var(--danger);}
+
+/* Tips */
+.tip-box{background:#fffbeb;border:1.5px solid #fde68a;border-radius:12px;padding:1rem 1.2rem;font-size:.82rem;color:#92400e;margin-bottom:1.5rem;display:flex;gap:.6rem;align-items:flex-start;line-height:1.5;}
+
+@media(max-width:600px){
+  .steps-row{display:none;}
+  .extract-header{flex-direction:column;align-items:flex-start;}
+  .td-dur{width:100px;}
+  thead th:nth-child(1){display:none;}
+  td:nth-child(1){display:none;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container header-inner">
+    <a href="index.html" class="logo">skip<span>Qs</span></a>
+    <div class="spacer"></div>
+    <a href="provider-dashboard.html" class="btn btn-ghost">← Dashboard</a>
+  </div>
+</header>
+
+<div class="container page">
+
+  <div class="page-title">📋 Import Services from Menu</div>
+  <p class="page-sub">Upload your menu or service list — we'll extract the items automatically. Just add the duration for each service and save.</p>
+
+  <!-- Steps -->
+  <div class="steps-row">
+    <div class="step-pill active" id="step1pill"><span class="step-num">1</span> Upload Menu</div>
+    <div class="step-pill" id="step2pill"><span class="step-num">2</span> Review &amp; Edit</div>
+    <div class="step-pill" id="step3pill"><span class="step-num">3</span> Save Services</div>
+  </div>
+
+  <!-- Tip -->
+  <div class="tip-box">
+    💡 <span>Works best with PDF menus or service lists. For each extracted item, enter how many minutes the service typically takes — that's all we need.</span>
+  </div>
+
+  <!-- Step 1: Upload -->
+  <div id="uploadSection">
+    <div class="upload-card" id="uploadCard">
+      <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png,.webp" onchange="handleFile(this.files[0])">
+      <div class="upload-icon">📤</div>
+      <div class="upload-title">Drop your menu here or click to browse</div>
+      <div class="upload-sub">We'll read the text and pull out your services automatically</div>
+      <div class="upload-types">
+        <span class="type-pill">📄 PDF</span>
+        <span class="type-pill">🖼️ JPG / PNG</span>
+        <span class="type-pill">📃 Up to 10MB</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 2: Processing -->
+  <div class="progress-card" id="progressCard">
+    <div style="font-size:2rem;margin-bottom:.6rem;">⚙️</div>
+    <div style="font-weight:700;margin-bottom:.3rem;" id="progressTitle">Reading your menu…</div>
+    <div class="progress-label" id="progressLabel">Extracting text from file</div>
+    <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar"></div></div>
+  </div>
+
+  <!-- Step 3: Extracted table -->
+  <div class="extract-card" id="extractCard">
+    <div class="extract-header">
+      <div>
+        <h3>📝 Review your services</h3>
+        <p>Edit names if needed · Fill in the duration (minutes) for each service · Delete any that don't apply</p>
+      </div>
+      <div class="extract-actions">
+        <button class="btn btn-ghost btn-sm" onclick="resetImport()">↩ Start Over</button>
+      </div>
+    </div>
+
+    <table id="servicesTable">
+      <thead>
+        <tr>
+          <th style="width:32px;">#</th>
+          <th>Service / Item Name</th>
+          <th style="width:130px;text-align:center;">Duration (min)</th>
+          <th style="width:44px;"></th>
+        </tr>
+      </thead>
+      <tbody id="servicesBody"></tbody>
+    </table>
+
+    <button class="add-row-btn" onclick="addRow()">
+      ➕ Add a service manually
+    </button>
+
+    <div class="summary-bar">
+      <div class="summary-text">
+        <strong id="rowCount">0</strong> services ready to save
+        <span id="durationWarning" style="color:var(--danger);margin-left:.6rem;display:none;">⚠️ Fill in duration for all services</span>
+      </div>
+      <button class="btn btn-accent" onclick="saveServices()" id="saveBtn">
+        💾 Save All Services
+      </button>
+    </div>
+  </div>
+
+  <!-- Step 4: Done -->
+  <div class="result-card" id="resultCard">
+    <div class="result-icon">🎉</div>
+    <div class="result-title" id="resultTitle">Services saved!</div>
+    <div class="result-sub" id="resultSub">Your services are now live on your profile.</div>
+    <div style="display:flex;gap:.8rem;justify-content:center;flex-wrap:wrap;">
+      <a href="provider-dashboard.html" class="btn btn-accent">Go to Dashboard</a>
+      <button class="btn btn-ghost" onclick="resetImport()" style="background:var(--bg);color:var(--primary);border:1px solid var(--border);">Import Another Menu</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- PDF.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<!-- Tesseract for image OCR -->
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="supabase-config.js"></script>
+<script src="auth-nav.js"></script>
+
+<script>
+// PDF.js worker
+if (typeof pdfjsLib !== 'undefined') {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+
+let session = null;
+let providerId = null;
+let extractedItems = [];
+let rowCounter = 0;
+
+// ── Auth check ──
+(async () => {
+  const { data: { session: s } } = await sb.auth.getSession();
+  if (!s) { window.location.href = 'login.html'; return; }
+  session = s;
+  const { data: prov } = await sb.from('providers').select('id,business_name').eq('user_id', s.user.id).maybeSingle();
+  if (!prov) { window.location.href = 'provider-dashboard.html'; return; }
+  providerId = prov.id;
+})();
+
+// ── Drag & drop ──
+const uploadCard = document.getElementById('uploadCard');
+uploadCard.addEventListener('dragover', e => { e.preventDefault(); uploadCard.classList.add('drag-over'); });
+uploadCard.addEventListener('dragleave', () => uploadCard.classList.remove('drag-over'));
+uploadCard.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadCard.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) handleFile(file);
+});
+
+// ── Handle file ──
+async function handleFile(file) {
+  if (!file) return;
+  const maxMB = 10;
+  if (file.size > maxMB * 1024 * 1024) { showToast('File too large — max 10MB', 'error'); return; }
+
+  setStep(2);
+  setProgress(10, 'Reading file…');
+
+  try {
+    let rawText = '';
+
+    if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+      rawText = await extractPdfText(file);
+    } else if (file.type.startsWith('image/')) {
+      rawText = await extractImageText(file);
+    } else {
+      showToast('Please upload a PDF or image file', 'error');
+      setStep(1); return;
+    }
+
+    setProgress(80, 'Identifying services…');
+    const items = parseMenuItems(rawText);
+    setProgress(100, 'Done!');
+
+    setTimeout(() => showExtractedItems(items), 400);
+  } catch (err) {
+    console.error(err);
+    showToast('Could not read file: ' + err.message, 'error');
+    setStep(1);
+  }
+}
+
+// ── Extract text from PDF ──
+async function extractPdfText(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  let fullText = '';
+  setProgress(20, `Reading PDF (${pdf.numPages} pages)…`);
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const pageText = content.items.map(item => item.str).join(' ');
+    fullText += pageText + '\n';
+    setProgress(20 + Math.round((i / pdf.numPages) * 55), `Reading page ${i} of ${pdf.numPages}…`);
+  }
+  return fullText;
+}
+
+// ── Extract text from image (OCR) ──
+async function extractImageText(file) {
+  setProgress(20, 'Running OCR on image…');
+  const result = await Tesseract.recognize(file, 'eng', {
+    logger: m => {
+      if (m.status === 'recognizing text') {
+        setProgress(20 + Math.round(m.progress * 55), 'Reading text from image…');
+      }
+    }
+  });
+  return result.data.text;
+}
+
+// ── Parse text into menu items ──
+function parseMenuItems(text) {
+  const lines = text.split(/[\n\r]+/).map(l => l.trim()).filter(Boolean);
+  const items = [];
+  const seen = new Set();
+
+  // Patterns to skip
+  const skipPatterns = [
+    /^\d+(\.\d+)?$/, // pure number (price)
+    /^£?\d+(\.\d{2})?$/, // price like £12.99
+    /^[^a-zA-Z]{0,3}$/, // too short / no letters
+    /^(menu|services|price list|our services|welcome|thank you|contact|address|phone|email|www\.|http|follow us|open|closed|hours|monday|tuesday|wednesday|thursday|friday|saturday|sunday|©|all rights)/i,
+    /^\d{1,2}[:\.]\d{2}/, // times like 09:00
+  ];
+
+  const priceRegex = /£?\d+(\.\d{2})?/g;
+
+  for (let line of lines) {
+    // Strip prices from line to get clean name
+    let name = line.replace(priceRegex, '').replace(/[-–—|•·]+$/,'').trim();
+    // Remove leading bullets / numbers
+    name = name.replace(/^[\d\.\-\*•·\s]+/, '').trim();
+
+    if (!name || name.length < 3 || name.length > 80) continue;
+    if (skipPatterns.some(p => p.test(name))) continue;
+    // Must contain at least 2 letters
+    if ((name.match(/[a-zA-Z]/g) || []).length < 2) continue;
+
+    const key = name.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    items.push(name);
+  }
+
+  return items.slice(0, 60); // cap at 60 items
+}
+
+// ── Show extracted items in table ──
+function showExtractedItems(items) {
+  extractedItems = items;
+  const tbody = document.getElementById('servicesBody');
+  tbody.innerHTML = '';
+  rowCounter = 0;
+
+  if (!items.length) {
+    // No items extracted — show empty table with a few blank rows
+    for (let i = 0; i < 3; i++) addRow();
+    showToast('Could not auto-detect items — please add them manually', 'error');
+  } else {
+    items.forEach(name => addRow(name));
+    showToast(`✓ Found ${items.length} items — review and add durations`, 'success');
+  }
+
+  updateRowCount();
+  setStep(3);
+  document.getElementById('extractCard').style.display = 'block';
+  document.getElementById('progressCard').style.display = 'none';
+}
+
+// ── Add a table row ──
+function addRow(name = '') {
+  rowCounter++;
+  const id = 'row_' + rowCounter;
+  const tbody = document.getElementById('servicesBody');
+  const tr = document.createElement('tr');
+  tr.id = id;
+  tr.innerHTML = `
+    <td style="color:var(--text-muted);font-size:.78rem;font-weight:600;">${rowCounter}</td>
+    <td class="td-name"><input type="text" value="${esc(name)}" placeholder="Service name" oninput="updateRowCount()"></td>
+    <td class="td-dur"><input type="number" min="1" max="480" step="5" placeholder="e.g. 30" oninput="updateRowCount()"></td>
+    <td class="td-del"><button class="del-btn" onclick="deleteRow('${id}')" title="Remove">✕</button></td>`;
+  tbody.appendChild(tr);
+  updateRowCount();
+}
+
+function deleteRow(id) {
+  const row = document.getElementById(id);
+  if (row) row.remove();
+  updateRowCount();
+}
+
+function updateRowCount() {
+  const rows = document.querySelectorAll('#servicesBody tr');
+  const filled = Array.from(rows).filter(r => {
+    const name = r.querySelector('td.td-name input')?.value.trim();
+    return name && name.length > 0;
+  });
+  document.getElementById('rowCount').textContent = filled.length;
+
+  // Warn if any have name but no duration
+  const missingDur = Array.from(rows).some(r => {
+    const name = r.querySelector('td.td-name input')?.value.trim();
+    const dur  = r.querySelector('td.td-dur input')?.value.trim();
+    return name && !dur;
+  });
+  document.getElementById('durationWarning').style.display = missingDur ? 'inline' : 'none';
+}
+
+// ── Save services to Supabase ──
+async function saveServices() {
+  if (!providerId) { showToast('Not logged in', 'error'); return; }
+
+  const rows = document.querySelectorAll('#servicesBody tr');
+  const services = [];
+
+  rows.forEach(row => {
+    const name = row.querySelector('td.td-name input')?.value.trim();
+    const dur  = parseInt(row.querySelector('td.td-dur input')?.value) || 15;
+    if (name) services.push({ name, dur });
+  });
+
+  if (!services.length) { showToast('Add at least one service', 'error'); return; }
+
+  const missingDur = services.some(s => !s.dur);
+  if (missingDur) {
+    if (!confirm('Some services have no duration set (default 15 min will be used). Continue?')) return;
+  }
+
+  const saveBtn = document.getElementById('saveBtn');
+  saveBtn.disabled = true; saveBtn.textContent = '⏳ Saving…';
+
+  try {
+    // Get current max display order
+    const { data: existing } = await sb.from('departments')
+      .select('display_order').eq('provider_id', providerId)
+      .order('display_order', { ascending: false }).limit(1);
+    let order = (existing?.[0]?.display_order ?? -1) + 1;
+
+    const inserts = services.map((s, i) => ({
+      provider_id:         providerId,
+      name:                s.name,
+      avg_consult_minutes: s.dur || 15,
+      wait_minutes:        0,
+      capacity:            1,
+      is_open:             true,
+      display_order:       order + i,
+      icon:                '🔹'
+    }));
+
+    const { error } = await sb.from('departments').insert(inserts);
+    if (error) throw error;
+
+    // Show success
+    document.getElementById('extractCard').style.display = 'none';
+    document.getElementById('resultCard').style.display = 'block';
+    document.getElementById('resultTitle').textContent = `${services.length} service${services.length > 1 ? 's' : ''} saved!`;
+    document.getElementById('resultSub').textContent = 'Your services are now live on your skipQs profile. You can manage wait times from your dashboard.';
+    setStep(4);
+    showToast('✓ Services saved successfully', 'success');
+
+  } catch (err) {
+    showToast('Save failed: ' + err.message, 'error');
+  } finally {
+    saveBtn.disabled = false; saveBtn.textContent = '💾 Save All Services';
+  }
+}
+
+// ── Reset ──
+function resetImport() {
+  document.getElementById('uploadSection').style.display = 'block';
+  document.getElementById('progressCard').style.display = 'none';
+  document.getElementById('extractCard').style.display = 'none';
+  document.getElementById('resultCard').style.display = 'none';
+  document.getElementById('fileInput').value = '';
+  document.getElementById('servicesBody').innerHTML = '';
+  rowCounter = 0;
+  setStep(1);
+}
+
+// ── UI helpers ──
+function setStep(n) {
+  [1,2,3].forEach(i => {
+    const el = document.getElementById('step' + i + 'pill');
+    if (!el) return;
+    el.classList.remove('active','done');
+    if (i < n) el.classList.add('done');
+    else if (i === n) el.classList.add('active');
+  });
+  document.getElementById('uploadSection').style.display = n === 1 ? 'block' : 'none';
+  document.getElementById('progressCard').style.display = n === 2 ? 'block' : 'none';
+}
+
+function setProgress(pct, label) {
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = label;
+  if (pct >= 100) document.getElementById('progressTitle').textContent = '✓ Done!';
+}
+
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => { t.className = 'toast'; }, 3000);
+}
+
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>

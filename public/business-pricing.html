@@ -176,16 +176,16 @@ footer{background:var(--primary);color:white;padding:2.4rem 0 1.4rem;}
     <h2 class="section-title">What you get today</h2>
     <p class="section-sub">One plan. All features. Zero cost. Paid plans will only launch once we have happy customers — and we'll give you plenty of notice.</p>
 
-    <div class="pricing-grid">
+    <div style="max-width:520px;margin:0 auto 2.5rem;">
 
-      <!-- Free Now -->
-      <div class="price-card featured" style="grid-column:1/2;">
+      <!-- Free — only plan shown -->
+      <div class="price-card featured">
         <div class="featured-badge">✓ Active Now — Free</div>
         <div class="plan-icon">🚀</div>
-        <div class="plan-name">Launch Plan</div>
-        <div class="plan-desc">Everything skipQs offers, open to every business, completely free.</div>
+        <div class="plan-name">Everything. Free.</div>
+        <div class="plan-desc">Every feature skipQs offers — open to every business, completely free. No catches, no time limits.</div>
         <div class="free-badge">FREE</div>
-        <div class="price-note">No credit card · No expiry</div>
+        <div class="price-note">No credit card · No expiry · No commitment</div>
         <ul class="feature-list">
           <li><span class="check">✓</span> Unlimited departments &amp; services</li>
           <li><span class="check">✓</span> Real-time live wait time board</li>
@@ -194,47 +194,9 @@ footer{background:var(--primary);color:white;padding:2.4rem 0 1.4rem;}
           <li><span class="check">✓</span> WhatsApp patient notifications</li>
           <li><span class="check">✓</span> QR code for walk-in patients</li>
           <li><span class="check">✓</span> Realtime queue updates</li>
-          <li><span class="check">✓</span> Basic analytics</li>
+          <li><span class="check">✓</span> Analytics &amp; reporting</li>
         </ul>
-        <a href="provider-signup.html" class="cta-btn cta-accent">Get Started — It's Free</a>
-      </div>
-
-      <!-- Growth coming soon -->
-      <div class="price-card coming-soon">
-        <div class="plan-icon">📈</div>
-        <div class="plan-name">Growth</div>
-        <div class="plan-desc">For established businesses that want deeper analytics and multi-location support.</div>
-        <div class="coming-pill">Coming Soon</div>
-        <div class="soon-price">~£29<small style="font-size:.9rem;font-weight:500"> /mo</small></div>
-        <div class="price-note">Estimated · final pricing TBD</div>
-        <ul class="feature-list">
-          <li><span class="check">✓</span> Everything in Launch</li>
-          <li><span class="check">✓</span> Multi-location management</li>
-          <li><span class="check">✓</span> Advanced analytics &amp; reports</li>
-          <li><span class="check">✓</span> Bulk CSV department import</li>
-          <li><span class="check">✓</span> Priority email support</li>
-          <li><span class="check">✓</span> Custom queue branding</li>
-        </ul>
-        <a href="#notify" class="cta-btn cta-disabled" onclick="notifyMe(event)">Notify Me When Live</a>
-      </div>
-
-      <!-- Enterprise coming soon -->
-      <div class="price-card coming-soon">
-        <div class="plan-icon">🏥</div>
-        <div class="plan-name">Enterprise</div>
-        <div class="plan-desc">For corporate hospital chains and businesses that want API access or a white-label solution.</div>
-        <div class="coming-pill">Coming Soon</div>
-        <div class="soon-price">Custom</div>
-        <div class="price-note">Tailored to your scale · no lock-in</div>
-        <ul class="feature-list">
-          <li><span class="check">✓</span> Everything in Growth</li>
-          <li><span class="check">✓</span> Embeddable wait-time widget</li>
-          <li><span class="check">✓</span> REST API access</li>
-          <li><span class="check">✓</span> White-label / custom branding</li>
-          <li><span class="check">✓</span> Dedicated account manager</li>
-          <li><span class="check">✓</span> SLA guarantee + 24/7 support</li>
-        </ul>
-        <a href="contact.html" class="cta-btn cta-outline">Talk to Us</a>
+        <a href="provider-signup.html" class="cta-btn cta-accent">Get Started — It's Free →</a>
       </div>
 
     </div>
@@ -369,13 +331,7 @@ footer{background:var(--primary);color:white;padding:2.4rem 0 1.4rem;}
 <script>
 document.getElementById('year').textContent = new Date().getFullYear();
 
-function notifyMe(e) {
-  e.preventDefault();
-  const email = prompt('Enter your email and we\'ll notify you when Growth plans launch:');
-  if (email && email.includes('@')) {
-    alert('Thanks! We\'ll let you know at ' + email + ' when Growth plans go live.');
-  }
-}
+// pricing page
 </script>
 </body>
 </html>

@@ -27,6 +27,15 @@
     .forgot { text-align: right; font-size: .8rem; margin-top: -.5rem; margin-bottom: 1rem; }
     .forgot a { color: var(--text-muted); text-decoration: none; }
     .forgot a:hover { text-decoration: underline; }
+    .divider { display:flex; align-items:center; gap:.8rem; margin:1.4rem 0; color:var(--text-muted); font-size:.82rem; }
+    .divider::before,.divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+    .btn-otp { width:100%; background:transparent; color:var(--primary); padding:.9rem; border:1.5px solid #cbd5e1; border-radius:.6rem; font-size:.95rem; font-weight:600; cursor:pointer; font-family:inherit; transition:.2s; display:flex; align-items:center; justify-content:center; gap:.5rem; }
+    .btn-otp:hover { border-color:var(--accent); background:#f0fffe; }
+    .otp-inline { display:none; margin-top:1rem; }
+    .otp-row { display:flex; gap:.5rem; justify-content:center; margin:.8rem 0; }
+    .otp-box { width:42px; height:50px; text-align:center; font-size:1.3rem; font-weight:700; border:2px solid #cbd5e1; border-radius:.6rem; font-family:inherit; transition:border-color .2s; }
+    .otp-box:focus { outline:none; border-color:var(--accent); }
+    .info-msg { background:#eff6ff; color:#1e40af; border-radius:.5rem; padding:.75rem 1rem; font-size:.875rem; margin-bottom:1rem; display:none; }
   </style>
 </head>
 <body>
@@ -57,7 +66,42 @@
       <button type="submit" class="btn-submit" id="submitBtn">Sign In</button>
     </form>
 
-    <div class="auth-footer">
+    <!-- Customer magic-link / OTP section -->
+    <div class="divider">or for customers</div>
+
+    <div id="infoMsgOTP" class="info-msg"></div>
+
+    <!-- Phase A: just show the button -->
+    <div id="otpPhaseA">
+      <button type="button" class="btn-otp" onclick="showOTPInput()">
+        📧 Sign in with email code
+      </button>
+    </div>
+
+    <!-- Phase B: email entry + send -->
+    <div id="otpPhaseB" style="display:none;">
+      <input type="email" id="otpEmail" class="form-control" placeholder="your@email.com" style="margin-bottom:.6rem;">
+      <button type="button" class="btn-submit" id="otpSendBtn" onclick="sendCustomerOTP()">Send Code</button>
+      <button type="button" style="width:100%;background:none;border:none;color:var(--text-muted);font-size:.85rem;margin-top:.5rem;cursor:pointer;font-family:inherit;" onclick="hideOTPInput()">← Back to password login</button>
+    </div>
+
+    <!-- Phase C: OTP code boxes -->
+    <div id="otpPhaseC" style="display:none;">
+      <p style="font-size:.85rem;color:var(--text-muted);text-align:center;margin-bottom:.3rem;">6-digit code sent to <strong id="otpEmailShow"></strong></p>
+      <div class="otp-row">
+        <input class="otp-box" id="l1" maxlength="1" inputmode="numeric">
+        <input class="otp-box" id="l2" maxlength="1" inputmode="numeric">
+        <input class="otp-box" id="l3" maxlength="1" inputmode="numeric">
+        <input class="otp-box" id="l4" maxlength="1" inputmode="numeric">
+        <input class="otp-box" id="l5" maxlength="1" inputmode="numeric">
+        <input class="otp-box" id="l6" maxlength="1" inputmode="numeric">
+      </div>
+      <div id="otpErrInline" class="error-msg"></div>
+      <button type="button" class="btn-submit" id="otpVerifyBtn" onclick="verifyCustomerOTP()">Verify &amp; Log In</button>
+      <button type="button" style="width:100%;background:none;border:none;color:var(--text-muted);font-size:.85rem;margin-top:.5rem;cursor:pointer;font-family:inherit;" onclick="backToOTPEmail()">← Change email</button>
+    </div>
+
+    <div class="auth-footer" style="margin-top:1.2rem;">
       New here? <a href="signup.html">Create an account</a>
     </div>
     <div class="auth-footer" style="margin-top:.6rem;font-size:.82rem;">
@@ -136,6 +180,82 @@
     }
     redirectUser(data.session);
   };
+
+  /* ===== CUSTOMER EMAIL OTP ===== */
+  let otpTargetEmail = '';
+
+  function showOTPInput() {
+    document.getElementById('otpPhaseA').style.display = 'none';
+    document.getElementById('otpPhaseB').style.display = 'block';
+    document.getElementById('otpEmail').focus();
+  }
+  function hideOTPInput() {
+    document.getElementById('otpPhaseA').style.display = 'block';
+    document.getElementById('otpPhaseB').style.display = 'none';
+    document.getElementById('otpPhaseC').style.display = 'none';
+    document.getElementById('infoMsgOTP').style.display = 'none';
+  }
+  function backToOTPEmail() {
+    document.getElementById('otpPhaseC').style.display = 'none';
+    document.getElementById('otpPhaseB').style.display = 'block';
+  }
+
+  async function sendCustomerOTP() {
+    const email = document.getElementById('otpEmail').value.trim().toLowerCase();
+    if (!email) return;
+    const btn = document.getElementById('otpSendBtn');
+    btn.disabled = true; btn.textContent = 'Sending…';
+    const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: false } });
+    btn.disabled = false; btn.textContent = 'Send Code';
+    if (error) {
+      // If user doesn't exist, redirect to signup
+      if (error.message.toLowerCase().includes('not found') || error.message.toLowerCase().includes('signups')) {
+        document.getElementById('infoMsgOTP').textContent = 'No account found. Please sign up first.';
+        document.getElementById('infoMsgOTP').style.display = 'block';
+        setTimeout(() => { window.location.href = 'signup.html'; }, 1800);
+        return;
+      }
+      document.getElementById('infoMsgOTP').style.background='#fee2e2';
+      document.getElementById('infoMsgOTP').style.color='#b91c1c';
+      document.getElementById('infoMsgOTP').textContent = error.message;
+      document.getElementById('infoMsgOTP').style.display = 'block';
+      return;
+    }
+    otpTargetEmail = email;
+    document.getElementById('otpEmailShow').textContent = email;
+    document.getElementById('otpPhaseB').style.display = 'none';
+    document.getElementById('otpPhaseC').style.display = 'block';
+    // Wire up OTP boxes
+    const lboxes = ['l1','l2','l3','l4','l5','l6'].map(id => document.getElementById(id));
+    lboxes.forEach((box, i) => {
+      box.oninput = e => {
+        const val = e.target.value.replace(/\D/g,'');
+        e.target.value = val;
+        if (val && i < 5) lboxes[i+1].focus();
+        if (lboxes.every(b => b.value)) verifyCustomerOTP();
+      };
+      box.onkeydown = e => { if (e.key==='Backspace' && !box.value && i>0) lboxes[i-1].focus(); };
+    });
+    lboxes[0].focus();
+  }
+
+  async function verifyCustomerOTP() {
+    const lboxes = ['l1','l2','l3','l4','l5','l6'].map(id => document.getElementById(id));
+    const code = lboxes.map(b => b.value).join('');
+    if (code.length < 6) return;
+    const btn = document.getElementById('otpVerifyBtn');
+    btn.disabled = true; btn.textContent = 'Verifying…';
+    const { data, error } = await sb.auth.verifyOtp({ email: otpTargetEmail, token: code, type: 'email' });
+    if (error) {
+      btn.disabled = false; btn.textContent = 'Verify & Log In';
+      lboxes.forEach(b => { b.value=''; b.style.borderColor='#ef4444'; });
+      document.getElementById('otpErrInline').textContent = 'Invalid or expired code. Try again.';
+      document.getElementById('otpErrInline').style.display = 'block';
+      lboxes[0].focus();
+      return;
+    }
+    redirectUser(data.session);
+  }
 
   // Forgot password
   document.getElementById('forgotLink').onclick = async (e) => {

@@ -12,25 +12,45 @@
     .logo { font-size:1.5rem; font-weight:800; color:var(--accent); text-decoration:none; }
     .navbar a.biz { color:rgba(255,255,255,.85); text-decoration:none; font-size:.9rem; font-weight:600; }
     .auth-wrapper { flex:1; display:flex; align-items:center; justify-content:center; padding:2rem; }
-    .auth-card { background:var(--white); width:100%; max-width:450px; padding:2.5rem; border-radius:1.25rem; box-shadow:var(--shadow); }
-    .auth-header h1 { font-size:1.8rem; margin:0 0 .5rem; color:#0f172a; }
-    .auth-header p { color:var(--text-muted); margin-bottom:2rem; font-size:.95rem; }
-    .form-group { margin-bottom:1.25rem; text-align:left; }
+    .auth-card { background:var(--white); width:100%; max-width:420px; padding:2.5rem; border-radius:1.25rem; box-shadow:var(--shadow); }
+    .auth-header h1 { font-size:1.8rem; margin:0 0 .4rem; color:#0f172a; }
+    .auth-header p { color:var(--text-muted); margin-bottom:1.8rem; font-size:.95rem; line-height:1.5; }
+    .form-group { margin-bottom:1.2rem; text-align:left; }
     .form-label { display:block; font-size:.875rem; font-weight:600; margin-bottom:.5rem; }
-    .form-control { width:100%; padding:.8rem 1rem; box-sizing:border-box; border:1.5px solid #cbd5e1; border-radius:.6rem; font-size:1rem; transition:border-color .2s; }
+    .form-control { width:100%; padding:.8rem 1rem; box-sizing:border-box; border:1.5px solid #cbd5e1; border-radius:.6rem; font-size:1rem; transition:border-color .2s; font-family:inherit; }
     .form-control:focus { outline:none; border-color:var(--accent); }
-    .btn-submit { width:100%; background:var(--primary); color:white; padding:1rem; border:none; border-radius:.6rem; font-size:1rem; font-weight:600; cursor:pointer; display:flex; justify-content:center; align-items:center; gap:10px; }
+    .btn-submit { width:100%; background:var(--primary); color:white; padding:1rem; border:none; border-radius:.6rem; font-size:1rem; font-weight:600; cursor:pointer; display:flex; justify-content:center; align-items:center; gap:10px; font-family:inherit; transition:opacity .2s; }
     .btn-submit:hover { opacity:.88; }
     .btn-submit:disabled { opacity:.6; cursor:not-allowed; }
-    .spinner { width:18px; height:18px; border:3px solid rgba(255,255,255,.3); border-radius:50%; border-top-color:#fff; animation:spin 1s linear infinite; display:none; }
+    .btn-back { width:100%; background:transparent; color:var(--text-muted); padding:.7rem; border:1.5px solid #cbd5e1; border-radius:.6rem; font-size:.9rem; font-weight:600; cursor:pointer; margin-top:.6rem; font-family:inherit; transition:.2s; }
+    .btn-back:hover { border-color:var(--primary); color:var(--primary); }
+    .spinner { width:18px; height:18px; border:3px solid rgba(255,255,255,.3); border-radius:50%; border-top-color:#fff; animation:spin 1s linear infinite; display:none; flex-shrink:0; }
     @keyframes spin { to { transform:rotate(360deg); } }
     .error-msg { background:#fee2e2; color:#b91c1c; border-radius:.5rem; padding:.75rem 1rem; font-size:.875rem; margin-bottom:1rem; display:none; }
-    .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:1000; justify-content:center; align-items:center; backdrop-filter:blur(4px); }
-    .success-popup { background:white; padding:2.5rem; border-radius:1.5rem; text-align:center; max-width:320px; width:90%; animation:popIn .4s cubic-bezier(.175,.885,.32,1.275); box-shadow:0 25px 50px -12px rgba(0,0,0,.25); }
-    .success-icon { width:60px; height:60px; background:#10b981; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:2rem; margin:0 auto 1.5rem; }
-    @keyframes popIn { from{transform:scale(.8);opacity:0} to{transform:scale(1);opacity:1} }
+    .info-msg { background:#eff6ff; color:#1e40af; border-radius:.5rem; padding:.75rem 1rem; font-size:.875rem; margin-bottom:1rem; display:none; }
     .auth-footer { margin-top:1.5rem; text-align:center; font-size:.9rem; color:var(--text-muted); }
     .auth-footer a { color:var(--primary); text-decoration:none; font-weight:600; }
+
+    /* Step indicator */
+    .steps { display:flex; align-items:center; gap:.5rem; margin-bottom:1.8rem; }
+    .step-dot { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.75rem; font-weight:700; flex-shrink:0; transition:.3s; }
+    .step-dot.active { background:var(--primary); color:white; }
+    .step-dot.done { background:var(--accent); color:var(--primary); }
+    .step-dot.pending { background:#e2e8f0; color:#94a3b8; }
+    .step-line { flex:1; height:2px; border-radius:1px; background:#e2e8f0; }
+    .step-line.done { background:var(--accent); }
+
+    /* OTP code boxes */
+    .otp-row { display:flex; gap:.6rem; justify-content:center; margin:1.2rem 0; }
+    .otp-box { width:46px; height:54px; text-align:center; font-size:1.4rem; font-weight:700; border:2px solid #cbd5e1; border-radius:.6rem; font-family:inherit; transition:border-color .2s; }
+    .otp-box:focus { outline:none; border-color:var(--accent); }
+
+    /* Email display pill */
+    .email-pill { display:inline-flex; align-items:center; gap:.4rem; background:#f1f5f9; border-radius:50px; padding:.4rem .9rem; font-size:.85rem; font-weight:600; color:var(--primary); margin-bottom:1rem; }
+    .resend-link { font-size:.82rem; color:var(--text-muted); text-align:center; margin-top:.8rem; }
+    .resend-link a { color:var(--primary); font-weight:600; text-decoration:none; cursor:pointer; }
+    .resend-link a:hover { text-decoration:underline; }
+    #resendTimer { font-weight:600; }
   </style>
 </head>
 <body>
@@ -42,92 +62,264 @@
 
 <main class="auth-wrapper">
   <div class="auth-card">
-    <div class="auth-header">
-      <h1>Join skipQs</h1>
-      <p>Sign up to start skipping queues at your favourite places.</p>
+
+    <!-- Step indicator -->
+    <div class="steps">
+      <div class="step-dot active" id="dot1">1</div>
+      <div class="step-line" id="line1"></div>
+      <div class="step-dot pending" id="dot2">2</div>
     </div>
 
-    <div id="errorMsg" class="error-msg"></div>
+    <!-- STEP 1: Name + Email -->
+    <div id="step1">
+      <div class="auth-header">
+        <h1>Join skipQs</h1>
+        <p>Skip queues at hospitals, salons, banks and more. We'll send a quick code to verify your email — no password needed.</p>
+      </div>
 
-    <form id="signupForm">
+      <div id="errorMsg" class="error-msg"></div>
+      <div id="infoMsg" class="info-msg"></div>
+
       <div class="form-group">
-        <label class="form-label">Full Name</label>
-        <input type="text" id="fullName" class="form-control" placeholder="Enter your name" required>
+        <label class="form-label">Your Name</label>
+        <input type="text" id="fullName" class="form-control" placeholder="Enter your name" autocomplete="name">
       </div>
       <div class="form-group">
         <label class="form-label">Email Address</label>
-        <input type="email" id="email" class="form-control" placeholder="name@example.com" required>
+        <input type="email" id="email" class="form-control" placeholder="name@example.com" autocomplete="email">
       </div>
-      <div class="form-group">
-        <label class="form-label">Password</label>
-        <input type="password" id="password" class="form-control" placeholder="At least 8 characters" required minlength="8">
-      </div>
-      <button type="submit" class="btn-submit" id="submitBtn">
-        <span id="spinner" class="spinner"></span>
-        <span id="btnText">Create Account</span>
-      </button>
-    </form>
 
-    <div class="auth-footer">Already have an account? <a href="login.html">Log in</a></div>
+      <button class="btn-submit" id="sendBtn" onclick="sendOTP()">
+        <span class="spinner" id="sendSpinner"></span>
+        <span id="sendText">Send Verification Code</span>
+      </button>
+
+      <div class="auth-footer">Already have an account? <a href="login.html">Log in</a></div>
+    </div>
+
+    <!-- STEP 2: OTP code entry -->
+    <div id="step2" style="display:none;">
+      <div class="auth-header">
+        <h1>Enter Code</h1>
+        <p>We sent a 6-digit code to:</p>
+      </div>
+
+      <div style="text-align:center;">
+        <div class="email-pill">📧 <span id="emailDisplay"></span></div>
+      </div>
+
+      <div id="otpErrorMsg" class="error-msg"></div>
+
+      <div class="otp-row">
+        <input class="otp-box" id="o1" maxlength="1" inputmode="numeric" pattern="[0-9]">
+        <input class="otp-box" id="o2" maxlength="1" inputmode="numeric" pattern="[0-9]">
+        <input class="otp-box" id="o3" maxlength="1" inputmode="numeric" pattern="[0-9]">
+        <input class="otp-box" id="o4" maxlength="1" inputmode="numeric" pattern="[0-9]">
+        <input class="otp-box" id="o5" maxlength="1" inputmode="numeric" pattern="[0-9]">
+        <input class="otp-box" id="o6" maxlength="1" inputmode="numeric" pattern="[0-9]">
+      </div>
+
+      <button class="btn-submit" id="verifyBtn" onclick="verifyOTP()">
+        <span class="spinner" id="verifySpinner"></span>
+        <span id="verifyText">Verify &amp; Create Account</span>
+      </button>
+
+      <button class="btn-back" onclick="goBack()">← Change email</button>
+
+      <div class="resend-link">
+        Didn't get it? <a id="resendLink" onclick="resendOTP()">Resend code</a>
+        <span id="resendTimer"></span>
+      </div>
+    </div>
+
   </div>
 </main>
 
-<div id="successOverlay" class="overlay">
-  <div class="success-popup">
-    <div class="success-icon">✓</div>
-    <h2 style="margin:0 0 .5rem; color:#0f172a;">Account Created!</h2>
-    <p style="color:#64748b; margin-bottom:2rem; font-size:.95rem; line-height:1.5;">Welcome to skipQs. Your account is ready. Let's start skipping those lines!</p>
-    <button id="successBtn" class="btn-submit">Continue</button>
-  </div>
-</div>
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="supabase-config.js"></script>
-
 <script>
-  const errDiv = document.getElementById('errorMsg');
-  function showError(msg) { errDiv.textContent = msg; errDiv.style.display = 'block'; }
+  let storedName  = '';
+  let storedEmail = '';
+  let resendCountdown;
 
-  document.getElementById('signupForm').onsubmit = async (e) => {
-    e.preventDefault();
-    errDiv.style.display = 'none';
+  const errDiv     = document.getElementById('errorMsg');
+  const infoDiv    = document.getElementById('infoMsg');
+  const otpErrDiv  = document.getElementById('otpErrorMsg');
 
-    const fullName = document.getElementById('fullName').value.trim();
-    const email    = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
-    const btn      = document.getElementById('submitBtn');
-    const btnText  = document.getElementById('btnText');
-    const spinner  = document.getElementById('spinner');
+  function showError(msg)  { errDiv.textContent = msg; errDiv.style.display = 'block'; }
+  function hideError()     { errDiv.style.display = 'none'; }
+  function showInfo(msg)   { infoDiv.textContent = msg; infoDiv.style.display = 'block'; }
+  function showOTPError(m) { otpErrDiv.textContent = m; otpErrDiv.style.display = 'block'; }
+  function hideOTPError()  { otpErrDiv.style.display = 'none'; }
 
+  /* -------- OTP box: auto-advance & backspace -------- */
+  const boxes = ['o1','o2','o3','o4','o5','o6'].map(id => document.getElementById(id));
+  boxes.forEach((box, i) => {
+    box.addEventListener('input', e => {
+      const val = e.target.value.replace(/\D/g,'');
+      e.target.value = val;
+      if (val && i < 5) boxes[i+1].focus();
+      // Auto-submit when all 6 filled
+      if (boxes.every(b => b.value)) verifyOTP();
+    });
+    box.addEventListener('keydown', e => {
+      if (e.key === 'Backspace' && !box.value && i > 0) boxes[i-1].focus();
+    });
+    box.addEventListener('paste', e => {
+      e.preventDefault();
+      const paste = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g,'').slice(0,6);
+      paste.split('').forEach((ch, idx) => { if (boxes[idx]) boxes[idx].value = ch; });
+      if (paste.length === 6) verifyOTP();
+    });
+  });
+
+  /* -------- Send OTP -------- */
+  async function sendOTP() {
+    hideError();
+    const name  = document.getElementById('fullName').value.trim();
+    const email = document.getElementById('email').value.trim().toLowerCase();
+
+    if (!name)  { showError('Please enter your name.'); return; }
+    if (!email) { showError('Please enter your email address.'); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showError('Please enter a valid email address.'); return; }
+
+    storedName  = name;
+    storedEmail = email;
+
+    const btn  = document.getElementById('sendBtn');
+    const spin = document.getElementById('sendSpinner');
+    const txt  = document.getElementById('sendText');
     btn.disabled = true;
-    btnText.textContent = 'Setting up account…';
-    spinner.style.display = 'block';
+    spin.style.display = 'block';
+    txt.textContent = 'Sending…';
 
-    // 1. Create auth user
-    const { data, error } = await sb.auth.signUp({ email, password });
-    if (error) {
-      btn.disabled = false; btnText.textContent = 'Create Account'; spinner.style.display = 'none';
-      showError(error.message); return;
-    }
-
-    // 2. Insert public profile row
-    const { error: profileErr } = await sb.from('users').insert({
-      id:           data.user.id,
-      display_name: fullName,
-      email:        email,
-      role:         'customer'
+    const { error } = await sb.auth.signInWithOtp({
+      email,
+      options: { shouldCreateUser: true, emailRedirectTo: null }
     });
 
-    spinner.style.display = 'none';
-    if (profileErr) { showError('Account created but profile save failed: ' + profileErr.message); return; }
+    spin.style.display = 'none';
+    btn.disabled = false;
+    txt.textContent = 'Send Verification Code';
 
-    // 3. Show success popup
-    document.getElementById('successOverlay').style.display = 'flex';
-    document.getElementById('successBtn').onclick = () => {
+    if (error) { showError(error.message); return; }
+
+    // Move to step 2
+    document.getElementById('step1').style.display  = 'none';
+    document.getElementById('step2').style.display  = 'block';
+    document.getElementById('emailDisplay').textContent = email;
+
+    // Update step indicators
+    document.getElementById('dot1').className  = 'step-dot done';
+    document.getElementById('dot1').textContent = '✓';
+    document.getElementById('line1').className  = 'step-line done';
+    document.getElementById('dot2').className  = 'step-dot active';
+
+    boxes[0].focus();
+    startResendTimer(60);
+  }
+
+  /* -------- Verify OTP -------- */
+  async function verifyOTP() {
+    hideOTPError();
+    const code = boxes.map(b => b.value).join('');
+    if (code.length < 6) { showOTPError('Please enter all 6 digits.'); return; }
+
+    const btn  = document.getElementById('verifyBtn');
+    const spin = document.getElementById('verifySpinner');
+    const txt  = document.getElementById('verifyText');
+    btn.disabled = true;
+    spin.style.display = 'block';
+    txt.textContent = 'Verifying…';
+
+    const { data, error } = await sb.auth.verifyOtp({
+      email: storedEmail,
+      token: code,
+      type:  'email'
+    });
+
+    if (error) {
+      spin.style.display = 'none';
+      btn.disabled = false;
+      txt.textContent = 'Verify & Create Account';
+      boxes.forEach(b => { b.value=''; b.style.borderColor='#ef4444'; });
+      showOTPError('Invalid or expired code. Please try again.');
+      boxes[0].focus();
+      return;
+    }
+
+    txt.textContent = 'Setting up account…';
+
+    // Check if profile already exists
+    const uid = data.user.id;
+    const { data: existing } = await sb.from('users').select('id').eq('id', uid).maybeSingle();
+
+    if (!existing) {
+      await sb.from('users').insert({
+        id:           uid,
+        display_name: storedName,
+        email:        storedEmail,
+        role:         'customer'
+      });
+    }
+
+    const pending = sessionStorage.getItem('redirectAfterLogin');
+    sessionStorage.removeItem('redirectAfterLogin');
+    window.location.replace(pending || 'index.html');
+  }
+
+  /* -------- Go back to step 1 -------- */
+  function goBack() {
+    clearInterval(resendCountdown);
+    document.getElementById('step2').style.display = 'none';
+    document.getElementById('step1').style.display = 'block';
+    document.getElementById('dot1').className  = 'step-dot active';
+    document.getElementById('dot1').textContent = '1';
+    document.getElementById('line1').className  = 'step-line';
+    document.getElementById('dot2').className  = 'step-dot pending';
+    boxes.forEach(b => { b.value=''; b.style.borderColor=''; });
+    hideOTPError();
+  }
+
+  /* -------- Resend -------- */
+  async function resendOTP() {
+    const link = document.getElementById('resendLink');
+    if (link.style.pointerEvents === 'none') return;
+    await sb.auth.signInWithOtp({ email: storedEmail, options: { shouldCreateUser: true } });
+    boxes.forEach(b => { b.value=''; b.style.borderColor=''; });
+    hideOTPError();
+    boxes[0].focus();
+    startResendTimer(60);
+  }
+
+  function startResendTimer(secs) {
+    const link  = document.getElementById('resendLink');
+    const timer = document.getElementById('resendTimer');
+    link.style.pointerEvents = 'none';
+    link.style.opacity = '.4';
+    clearInterval(resendCountdown);
+    let s = secs;
+    timer.textContent = ' (' + s + 's)';
+    resendCountdown = setInterval(() => {
+      s--;
+      if (s <= 0) {
+        clearInterval(resendCountdown);
+        link.style.pointerEvents = '';
+        link.style.opacity = '';
+        timer.textContent = '';
+      } else {
+        timer.textContent = ' (' + s + 's)';
+      }
+    }, 1000);
+  }
+
+  /* -------- If already logged in -------- */
+  sb.auth.getSession().then(({ data: { session } }) => {
+    if (session) {
       const pending = sessionStorage.getItem('redirectAfterLogin');
       window.location.replace(pending || 'index.html');
-    };
-  };
+    }
+  });
 </script>
 </body>
 </html>

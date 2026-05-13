@@ -384,6 +384,7 @@ async function confirmJoin() {
       customer_phone:   phone,
       service_duration: pendingDept.avg_consult_minutes || 15,
       status:           'waiting',
+      joined_at:        new Date().toISOString(),
       ...(pendingDept._legacy ? { selected_service: pendingDept.name } : {})
     });
     if (error) {

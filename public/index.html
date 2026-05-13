@@ -315,14 +315,18 @@
       .footer-grid{grid-template-columns:1fr 1fr}
       .mobile-nav{display:block}
       body{padding-bottom:66px}
-      .qb-timer{padding:.35rem .7rem;}
-      .qb-timer-value{font-size:1.45rem;letter-spacing:-.5px;}
+      /* Queue banner — 2-row layout on mobile */
+      #queueBanner .qb-inner{flex-wrap:wrap;}
+      .qb-icon{width:40px;min-height:48px;font-size:1.2rem;}
+      .qb-info{padding:.4rem .6rem;flex:1;}
+      .qb-title{font-size:.8rem;}
+      .qb-sub{font-size:.62rem;}
+      .qb-timer{padding:.35rem .8rem;border-left:1px solid rgba(0,47,52,.15);}
+      .qb-timer-value{font-size:1.35rem;letter-spacing:-.5px;}
       .qb-timer-label{display:none;}
-      .qb-actions{display:none;}
-      .qb-icon{width:40px;min-height:50px;font-size:1.2rem;}
-      .qb-info{padding:.4rem .7rem;}
-      .qb-title{font-size:.82rem;}
-      .qb-sub{font-size:.65rem;}
+      /* Actions row — full width below on mobile */
+      .qb-actions{display:flex;width:100%;border-left:none;border-top:1px solid rgba(0,47,52,.15);padding:.45rem .6rem;gap:.5rem;background:rgba(0,47,52,.06);}
+      .qb-actions .qb-btn{flex:1;justify-content:center;font-size:.78rem;padding:.45rem .6rem;}
       .header-inner{padding:10px 14px;gap:8px;position:relative;}
       .hero{padding:30px 0 36px}
       .hero h1{font-size:1.85rem;letter-spacing:-.8px}
@@ -833,7 +837,12 @@
     document.getElementById('qbTitle').textContent = bizName + (deptName ? ' — ' + deptName : '');
     document.getElementById('qbSub').textContent = q.status === 'serving' ? '🔔 You are being served now!' : 'You are in the queue';
     document.getElementById('qbViewBtn').href = detailHref;
-    startTimer(waitMins);
+    // Calculate remaining time from joined_at so timer is in sync across all devices
+    const joinedAt     = q.joined_at ? new Date(q.joined_at).getTime() : Date.now();
+    const totalSecs    = waitMins * 60;
+    const elapsedSecs  = Math.floor((Date.now() - joinedAt) / 1000);
+    const remainingSecs = Math.max(0, totalSecs - elapsedSecs);
+    startTimerFromSecs(remainingSecs);
     document.getElementById('queueBanner').style.display = 'block';
     setupQueueNotif(bizName, deptName, waitMins, q.status);
     if (q.department_id) {
@@ -854,14 +863,18 @@
       }).subscribe();
   }
 
-  function startTimer(minutes) {
+  function startTimerFromSecs(secs) {
     if (timerInterval) clearInterval(timerInterval);
-    let secs = Math.max(0, Math.round(minutes * 60));
+    secs = Math.max(0, secs);
     renderTimer(secs);
     timerInterval = setInterval(() => { if (secs > 0) secs--; renderTimer(secs); }, 1000);
   }
+  function startTimer(minutes) {
+    // Used by resetTimer when staff updates dept wait_minutes (fresh countdown from now)
+    startTimerFromSecs(Math.round(minutes * 60));
+  }
   function resetTimer(minutes) {
-    if (timerInterval) clearInterval(timerInterval);
+    // Staff changed the wait time — treat as a fresh countdown from now
     startTimer(minutes);
     if (lastQueueState.bizName) updateQueueNotifState(lastQueueState.bizName, lastQueueState.deptName, minutes, lastQueueState.status);
   }
@@ -1003,9 +1016,16 @@
   function listingCard(p, isDemo) {
     const icon      = ICONS[p.category] || (p.is_hospital ? '🏥' : '🏪');
     const wait      = p.minWait;
-    const waitLabel = wait === null ? 'See dept' : (wait === 0 ? 'No wait' : wait + ' min');
-    const badgeCls  = wait > 60 ? 'high' : wait > 30 ? 'med' : '';
     const isHosp    = p.is_hospital || p.category === 'Hospital';
+    const noWaitLabel = isHosp ? 'See depts'
+      : ['Clinic','Pharmacy'].includes(p.category) ? 'See depts'
+      : ['Salon','Barber'].includes(p.category)    ? 'See services'
+      : p.category === 'Restaurant'                ? 'Check wait'
+      : p.category === 'Bank'                      ? 'See services'
+      : p.category === 'Gym'                       ? 'See services'
+      : 'See services';
+    const waitLabel = wait === null ? noWaitLabel : (wait === 0 ? 'No wait' : wait + ' min');
+    const badgeCls  = wait > 60 ? 'high' : wait > 30 ? 'med' : '';
     const href      = isDemo
       ? (isHosp ? 'hospitals.html' : (p.category ? (p.category.toLowerCase().replace(/\s/g,'') + 's.html') : 'find-services.html'))
       : ((isHosp ? 'hospital-detail.html' : 'business-detail.html') + '?id=' + esc(p.id));

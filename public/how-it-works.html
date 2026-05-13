@@ -146,17 +146,47 @@ a{text-decoration:none;}
 <body>
 
 <!-- NAV -->
+<style>
+.hiw-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:6px;}
+.hiw-hamburger span{display:block;width:22px;height:2px;background:#002f34;border-radius:2px;transition:.3s;}
+.hiw-mobile-nav{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1999;}
+.hiw-mobile-nav.open{display:block;}
+.hiw-mobile-drawer{position:absolute;top:0;right:0;width:240px;height:100%;background:white;padding:1.5rem;box-shadow:-4px 0 20px rgba(0,0,0,.15);display:flex;flex-direction:column;gap:.8rem;}
+.hiw-mobile-drawer a{color:#002f34;font-weight:600;font-size:1rem;text-decoration:none;padding:.5rem 0;border-bottom:1px solid #f1f5f9;}
+.hiw-mobile-drawer a:last-of-type{border-bottom:none;}
+.hiw-close-btn{align-self:flex-end;background:none;border:none;font-size:1.4rem;cursor:pointer;color:#64748b;margin-bottom:.5rem;}
+@media(max-width:640px){
+  .hiw-nav-links{display:none !important;}
+  .hiw-hamburger{display:flex;}
+}
+</style>
 <header style="background:white;padding:14px 0;box-shadow:0 2px 8px rgba(0,0,0,.06);position:sticky;top:0;z-index:1000;">
-  <div style="max-width:1100px;margin:0 auto;padding:0 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+  <div style="max-width:1100px;margin:0 auto;padding:0 20px;display:flex;align-items:center;gap:16px;">
     <a href="index.html" style="font-size:26px;font-weight:800;color:#002f34;letter-spacing:-1.5px;flex-shrink:0;">skip<span style="color:#23e5db;">Qs</span></a>
     <div style="flex:1;"></div>
-    <a href="hospitals.html" style="color:#406367;font-size:13px;font-weight:600;">Hospitals</a>
-    <a href="how-it-works.html" style="color:#23e5db;font-size:13px;font-weight:700;">How It Works</a>
-    <a href="business-how-it-works.html" style="color:#406367;font-size:13px;font-weight:600;">For Businesses</a>
-    <a href="login.html" style="padding:9px 18px;border-radius:50px;font-size:13px;font-weight:700;background:#f7f8f8;color:#002f34;border:1.5px solid #e2e8f0;">Login</a>
-    <a href="signup.html" style="padding:9px 18px;border-radius:50px;font-size:13px;font-weight:700;background:#23e5db;color:#002f34;">Sign Up</a>
+    <span class="hiw-nav-links" style="display:flex;align-items:center;gap:16px;">
+      <a href="hospitals.html" style="color:#406367;font-size:13px;font-weight:600;text-decoration:none;">Hospitals</a>
+      <a href="how-it-works.html" style="color:#23e5db;font-size:13px;font-weight:700;text-decoration:none;">How It Works</a>
+      <a href="business-how-it-works.html" style="color:#406367;font-size:13px;font-weight:600;text-decoration:none;">For Businesses</a>
+    </span>
+    <a href="login.html" style="padding:9px 18px;border-radius:50px;font-size:13px;font-weight:700;background:#f7f8f8;color:#002f34;border:1.5px solid #e2e8f0;text-decoration:none;">Login</a>
+    <a href="signup.html" style="padding:9px 18px;border-radius:50px;font-size:13px;font-weight:700;background:#23e5db;color:#002f34;text-decoration:none;">Sign Up</a>
+    <button class="hiw-hamburger" onclick="document.getElementById('hiwMobileNav').classList.toggle('open')" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
   </div>
 </header>
+<div class="hiw-mobile-nav" id="hiwMobileNav" onclick="this.classList.remove('open')">
+  <div class="hiw-mobile-drawer" onclick="event.stopPropagation()">
+    <button class="hiw-close-btn" onclick="document.getElementById('hiwMobileNav').classList.remove('open')">✕</button>
+    <a href="index.html">🏠 Home</a>
+    <a href="hospitals.html">🏥 Hospitals</a>
+    <a href="how-it-works.html" style="color:#23e5db;">⚡ How It Works</a>
+    <a href="business-how-it-works.html">🏪 For Businesses</a>
+    <a href="login.html">🔑 Login</a>
+    <a href="signup.html">✨ Sign Up</a>
+  </div>
+</div>
 
 <!-- HERO -->
 <section style="background:linear-gradient(135deg,#002f34 0%,#004a52 60%,#005f6b 100%);padding:80px 20px 70px;text-align:center;">
@@ -743,5 +773,8 @@ function playVideo(frameId, btnId) {
   }
 }
 </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="supabase-config.js"></script>
+<script src="auth-nav.js"></script>
 </body>
 </html>

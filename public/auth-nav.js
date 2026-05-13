@@ -55,14 +55,67 @@
     return info;
   }
 
-  /* ── Apply to all nav elements ──────────────────────────────── */
-  function applyLoggedIn(info) {
-    const { dashUrl, dashLabel } = info;
+  /* ── Build logged-in nav cluster (inline-styled, works anywhere) ── */
+  function buildCluster(initial, rawName, dashUrl, dashLabel, small) {
+    const logoutFn = "(async()=>{await window.sb.auth.signOut();window.location.href='index.html';})()";
+    const sz = small ? '28px' : '34px';
+    const fs = small ? '12px' : '14px';
+    const div = document.createElement('div');
+    div.style.cssText = 'display:flex;align-items:center;gap:8px;flex-shrink:0;';
+    div.innerHTML =
+      '<a href="' + dashUrl + '" style="padding:7px 14px;border-radius:50px;font-size:13px;font-weight:700;background:#f7f8f8;color:#002f34;border:1.5px solid #e2e8f0;text-decoration:none;">' + dashLabel + '</a>' +
+      '<div style="width:' + sz + ';height:' + sz + ';border-radius:50%;background:#23e5db;color:#002f34;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:' + fs + ';flex-shrink:0;cursor:default;" title="' + rawName + '">' + initial + '</div>' +
+      '<button onclick="' + logoutFn + '" style="padding:7px 14px;border-radius:50px;font-size:13px;font-weight:700;background:transparent;color:#002f34;border:1.5px solid #e2e8f0;cursor:pointer;font-family:inherit;">Logout</button>';
+    return div;
+  }
 
-    // Pattern 1 – any <a href="login.html"> link (most pages)
-    document.querySelectorAll('a[href="login.html"], a[href="./login.html"]').forEach(a => {
+  /* ── Apply to all nav elements ──────────────────────────────── */
+  function applyLoggedIn(info, userMeta) {
+    const { dashUrl, dashLabel } = info;
+    const rawName = userMeta.rawName;
+    const initial = userMeta.initial;
+    const logoutFn = "(async()=>{await window.sb.auth.signOut();window.location.href='index.html';})()";
+
+    // Pattern 8 – sector pages: .header-actions (desktop) ← NEW
+    document.querySelectorAll('.header-actions').forEach(function (el) {
+      el.innerHTML =
+        '<a href="' + dashUrl + '" class="btn btn-ghost">' + dashLabel + '</a>' +
+        '<div style="width:34px;height:34px;border-radius:50%;background:#23e5db;color:#002f34;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex-shrink:0;cursor:default;" title="' + rawName + '">' + initial + '</div>' +
+        '<button onclick="' + logoutFn + '" class="btn btn-ghost" style="cursor:pointer;border:none;font-family:inherit;">Logout</button>';
+    });
+
+    // Pattern 9 – sector pages: .mobile-actions (mobile nav) ← NEW
+    document.querySelectorAll('.mobile-actions').forEach(function (el) {
+      el.innerHTML =
+        '<a href="' + dashUrl + '" class="btn btn-ghost">' + dashLabel + '</a>' +
+        '<button onclick="' + logoutFn + '" class="btn btn-primary" style="cursor:pointer;border:none;font-family:inherit;">Logout</button>';
+    });
+
+    // Pattern 10 – content pages: <a href="login.html"> inside <header>
+    //   Replace the login link (and nearby signup link) with a logged-in cluster ← NEW
+    var header = document.querySelector('header');
+    if (header) {
+      var loginAnchor  = header.querySelector('a[href="login.html"]');
+      var signupAnchor = header.querySelector('a[href="signup.html"]');
+      if (loginAnchor && !loginAnchor.closest('.header-actions')) {
+        var parent = loginAnchor.parentElement;
+        if (signupAnchor && signupAnchor.parentElement === parent) signupAnchor.remove();
+        var cluster = buildCluster(initial, rawName, dashUrl, dashLabel, false);
+        parent.replaceChild(cluster, loginAnchor);
+      }
+    }
+
+    // Pattern 1 – any remaining <a href="login.html"> links NOT yet handled above
+    document.querySelectorAll('a[href="login.html"], a[href="./login.html"]').forEach(function (a) {
+      // Skip links inside mobile-nav / hamburger menus (already handled or left as-is)
+      if (a.closest('.mobile-nav') || a.closest('.header-actions')) return;
       a.textContent = dashLabel;
       a.href = dashUrl;
+    });
+
+    // Hide any remaining signup links that are navigation buttons (not footer or CTA)
+    document.querySelectorAll('a[href="signup.html"]').forEach(function (a) {
+      if (a.closest('header') || a.closest('nav')) a.style.display = 'none';
     });
 
     // Pattern 2 – #authBtn (join-queue.html style)
@@ -147,12 +200,16 @@
       applyLoggedOut();
       return;
     }
+    const user    = session.user;
+    const email   = user.email || '';
+    const rawName = (user.user_metadata && (user.user_metadata.display_name || user.user_metadata.full_name))
+                    || email.split('@')[0] || '?';
+    const userMeta = { rawName: rawName, initial: rawName.charAt(0).toUpperCase() };
     try {
-      const info = await getRoleInfo(session.user.id);
-      applyLoggedIn(info);
-    } catch {
-      // Network error or RLS block — fall back to customer view
-      applyLoggedIn({ dashUrl: 'dashboard.html', dashLabel: 'My Queues' });
+      const info = await getRoleInfo(user.id);
+      applyLoggedIn(info, userMeta);
+    } catch (_e) {
+      applyLoggedIn({ dashUrl: 'dashboard.html', dashLabel: 'My Queues' }, userMeta);
     }
   }
 
