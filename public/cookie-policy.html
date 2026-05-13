@@ -55,8 +55,10 @@
     </div>
   </footer>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
   <script src="script.js"></script>
+  <script>if(typeof SUPABASE_URL!=='undefined'&&!window.sb)window.sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);</script>
+  <script src="auth-nav.js"></script>
 </body>
 </html>
