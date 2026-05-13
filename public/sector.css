@@ -121,18 +121,30 @@ footer{background:var(--primary);color:white;padding:2.4rem 0 1.4rem;margin-top:
 }
 @media(max-width:600px){
   .grid{grid-template-columns:1fr;}
-  .hero h1{font-size:1.8rem;}
-  .hero{padding:36px 0 48px;}
-  .hero-stats{grid-template-columns:repeat(2,1fr);}
-  .hero-stat-value{font-size:1.4rem;}
+  .hero h1{font-size:1.75rem;}
+  .hero{padding:28px 0 40px;}
+  .hero-stats{grid-template-columns:repeat(2,1fr);gap:8px;}
+  .hero-stat{padding:.75rem .9rem;}
+  .hero-stat-value{font-size:1.3rem;}
+  .hero-stat-label{font-size:.65rem;}
   .nav{display:none;}
   .header-actions{display:none;}
   .hamburger{display:flex;}
   .footer-grid{grid-template-columns:1fr;}
   .footer-grid > div:first-child{margin-bottom:.5rem;}
   .container{padding:0 14px;}
-  .search-section{margin:-20px 0 1rem;}
-  .search-input{font-size:.85rem;}
-  .h-card-top h3{font-size:1rem;}
-  .dept-row{font-size:.82rem;}
+  .search-section{margin:-18px 0 .8rem;}
+  .search-card{padding:.8rem;}
+  .search-input{font-size:.88rem;padding:.75rem .9rem;}
+  .h-card-top{padding:.9rem 1rem;}
+  .h-card-top h3{font-size:.95rem;}
+  .h-card-body{padding:.75rem 1rem;}
+  .dept-row{font-size:.8rem;padding:.4rem 0;}
+  .h-card-foot{padding:.6rem 1rem;}
+  .cta-text{font-size:.78rem;}
+  .section-title{font-size:1.2rem;}
+}
+@media(max-width:380px){
+  .hero h1{font-size:1.5rem;}
+  .hero-stat-value{font-size:1.15rem;}
 }

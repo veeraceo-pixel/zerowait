@@ -75,7 +75,37 @@ main{padding:1.6rem 0 4rem;}
 .modal-card input:focus{outline:none;border-color:var(--accent);}
 .modal-actions{display:flex;gap:.6rem;justify-content:flex-end;}
 .modal-actions .btn-primary{background:var(--primary);color:white;padding:.7rem 1.4rem;}
-@media(max-width:700px){.hero-flex{flex-direction:column;}.hero-stats{width:100%;}.hero-stat{flex:1;min-width:0;}.hero h1{font-size:1.6rem;}}
+/* ── MOBILE BOTTOM NAV ── */
+.mob-nav-bar{display:none;position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--border);z-index:999;box-shadow:0 -4px 16px rgba(0,0,0,.07);}
+.mob-nav-inner{display:flex;justify-content:space-around;padding:8px 0 6px;}
+.mob-nav-item{text-align:center;color:var(--text-muted);text-decoration:none;padding:4px 8px;flex:1;}
+.mob-nav-item.active{color:var(--primary);}
+.mob-nav-item span{display:block;font-size:20px;margin-bottom:2px;}
+.mob-nav-item p{font-size:10px;margin:0;font-weight:600;}
+@media(max-width:700px){
+  .hero-flex{flex-direction:column;}
+  .hero-stats{width:100%;gap:.6rem;}
+  .hero-stat{flex:1;min-width:0;padding:.7rem .8rem;}
+  .hero-stat-value{font-size:1.4rem;}
+  .hero h1{font-size:1.5rem;}
+  .hero{padding:1.6rem 0;}
+  .dept-grid{grid-template-columns:1fr;}
+  .modal-card{padding:1.2rem;border-radius:14px;}
+  header{position:sticky;top:0;}
+  .mob-nav-bar{display:block;}
+  body{padding-bottom:66px;}
+  .section-title{font-size:1.1rem;}
+  main{padding:1.2rem 0 2rem;}
+  .dept-card{border-radius:14px;}
+  .wait-num{font-size:2rem;}
+  .section-bar{padding:.65rem 0;font-size:.78rem;}
+}
+@media(max-width:420px){
+  .hero h1{font-size:1.3rem;}
+  .hero-stat-value{font-size:1.2rem;}
+  .hero-stats{gap:.4rem;}
+  .dept-cta{font-size:.82rem;padding:.6rem;}
+}
 </style>
 </head>
 <body>
@@ -132,6 +162,17 @@ main{padding:1.6rem 0 4rem;}
 
 <div class="toast" id="toast"></div>
 
+<!-- ══ MOBILE BOTTOM NAV ══ -->
+<nav class="mob-nav-bar" aria-label="Mobile navigation">
+  <div class="mob-nav-inner">
+    <a href="index.html"         class="mob-nav-item"><span>🏠</span><p>Home</p></a>
+    <a href="hospitals.html"     class="mob-nav-item"><span>🏥</span><p>Hospitals</p></a>
+    <a href="dashboard.html"     class="mob-nav-item active"><span>📋</span><p>My Queues</p></a>
+    <a href="find-services.html" class="mob-nav-item"><span>🔍</span><p>Search</p></a>
+    <a href="login.html"         class="mob-nav-item" id="mobDetailLoginBtn"><span>👤</span><p>Account</p></a>
+  </div>
+</nav>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="supabase-config.js"></script>
 <script src="auth-nav.js"></script>
@@ -164,6 +205,8 @@ async function init() {
   if (session) {
     document.getElementById('loginBtn').style.display='none';
     document.getElementById('myQueuesBtn').style.display='inline-flex';
+    const mob = document.getElementById('mobDetailLoginBtn');
+    if (mob) { mob.href = 'dashboard.html'; mob.querySelector('span').textContent = '📋'; mob.querySelector('p').textContent = 'Queues'; }
   }
 
   await loadAll();
@@ -341,7 +384,7 @@ async function confirmJoin() {
       customer_phone:   phone,
       service_duration: pendingDept.avg_consult_minutes || 15,
       status:           'waiting',
-      ...(pendingDept._legacy ? { notes: 'Service: ' + pendingDept.name } : {})
+      ...(pendingDept._legacy ? { selected_service: pendingDept.name } : {})
     });
     if (error) {
       if (error.code === '23505' || /one_active_queue_per_user/.test(error.message)) {

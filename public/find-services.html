@@ -8,15 +8,51 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="sector.css">
 <style>
-  /* ── Category filter pills ── */
+  /* ── Fix search card: override the grid with flex so chips stack below input ── */
+  .search-card {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    align-items: stretch !important;
+    grid-template-columns: unset !important;
+  }
+
+  /* ── Search row inside card ── */
+  .search-row {
+    display: flex;
+    gap: 8px;
+  }
+  .search-row .search-input {
+    flex: 1;
+    border-right: 2px solid var(--primary) !important;
+    border-radius: 8px;
+  }
+  .search-row .search-btn {
+    padding: .85rem 1.4rem;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+  }
+
+  /* ── Category filter strip ── */
   .category-filters {
     display: flex;
     gap: 8px;
-    flex-wrap: wrap;
-    margin: 1.25rem 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+    flex-wrap: nowrap;
   }
+  .category-filters::-webkit-scrollbar { display: none; }
+
   .cat-chip {
-    padding: 7px 16px;
+    padding: 7px 14px;
     border-radius: 50px;
     border: 1.5px solid var(--border);
     background: var(--bg);
@@ -26,6 +62,8 @@
     color: var(--text-muted);
     transition: .15s;
     user-select: none;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
   .cat-chip:hover { border-color: var(--primary); color: var(--primary); }
   .cat-chip.active { background: var(--primary); color: #fff; border-color: var(--primary); }
@@ -44,6 +82,47 @@
     gap: 8px;
   }
   .sector-group .grid { margin-top: 0; }
+
+  /* ── Mobile bottom nav ── */
+  .mob-bottom-nav {
+    display: none;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: white;
+    border-top: 1px solid var(--border);
+    z-index: 999;
+    box-shadow: 0 -4px 16px rgba(0,0,0,.07);
+  }
+  .mob-bottom-nav-inner {
+    display: flex;
+    justify-content: space-around;
+    padding: 8px 0 6px;
+  }
+  .mob-bottom-nav-item {
+    text-align: center;
+    color: var(--text-muted);
+    text-decoration: none;
+    padding: 4px 8px;
+    flex: 1;
+  }
+  .mob-bottom-nav-item.active { color: var(--primary); }
+  .mob-bottom-nav-item span { display: block; font-size: 20px; margin-bottom: 2px; }
+  .mob-bottom-nav-item p { font-size: 10px; margin: 0; font-weight: 600; }
+
+  @media(max-width:600px) {
+    .mob-bottom-nav { display: block; }
+    body { padding-bottom: 66px; }
+    .hero { padding: 26px 0 36px !important; }
+    .hero h1 { font-size: 1.55rem !important; }
+    .hero-stats { gap: 8px !important; }
+    .hero-stat { padding: .75rem !important; }
+    .hero-stat-value { font-size: 1.3rem !important; }
+    .search-section { margin: -16px 0 .8rem !important; }
+    .h-card-top h3 { font-size: .95rem; }
+    .h-card-body { padding: .8rem 1rem; }
+    .h-card-foot { padding: .6rem 1rem; }
+    .sector-group-title { font-size: .9rem; }
+  }
 </style>
 </head>
 <body data-category="__all__">
@@ -104,8 +183,13 @@
 </section>
 
 <div class="container search-section">
-  <div class="search-card" style="flex-direction:column;gap:12px;align-items:stretch;">
-    <input id="searchInput" class="search-input" type="text" placeholder="Search by name, city or address…" style="border-right:2px solid var(--primary);border-radius:8px;">
+  <div class="search-card">
+    <!-- Search input row -->
+    <div class="search-row">
+      <input id="searchInput" class="search-input" type="text" placeholder="Search by name, city or address…" autocomplete="off">
+      <button class="search-btn" onclick="document.getElementById('searchInput').dispatchEvent(new Event('keyup'))">Search</button>
+    </div>
+    <!-- Category filter strip — horizontal scroll on mobile -->
     <div class="category-filters" id="categoryFilters">
       <div class="cat-chip active" data-cat="">🌐 All</div>
       <div class="cat-chip" data-cat="Hospital">🏥 Hospitals</div>
@@ -116,8 +200,8 @@
       <div class="cat-chip" data-cat="Bank">🏦 Banks</div>
       <div class="cat-chip" data-cat="Restaurant">🍽️ Restaurants</div>
       <div class="cat-chip" data-cat="Gym">🏋️ Gyms</div>
-      <div class="cat-chip" data-cat="CarWash">🧼 Car Washes</div>
-      <div class="cat-chip" data-cat="Government">🏛️ Government</div>
+      <div class="cat-chip" data-cat="CarWash">🧼 Car Wash</div>
+      <div class="cat-chip" data-cat="Government">🏛️ Govt</div>
       <div class="cat-chip" data-cat="Repair">🛠️ Repairs</div>
     </div>
   </div>
@@ -130,6 +214,17 @@
     <div class="skel">Loading…</div>
   </div>
 </main>
+
+<!-- ══ MOBILE BOTTOM NAV ══ -->
+<nav class="mob-bottom-nav" aria-label="Mobile navigation">
+  <div class="mob-bottom-nav-inner">
+    <a href="index.html"         class="mob-bottom-nav-item"><span>🏠</span><p>Home</p></a>
+    <a href="hospitals.html"     class="mob-bottom-nav-item"><span>🏥</span><p>Hospitals</p></a>
+    <a href="dashboard.html"     class="mob-bottom-nav-item"><span>📋</span><p>My Queues</p></a>
+    <a href="find-services.html" class="mob-bottom-nav-item active"><span>🔍</span><p>Search</p></a>
+    <a href="login.html"         class="mob-bottom-nav-item" id="mobFindLoginBtn"><span>👤</span><p>Account</p></a>
+  </div>
+</nav>
 
 <footer>
   <div class="container">
