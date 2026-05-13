@@ -187,24 +187,10 @@
     .listing-meta{display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding:8px 0 0;border-top:1px solid var(--bg);}
     .listing-cat{font-size:11px;color:var(--text-muted);background:var(--bg);padding:3px 8px;border-radius:4px;font-weight:600;}
     .listing-queue{font-size:12px;color:var(--green);font-weight:700;}
-    /* Join Queue button on card */
+    /* Join Queue button on card — div not anchor, avoids nested-<a> bug */
     .join-btn{display:block;margin:10px 14px 14px;background:var(--primary);color:white;border:none;border-radius:10px;padding:10px;font-size:.82rem;font-weight:800;text-align:center;cursor:pointer;text-decoration:none;transition:.15s;font-family:inherit;}
     .join-btn:hover{background:#004050;color:white;}
-    .join-btn.demo{background:var(--bg);color:var(--text-muted);border:1.5px solid var(--border);cursor:default;}
-    /* Mobile horizontal listing card */
-    .listing-card-h{background:white;border-radius:14px;overflow:hidden;text-decoration:none;color:inherit;box-shadow:0 1px 4px rgba(0,0,0,.07);border:1.5px solid var(--border);display:none;position:relative;flex-direction:row;align-items:stretch;}
-    .listing-card-h:active{border-color:var(--accent);}
-    .listing-card-h .lch-img{width:90px;min-height:90px;background:linear-gradient(135deg,#002f34,#004d57);display:flex;align-items:center;justify-content:center;font-size:2rem;flex-shrink:0;position:relative;}
-    .listing-card-h .lch-body{flex:1;padding:12px;display:flex;flex-direction:column;justify-content:space-between;min-width:0;}
-    .listing-card-h .lch-name{font-size:14px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:2px;}
-    .listing-card-h .lch-addr{font-size:12px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-    .listing-card-h .lch-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:6px;}
-    .lch-wait-pill{background:var(--accent2);color:var(--primary);padding:3px 10px;border-radius:50px;font-size:12px;font-weight:800;}
-    .lch-wait-pill.high{background:#fee2e2;color:var(--danger);}
-    .lch-wait-pill.med{background:#fef9c3;color:#854d0e;}
-    .lch-cat-pill{font-size:11px;color:var(--text-muted);background:var(--bg);padding:3px 8px;border-radius:4px;font-weight:600;}
-    .lch-open{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--green);font-weight:700;}
-    .lch-open-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:qbPulse 1.5s infinite;}
+    .join-btn.demo{background:var(--bg);color:var(--text-muted);border:1.5px solid var(--border);}
     /* skeleton */
     .skel{background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:12px;height:240px;}
     @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
@@ -354,14 +340,12 @@
       .trust-badge{font-size:.75rem;padding:.4rem .8rem}
     }
     @media(max-width:540px){
-      /* Switch to horizontal scroll categories */
+      /* Horizontal scroll categories */
       .categories-section .container .section-title{margin-bottom:10px}
       .categories-grid{display:none}
       .categories-scroll-wrap{display:block}
-      /* Switch listings to horizontal card layout */
-      .listings-grid{display:flex;flex-direction:column;gap:10px}
-      .listing-card{display:none}
-      .listing-card-h{display:flex}
+      /* Single-column listing cards */
+      .listings-grid{grid-template-columns:1fr;gap:10px}
       /* Footer single column */
       .footer-grid{grid-template-columns:1fr}
       .hero h1{font-size:1.6rem;letter-spacing:-.5px}
@@ -375,6 +359,9 @@
       .trust-section{padding:24px 16px;border-radius:12px}
       .how-section{padding:24px 16px;border-radius:12px}
       .trust-badges{gap:.4rem}
+      /* Compact card on mobile */
+      .listing-img{height:110px}
+      .listing-wait{font-size:17px}
     }
     @media(max-width:360px){
       .hero h1{font-size:1.45rem}
@@ -1024,8 +1011,8 @@
       : ((isHosp ? 'hospital-detail.html' : 'business-detail.html') + '?id=' + esc(p.id));
     const unitWord  = isHosp ? (p.deptCount===1?'dept':'depts') : (p.deptCount===1?'service':'services');
     const btnLabel  = isDemo ? '📋 View Details' : '📋 View &amp; Join Queue →';
-    // Desktop vertical card
-    const vertCard = `
+    // Single card — <div class="join-btn"> avoids the nested-<a> browser bug
+    return `
     <a href="${href}" class="listing-card">
       <div class="listing-img">
         <span role="img" aria-label="${esc(p.category||'Business')}">${icon}</span>
@@ -1041,29 +1028,10 @@
           <div class="listing-queue">${p.deptCount} ${unitWord}</div>
         </div>
       </div>
-      <a href="${href}" class="join-btn${isDemo?' demo':''}" onclick="event.stopPropagation()" aria-label="View queue at ${esc(p.business_name||'Business')}">
+      <div class="join-btn${isDemo?' demo':''}">
         ${btnLabel}
-      </a>
-    </a>`;
-    // Mobile horizontal card
-    const horizCard = `
-    <a href="${href}" class="listing-card-h">
-      <div class="lch-img">
-        <span role="img" aria-label="${esc(p.category||'Business')}">${icon}</span>
-      </div>
-      <div class="lch-body">
-        <div>
-          <div class="lch-name" title="${esc(p.business_name||'Business')}">${esc(p.business_name||'Business')}</div>
-          <div class="lch-addr">📍 ${esc(p.address||'')}</div>
-        </div>
-        <div class="lch-bottom">
-          <span class="lch-wait-pill ${badgeCls}">⏱ ${waitLabel}</span>
-          <span class="lch-cat-pill">${esc(p.category||'Service')}</span>
-          <span class="lch-open"><span class="lch-open-dot"></span>Open</span>
-        </div>
       </div>
     </a>`;
-    return vertCard + horizCard;
   }
 
   // ── SEARCH WITH AUTOCOMPLETE ──
