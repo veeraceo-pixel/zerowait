@@ -435,20 +435,16 @@
   <div class="idx-mobile-dropdown" id="idxMobileDropdown">
     <a href="hospitals.html">🏥 Hospitals</a>
     <a href="clinics.html">🩺 Clinics</a>
-    <a href="pharmacies.html">💊 Pharmacies</a>
     <a href="salons.html">💇 Salons &amp; Barbers</a>
     <a href="banks.html">🏦 Banks</a>
-    <a href="restaurants.html">🍽️ Restaurants</a>
-    <a href="gyms.html">🏋️ Gyms</a>
     <a href="find-services.html">🔍 All Services</a>
-    <div style="border-top:1px solid rgba(255,255,255,.12);margin:.5rem 0;"></div>
-    <a href="provider-signup.html" style="color:var(--accent);font-weight:800;">➕ Register Your Business — Free</a>
+    <div style="border-top:1px solid rgba(255,255,255,.12);margin:.4rem 0;"></div>
+    <a href="provider-signup.html" style="color:var(--accent);font-weight:700;">➕ Register Your Business — Free</a>
     <a href="hospital-signup.html">🏥 Register Hospital / Clinic</a>
     <a href="business-pricing.html">💰 Pricing</a>
-    <div class="idx-mob-actions" id="idxMobActions">
-      <a href="login.html"     class="ghost" id="mobNavLoginBtn">Login</a>
-      <a href="signup.html"    class="solid" id="mobNavSignupBtn">Sign Up</a>
-      <a href="dashboard.html" class="solid" id="mobNavDashBtn" style="display:none;flex:1;text-align:center;">My Dashboard</a>
+    <div class="idx-mob-actions">
+      <a href="login.html" class="ghost" id="mobNavLoginBtn">Login</a>
+      <a href="signup.html" class="solid">Sign Up</a>
     </div>
   </div>
 </header>
@@ -1164,18 +1160,8 @@
 
     const { data: { session } } = await sb.auth.getSession();
     if (session) {
-      // Bottom mobile nav
       const mob = document.getElementById('mobileLoginBtn');
       if (mob) { mob.href = 'dashboard.html'; mob.querySelector('span').textContent = '📋'; mob.querySelector('p').textContent = 'Queues'; }
-
-      // Mobile dropdown — hide Login/Sign Up, show Dashboard
-      const loginBtn  = document.getElementById('mobNavLoginBtn');
-      const signupBtn = document.getElementById('mobNavSignupBtn');
-      const dashBtn   = document.getElementById('mobNavDashBtn');
-      if (loginBtn)  loginBtn.style.display  = 'none';
-      if (signupBtn) signupBtn.style.display = 'none';
-      if (dashBtn)   dashBtn.style.display   = 'flex';
-
       checkActiveQueue(session.user.id);
     }
 

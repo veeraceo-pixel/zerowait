@@ -118,6 +118,12 @@ tr:last-child td{border-bottom:none;}
 .bulk-progress{margin-top:.8rem;font-size:.85rem;color:var(--text-muted);}
 .bulk-progress b{color:var(--primary);}
 
+.btn-wa{background:#25d366;color:white;border-color:#25d366;}
+.btn-wa:hover{background:#1ebe5d;}
+.btn-wa-call{background:#128c7e;color:white;border-color:#128c7e;}
+.btn-wa-call:hover{background:#0e7a6e;}
+.btn-no-phone{font-size:.72rem;color:var(--text-muted);cursor:default;}
+
 /* ── QR OVERLAY ── */
 #qrOverlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:3000;display:none;align-items:center;justify-content:center;}
 .qr-card{background:white;padding:2rem;border-radius:18px;text-align:center;}
@@ -205,7 +211,7 @@ tr:last-child td{border-bottom:none;}
       <span>📡 Active Queue</span>
     </div>
     <table>
-      <thead><tr><th>Customer</th><th>Service / Dept</th><th>Est. Mins</th><th>Action</th></tr></thead>
+      <thead><tr><th>Customer</th><th>Service / Dept</th><th>Est. Mins</th><th>Contact</th><th>Action</th></tr></thead>
       <tbody id="qItems"></tbody>
     </table>
   </section>
@@ -346,6 +352,8 @@ tr:last-child td{border-bottom:none;}
 <script src="supabase-config.js"></script>
 <script src="sector-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/easyqrcodejs@4.4.10/dist/easy.qrcode.min.js"></script>
+<script src="skipqs-ai.js"></script>
+<script src="ai-provider.js"></script>
 <script>
 
 /* ═══════════════════════════════════════════════
@@ -398,6 +406,7 @@ let queueChannel, providerChannel, svcChannel;
 sb.auth.getSession().then(async ({ data: { session } }) => {
   if (!session) { window.location.href = 'login.html'; return; }
   curUid = session.user.id;
+  window.curUid = curUid; // needed by AI module
 
   // Guard: if this user is NOT a provider, send them to the customer dashboard
   const { data: provCheck } = await sb
@@ -495,6 +504,30 @@ function setupManageSection(data) {
 }
 
 /* ═══════════════════════════════════════════════
+   WHATSAPP HELPERS
+═══════════════════════════════════════════════ */
+function cleanPhone(p) {
+  if (!p) return '';
+  p = p.trim();
+  const digits = p.replace(/\D/g, '');
+  if (!p.startsWith('+') && digits.startsWith('07') && digits.length === 11)
+    return '44' + digits.slice(1);
+  return digits;
+}
+function waLink(phone, name) {
+  const p = cleanPhone(phone); if (!p) return '';
+  const biz = document.getElementById('bizTitle')?.textContent || 'skipQs';
+  return `https://wa.me/${p}?text=${encodeURIComponent(`Hi ${name}, it's your turn at ${biz}! Please come in now 😊`)}`;
+}
+function waButtons(phone, name) {
+  if (!phone || !phone.replace(/\D/g,''))
+    return `<span class="btn-no-phone">No phone</span>`;
+  const p = cleanPhone(phone);
+  return `<a href="${waLink(phone,name)}" target="_blank" rel="noopener" class="btn btn-wa btn-sm" title="Send WhatsApp message">💬</a>
+          <a href="https://wa.me/${p}" target="_blank" rel="noopener" class="btn btn-wa-call btn-sm" title="WhatsApp call">📞</a>`;
+}
+
+/* ═══════════════════════════════════════════════
    LIVE QUEUE
 ═══════════════════════════════════════════════ */
 function startLiveQ() {
@@ -532,6 +565,7 @@ async function refreshQueue() {
           <td><span class="status-badge open" style="font-size:.6rem;">NOW SERVING</span><br><strong>${esc(d.customer_name)}</strong><br><small style="color:var(--text-muted)">${esc(d.customer_phone||'')}</small></td>
           <td>${svcLabel}</td>
           <td style="color:#16a34a;font-weight:700;">In Progress</td>
+          <td>${waButtons(d.customer_phone, d.customer_name)}</td>
           <td><button class="btn btn-green btn-sm" onclick="completeService('${d.id}')">Finish ✓</button></td>
         </tr>`);
     } else {
@@ -543,6 +577,7 @@ async function refreshQueue() {
           <td><strong>${esc(d.customer_name)}</strong><br><small style="color:var(--text-muted)">${esc(d.customer_phone||'')}</small></td>
           <td>${svcLabel}</td>
           <td>${dur}m</td>
+          <td>${waButtons(d.customer_phone, d.customer_name)}</td>
           <td><button class="btn btn-primary btn-sm" onclick="startServing('${d.id}')">Start →</button></td>
         </tr>`);
     }
