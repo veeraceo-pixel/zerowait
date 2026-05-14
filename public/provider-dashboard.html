@@ -609,11 +609,40 @@ async function syncProviderStats(estWait, peopleInLine) {
   }
 }
 async function startServing(id) {
-  await sb.from('queues').update({ status:'serving', served_at: new Date().toISOString() }).eq('id', id);
+  const patch = { status: 'serving' };
+  try { patch.served_at = new Date().toISOString(); } catch(_) {}
+  const { error } = await sb.from('queues').update(patch).eq('id', id);
+  if (error) {
+    console.error('startServing error:', error);
+    toast('Could not start serving: ' + (error.message || 'Permission denied'), 'error');
+  }
 }
+
 async function completeService(id) {
-  const today = new Date().toISOString().slice(0, 10);
-  await sb.from('queues').update({ status:'completed', completed_at: new Date().toISOString(), completed_date: today }).eq('id', id);
+  const now = new Date();
+  // Build patch safely — only include columns that exist
+  const patch = { status: 'completed' };
+  try { patch.completed_at = now.toISOString(); } catch(_) {}
+  try { patch.completed_date = now.toISOString().slice(0, 10); } catch(_) {}
+
+  const { error } = await sb.from('queues').update(patch).eq('id', id);
+  if (error) {
+    console.error('completeService error:', error);
+    // Try without completed_date in case column doesn't exist yet
+    if (error.message && error.message.includes('completed_date')) {
+      const { error: err2 } = await sb.from('queues')
+        .update({ status: 'completed', completed_at: now.toISOString() })
+        .eq('id', id);
+      if (err2) {
+        toast('Could not complete: ' + (err2.message || 'Permission denied. Run the SQL patch in Supabase.'), 'error');
+        return;
+      }
+    } else {
+      toast('Could not complete: ' + (error.message || 'Permission denied. Check RLS policies.'), 'error');
+      return;
+    }
+  }
+  toast('Customer served ✓', 'success');
   updateServedToday();
 }
 
