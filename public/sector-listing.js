@@ -44,6 +44,21 @@
     if (el) el.textContent = text;
   }
 
+
+  // Format raw address/postcode into readable text
+  function formatAddr(addr) {
+    if (!addr) return 'Address not set';
+    // If it looks like a raw postcode (no spaces, letters+numbers, short)
+    // try to make it readable
+    if (addr.length < 10 && /^[a-z0-9]+$/i.test(addr.replace(/\s/g,''))) {
+      // Format postcode: insert space before last 3 chars
+      const clean = addr.replace(/\s/g,'').toUpperCase();
+      return clean.length > 4 ? clean.slice(0,-3) + ' ' + clean.slice(-3) : clean;
+    }
+    // General cleanup: fix comma spacing, capitalise
+    return addr.replace(/,([^\s])/g, ', $1').replace(/\s+/g,' ').trim();
+  }
+
   function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
   // ── Demo businesses shown when no real data in DB ──────────────────
@@ -155,19 +170,20 @@
     // Route hospitals to hospital-detail, all others to business-detail
     // Demo items link to signup page (no real ID to fetch)
     const detailPage = p.isDemo
-      ? (category === 'Hospital' ? 'hospital-signup.html' : `business-signup.html?category=${encodeURIComponent(category)}`)
+      ? null  // Demo cards are not clickable
       : ((category === 'Hospital' || p.is_hospital) ? 'hospital-detail.html' : 'business-detail.html') + '?id=' + esc(p.id);
 
     const demoOverlay = p.isDemo ? `
       <div style="position:absolute;top:10px;right:10px;background:var(--accent2);color:var(--primary);font-size:.6rem;font-weight:800;letter-spacing:.8px;padding:3px 8px;border-radius:20px;text-transform:uppercase;z-index:2;">SAMPLE</div>` : '';
-    const demoNote = p.isDemo ? `<div style="font-size:.7rem;color:var(--text-muted);margin-top:.4rem;font-style:italic;">Demo — register to show your live data</div>` : '';
+    const demoNote = p.isDemo ? `<div style="font-size:.7rem;color:var(--text-muted);margin-top:.4rem;">📋 Sample data — <a href="provider-signup.html" style="color:var(--accent);font-weight:700;">Register your business</a> to appear here</div>` : '';
 
-    return `
-      <a href="${detailPage}" class="h-card" style="position:relative;">
+    return p.isDemo ? `
+      <div class="h-card" style="position:relative;cursor:default;" onclick="void(0)">` : `
+      <a href="${detailPage}" class="h-card" style="position:relative;">`
         ${demoOverlay}
         <div class="h-card-top">
           <h3>${esc(p.business_name)}</h3>
-          <div class="addr">📍 ${esc(p.address || 'Address not set')}</div>
+          <div class="addr">📍 ${esc(formatAddr(p.address || ''))}</div>
           <div class="status-pill ${isOpen?'':'closed'}">
             ${isOpen ? '<div class="live-dot"></div> OPEN' : 'CLOSED'}
           </div>
@@ -217,44 +233,18 @@
 
   loadAll();
 
-  // ── Auth: swap Login → correct dashboard when user is signed in ──────────────
-  async function updateAuthNav(session) {
+  // ── Auth: swap Login → My Queues when user is signed in ──────────────
+  function updateAuthNav(session) {
+    // Desktop + mobile: find all links pointing at login.html
     document.querySelectorAll('a[href="login.html"]').forEach(a => {
       if (session) {
-        a.textContent = 'Dashboard';
-        a.href = 'dashboard.html'; // default — updated below if provider
+        a.textContent = 'My Queues';
+        a.href = 'dashboard.html';
       } else {
         a.textContent = 'Login';
         a.href = 'login.html';
       }
     });
-
-    if (!session) return;
-
-    // Check if logged-in user is a provider — route them to their dashboard
-    try {
-      const { data: prov } = await sb
-        .from('providers')
-        .select('id, is_hospital, category')
-        .or(`user_id.eq.${session.user.id},id.eq.${session.user.id}`)
-        .maybeSingle();
-
-      if (prov) {
-        const dest = (prov.is_hospital || prov.category === 'Hospital')
-          ? 'hospital-dashboard.html'
-          : 'provider-dashboard.html';
-        document.querySelectorAll('a[href="login.html"], a[href="dashboard.html"]').forEach(a => {
-          if (a.textContent === 'Dashboard' || a.textContent === 'My Queues') {
-            a.href = dest;
-            a.textContent = 'Dashboard';
-          }
-        });
-      } else {
-        document.querySelectorAll('a[href="dashboard.html"]').forEach(a => {
-          a.textContent = 'My Queues';
-        });
-      }
-    } catch (_) {}
   }
 
   // Check on load

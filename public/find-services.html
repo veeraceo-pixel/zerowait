@@ -337,13 +337,23 @@ function toggleSectorNav() {
       }
     }
 
-    // Search filter
+    // Search filter - normalise postcodes for matching
     if (searchQ) {
-      items = items.filter(p =>
-        (p.business_name||'').toLowerCase().includes(searchQ) ||
-        (p.address||'').toLowerCase().includes(searchQ) ||
-        (p.category||'').toLowerCase().includes(searchQ)
-      );
+      const normQ = searchQ.replace(/\s/g,'').toLowerCase();
+      items = items.filter(p => {
+        const name = (p.business_name||'').toLowerCase();
+        const addr = (p.address||'').toLowerCase();
+        const addrNorm = addr.replace(/\s/g,'');
+        const cat  = (p.category||'').toLowerCase();
+        // Extract city from address (last meaningful part before postcode)
+        const parts = addr.split(',').map(s=>s.trim());
+        const city = parts.length > 1 ? parts[parts.length-2] : '';
+        return name.includes(searchQ) ||
+               addr.includes(searchQ) ||
+               addrNorm.includes(normQ) ||
+               cat.includes(searchQ) ||
+               city.includes(searchQ);
+      });
     }
 
     const grid = document.getElementById('grid');
@@ -423,6 +433,7 @@ function toggleSectorNav() {
   }
 
   function showEmpty(msg) {
+    msg = msg || 'No services found matching your search. Try a business name, category (e.g. Salon, Bank) or city name.';
     const grid = document.getElementById('grid');
     msg = msg || 'No services found. Try a different search or category.';
     grid.innerHTML = `

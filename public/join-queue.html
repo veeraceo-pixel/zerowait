@@ -151,46 +151,44 @@
     if (!boxes.length) { alert('Please select at least one service.'); return; }
     if (!name || !phone) { alert('Please enter your name and phone number.'); return; }
 
+    // Guest join: customers do NOT need an account to join a queue.
+    // If logged in, use their user_id for queue tracking.
+    // If not logged in, generate a guest session ID stored in sessionStorage.
     const { data: { session } } = await sb.auth.getSession();
-    if (!session) {
-      alert('Please log in to join the queue.');
-      sessionStorage.setItem('redirectAfterLogin', window.location.href);
-      window.location.href = 'login.html'; return;
-    }
+    // Guest tracking: store a session key for live tracking after join
+    const guestTrackKey = sessionStorage.getItem('sq_guest_id') || (() => {
+      const gid = 'guest_' + Math.random().toString(36).slice(2,10);
+      sessionStorage.setItem('sq_guest_id', gid);
+      return gid;
+    })();
+    // user_id must be a valid UUID or null — use logged-in user ID or null for guests
+    const userId = session?.user?.id || null;
 
-    // Guard: prevent provider from joining their own queue
-    if (session.user.id === providerId) {
+    // Guard: provider cannot join their own queue
+    if (session && (session.user.id === providerId)) {
       alert('You cannot join your own queue. Use your dashboard to manage it.');
-      window.location.href = 'provider-dashboard.html'; return;
-    }
-
-    // Guard: prevent any provider from joining any queue (providers use dashboard)
-    const { data: isProvider } = await sb.from('providers')
-      .select('id')
-      .or(`user_id.eq.${session.user.id},id.eq.${session.user.id}`)
-      .maybeSingle();
-    if (isProvider) {
-      alert('Provider accounts cannot join customer queues. Please use a separate customer account.');
       window.location.href = 'provider-dashboard.html'; return;
     }
 
     const btn = document.getElementById('joinBtn');
     btn.disabled = true; btn.textContent = 'Joining…';
 
-    // Check already in queue
-    const { data: existing } = await sb.from('queues')
-      .select('id').eq('provider_id', providerId).eq('user_id', session.user.id).eq('status','waiting').maybeSingle();
-    if (existing) {
-      alert('You are already in this queue!');
-      btn.disabled = false; btn.textContent = 'Confirm & Join Queue'; return;
-    }
-
     const svcNames    = Array.from(boxes).map(b => b.dataset.name).join(', ');
     const totalDur    = Array.from(boxes).reduce((s,b) => s + Number(b.value), 0);
     const currentWait = parseInt(document.getElementById('estWait').textContent) || 0;
 
+    // For logged-in users: check if already in an active queue
+    if (session) {
+      const { data: existing } = await sb.from('queues')
+        .select('id').eq('user_id', session.user.id).in('status',['waiting','serving']).maybeSingle();
+      if (existing) {
+        alert('You already have an active queue. Leave it from your dashboard before joining a new one.');
+        btn.disabled = false; btn.textContent = 'Confirm & Join Queue'; return;
+      }
+    }
+
     const { data: newRow, error } = await sb.from('queues').insert({
-      user_id:          session.user.id,
+      user_id:          userId,
       provider_id:      providerId,
       business_name:    businessName,
       customer_name:    name,
@@ -203,9 +201,8 @@
     }).select().single();
 
     if (error) {
-      // Duplicate key: user already has an active queue entry
       if (error.code === '23505' || /one_active_queue_per_user/.test(error.message)) {
-        alert('You already have an active queue at another provider. Please leave that queue first from your dashboard before joining a new one.');
+        alert('You already have an active queue entry. Please wait for it to complete or cancel it first.');
       } else {
         alert('Could not join queue: ' + error.message);
       }
