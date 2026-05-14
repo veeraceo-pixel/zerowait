@@ -13,22 +13,30 @@ ALTER TABLE providers
 ALTER TABLE providers
   ADD COLUMN IF NOT EXISTS is_hospital boolean DEFAULT false;
 
+ALTER TABLE providers
+  ADD COLUMN IF NOT EXISTS description text;
+
+-- Back-fill: any provider whose category is 'Hospital' is a hospital
+UPDATE providers
+  SET is_hospital = true
+  WHERE category = 'Hospital' AND (is_hospital IS NULL OR is_hospital = false);
+
 -- ============================================================
 -- 2. DEPARTMENTS — new table for hospital departments
 -- ============================================================
 CREATE TABLE IF NOT EXISTS departments (
-  id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  provider_id    uuid NOT NULL REFERENCES providers(id) ON DELETE CASCADE,
-  name           text NOT NULL,
-  description    text,
-  icon           text DEFAULT '🏥',
-  is_open        boolean DEFAULT true,
-  wait_minutes   integer DEFAULT 0,        -- staff-set live wait time
-  capacity       integer DEFAULT 1,         -- how many patients seen at once
-  avg_consult_minutes integer DEFAULT 15,   -- typical visit duration
-  display_order  integer DEFAULT 0,
-  created_at     timestamptz DEFAULT now(),
-  updated_at     timestamptz DEFAULT now()
+  id                  uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+  provider_id         uuid        NOT NULL REFERENCES providers(id) ON DELETE CASCADE,
+  name                text        NOT NULL,
+  description         text,
+  icon                text        DEFAULT '🏥',
+  is_open             boolean     DEFAULT true,
+  wait_minutes        integer     DEFAULT 0,        -- staff-set live wait time
+  capacity            integer     DEFAULT 1,         -- how many patients seen at once
+  avg_consult_minutes integer     DEFAULT 15,        -- typical visit duration
+  display_order       integer     DEFAULT 0,
+  created_at          timestamptz DEFAULT now(),
+  updated_at          timestamptz DEFAULT now()
 );
 
 CREATE INDEX IF NOT EXISTS idx_departments_provider
@@ -47,6 +55,18 @@ CREATE TRIGGER trg_departments_touch
   BEFORE UPDATE ON departments
   FOR EACH ROW EXECUTE FUNCTION touch_updated_at();
 
+-- Enable realtime on departments so wait-time updates push live
+ALTER TABLE departments REPLICA IDENTITY FULL;
+
+DO $$
+BEGIN
+  BEGIN
+    EXECUTE 'ALTER PUBLICATION supabase_realtime ADD TABLE departments';
+  EXCEPTION WHEN duplicate_object THEN
+    NULL;
+  END;
+END $$;
+
 -- ============================================================
 -- 3. QUEUES — link queue entries to departments
 -- ============================================================
@@ -56,23 +76,52 @@ ALTER TABLE queues
 ALTER TABLE queues
   ADD COLUMN IF NOT EXISTS department_id uuid REFERENCES departments(id) ON DELETE SET NULL;
 
+-- ============================================================
+-- 4. QUEUE UNIQUENESS CONSTRAINT
+-- ============================================================
+-- FIX: The previous migration used UNIQUE(user_id, status) which is wrong.
+-- Because 'completed' is also a status value, that constraint would allow
+-- only ONE completed entry per user ever — any second completion would fail
+-- with a unique-violation error.
+--
+-- The correct approach is a PARTIAL UNIQUE INDEX that only applies to the
+-- active statuses ('waiting' and 'serving'), so a user can only be in one
+-- active queue at a time, while still accumulating unlimited history.
+
+-- Drop the old broken table constraint if it exists
+ALTER TABLE queues
+  DROP CONSTRAINT IF EXISTS one_active_queue_per_user;
+
+-- Create a correct partial unique index
+DROP INDEX IF EXISTS idx_one_active_queue_per_user;
+CREATE UNIQUE INDEX idx_one_active_queue_per_user
+  ON queues (user_id)
+  WHERE status IN ('waiting', 'serving');
+
+-- Supporting indexes
 CREATE INDEX IF NOT EXISTS idx_queues_department_status
   ON queues (department_id, status);
 
--- One active queue per user (drop & recreate if it exists)
-ALTER TABLE queues
-  DROP CONSTRAINT IF EXISTS one_active_queue_per_user;
-ALTER TABLE queues
-  ADD CONSTRAINT one_active_queue_per_user
-  UNIQUE (user_id, status);
-
 CREATE INDEX IF NOT EXISTS idx_queues_user_status
   ON queues (user_id, status);
+
 CREATE INDEX IF NOT EXISTS idx_queues_provider_status
   ON queues (provider_id, status);
 
 -- ============================================================
--- 4. ROW-LEVEL SECURITY (departments)
+-- 5. ADDITIONAL INDEXES
+-- ============================================================
+CREATE INDEX IF NOT EXISTS idx_providers_is_hospital ON providers(is_hospital);
+CREATE INDEX IF NOT EXISTS idx_providers_category    ON providers(category);
+CREATE INDEX IF NOT EXISTS idx_providers_user_id     ON providers(user_id);
+CREATE INDEX IF NOT EXISTS idx_departments_open_only ON departments(is_open);
+CREATE INDEX IF NOT EXISTS idx_queues_provider       ON queues(provider_id);
+CREATE INDEX IF NOT EXISTS idx_queues_user           ON queues(user_id);
+CREATE INDEX IF NOT EXISTS idx_queues_status         ON queues(status);
+CREATE INDEX IF NOT EXISTS idx_queues_department     ON queues(department_id);
+
+-- ============================================================
+-- 6. ROW-LEVEL SECURITY (departments)
 -- ============================================================
 ALTER TABLE departments ENABLE ROW LEVEL SECURITY;
 
@@ -119,14 +168,29 @@ CREATE POLICY "departments_delete_owner"
   );
 
 -- ============================================================
--- 5. REALTIME — make departments broadcast changes
+-- 7. VERIFY
 -- ============================================================
--- Run once; safe to ignore "already exists" notice
-DO $$
-BEGIN
-  BEGIN
-    EXECUTE 'ALTER PUBLICATION supabase_realtime ADD TABLE departments';
-  EXCEPTION WHEN duplicate_object THEN
-    NULL;
-  END;
-END $$;
+SELECT
+  'providers'   AS tbl,
+  COUNT(*)      AS rows,
+  COUNT(description)                            AS has_description,
+  COUNT(CASE WHEN is_hospital THEN 1 END)       AS hospitals
+FROM providers
+
+UNION ALL
+
+SELECT
+  'departments' AS tbl,
+  COUNT(*)      AS rows,
+  NULL,
+  NULL
+FROM departments
+
+UNION ALL
+
+SELECT
+  'queues'      AS tbl,
+  COUNT(*)      AS rows,
+  COUNT(department_id)                          AS has_dept,
+  NULL
+FROM queues;

@@ -1,8 +1,13 @@
 // api.js
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const SUPABASE_URL = 'https://idcrplpiokodcanjfolf.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_ygbeTEvM5TdJKRND4GM5dQ_YPGYQI8e';
+// FIX: Supabase credentials are read from the globally-loaded supabase-config.js
+// (which defines SUPABASE_URL and SUPABASE_ANON_KEY) so that credentials live in
+// exactly one place and can be updated without touching this file.
+// supabase-config.js must be loaded via <script> before this module is imported.
+if (typeof SUPABASE_URL === 'undefined' || typeof SUPABASE_ANON_KEY === 'undefined') {
+  throw new Error('[skipQs] supabase-config.js must be loaded before api.js');
+}
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -145,7 +150,7 @@ export async function joinQueue(payload) {
 }
 
 export async function getMyQueues(userId) {
-  // You can later replace this with a view that includes position_in_queue
+  // Fetch the user's active queue entries
   const { data, error } = await supabase
     .from('queues')
     .select(
@@ -160,10 +165,37 @@ export async function getMyQueues(userId) {
     return [];
   }
 
-  // naive position based on order
-  return (data || []).map((q, index) => ({
+  const myQueues = data || [];
+
+  // FIX: Compute accurate position by counting all earlier entries in the same
+  // provider queue, not just the user's own entries sorted arbitrarily.
+  // We batch a single query per unique provider to avoid N+1 requests.
+  const providerIds = [...new Set(myQueues.map((q) => q.provider_id))];
+
+  // For each provider, count how many entries joined before each of ours
+  const positionMap = {};
+
+  await Promise.all(
+    providerIds.map(async (pid) => {
+      const { data: ahead, error: posErr } = await supabase
+        .from('queues')
+        .select('id, joined_at, provider_id')
+        .eq('provider_id', pid)
+        .in('status', ['waiting', 'serving'])
+        .order('joined_at', { ascending: true });
+
+      if (posErr || !ahead) return;
+
+      // Map each queue entry id → its 1-based position within this provider's queue
+      ahead.forEach((entry, index) => {
+        positionMap[entry.id] = index + 1;
+      });
+    })
+  );
+
+  return myQueues.map((q) => ({
     ...q,
-    position_in_queue: index + 1
+    position_in_queue: positionMap[q.id] ?? null
   }));
 }
 

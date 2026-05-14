@@ -1,2 +1,14 @@
 <!DOCTYPE html>
-<html><head><meta http-equiv="refresh" content="0;url=dashboard.html"><title>Redirecting…</title></head><body><p>Redirecting to <a href="dashboard.html">My Queues</a>…</p></body></html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Queues – skipQs</title>
+  <link rel="canonical" href="dashboard.html">
+  <!-- JS redirect fires before paint so the page never appears blank.
+       The meta-refresh is a fallback for the rare browser with JS disabled. -->
+  <script>window.location.replace('dashboard.html');</script>
+  <meta http-equiv="refresh" content="0;url=dashboard.html">
+</head>
+<body></body>
+</html>

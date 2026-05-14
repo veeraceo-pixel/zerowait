@@ -12,6 +12,18 @@ const heroSearchInput = document.getElementById('hero-search-input');
 const demoTimerEl = document.getElementById('demo-timer');
 const demoEtaEl = document.getElementById('demo-eta');
 
+// ── XSS sanitiser ────────────────────────────────────────────────
+// All database-sourced strings must pass through esc() before
+// being interpolated into innerHTML.
+function esc(s) {
+  return String(s || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
 async function renderLiveQueues() {
   if (!liveQueueList) return;
 
@@ -30,20 +42,22 @@ async function renderLiveQueues() {
     const card = document.createElement('article');
     card.className = 'sq-queue-card';
 
+    // FIX: All DB values escaped through esc() to prevent XSS.
+    // Numeric values cast with Number() so they can never contain markup.
     card.innerHTML = `
       <header class="sq-queue-card-header">
-        <h3>${p.business_name}</h3>
-        <span class="sq-badge">${p.category || 'Service'}</span>
+        <h3>${esc(p.business_name)}</h3>
+        <span class="sq-badge">${esc(p.category || 'Service')}</span>
       </header>
-      <p class="sq-subtle">${p.address || ''}</p>
+      <p class="sq-subtle">${esc(p.address || '')}</p>
       <div class="sq-queue-status">
         <div>
           <span class="sq-label">People in line</span>
-          <span class="sq-value">${p.people_in_line ?? 0}</span>
+          <span class="sq-value">${Number(p.people_in_line) || 0}</span>
         </div>
         <div>
           <span class="sq-label">Current wait</span>
-          <span class="sq-value">${p.current_wait_mins ?? 0} mins</span>
+          <span class="sq-value">${Number(p.current_wait_mins) || 0} mins</span>
         </div>
       </div>
     `;
@@ -82,9 +96,10 @@ async function renderBusinessSnapshot() {
     .slice(0, 4)
     .forEach(([cat, stats]) => {
       const li = document.createElement('li');
+      // FIX: category name escaped; counts are plain numbers (safe).
       li.innerHTML = `
-        <span>${cat}</span>
-        <span>${stats.count} providers · ${stats.people} in line</span>
+        <span>${esc(cat)}</span>
+        <span>${Number(stats.count)} providers · ${Number(stats.people)} in line</span>
       `;
       businessSnapshotEl.appendChild(li);
     });

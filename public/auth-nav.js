@@ -6,7 +6,7 @@
    - If the logged-in user owns a row in `providers`
        → they are a PROVIDER
        → Hospital provider → hospital-dashboard.html
-       → Business provider → business-dashboard.html
+       → Business provider → provider-dashboard.html
    - Otherwise → CUSTOMER → dashboard.html
 
    Role is cached in sessionStorage (key: sq_role_cache) so we
@@ -17,6 +17,20 @@
   'use strict';
 
   const CACHE_KEY = 'sq_role_cache';
+
+  /* ── XSS sanitiser ──────────────────────────────────────────────
+     FIX: rawName and initial come from user-controlled metadata
+     (display_name / full_name fields set at sign-up). They must be
+     escaped before being placed into innerHTML / HTML attributes.
+  ─────────────────────────────────────────────────────────────── */
+  function esc(s) {
+    return String(s || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;');
+  }
 
   /* ── Role lookup (cached) ───────────────────────────────────── */
   async function getRoleInfo(userId) {
@@ -37,7 +51,7 @@
       info = {
         isProvider : true,
         isHospital,
-        dashUrl    : isHospital ? 'hospital-dashboard.html' : 'business-dashboard.html',
+        dashUrl    : isHospital ? 'hospital-dashboard.html' : 'provider-dashboard.html',
         dashLabel  : 'Dashboard'
       };
     } else {
@@ -58,15 +72,19 @@
      - dashLink: light pill  (#f7f8f8 bg, dark text) — always visible
      - avatar:   accent circle (#23e5db bg, dark text) — always visible
      - logout:   ghost pill (white/25% bg, white text) — visible on dark or light bg
+
+     FIX: rawName and initial are escaped via esc() before being
+     written into HTML attribute values and text nodes.
   ─────────────────────────────────────────────────────────────── */
   function buildCluster(initial, rawName, dashUrl, dashLabel) {
     const logoutFn = "(async()=>{await window.sb.auth.signOut();window.location.href='index.html';})()";
     const div = document.createElement('div');
     div.className = 'sq-auth-cluster';
     div.style.cssText = 'display:flex;align-items:center;gap:8px;flex-shrink:0;';
+    // FIX: esc() applied to all user-supplied values in HTML attributes and content.
     div.innerHTML =
-      '<a href="' + dashUrl + '" class="sq-dash-link" style="padding:8px 16px;border-radius:50px;font-size:13px;font-weight:700;background:#23e5db;color:#002f34;text-decoration:none;white-space:nowrap;border:none;">' + dashLabel + '</a>' +
-      '<div class="sq-avatar" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.2);color:white;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex-shrink:0;cursor:default;border:2px solid rgba(255,255,255,.4);" title="' + rawName + '">' + initial + '</div>' +
+      '<a href="' + esc(dashUrl) + '" class="sq-dash-link" style="padding:8px 16px;border-radius:50px;font-size:13px;font-weight:700;background:#23e5db;color:#002f34;text-decoration:none;white-space:nowrap;border:none;">' + esc(dashLabel) + '</a>' +
+      '<div class="sq-avatar" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.2);color:white;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex-shrink:0;cursor:default;border:2px solid rgba(255,255,255,.4);" title="' + esc(rawName) + '">' + esc(initial) + '</div>' +
       '<button onclick="' + logoutFn + '" style="padding:8px 16px;border-radius:50px;font-size:13px;font-weight:700;background:rgba(255,255,255,.15);color:white;border:1.5px solid rgba(255,255,255,.35);cursor:pointer;font-family:inherit;white-space:nowrap;">Logout</button>';
     return div;
   }
@@ -77,9 +95,10 @@
     const div = document.createElement('div');
     div.className = 'sq-auth-cluster';
     div.style.cssText = 'display:flex;align-items:center;gap:8px;flex-shrink:0;';
+    // FIX: esc() applied to all user-supplied values.
     div.innerHTML =
-      '<a href="' + dashUrl + '" style="padding:8px 16px;border-radius:50px;font-size:13px;font-weight:700;background:#23e5db;color:#002f34;text-decoration:none;white-space:nowrap;">' + dashLabel + '</a>' +
-      '<div style="width:34px;height:34px;border-radius:50%;background:#23e5db;color:#002f34;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex-shrink:0;cursor:default;border:2px solid rgba(0,47,52,.15);" title="' + rawName + '">' + initial + '</div>' +
+      '<a href="' + esc(dashUrl) + '" style="padding:8px 16px;border-radius:50px;font-size:13px;font-weight:700;background:#23e5db;color:#002f34;text-decoration:none;white-space:nowrap;">' + esc(dashLabel) + '</a>' +
+      '<div style="width:34px;height:34px;border-radius:50%;background:#23e5db;color:#002f34;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex-shrink:0;cursor:default;border:2px solid rgba(0,47,52,.15);" title="' + esc(rawName) + '">' + esc(initial) + '</div>' +
       '<button onclick="' + logoutFn + '" style="padding:8px 16px;border-radius:50px;font-size:13px;font-weight:700;background:#f7f8f8;color:#002f34;border:1.5px solid #e2e8f0;cursor:pointer;font-family:inherit;white-space:nowrap;">Logout</button>';
     return div;
   }
@@ -127,6 +146,7 @@
       if (!document.getElementById('sq-idx-avatar')) {
         const avatar = document.createElement('div');
         avatar.id = 'sq-idx-avatar';
+        // FIX: use textContent / title property (not innerHTML) so no escaping needed.
         avatar.title = rawName;
         avatar.style.cssText = 'width:32px;height:32px;border-radius:50%;background:#23e5db;color:#002f34;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0;cursor:default;';
         avatar.textContent = initial;
@@ -158,8 +178,10 @@
       if (el.querySelector('.sq-auth-cluster')) return;
       el.innerHTML = '';
       const logoutFnStr = "(async()=>{await window.sb.auth.signOut();window.location.href='index.html';})()";
+      // FIX: dashUrl/dashLabel escaped; these values originate from
+      // our own code (not user input) but we escape defensively.
       el.innerHTML =
-        '<a href="' + dashUrl + '" style="padding:8px 18px;border-radius:50px;font-size:13px;font-weight:700;background:#23e5db;color:#002f34;text-decoration:none;">' + dashLabel + '</a>' +
+        '<a href="' + esc(dashUrl) + '" style="padding:8px 18px;border-radius:50px;font-size:13px;font-weight:700;background:#23e5db;color:#002f34;text-decoration:none;">' + esc(dashLabel) + '</a>' +
         '<button onclick="' + logoutFnStr + '" style="padding:8px 18px;border-radius:50px;font-size:13px;font-weight:700;background:rgba(255,255,255,.15);color:white;border:1.5px solid rgba(255,255,255,.3);cursor:pointer;font-family:inherit;">Logout</button>';
     });
 
@@ -248,8 +270,6 @@
     // Sector pages: restore header-actions
     document.querySelectorAll('.header-actions .sq-auth-cluster').forEach(function(c){ c.remove(); });
     document.querySelectorAll('.mobile-actions .sq-auth-cluster').forEach(function(c){ c.remove(); });
-    // Restore original login buttons in sector pages (if removed)
-    // (sector pages are usually re-loaded so this mainly handles SPA scenarios)
 
     // Content pages: restore cluster → login/signup links
     document.querySelectorAll('header .sq-auth-cluster').forEach(function(c){
@@ -291,6 +311,7 @@
     const email   = user.email || '';
     const rawName = (user.user_metadata && (user.user_metadata.display_name || user.user_metadata.full_name))
                     || email.split('@')[0] || '?';
+    // FIX: initial derived from rawName; both will be escaped in buildCluster/buildClusterLight.
     const userMeta = { rawName, initial: rawName.charAt(0).toUpperCase() };
     try {
       const info = await getRoleInfo(user.id);

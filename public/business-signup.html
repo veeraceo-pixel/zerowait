@@ -426,12 +426,12 @@ async function register() {
     if (deptErr) {
       console.error(deptErr);
       showError('Account saved, but adding ' + cfg.unitPlural.toLowerCase() + ' failed: ' + deptErr.message + '. Add them from the dashboard.');
-      setTimeout(()=>{ window.location.href='business-dashboard.html'; }, 2500);
+      setTimeout(()=>{ window.location.href='provider-dashboard.html'; }, 2500);
       return;
     }
 
     showSuccess('🎉 ' + cfg.label + ' registered with ' + units.length + ' ' + (units.length===1?cfg.unitSingular:cfg.unitPlural).toLowerCase() + '. Redirecting…');
-    setTimeout(()=>{ window.location.href='business-dashboard.html'; }, 1500);
+    setTimeout(()=>{ window.location.href='provider-dashboard.html'; }, 1500);
   } catch (err) {
     console.error(err);
     showError('Unexpected error: ' + (err.message || err));

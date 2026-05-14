@@ -6,141 +6,100 @@
 <title>Business Registration | skipQs</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root {
-  --primary:#002f34;
-  --accent:#23e5db;
-  --bg:#f7f8f8;
-  --border:#e2e8f0;
-  --danger:#dc2626;
-  --success:#059669;
-}
-* { box-sizing:border-box; margin:0; padding:0; }
-body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--primary); }
+:root{--primary:#002f34;--accent:#23e5db;--bg:#f7f8f8;--border:#e2e8f0;--danger:#dc2626;--success:#059669;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--primary);}
 
-.navbar {
-  background:var(--primary);
-  padding:1rem 2rem;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-.logo { font-size:1.5rem; font-weight:800; color:var(--accent); text-decoration:none; }
+.navbar{background:var(--primary);padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;}
+.logo{font-size:1.5rem;font-weight:800;color:var(--accent);text-decoration:none;}
 
-.auth-wrapper { max-width:700px; margin:2rem auto; padding:0 1rem 5rem; }
-.title { font-size:2rem; font-weight:800; margin-bottom:.5rem; }
-.subtitle { color:#64748b; margin-bottom:2rem; }
+.auth-wrapper{max-width:700px;margin:2rem auto;padding:0 1rem 5rem;}
+.title{font-size:2rem;font-weight:800;margin-bottom:.5rem;}
+.subtitle{color:#64748b;margin-bottom:2rem;}
 
-.card {
-  background:#fff;
-  border-radius:18px;
-  padding:1.6rem;
-  margin-bottom:1.4rem;
-  border:1px solid var(--border);
-}
-.step { font-size:.75rem; color:var(--accent); font-weight:800; margin-bottom:.5rem; text-transform:uppercase; }
-.heading { font-size:1.15rem; font-weight:700; margin-bottom:1.2rem; }
+/* Steps indicator */
+.steps-bar{display:flex;gap:0;margin-bottom:2rem;border-radius:12px;overflow:hidden;border:1.5px solid var(--border);}
+.step-tab{flex:1;padding:.55rem .5rem;text-align:center;font-size:.72rem;font-weight:700;color:#94a3b8;background:white;border-right:1px solid var(--border);transition:.2s;}
+.step-tab:last-child{border-right:none;}
+.step-tab.active{background:var(--primary);color:white;}
+.step-tab.done{background:#d1fae5;color:#065f46;}
 
-.row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem; }
-.group { display:flex; flex-direction:column; gap:.4rem; }
-label { font-size:.85rem; font-weight:600; }
+.card{background:#fff;border-radius:18px;padding:1.6rem;margin-bottom:1.4rem;border:1px solid var(--border);}
+.step-label{font-size:.72rem;color:var(--accent);font-weight:800;margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.5px;}
+.heading{font-size:1.15rem;font-weight:700;margin-bottom:1.2rem;}
 
-input, select {
-  padding:.9rem 1rem;
-  border-radius:12px;
-  border:1.5px solid var(--border);
-  font-family:inherit;
-  font-size:.95rem;
-  width:100%;
-}
-input:focus, select:focus { outline:none; border-color:var(--accent); }
+.row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;}
+.group{display:flex;flex-direction:column;gap:.4rem;}
+label{font-size:.85rem;font-weight:600;}
+input,select,textarea{padding:.85rem 1rem;border-radius:12px;border:1.5px solid var(--border);font-family:inherit;font-size:.95rem;width:100%;}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);}
 
-.geo { display:flex; gap:.6rem; align-items:flex-start; }
-.geo input { flex:1; }
+.geo{display:flex;gap:.6rem;align-items:flex-start;}
+.geo input{flex:1;}
+.lookup-btn{background:var(--primary);color:white;border:none;border-radius:12px;padding:.85rem 1rem;cursor:pointer;font-weight:700;font-family:inherit;white-space:nowrap;flex-shrink:0;}
+.lookup-btn:disabled{opacity:.6;cursor:not-allowed;}
+.success-msg{color:var(--success);font-size:.85rem;margin-top:.5rem;display:none;}
 
-.lookup-btn {
-  background:var(--primary);
-  color:white;
-  border:none;
-  border-radius:12px;
-  padding:.9rem 1rem;
-  cursor:pointer;
-  font-weight:700;
-  font-family:inherit;
-  white-space:nowrap;
-  flex-shrink:0;
-}
-.lookup-btn:disabled { opacity:.6; cursor:not-allowed; }
+.error-msg{background:#fee2e2;color:#b91c1c;padding:1rem;border-radius:12px;margin-bottom:1.2rem;display:none;}
+.success-banner{background:#d1fae5;color:#065f46;padding:1.2rem;border-radius:12px;margin-bottom:1.2rem;display:none;font-weight:600;text-align:center;}
 
-.success-msg { color:var(--success); font-size:.85rem; margin-top:.5rem; display:none; }
-.error-msg {
-  background:#fee2e2;
-  color:#b91c1c;
-  padding:1rem;
-  border-radius:12px;
-  margin-bottom:1.2rem;
-  display:none;
-}
-.success-banner {
-  background:#d1fae5;
-  color:#065f46;
-  padding:1.2rem;
-  border-radius:12px;
-  margin-bottom:1.2rem;
-  display:none;
-  font-weight:600;
-  text-align:center;
-}
+/* Services table */
+table{width:100%;border-collapse:collapse;}
+th{text-align:left;font-size:.75rem;color:#64748b;padding-bottom:.6rem;}
+td{padding:.4rem .3rem;}
+td input{padding:.6rem .7rem;font-size:.9rem;}
+.s-name{width:100%;}
+.s-dur{width:80px!important;}
+.s-price{width:80px!important;}
+.delete-btn{background:none;border:none;color:red;cursor:pointer;font-size:1.3rem;padding:0 .4rem;}
+.add-service{margin-top:.8rem;background:none;border:none;color:var(--primary);font-weight:700;cursor:pointer;font-family:inherit;font-size:.9rem;}
 
-table { width:100%; border-collapse:collapse; }
-th { text-align:left; font-size:.75rem; color:#64748b; padding-bottom:.6rem; }
-td { padding:.4rem .3rem; }
-td input { padding:.6rem .7rem; font-size:.9rem; }
-.s-name  { width:100%; }
-.s-dur   { width:80px !important; }
-.s-price { width:80px !important; }
-.delete-btn { background:none; border:none; color:red; cursor:pointer; font-size:1.3rem; padding:0 .4rem; }
-.add-service {
-  margin-top:.8rem;
-  background:none;
-  border:none;
-  color:var(--primary);
-  font-weight:700;
-  cursor:pointer;
-  font-family:inherit;
-  font-size:.9rem;
-}
+/* Grocery preset picker */
+.grocery-search{margin-bottom:.8rem;position:relative;}
+.grocery-search input{padding:.7rem 1rem .7rem 2.4rem;font-size:.88rem;}
+.grocery-search::before{content:'🔍';position:absolute;left:.8rem;top:50%;transform:translateY(-50%);font-size:.85rem;}
+.grocery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.4rem;max-height:280px;overflow-y:auto;padding:.4rem;border:1.5px solid var(--border);border-radius:12px;background:#fafbfc;}
+.grocery-chip{padding:.45rem .7rem;border-radius:8px;border:1.5px solid var(--border);background:white;font-size:.78rem;font-weight:600;cursor:pointer;text-align:left;font-family:inherit;display:flex;align-items:center;gap:.4rem;transition:.15s;color:var(--primary);}
+.grocery-chip:hover{border-color:var(--accent);background:#f0fdfc;}
+.grocery-chip.selected{background:var(--accent);border-color:var(--accent);color:var(--primary);}
+.selected-items{margin-top:.8rem;display:flex;flex-wrap:wrap;gap:.35rem;}
+.selected-tag{background:var(--primary);color:white;border-radius:50px;padding:.3rem .8rem;font-size:.75rem;font-weight:700;display:inline-flex;align-items:center;gap:.4rem;}
+.selected-tag button{background:none;border:none;color:rgba(255,255,255,.7);cursor:pointer;font-size:.9rem;line-height:1;padding:0;}
 
-.submit-btn {
-  width:100%;
-  background:var(--primary);
-  color:white;
-  border:none;
-  padding:1rem;
-  border-radius:14px;
-  font-size:1rem;
-  font-weight:800;
-  cursor:pointer;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:10px;
-  font-family:inherit;
-}
-.submit-btn:disabled { opacity:.7; cursor:not-allowed; }
+/* Menu photo upload */
+.photo-zone{border:2px dashed var(--border);border-radius:14px;padding:1.6rem;text-align:center;cursor:pointer;transition:.2s;background:#fafbfc;position:relative;}
+.photo-zone:hover,.photo-zone.drag{border-color:var(--accent);background:#f0fdfc;}
+.photo-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.photo-preview{max-width:100%;max-height:200px;border-radius:10px;margin-top:.8rem;display:none;}
+.photo-hint{font-size:.78rem;color:#94a3b8;margin-top:.4rem;}
 
-.spinner {
-  width:18px;
-  height:18px;
-  border:3px solid rgba(255,255,255,.3);
-  border-top-color:#fff;
-  border-radius:50%;
-  animation:spin .9s linear infinite;
-  display:none;
-  flex-shrink:0;
-}
-@keyframes spin { to { transform:rotate(360deg); } }
+/* Bulk import */
+.bulk-tabs{display:flex;gap:.5rem;margin-bottom:.8rem;}
+.bulk-tab-btn{padding:.45rem 1rem;border-radius:8px;font-weight:700;font-size:.82rem;cursor:pointer;border:1.5px solid var(--border);background:var(--bg);color:#64748b;font-family:inherit;}
+.bulk-tab-btn.active{background:var(--primary);color:white;border-color:var(--primary);}
+.bulk-area{width:100%;min-height:100px;padding:.75rem;border:1.5px dashed var(--border);border-radius:12px;font-family:inherit;font-size:.88rem;resize:vertical;background:var(--bg);}
+.bulk-area:focus{outline:none;border-color:var(--accent);}
+.bulk-hint-small{font-size:.75rem;color:#94a3b8;margin-top:.35rem;}
+.upload-zone{border:2px dashed var(--border);border-radius:12px;padding:1.4rem;text-align:center;cursor:pointer;transition:.2s;background:var(--bg);}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--accent);background:#f0fdfc;}
+.preview-table{width:100%;border-collapse:collapse;margin-top:.8rem;}
+.preview-table th{font-size:.7rem;text-transform:uppercase;color:#64748b;padding:.4rem .5rem;border-bottom:2px solid var(--border);text-align:left;}
+.preview-table td{padding:.3rem .4rem;}
+.preview-table td input{padding:.35rem .5rem;font-size:.82rem;}
+.preview-table .rm-td{text-align:center;cursor:pointer;color:#9ca3af;}
+.preview-table .rm-td:hover{color:var(--danger);}
 
-@media(max-width:640px) { .row { grid-template-columns:1fr; } }
+/* Skip banner */
+.skip-banner{background:#fef9c3;border:1.5px solid #fde68a;border-radius:12px;padding:1rem 1.2rem;font-size:.88rem;color:#78350f;display:flex;align-items:center;gap:.6rem;}
+.skip-banner strong{font-weight:800;}
+
+/* Submit */
+.submit-btn{width:100%;background:var(--primary);color:white;border:none;padding:1rem;border-radius:14px;font-size:1rem;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;font-family:inherit;}
+.submit-btn:disabled{opacity:.7;cursor:not-allowed;}
+.spinner{width:18px;height:18px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .9s linear infinite;display:none;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+@media(max-width:640px){.row{grid-template-columns:1fr;}.grocery-grid{grid-template-columns:repeat(2,1fr);}}
 </style>
 </head>
 <body>
@@ -156,26 +115,25 @@ td input { padding:.6rem .7rem; font-size:.9rem; }
   <div id="errorMsg"   class="error-msg"></div>
   <div id="successMsg" class="success-banner"></div>
 
-  <!-- STEP 1 -->
+  <!-- STEP 1: Business Details -->
   <div class="card">
-    <div class="step">STEP 1</div>
+    <div class="step-label">Step 1</div>
     <div class="heading">Business Details</div>
 
     <div class="row">
       <div class="group">
         <label for="bizName">Business Name</label>
-        <input type="text" id="bizName" placeholder="City Barbers" autocomplete="organization">
+        <input type="text" id="bizName" placeholder="e.g. City Barbers" autocomplete="organization">
       </div>
       <div class="group">
         <label for="category">Category</label>
-        <select id="category" onchange="toggleOtherCategory(this.value)">
-          <option value="">Select category</option>
+        <select id="category" onchange="onCategoryChange(this.value)">
+          <option value="">Select category…</option>
         </select>
-        <input type="text" id="otherCategory" placeholder="e.g. Laundry, Tailor, Flower Shop…" autocomplete="off"
-          style="display:none;margin-top:.5rem;"
-          oninput="this.value=this.value.replace(/[<>]/g,'')">
-        <span id="otherCategoryHint" style="display:none;font-size:.78rem;color:#64748b;margin-top:.25rem;">
-          Type your business type — it helps us improve skipQs for everyone.
+        <input type="text" id="otherCategory" placeholder="e.g. Laundry, Tailor, Flower Shop…"
+          style="display:none;margin-top:.5rem;" oninput="this.value=this.value.replace(/[<>]/g,'')">
+        <span id="otherCategoryHint" style="display:none;font-size:.75rem;color:#64748b;margin-top:.2rem;">
+          Describe your business type — helps us improve skipQs.
         </span>
       </div>
     </div>
@@ -194,15 +152,8 @@ td input { padding:.6rem .7rem; font-size:.9rem; }
     <div class="group">
       <label for="addressInput">Business Address</label>
       <div class="geo">
-        <input
-          type="text"
-          id="addressInput"
-          placeholder="25 King Street, Manchester"
-          autocomplete="street-address"
-        >
-        <button type="button" class="lookup-btn" id="lookupBtn" onclick="geocodeAddress()">
-          Look Up
-        </button>
+        <input type="text" id="addressInput" placeholder="25 King Street, Manchester" autocomplete="street-address">
+        <button type="button" class="lookup-btn" id="lookupBtn" onclick="geocodeAddress()">Look Up</button>
       </div>
       <div id="geoResult" class="success-msg"></div>
       <input type="hidden" id="lat">
@@ -210,11 +161,10 @@ td input { padding:.6rem .7rem; font-size:.9rem; }
     </div>
   </div>
 
-  <!-- STEP 2 -->
+  <!-- STEP 2: Login Credentials -->
   <div class="card">
-    <div class="step">STEP 2</div>
+    <div class="step-label">Step 2</div>
     <div class="heading">Login Credentials</div>
-
     <div class="row">
       <div class="group">
         <label for="email">Email</label>
@@ -227,24 +177,125 @@ td input { padding:.6rem .7rem; font-size:.9rem; }
     </div>
   </div>
 
-  <!-- STEP 3 -->
+  <!-- STEP 3: Services (hidden for no-service categories like AutoStand) -->
+  <div class="card" id="serviceStepCard">
+    <div class="step-label">Step 3</div>
+    <div class="heading" id="serviceStepHeading">Services</div>
+    <p id="serviceStepDesc" style="font-size:.85rem;color:#64748b;margin-bottom:1rem;"></p>
+
+    <!-- Kirana: grocery category picker -->
+    <div id="groceryPickerWrap" style="display:none;">
+      <p style="font-size:.85rem;color:#64748b;margin-bottom:.8rem;">
+        Select the counters / product categories you stock. You can add more later.
+      </p>
+      <div class="grocery-search">
+        <input type="text" id="grocerySearch" placeholder="Search categories…" oninput="filterGrocery(this.value)">
+      </div>
+      <div class="grocery-grid" id="groceryGrid"></div>
+      <div class="selected-items" id="grocerySelected"></div>
+    </div>
+
+    <!-- Standard: manual service table -->
+    <div id="serviceTableWrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Service Name</th>
+            <th>Duration (mins)</th>
+            <th>Price (£)</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="svcBody"></tbody>
+      </table>
+      <button type="button" class="add-service" onclick="addRow()">+ Add Service</button>
+    </div>
+  </div>
+
+  <!-- STEP 3b: Auto Stand — no service step, show availability notice -->
+  <div class="card" id="autoStandCard" style="display:none;">
+    <div class="step-label">Step 3</div>
+    <div class="heading">Vehicle Availability</div>
+    <div class="skip-banner">
+      <span style="font-size:1.5rem;">🛺</span>
+      <div>
+        <strong>No service list needed.</strong> Auto stands track vehicle
+        availability, not timed appointments. After registering, use your
+        dashboard to set how many autos / cabs / e-rickshaws are available
+        right now. Customers see live availability and join a virtual queue.
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 4: Menu Photo Upload (optional) -->
   <div class="card">
-    <div class="step">STEP 3</div>
-    <div class="heading">Services</div>
+    <div class="step-label">Step 4 <span style="font-weight:400;opacity:.6;">— Optional</span></div>
+    <div class="heading">Upload Your Menu or Price List</div>
+    <p style="font-size:.85rem;color:#64748b;margin-bottom:1rem;">
+      Upload a photo of your menu, price board, or service list. Customers see this before joining your queue.
+      Accepted: JPG, PNG, WEBP · Max 5 MB. You can also do this later from your dashboard.
+    </p>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Service Name</th>
-          <th>Duration (mins)</th>
-          <th>Price (£)</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody id="svcBody"></tbody>
-    </table>
+    <div class="photo-zone" id="photoZone"
+         ondragover="event.preventDefault();this.classList.add('drag')"
+         ondragleave="this.classList.remove('drag')"
+         ondrop="handlePhotoDrop(event)">
+      <input type="file" id="menuPhotoInput" accept="image/jpeg,image/png,image/webp"
+             onchange="handlePhotoSelect(event)">
+      <div id="photoPlaceholder">
+        <div style="font-size:2.5rem;margin-bottom:.5rem;">📷</div>
+        <div style="font-weight:700;color:var(--primary);">Click to upload or drag & drop</div>
+        <div class="photo-hint">JPG, PNG or WEBP · Max 5 MB</div>
+      </div>
+      <img id="photoPreview" class="photo-preview" alt="Menu preview">
+    </div>
+    <div id="photoStatus" style="font-size:.82rem;margin-top:.5rem;display:none;"></div>
+  </div>
 
-    <button type="button" class="add-service" onclick="addRow()">+ Add Service</button>
+  <!-- STEP 5: Bulk Import (paste or CSV) — hidden for AutoStand -->
+  <div class="card" id="bulkCard">
+    <div class="step-label">Step 5 <span style="font-weight:400;opacity:.6;">— Optional</span></div>
+    <div class="heading" id="bulkHeading">Import Your Full Service List</div>
+    <p style="font-size:.85rem;color:#64748b;margin-bottom:1rem;">
+      Paste a list or upload a CSV to add many services at once. Review and adjust before saving.
+    </p>
+    <div class="bulk-tabs">
+      <button type="button" class="bulk-tab-btn active" id="tabPasteBtn" onclick="switchSignupTab('paste')">📋 Paste List</button>
+      <button type="button" class="bulk-tab-btn"        id="tabCsvBtn"   onclick="switchSignupTab('csv')">📄 Upload CSV</button>
+    </div>
+
+    <div id="signupPastePanel">
+      <textarea id="signupPasteInput" class="bulk-area"
+        placeholder="One item per line, e.g.:&#10;Haircut&#10;Colour &amp; Highlights&#10;Beard Trim&#10;&#10;Or CSV: Name, Wait(min), Price(£)"></textarea>
+      <p class="bulk-hint-small">💡 One per line · or CSV: <code>Name, Wait(min), Price(£)</code></p>
+      <button type="button" id="parseSignupBtn" onclick="parseSignupInput()"
+              style="margin-top:.6rem;background:none;border:none;color:var(--primary);font-weight:700;font-size:.85rem;cursor:pointer;font-family:inherit;display:none;">
+        Preview →
+      </button>
+    </div>
+
+    <div id="signupCsvPanel" style="display:none;">
+      <div class="upload-zone" onclick="document.getElementById('signupCsvFile').click()"
+           ondragover="event.preventDefault();this.classList.add('drag')"
+           ondragleave="this.classList.remove('drag')" ondrop="handleSignupDrop(event)">
+        <input type="file" id="signupCsvFile" accept=".csv,.txt" onchange="handleSignupFile(event)" style="display:none;opacity:0;position:absolute;">
+        <div style="font-size:1.8rem;margin-bottom:.4rem;">📄</div>
+        <div style="font-size:.88rem;color:#64748b;"><strong style="color:var(--primary);">Click to upload</strong> or drag & drop</div>
+        <div style="font-size:.75rem;color:#94a3b8;margin-top:.25rem;">.csv or .txt · Max 500 rows</div>
+      </div>
+    </div>
+
+    <div id="signupPreviewWrap" style="display:none;margin-top:.8rem;">
+      <p id="signupPreviewCount" style="font-size:.85rem;font-weight:700;margin-bottom:.5rem;"></p>
+      <div style="overflow-x:auto;">
+        <table class="preview-table">
+          <thead><tr><th>Name</th><th>Wait (min)</th><th>Price (£)</th><th></th></tr></thead>
+          <tbody id="signupPreviewBody"></tbody>
+        </table>
+      </div>
+      <button type="button" onclick="clearSignupImport()"
+              style="margin-top:.5rem;font-size:.78rem;color:#64748b;background:none;border:none;cursor:pointer;font-family:inherit;">✕ Clear</button>
+    </div>
   </div>
 
   <button type="button" class="submit-btn" id="submitBtn" onclick="register()">
@@ -257,301 +308,399 @@ td input { padding:.6rem .7rem; font-size:.9rem; }
 <script src="supabase-config.js"></script>
 <script src="sector-config.js"></script>
 <script>
-// Guard: catch missing config early
 if (typeof SUPABASE_URL === 'undefined' || typeof SUPABASE_ANON_KEY === 'undefined') {
-  document.getElementById('errorMsg').textContent =
-    'Config error: supabase-config.js not loaded correctly.';
+  document.getElementById('errorMsg').textContent = 'Config error: supabase-config.js not loaded.';
   document.getElementById('errorMsg').style.display = 'block';
-  document.getElementById('submitBtn').disabled = true;
   throw new Error('Missing Supabase config');
 }
-
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-let isSubmitting        = false;
-let geocodingInProgress = false;
+let isSubmitting = false, geocodingInProgress = false;
+let signupImportedServices = [];
+let selectedGroceryItems = new Set();
+let menuPhotoFile = null;
 
-// ── Populate category dropdown from sector-config.js ─────────────────────────
+/* ── CATEGORY DROPDOWN ───────────────────────────────────────── */
 (function populateCategorySelect() {
   const sel = document.getElementById('category');
-  if (!sel || typeof SECTOR_ORDER === 'undefined' || typeof SECTOR_CONFIG === 'undefined') return;
+  if (!sel || typeof SECTOR_ORDER === 'undefined') return;
   SECTOR_ORDER.forEach(key => {
-    const cfg = SECTOR_CONFIG[key];
-    if (!cfg) return;
-    const opt       = document.createElement('option');
-    opt.value       = cfg.label;
-    // Show "Other – Not listed here" as the last option label
-    opt.textContent = key === 'Other'
-      ? '🏷️ Other — Not listed here'
-      : (cfg.icon ? cfg.icon + ' ' : '') + cfg.label;
+    const cfg = SECTOR_CONFIG[key]; if (!cfg) return;
+    const opt = document.createElement('option');
+    opt.value = cfg.label;
+    opt.textContent = key === 'Other' ? '🏷️ Other — Not listed here' : cfg.icon + ' ' + cfg.label;
     sel.appendChild(opt);
   });
 })();
 
-function toggleOtherCategory(val) {
-  const show = (val === 'Other');
-  document.getElementById('otherCategory').style.display      = show ? 'block' : 'none';
-  document.getElementById('otherCategoryHint').style.display  = show ? 'block' : 'none';
-  if (show) document.getElementById('otherCategory').focus();
+function onCategoryChange(val) {
+  // Other category text box
+  const isOther = (val === 'Other');
+  document.getElementById('otherCategory').style.display = isOther ? 'block' : 'none';
+  document.getElementById('otherCategoryHint').style.display = isOther ? 'block' : 'none';
+  if (isOther) document.getElementById('otherCategory').focus();
+
+  // Find the config for the selected category label
+  const cfg = Object.values(SECTOR_CONFIG).find(c => c.label === val) || null;
+  const isAutoStand = cfg && cfg.noServiceStep;
+  const isKirana = cfg && cfg.label === 'Kirana Store';
+
+  // Show/hide service step vs auto-stand notice
+  document.getElementById('serviceStepCard').style.display = isAutoStand ? 'none' : 'block';
+  document.getElementById('autoStandCard').style.display   = isAutoStand ? 'block' : 'none';
+  document.getElementById('bulkCard').style.display        = isAutoStand ? 'none' : 'block';
+
+  if (!isAutoStand && cfg) {
+    // Update service step heading and description
+    document.getElementById('serviceStepHeading').textContent = cfg.unitPlural + ' You Offer';
+    const desc = isKirana
+      ? 'Select the product counters or categories you stock — customers will see these when joining your queue.'
+      : 'Add the services customers can choose from. You can edit these later in your dashboard.';
+    document.getElementById('serviceStepDesc').textContent = desc;
+
+    // Kirana: show grocery picker; others: show manual table
+    document.getElementById('groceryPickerWrap').style.display = isKirana ? 'block' : 'none';
+    document.getElementById('serviceTableWrap').style.display  = isKirana ? 'none'  : 'block';
+    document.getElementById('bulkHeading').textContent = isKirana
+      ? 'Import a Custom Item List'
+      : 'Import Your Full Service List';
+
+    if (isKirana) buildGroceryGrid(cfg);
+  }
 }
 
-// Clear verified coords if user edits address after looking it up
+/* ── GROCERY PICKER ─────────────────────────────────────────── */
+function buildGroceryGrid(cfg) {
+  const grid = document.getElementById('groceryGrid');
+  grid.innerHTML = '';
+  selectedGroceryItems.clear();
+  document.getElementById('grocerySelected').innerHTML = '';
+
+  (cfg.presets || []).forEach(([icon, name]) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'grocery-chip';
+    btn.dataset.name = name;
+    btn.dataset.icon = icon;
+    btn.innerHTML = `<span>${icon}</span><span>${name}</span>`;
+    btn.onclick = () => toggleGroceryItem(btn, icon, name);
+    grid.appendChild(btn);
+  });
+}
+
+function filterGrocery(q) {
+  const lq = q.toLowerCase();
+  document.querySelectorAll('.grocery-chip').forEach(btn => {
+    btn.style.display = btn.dataset.name.toLowerCase().includes(lq) ? '' : 'none';
+  });
+}
+
+function toggleGroceryItem(btn, icon, name) {
+  if (selectedGroceryItems.has(name)) {
+    selectedGroceryItems.delete(name);
+    btn.classList.remove('selected');
+  } else {
+    selectedGroceryItems.add(name);
+    btn.classList.add('selected');
+  }
+  renderGrocerySelected();
+}
+
+function renderGrocerySelected() {
+  const wrap = document.getElementById('grocerySelected');
+  wrap.innerHTML = '';
+  selectedGroceryItems.forEach(name => {
+    const cfg = document.querySelector(`.grocery-chip[data-name="${CSS.escape(name)}"]`);
+    const icon = cfg ? cfg.dataset.icon : '🛒';
+    const tag = document.createElement('span');
+    tag.className = 'selected-tag';
+    tag.innerHTML = `${icon} ${name} <button onclick="removeGrocery('${name.replace(/'/g,"\\'")}')">×</button>`;
+    wrap.appendChild(tag);
+  });
+}
+
+function removeGrocery(name) {
+  selectedGroceryItems.delete(name);
+  const btn = document.querySelector(`.grocery-chip[data-name="${CSS.escape(name)}"]`);
+  if (btn) btn.classList.remove('selected');
+  renderGrocerySelected();
+}
+
+/* ── MENU PHOTO UPLOAD ──────────────────────────────────────── */
+function handlePhotoDrop(e) {
+  e.preventDefault();
+  document.getElementById('photoZone').classList.remove('drag');
+  const f = e.dataTransfer.files[0];
+  if (f) previewMenuPhoto(f);
+}
+function handlePhotoSelect(e) {
+  const f = e.target.files[0]; if (f) previewMenuPhoto(f);
+}
+function previewMenuPhoto(file) {
+  if (!file.type.startsWith('image/')) { showError('Please upload a JPG, PNG, or WEBP image.'); return; }
+  if (file.size > 5 * 1024 * 1024)    { showError('Image must be under 5 MB.'); return; }
+  menuPhotoFile = file;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = document.getElementById('photoPreview');
+    img.src = ev.target.result;
+    img.style.display = 'block';
+    document.getElementById('photoPlaceholder').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+  const status = document.getElementById('photoStatus');
+  status.textContent = `✓ ${file.name} selected (${(file.size/1024/1024).toFixed(1)} MB)`;
+  status.style.color = 'var(--success)';
+  status.style.display = 'block';
+}
+
+/* ── ADDRESS GEOCODE ────────────────────────────────────────── */
 document.getElementById('addressInput').addEventListener('input', () => {
   document.getElementById('lat').value = '';
   document.getElementById('lng').value = '';
   const g = document.getElementById('geoResult');
-  g.style.display = 'none';
-  g.textContent   = '';
+  g.style.display = 'none'; g.textContent = '';
 });
 
-// ── GEOCODE ──────────────────────────────────────────────────────────────────
 async function geocodeAddress() {
   if (geocodingInProgress) return;
-
   const address = document.getElementById('addressInput').value.trim();
   if (!address) { showError('Please enter an address first.'); return; }
-
-  const btn       = document.getElementById('lookupBtn');
+  const btn = document.getElementById('lookupBtn');
   const geoResult = document.getElementById('geoResult');
-
-  hideError();
-  geoResult.style.display  = 'none';
-  geoResult.textContent    = '';
-  document.getElementById('lat').value = '';
-  document.getElementById('lng').value = '';
-
-  geocodingInProgress = true;
-  btn.disabled        = true;
-  btn.textContent     = 'Looking...';
-
+  hideError(); geoResult.style.display = 'none'; geoResult.textContent = '';
+  document.getElementById('lat').value = ''; document.getElementById('lng').value = '';
+  geocodingInProgress = true; btn.disabled = true; btn.textContent = 'Looking…';
   try {
-    const res  = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`
-    );
+    const res  = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`);
     const data = await res.json();
-
-    if (!data.length) {
-      showError('Address not found. Try adding your city or postcode.');
-      return;
-    }
-
+    if (!data.length) { showError('Address not found. Add your city or postcode.'); return; }
     document.getElementById('lat').value = data[0].lat;
     document.getElementById('lng').value = data[0].lon;
-
-    // Show a short version of the resolved address
-    const shortAddr = data[0].display_name.split(',').slice(0, 3).join(',');
-    geoResult.textContent  = `✓ Verified: ${shortAddr}`;
+    const short = data[0].display_name.split(',').slice(0, 3).join(',');
+    geoResult.textContent = '✓ Verified: ' + short;
     geoResult.style.display = 'block';
-
   } catch(err) {
-    console.error('Geocode error:', err);
     showError('Address lookup failed. Check your connection and try again.');
   } finally {
-    geocodingInProgress = false;
-    btn.disabled        = false;
-    btn.textContent     = 'Look Up';
+    geocodingInProgress = false; btn.disabled = false; btn.textContent = 'Look Up';
   }
 }
 
-// ── SERVICE ROWS ─────────────────────────────────────────────────────────────
-function addRow(name = '', duration = '', price = '') {
+/* ── MANUAL SERVICE ROWS ────────────────────────────────────── */
+function addRow(name='', duration='', price='') {
   const tr = document.createElement('tr');
-
-  const makeInput = (cls, type, placeholder, value, extra = {}) => {
+  const mkInput = (cls, type, ph, val, extra={}) => {
     const el = document.createElement('input');
-    el.className   = cls;
-    el.type        = type;
-    el.placeholder = placeholder;
-    el.value       = value;
-    Object.assign(el, extra);
-    return el;
+    el.className=cls; el.type=type; el.placeholder=ph; el.value=val;
+    Object.assign(el, extra); return el;
   };
-
-  const delBtn       = document.createElement('button');
-  delBtn.type        = 'button';
-  delBtn.className   = 'delete-btn';
-  delBtn.textContent = '×';
-  delBtn.title       = 'Remove service';
-  delBtn.onclick     = () => tr.remove();
-
-  const cells = [
-    makeInput('s-name',  'text',   'e.g. Haircut', name),
-    makeInput('s-dur',   'number', '30',           duration, { min: '1' }),
-    makeInput('s-price', 'number', '15',           price,    { min: '0', step: '0.01' }),
-    delBtn
-  ];
-
-  cells.forEach(el => {
-    const td = document.createElement('td');
-    td.appendChild(el);
-    tr.appendChild(td);
-  });
-
+  const del = document.createElement('button');
+  del.type='button'; del.className='delete-btn'; del.textContent='×'; del.onclick=()=>tr.remove();
+  [mkInput('s-name','text','e.g. Haircut',name),
+   mkInput('s-dur','number','30',duration,{min:'1'}),
+   mkInput('s-price','number','0',price,{min:'0',step:'0.01'}),
+   del].forEach(el => { const td=document.createElement('td'); td.appendChild(el); tr.appendChild(td); });
   document.getElementById('svcBody').appendChild(tr);
 }
-addRow(); // start with one empty row
+addRow();
 
-// ── HELPERS ──────────────────────────────────────────────────────────────────
-function showError(msg) {
-  const el = document.getElementById('errorMsg');
-  el.textContent  = msg;
-  el.style.display = 'block';
-  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+/* ── BULK IMPORT ────────────────────────────────────────────── */
+function switchSignupTab(tab) {
+  document.getElementById('tabPasteBtn').classList.toggle('active', tab==='paste');
+  document.getElementById('tabCsvBtn').classList.toggle('active', tab==='csv');
+  document.getElementById('signupPastePanel').style.display = tab==='paste' ? 'block' : 'none';
+  document.getElementById('signupCsvPanel').style.display   = tab==='csv'   ? 'block' : 'none';
+  document.getElementById('parseSignupBtn').style.display   = tab==='paste' ? 'inline-block' : 'none';
 }
-function hideError() {
-  document.getElementById('errorMsg').style.display = 'none';
+document.getElementById('signupPasteInput').addEventListener('input', function() {
+  document.getElementById('parseSignupBtn').style.display = this.value.trim() ? 'inline-block' : 'none';
+});
+function parseCsvLine(line) {
+  const r=[]; let c='', q=false;
+  for (const ch of line) { if(ch==='"'){q=!q;}else if(ch===','&&!q){r.push(c.trim());c='';}else{c+=ch;} }
+  r.push(c.trim()); return r;
 }
-function showSuccess(msg) {
-  const el = document.getElementById('successMsg');
-  el.textContent  = msg;
-  el.style.display = 'block';
-  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+function parseSignupText(text) {
+  const rows=[], lines=text.split('\n').map(l=>l.trim()).filter(l=>l);
+  const hasCsv=lines.some(l=>l.includes(','));
+  for (const line of lines) {
+    const p=hasCsv?parseCsvLine(line):[line];
+    const name=(p[0]||'').trim();
+    if(!name||name.toLowerCase()==='name'||name.toLowerCase()==='service')continue;
+    rows.push({name,duration:parseInt(p[1])||15,price:parseFloat(p[2])||0});
+  }
+  return rows;
 }
-function resetBtn() {
-  document.getElementById('submitBtn').disabled   = false;
-  document.getElementById('spinner').style.display = 'none';
-  document.getElementById('btnText').textContent  = 'Complete Registration';
-  isSubmitting = false;
+function parseSignupInput() {
+  const rows=parseSignupText(document.getElementById('signupPasteInput').value);
+  if(!rows.length){alert('No valid services found. Check your formatting.');return;}
+  showSignupPreview(rows);
+}
+function showSignupPreview(rows) {
+  signupImportedServices=rows;
+  document.getElementById('signupPreviewWrap').style.display='block';
+  document.getElementById('signupPreviewCount').textContent=rows.length+' item'+(rows.length===1?'':'s')+' ready';
+  const tbody=document.getElementById('signupPreviewBody');
+  tbody.innerHTML='';
+  rows.forEach((r,i)=>{
+    const tr=document.createElement('tr');
+    tr.style.background=i%2?'#fafbfc':'';
+    tr.innerHTML=`
+      <td><input type="text" value="${r.name.replace(/"/g,'&quot;')}" style="width:100%;padding:.3rem .5rem;border:1.5px solid #e2e8f0;border-radius:6px;font-family:inherit;font-size:.82rem;" onchange="signupImportedServices[${i}].name=this.value"></td>
+      <td><input type="number" value="${r.duration}" min="1" style="width:60px;padding:.3rem .5rem;border:1.5px solid #e2e8f0;border-radius:6px;font-family:inherit;font-size:.82rem;text-align:center;" onchange="signupImportedServices[${i}].duration=parseInt(this.value)||15"></td>
+      <td><input type="number" value="${r.price}" min="0" step="0.01" style="width:60px;padding:.3rem .5rem;border:1.5px solid #e2e8f0;border-radius:6px;font-family:inherit;font-size:.82rem;text-align:center;" onchange="signupImportedServices[${i}].price=parseFloat(this.value)||0"></td>
+      <td class="rm-td" onclick="removeSignupRow(${i})">×</td>`;
+    tbody.appendChild(tr);
+  });
+}
+function removeSignupRow(i){signupImportedServices.splice(i,1);showSignupPreview(signupImportedServices);}
+function clearSignupImport(){
+  signupImportedServices=[];
+  document.getElementById('signupPreviewWrap').style.display='none';
+  document.getElementById('signupPasteInput').value='';
+  document.getElementById('parseSignupBtn').style.display='none';
+}
+function handleSignupFile(e){const f=e.target.files[0];if(f)readSignupCsv(f);}
+function handleSignupDrop(e){
+  e.preventDefault();document.querySelector('.upload-zone').classList.remove('drag');
+  const f=e.dataTransfer.files[0];if(f)readSignupCsv(f);
+}
+function readSignupCsv(file){
+  const r=new FileReader();
+  r.onload=ev=>{const rows=parseSignupText(ev.target.result);if(!rows.length){alert('No valid items found in file.');return;}showSignupPreview(rows);};
+  r.readAsText(file);
 }
 
-// ── REGISTER ─────────────────────────────────────────────────────────────────
+/* ── HELPERS ────────────────────────────────────────────────── */
+function showError(msg){const e=document.getElementById('errorMsg');e.textContent=msg;e.style.display='block';e.scrollIntoView({behavior:'smooth',block:'center'});}
+function hideError(){document.getElementById('errorMsg').style.display='none';}
+function showSuccess(msg){const e=document.getElementById('successMsg');e.textContent=msg;e.style.display='block';e.scrollIntoView({behavior:'smooth',block:'center'});}
+function resetBtn(){document.getElementById('submitBtn').disabled=false;document.getElementById('spinner').style.display='none';document.getElementById('btnText').textContent='Complete Registration';isSubmitting=false;}
+
+/* ── REGISTER ───────────────────────────────────────────────── */
 async function register() {
   if (isSubmitting) return;
   hideError();
 
-  // Read all values
   const bizName       = document.getElementById('bizName').value.trim();
   const categoryRaw   = document.getElementById('category').value;
   const otherCategory = document.getElementById('otherCategory').value.trim();
-  // If "Other" selected, use the custom name they typed; fall back to "Other"
-  const category = (categoryRaw === 'Other')
-    ? (otherCategory || 'Other')
-    : categoryRaw;
-  const phone    = document.getElementById('phone').value.trim();
-  const capacity = Math.max(1, parseInt(document.getElementById('capacity').value) || 1);
-  const address  = document.getElementById('addressInput').value.trim();
-  const lat      = parseFloat(document.getElementById('lat').value);
-  const lng      = parseFloat(document.getElementById('lng').value);
-  const email    = document.getElementById('email').value.trim().toLowerCase();
-  const password = document.getElementById('password').value;
+  const category      = categoryRaw === 'Other' ? (otherCategory || 'Other') : categoryRaw;
+  const phone         = document.getElementById('phone').value.trim();
+  const capacity      = Math.max(1, parseInt(document.getElementById('capacity').value) || 1);
+  const address       = document.getElementById('addressInput').value.trim();
+  const lat           = parseFloat(document.getElementById('lat').value);
+  const lng           = parseFloat(document.getElementById('lng').value);
+  const email         = document.getElementById('email').value.trim().toLowerCase();
+  const password      = document.getElementById('password').value;
 
-  // Field-by-field validation with clear messages
-  if (!bizName)    { showError('Please enter your business name.');           return; }
-  if (!categoryRaw){ showError('Please select a business category.');         return; }
-  if (categoryRaw === 'Other' && !otherCategory) {
-    showError('Please describe your business type in the "Other" field.');    return;
+  if (!bizName)     { showError('Please enter your business name.'); return; }
+  if (!categoryRaw) { showError('Please select a business category.'); return; }
+  if (categoryRaw === 'Other' && !otherCategory) { showError('Please describe your business type.'); return; }
+  if (!phone)       { showError('Please enter your phone number.'); return; }
+  const digits = phone.replace(/\D/g,'');
+  if (digits.length < 7 || digits.length > 15) { showError('Phone number must be 7–15 digits.'); return; }
+  if (!address)     { showError('Please enter your business address.'); return; }
+  if (isNaN(lat) || isNaN(lng)) { showError('Please click "Look Up" to verify your address.'); return; }
+  if (!email)       { showError('Please enter your email address.'); return; }
+  if (!password || password.length < 6) { showError('Password must be at least 6 characters.'); return; }
+
+  // Determine which services to save
+  const cfg = Object.values(SECTOR_CONFIG).find(c => c.label === category) || null;
+  const isAutoStand = cfg && cfg.noServiceStep;
+  const isKirana    = cfg && cfg.label === 'Kirana Store';
+
+  let allServices = [];
+
+  if (!isAutoStand) {
+    if (isKirana) {
+      // Build services from the grocery picker selection
+      const groceryServices = [];
+      selectedGroceryItems.forEach(name => {
+        const btn = document.querySelector(`.grocery-chip[data-name="${CSS.escape(name)}"]`);
+        const icon = btn ? btn.dataset.icon : '🛒';
+        groceryServices.push({ name: icon + ' ' + name, duration: 10, price: 0 });
+      });
+      allServices = groceryServices;
+    } else {
+      // Manual rows
+      const manual = Array.from(document.querySelectorAll('#svcBody tr')).map(row => ({
+        name:     row.querySelector('.s-name').value.trim(),
+        duration: Math.max(1, parseInt(row.querySelector('.s-dur').value) || 15),
+        price:    Math.max(0, parseFloat(row.querySelector('.s-price').value) || 0)
+      })).filter(s => s.name);
+      const seen = new Set(manual.map(s => s.name.toLowerCase()));
+      const extra = signupImportedServices.filter(s => s.name && !seen.has(s.name.toLowerCase()));
+      allServices = [...manual, ...extra];
+    }
+    if (!isKirana && !allServices.length) {
+      showError('Please add at least one service before registering.'); return;
+    }
   }
-  if (!phone)    { showError('Please enter your phone number.');     return; }
-
-  const digitsOnly = phone.replace(/\D/g, '');
-  if (digitsOnly.length < 10 || digitsOnly.length > 15) {
-    showError('Phone number must be 10–15 digits.'); return;
-  }
-
-  if (!address)  { showError('Please enter your business address.'); return; }
-
-  if (isNaN(lat) || isNaN(lng)) {
-    showError('Please click "Look Up" to verify your address before submitting.'); return;
-  }
-
-  if (!email)    { showError('Please enter your email address.');    return; }
-  if (!password) { showError('Please enter a password.');            return; }
-  if (password.length < 6) {
-    showError('Password must be at least 6 characters.'); return;
-  }
-
-  // Collect + validate services
-  const services = Array.from(document.querySelectorAll('#svcBody tr')).map(row => ({
-    name:     row.querySelector('.s-name').value.trim(),
-    duration: Math.max(1,   parseInt(row.querySelector('.s-dur').value)    || 15),
-    price:    Math.max(0, parseFloat(row.querySelector('.s-price').value)  || 0)
-  })).filter(s => s.name);
-
-  if (!services.length) { showError('Please add at least one service.'); return; }
 
   // Lock UI
-  const btn     = document.getElementById('submitBtn');
-  const spinner = document.getElementById('spinner');
-  const btnText = document.getElementById('btnText');
-
-  isSubmitting          = true;
-  btn.disabled          = true;
-  spinner.style.display = 'block';
-  btnText.textContent   = 'Creating your account...';
+  isSubmitting = true;
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  document.getElementById('spinner').style.display = 'block';
+  document.getElementById('btnText').textContent = 'Creating your account…';
 
   let uid = null;
-
   try {
-    // 1. Check duplicate email in providers table
-    const { data: existing } = await sb
-      .from('providers')
-      .select('id')
-      .eq('email', email)
-      .maybeSingle();
-
+    // 1. Check duplicate email
+    const { data: existing } = await sb.from('providers').select('id').eq('email', email).maybeSingle();
     if (existing) throw new Error('A business is already registered with this email.');
 
-    // 2. Create Supabase Auth account
+    // 2. Create auth account
     const { data: authData, error: authErr } = await sb.auth.signUp({ email, password });
     if (authErr) throw authErr;
-
-    // If email confirmation is ON, user object is returned but session is null.
-    // Handle this gracefully instead of crashing.
     if (!authData || !authData.user) {
-      showSuccess(
-        '✅ Account created! Please check your email to confirm your address, then sign in to your dashboard.'
-      );
-      resetBtn();
-      return;
+      showSuccess('✅ Account created! Check your email to confirm, then sign in.');
+      resetBtn(); return;
+    }
+    uid = authData.user.id;
+
+    document.getElementById('btnText').textContent = 'Saving business profile…';
+
+    // 3. Upload menu photo (optional)
+    let menuImageUrl = null;
+    if (menuPhotoFile) {
+      document.getElementById('btnText').textContent = 'Uploading menu photo…';
+      const ext = menuPhotoFile.name.split('.').pop().toLowerCase();
+      const path = `${uid}/menu.${ext}`;
+      const { error: uploadErr } = await sb.storage.from('menus').upload(path, menuPhotoFile, { upsert: true });
+      if (!uploadErr) {
+        const { data: urlData } = sb.storage.from('menus').getPublicUrl(path);
+        menuImageUrl = urlData?.publicUrl || null;
+      }
     }
 
-    uid = authData.user.id;
-    btnText.textContent = 'Saving business profile...';
-
-    // 3. Insert provider row
-    const { error: providerErr } = await sb.from('providers').insert({
-      id:                uid,
-      email,
-      business_name:     bizName,
-      category,
-      phone,
-      address,
-      lat,
-      lng,
-      capacity,
-      is_open:           true,
-      current_wait_mins: 0,
-      people_in_line:    0,
-      created_at:        new Date().toISOString()
+    // 4. Insert provider row
+    document.getElementById('btnText').textContent = 'Saving business profile…';
+    const { error: provErr } = await sb.from('providers').insert({
+      id: uid, email, business_name: bizName, category, phone, address, lat, lng,
+      capacity, is_open: true, current_wait_mins: 0, people_in_line: 0,
+      menu_image_url: menuImageUrl, created_at: new Date().toISOString()
     });
-    if (providerErr) throw providerErr;
+    if (provErr) throw provErr;
 
-    btnText.textContent = 'Adding services...';
+    // 5. Insert services
+    if (allServices.length) {
+      document.getElementById('btnText').textContent = 'Saving services…';
+      const { error: svcErr } = await sb.from('services').insert(
+        allServices.map(s => ({ provider_id: uid, name: s.name, duration: s.duration, price: s.price }))
+      );
+      if (svcErr) throw svcErr;
+    }
 
-    // 4. Insert services
-    const { error: svcErr } = await sb.from('services').insert(
-      services.map(s => ({
-        provider_id:   uid,
-        name:          s.name,
-        duration: s.duration,
-        price:         s.price
-      }))
-    );
-    if (svcErr) throw svcErr;
-
-    // 5. Done
-    spinner.style.display = 'none';
-    btnText.textContent   = '✓ Success! Redirecting...';
+    // 6. Done
+    document.getElementById('spinner').style.display = 'none';
+    document.getElementById('btnText').textContent = '✓ Success! Redirecting…';
     setTimeout(() => { window.location.href = 'provider-dashboard.html'; }, 1800);
 
   } catch(err) {
     console.error('Registration error:', err);
-
-    // If auth account was created but a later DB step failed,
-    // sign out so the user can try again without hitting the duplicate check
-    if (uid) {
-      try { await sb.auth.signOut(); } catch(_) {}
-    }
-
+    if (uid) { try { await sb.auth.signOut(); } catch(_) {} }
     showError(err.message || 'Registration failed. Please try again.');
     resetBtn();
   }

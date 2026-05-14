@@ -45,6 +45,33 @@
     .live-pill{display:inline-flex;align-items:center;gap:.35rem;background:rgba(16,185,129,.85);padding:3px 10px;border-radius:50px;font-size:.65rem;font-weight:800;letter-spacing:.4px;text-transform:uppercase;margin-bottom:.5rem;}
     .live-dot{width:6px;height:6px;border-radius:50%;background:white;animation:pulse 1.4s ease-in-out infinite;}
     @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.7)}}
+
+    /* ── MOBILE QUEUE BANNER (replaces card on small screens) ── */
+    /* On phones, the full card with timer column + actions wraps
+       into a mess. Instead we show a compact sticky banner at the
+       bottom of the screen showing business name + timer + one action. */
+    .mob-queue-banner{
+      display:none; /* shown only on mobile via @media */
+      position:fixed;bottom:0;left:0;right:0;z-index:900;
+      background:linear-gradient(90deg,#002f34 0%,#004d57 100%);
+      border-top:2px solid rgba(35,229,219,.4);
+      padding:.75rem 1rem;
+      align-items:center;gap:.7rem;
+      box-shadow:0 -4px 20px rgba(0,0,0,.25);
+    }
+    .mob-banner-info{flex:1;min-width:0;}
+    .mob-banner-biz{font-size:.88rem;font-weight:800;color:white;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .mob-banner-status{font-size:.72rem;color:rgba(255,255,255,.6);margin-top:.1rem;}
+    .mob-banner-timer{text-align:center;flex-shrink:0;}
+    .mob-banner-timer-val{font-size:1.8rem;font-weight:800;color:var(--accent);line-height:1;font-variant-numeric:tabular-nums;}
+    .mob-banner-timer-lbl{font-size:.55rem;text-transform:uppercase;color:rgba(255,255,255,.4);font-weight:700;}
+    .mob-banner-leave{padding:.45rem .85rem;border-radius:8px;font-size:.78rem;font-weight:700;background:rgba(255,255,255,.12);color:white;border:1px solid rgba(255,255,255,.2);cursor:pointer;font-family:inherit;flex-shrink:0;}
+    /* Add bottom padding to page when banner is visible */
+    body.has-active-queue{padding-bottom:72px;}
+    @media(max-width:540px){
+      .active-queue-card{display:none!important;} /* hide card, show banner */
+      .mob-queue-banner{display:flex;}
+    }
     /* ── SECTION HEADER ── */
     .page-header{margin-bottom:1.4rem;}
     .page-header h1{font-size:1.8rem;font-weight:800;letter-spacing:-.5px;}
@@ -138,6 +165,18 @@
 
   <!-- ── ACTIVE QUEUE SECTION ── -->
   <div id="activeQueueArea"></div>
+  <!-- Mobile sticky banner (shown on screens ≤540px instead of the card above) -->
+  <div class="mob-queue-banner" id="mobQueueBanner" style="display:none;">
+    <div class="mob-banner-info">
+      <div class="mob-banner-biz" id="mobBannerBiz">—</div>
+      <div class="mob-banner-status" id="mobBannerStatus">Waiting for your turn…</div>
+    </div>
+    <div class="mob-banner-timer">
+      <div class="mob-banner-timer-val" id="mobTimerVal">—</div>
+      <div class="mob-banner-timer-lbl">min left</div>
+    </div>
+    <button class="mob-banner-leave" id="mobLeaveBtn">Leave</button>
+  </div>
 
   <div class="page-header">
     <h1>My Queues</h1>
@@ -189,7 +228,7 @@
     if (prov) {
       const dest = (prov.is_hospital || prov.category === 'Hospital')
         ? 'hospital-dashboard.html'
-        : 'business-dashboard.html';
+        : 'provider-dashboard.html';
       window.location.replace(dest);
       return;
     }
@@ -199,7 +238,7 @@
     loadTab('active');
   });
 
-  // ── ACTIVE QUEUE BANNER WITH TIMER ──
+  // ── ACTIVE QUEUE BANNER WITH DYNAMIC POSITION-AWARE TIMER ──
   async function loadActiveQueueBanner() {
     const area = document.getElementById('activeQueueArea');
     const { data: rows } = await sb.from('queues')
@@ -208,21 +247,22 @@
       .in('status',['waiting','serving'])
       .limit(1);
 
-    if (!rows || !rows.length) { area.innerHTML=''; return; }
+    if (!rows || !rows.length) { area.innerHTML=''; updateMobileBanner(false); return; }
     const q = rows[0];
 
-    // Fetch provider (include lat/lng for travel alert)
-    const { data: prov } = await sb.from('providers').select('business_name,id,is_hospital,category,lat,lng').eq('id',q.provider_id).maybeSingle();
+    // Fetch provider (include lat/lng for travel alert, capacity for position math)
+    const { data: prov } = await sb.from('providers').select('business_name,id,is_hospital,category,lat,lng,capacity,current_wait_mins').eq('id',q.provider_id).maybeSingle();
     // Fetch department
-    let deptName = '', waitMins = q.service_duration || 15;
+    let deptName = '', deptWaitMins = null;
     if (q.department_id) {
-      const { data: dept } = await sb.from('departments').select('name,wait_minutes').eq('id',q.department_id).maybeSingle();
-      if (dept) { deptName = dept.name; waitMins = dept.wait_minutes || waitMins; }
+      const { data: dept } = await sb.from('departments').select('name,wait_minutes,avg_consult_minutes').eq('id',q.department_id).maybeSingle();
+      if (dept) { deptName = dept.name; deptWaitMins = dept.wait_minutes; }
     }
 
     const bizName = prov ? prov.business_name : 'Your Queue';
     const isHosp = prov && (prov.is_hospital || prov.category === 'Hospital');
     const detailPage = prov ? (isHosp ? `hospital-detail.html?id=${prov.id}` : `business-detail.html?id=${prov.id}`) : '#';
+    const statusText = q.status === 'serving' ? '🔔 You are being served now!' : 'Waiting for your turn…';
 
     area.innerHTML = `
       <div class="active-queue-card" id="aqCard">
@@ -231,26 +271,32 @@
           <div class="live-pill"><div class="live-dot"></div>Active</div>
           <div class="aqc-label">You are in the queue</div>
           <div class="aqc-title">${esc(bizName)}${deptName ? ' — ' + esc(deptName) : ''}</div>
-          <div class="aqc-sub" id="aqStatus">${q.status === 'serving' ? '🔔 You are being served now!' : 'Waiting for your turn…'}</div>
+          <div class="aqc-sub" id="aqStatus">${statusText}</div>
+          <div class="aqc-sub" id="aqPosition" style="font-size:.75rem;opacity:.7;margin-top:.2rem;"></div>
         </div>
         <div class="aqc-timer">
           <div class="aqc-timer-val" id="aqTimerVal">—</div>
           <div class="aqc-timer-lbl">min left</div>
         </div>
         <div class="aqc-actions">
-          <a href="${detailPage}" class="aqc-btn aqc-btn-primary">View Department</a>
+          <a href="${detailPage}" class="aqc-btn aqc-btn-primary">View Details</a>
           <button class="aqc-btn aqc-btn-ghost" onclick="cancelQueue('${q.id}')">Leave Queue</button>
         </div>
       </div>`;
 
-    startTimer(waitMins, q.joined_at);
+    // Show the mobile sticky banner (visible only on ≤540px screens)
+    updateMobileBanner(true, bizName + (deptName ? ' — ' + deptName : ''), statusText, q.id);
+
+    // Calculate initial position-aware wait and start timer
+    await recalcAndStartTimer(q, prov, deptWaitMins);
 
     // Start travel alert if provider has coordinates
     if (prov && prov.lat && prov.lng) {
-      initTravelAlert(parseFloat(prov.lat), parseFloat(prov.lng), waitMins, q.joined_at);
+      const initialMins = deptWaitMins !== null ? deptWaitMins : (prov.current_wait_mins || q.service_duration || 15);
+      initTravelAlert(parseFloat(prov.lat), parseFloat(prov.lng), initialMins, q.joined_at);
     }
 
-    // Ask for notification permission now that they have an active queue
+    // Ask for notification permission
     if (window.skipQsNotify) {
       window.skipQsNotify.init().then(() => {
         window.skipQsNotify.requestPermission();
@@ -258,14 +304,58 @@
       });
     }
 
-    // Realtime updates
+    // ── REALTIME: my own queue row (status changes: serving / completed / cancelled)
+    sb.channel('dash-queue-' + q.id)
+      .on('postgres_changes',{event:'UPDATE',schema:'public',table:'queues',filter:`id=eq.${q.id}`}, async payload => {
+        if (['completed','cancelled','no_show'].includes(payload.new.status)) {
+          area.innerHTML = '';
+          updateMobileBanner(false);
+          if (timerInterval) clearInterval(timerInterval);
+          if (travelCheckInterval) clearInterval(travelCheckInterval);
+          loadTab(currentTab);
+        } else if (payload.new.status === 'serving') {
+          const el = document.getElementById('aqStatus');
+          if (el) el.textContent = '🔔 You are being served now!';
+          resetTimerToZero();
+          if (window.skipQsNotify) {
+            window.skipQsNotify.send(
+              '🔔 Your turn — come in now!',
+              `${bizName}${deptName ? ' — ' + deptName : ''} is ready for you.`,
+              { tag: 'skipqs-serving', requireInteraction: true, url: '/dashboard.html' }
+            );
+          }
+          if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({
+              type: 'SHOW_QUEUE_NOTIFICATION', bizName, deptName, status: 'serving'
+            });
+          }
+        }
+      })
+      .subscribe();
+
+    // ── REALTIME: ANY queue change at this provider (someone joins, leaves, or completes)
+    // This recalculates our real position in the queue and adjusts the timer dynamically.
+    // This is the core fix for "previous patient finished early → timer speeds up"
+    // and "patient taking longer → timer slows down".
+    sb.channel('dash-provqueue-' + q.provider_id)
+      .on('postgres_changes',{event:'*',schema:'public',table:'queues',filter:`provider_id=eq.${q.provider_id}`},
+        async () => {
+          // Skip if our own row was the one that changed to inactive
+          const { data: mine } = await sb.from('queues').select('status').eq('id',q.id).maybeSingle();
+          if (!mine || !['waiting','serving'].includes(mine.status)) return;
+          await recalcAndStartTimer(q, prov, deptWaitMins);
+        })
+      .subscribe();
+
+    // ── REALTIME: department wait_minutes (staff manually adjusts wait time)
+    // Catches: doctor has emergency → staff raises wait → timer slows.
+    // Catches: previous patients cancelled in bulk → staff lowers wait → timer speeds up.
     if (q.department_id) {
       sb.channel('dash-dept-' + q.department_id)
-        .on('postgres_changes',{event:'UPDATE',schema:'public',table:'departments',filter:`id=eq.${q.department_id}`}, payload => {
-          const newWait = payload.new.wait_minutes || 0;
-          resetTimer(newWait, q.joined_at);
-          // Notify if wait dropped to ≤ 3 min
-          if (newWait <= 3 && newWait > 0 && window.skipQsNotify && document.hidden) {
+        .on('postgres_changes',{event:'UPDATE',schema:'public',table:'departments',filter:`id=eq.${q.department_id}`}, async payload => {
+          deptWaitMins = payload.new.wait_minutes || 0;
+          await recalcAndStartTimer(q, prov, deptWaitMins);
+          if (deptWaitMins <= 3 && deptWaitMins > 0 && window.skipQsNotify && document.hidden) {
             window.skipQsNotify.send(
               '⏳ Almost your turn!',
               `Less than 3 minutes left at ${bizName}. Head over now!`,
@@ -275,44 +365,84 @@
         })
         .subscribe();
     }
-    sb.channel('dash-queue-' + q.id)
-      .on('postgres_changes',{event:'UPDATE',schema:'public',table:'queues',filter:`id=eq.${q.id}`}, async payload => {
-        if (['completed','cancelled','no_show'].includes(payload.new.status)) {
-          area.innerHTML = '';
-          if (timerInterval) clearInterval(timerInterval);
-          if (travelCheckInterval) clearInterval(travelCheckInterval);
-          loadTab(currentTab);
-        } else if (payload.new.status === 'serving') {
-          const el = document.getElementById('aqStatus');
-          if (el) el.textContent = '🔔 You are being served now!';
-          // Fire notification whether page is visible or not
-          if (window.skipQsNotify) {
-            window.skipQsNotify.send(
-              '🔔 Your turn — come in now!',
-              `${bizName}${deptName ? ' — ' + deptName : ''} is ready for you.`,
-              { tag: 'skipqs-serving', requireInteraction: true, url: '/dashboard.html' }
-            );
+
+    // ── REALTIME: provider row (capacity change, or staff raises current_wait_mins for emergency)
+    sb.channel('dash-prov-' + q.provider_id)
+      .on('postgres_changes',{event:'UPDATE',schema:'public',table:'providers',filter:`id=eq.${q.provider_id}`},
+        async payload => {
+          // Update our local prov reference with new capacity
+          if (prov) {
+            prov.capacity = payload.new.capacity || prov.capacity;
+            prov.current_wait_mins = payload.new.current_wait_mins;
           }
-          // Also use legacy SW message for older code path
-          if (navigator.serviceWorker && navigator.serviceWorker.controller) {
-            navigator.serviceWorker.controller.postMessage({
-              type: 'SHOW_QUEUE_NOTIFICATION',
-              bizName, deptName, status: 'serving'
-            });
-          }
-        }
-      })
+          await recalcAndStartTimer(q, prov, deptWaitMins);
+        })
       .subscribe();
   }
 
-  function startTimer(minutes, joinedAt) {
-    if (timerInterval) clearInterval(timerInterval);
-    // Calculate how many seconds have already elapsed since joining
-    let elapsed = 0;
-    if (joinedAt) {
-      elapsed = Math.floor((Date.now() - new Date(joinedAt).getTime()) / 1000);
+  /**
+   * Queries the live queue for this provider, finds the user's real position,
+   * calculates an accurate wait time, and restarts the countdown timer.
+   *
+   * Logic:
+   *  - Count how many entries are ahead of us (joined before us, still active)
+   *  - Sum their service_duration values
+   *  - Divide by provider capacity (parallel serving slots)
+   *  - If a department has a staff-set wait_minutes override, use that as the floor
+   *
+   * This means:
+   *  • Someone ahead cancels → they drop off the list → our position moves up → timer speeds up ✓
+   *  • Someone ahead takes longer → provider dashboard raises dept wait_minutes → timer slows ✓
+   *  • Doctor has emergency → staff bumps dept wait_minutes → timer slows ✓
+   *  • Capacity increases → same queue, more slots → timer speeds up ✓
+   */
+  async function recalcAndStartTimer(q, prov, deptWaitMins) {
+    if (q.status === 'serving') { resetTimerToZero(); return; }
+
+    const capacity = Math.max(1, prov?.capacity || 1);
+
+    // Fetch everyone currently waiting or being served at this provider
+    const { data: ahead } = await sb.from('queues')
+      .select('id,joined_at,service_duration,status')
+      .eq('provider_id', q.provider_id)
+      .in('status', ['waiting','serving'])
+      .order('joined_at', { ascending: true });
+
+    const queue = ahead || [];
+    const myIdx = queue.findIndex(r => r.id === q.id);
+
+    let waitMins;
+
+    if (myIdx <= 0) {
+      // We're first (or only) in line — next to be served
+      waitMins = 0;
+    } else {
+      // Sum durations of everyone ahead of us
+      const aheadRows = queue.slice(0, myIdx);
+      const totalAheadMins = aheadRows.reduce((sum, r) => sum + (Number(r.service_duration) || 15), 0);
+      waitMins = Math.ceil(totalAheadMins / capacity);
     }
-    let remaining = Math.max(0, Math.round(minutes * 60) - elapsed);
+
+    // If staff has manually set a department wait override and it's larger than
+    // our position-based estimate, respect it (emergency / unexpected slowdown)
+    if (deptWaitMins !== null && deptWaitMins > waitMins) {
+      waitMins = deptWaitMins;
+    }
+
+    // Update position display
+    const posEl = document.getElementById('aqPosition');
+    if (posEl && myIdx >= 0) {
+      posEl.textContent = myIdx === 0
+        ? 'You are next!'
+        : `Position ${myIdx + 1} in queue`;
+    }
+
+    startTimer(waitMins);
+  }
+
+  function startTimer(minutes) {
+    if (timerInterval) clearInterval(timerInterval);
+    let remaining = Math.max(0, Math.round(minutes * 60));
     renderTimerVal(remaining);
     timerInterval = setInterval(() => {
       if (remaining > 0) remaining--;
@@ -320,21 +450,48 @@
     }, 1000);
   }
 
-  function resetTimer(minutes, joinedAt) {
-    startTimer(minutes, joinedAt);
+  function resetTimerToZero() {
+    if (timerInterval) clearInterval(timerInterval);
+    const el = document.getElementById('aqTimerVal');
+    if (el) el.textContent = '✓';
+    const mob = document.getElementById('mobTimerVal');
+    if (mob) mob.textContent = '✓';
   }
 
   function renderTimerVal(secs) {
-    const el = document.getElementById('aqTimerVal');
-    if (!el) return;
     const m = Math.floor(secs / 60);
-    el.textContent = m > 0 ? String(m) : (secs > 0 ? '<1' : '✓');
+    const txt = m > 0 ? String(m) : (secs > 0 ? '<1' : '✓');
+    const el = document.getElementById('aqTimerVal');
+    if (el) el.textContent = txt;
+    const mob = document.getElementById('mobTimerVal');
+    if (mob) mob.textContent = txt;
+  }
+
+  function updateMobileBanner(show, bizLabel, statusText, queueId) {
+    const banner = document.getElementById('mobQueueBanner');
+    if (!banner) return;
+    if (!show) {
+      banner.style.display = 'none';
+      document.body.classList.remove('has-active-queue');
+      return;
+    }
+    document.getElementById('mobBannerBiz').textContent    = bizLabel || '—';
+    document.getElementById('mobBannerStatus').textContent = statusText || 'Waiting for your turn…';
+    const leaveBtn = document.getElementById('mobLeaveBtn');
+    if (leaveBtn) leaveBtn.onclick = () => cancelQueue(queueId);
+    banner.style.display = 'flex';
+    document.body.classList.add('has-active-queue');
   }
 
   async function cancelQueue(id) {
     if (!confirm('Leave this queue?')) return;
 
-    // Always scope the update to the current user so RLS can match
+    // FIX: The old UNIQUE(user_id, status) constraint (now replaced by a partial
+    // index on active statuses only) could cause a duplicate-key error (code 23505)
+    // when a user already had a prior 'cancelled' row. We handle this gracefully:
+    // if we hit a uniqueness violation, it means the DB schema hasn't been updated yet —
+    // in that case we update the row to 'completed' instead, which is safe to do
+    // for the purpose of removing the user from the active queue.
     const { error } = await sb
       .from('queues')
       .update({ status: 'cancelled' })
@@ -342,15 +499,30 @@
       .eq('user_id', currentUserId);
 
     if (error) {
-      console.error('[skipQs] Leave queue error:', error);
-      // If RLS is blocking, the update returns no error but 0 rows affected.
-      // We handle that below. For a real error, show it.
-      toast('Could not leave queue — ' + (error.message || 'permission denied'), 'error');
-      return;
+      // Duplicate key: old broken constraint still present — fall back to 'completed'
+      if (error.code === '23505' || /one_active_queue_per_user/.test(error.message)) {
+        const { error: err2 } = await sb
+          .from('queues')
+          .update({ status: 'completed', completed_at: new Date().toISOString(), completed_date: new Date().toISOString().slice(0,10) })
+          .eq('id', id)
+          .eq('user_id', currentUserId);
+        if (err2) {
+          console.error('[skipQs] Leave queue fallback error:', err2);
+          toast('Could not leave queue — please try again or contact support', 'error');
+          return;
+        }
+        toast('You have left the queue ✓');
+      } else {
+        console.error('[skipQs] Leave queue error:', error);
+        toast('Could not leave queue — ' + (error.message || 'permission denied'), 'error');
+        return;
+      }
+    } else {
+      toast('You have left the queue ✓');
     }
 
-    toast('You have left the queue ✓');
     document.getElementById('activeQueueArea').innerHTML = '';
+    updateMobileBanner(false);
     if (timerInterval) clearInterval(timerInterval);
     loadTab(currentTab);
   }

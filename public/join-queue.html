@@ -186,7 +186,15 @@
       estimated_time:   new Date(Date.now() + currentWait * 60000).toISOString()
     }).select().single();
 
-    if (error) { alert('Error: ' + error.message); btn.disabled = false; btn.textContent = 'Confirm & Join Queue'; return; }
+    if (error) {
+      // Duplicate key: user already has an active queue entry
+      if (error.code === '23505' || /one_active_queue_per_user/.test(error.message)) {
+        alert('You already have an active queue at another provider. Please leave that queue first from your dashboard before joining a new one.');
+      } else {
+        alert('Could not join queue: ' + error.message);
+      }
+      btn.disabled = false; btn.textContent = 'Confirm & Join Queue'; return;
+    }
     startLiveTracking(newRow.id, svcNames);
   }
 
@@ -197,10 +205,21 @@
 
     if (queueChannel) sb.removeChannel(queueChannel);
 
+    // Subscribe to ANY queue change for this provider (someone joins, leaves, completes)
+    // This recalculates our real position + wait every time the queue moves
     queueChannel = sb.channel('queue-track:' + providerId)
       .on('postgres_changes', {
         event: '*', schema: 'public', table: 'queues',
         filter: 'provider_id=eq.' + providerId
+      }, () => refreshPosition(myQueueId))
+      .subscribe();
+
+    // Also subscribe to provider row — catches capacity changes and
+    // emergency slowdowns (provider raises current_wait_mins manually)
+    sb.channel('prov-track:' + providerId)
+      .on('postgres_changes', {
+        event: 'UPDATE', schema: 'public', table: 'providers',
+        filter: 'id=eq.' + providerId
       }, () => refreshPosition(myQueueId))
       .subscribe();
 
