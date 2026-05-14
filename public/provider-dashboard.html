@@ -170,7 +170,7 @@ tr:last-child td{border-bottom:none;}
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
 <nav id="sidebar">
-  <div class="nav-logo">skipQs</div>
+  <a href="index.html" class="nav-logo" style="text-decoration:none;">skipQs</a>
   <button class="nav-link active"   onclick="showSection('live',     this)"><span class="nav-icon">📡</span><span>Live Queue</span></button>
   <button class="nav-link"          onclick="showSection('services', this)"><span class="nav-icon">🛠️</span><span>Services</span></button>
   <button class="nav-link"          onclick="showSection('manage',   this)"><span class="nav-icon">🏪</span><span>Manage</span></button>
@@ -353,7 +353,6 @@ tr:last-child td{border-bottom:none;}
 <script src="sector-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/easyqrcodejs@4.4.10/dist/easy.qrcode.min.js"></script>
 <script src="skipqs-ai.js"></script>
-<script src="ai-provider.js"></script>
 <script>
 
 /* ═══════════════════════════════════════════════
@@ -405,27 +404,28 @@ let queueChannel, providerChannel, svcChannel;
 ═══════════════════════════════════════════════ */
 sb.auth.getSession().then(async ({ data: { session } }) => {
   if (!session) { window.location.href = 'login.html'; return; }
-  curUid = session.user.id;
-  window.curUid = curUid; // needed by AI module
+  const authUid = session.user.id;
 
   // Guard: if this user is NOT a provider, send them to the customer dashboard
   const { data: provCheck } = await sb
     .from('providers')
     .select('id, is_hospital, category')
-    .or(`user_id.eq.${curUid},id.eq.${curUid}`)
+    .or(`user_id.eq.${authUid},id.eq.${authUid}`)
     .maybeSingle();
 
   if (!provCheck) {
-    // This is a customer account — redirect to the customer dashboard
     window.location.replace('dashboard.html');
     return;
   }
-
-  // If hospital provider landed on business dashboard, redirect to hospital dashboard
   if (provCheck.is_hospital || provCheck.category === 'Hospital') {
     window.location.replace('hospital-dashboard.html');
     return;
   }
+
+  // FIX: always use the provider row's actual ID (not auth UID)
+  // These can differ if provider was registered with user_id field
+  curUid = provCheck.id;
+  window.curUid = curUid; // AI module reads this
 
   document.getElementById('userEmail').textContent = session.user.email || '';
   await loadProviderData();
@@ -439,9 +439,16 @@ sb.auth.getSession().then(async ({ data: { session } }) => {
    PROVIDER DATA
 ═══════════════════════════════════════════════ */
 async function loadProviderData() {
-  const { data } = await sb.from('providers')
-    .select('*').or(`user_id.eq.${curUid},id.eq.${curUid}`).maybeSingle();
-  if (!data) return;
+  const { data, error } = await sb.from('providers')
+    .select('*').eq('id', curUid).maybeSingle();
+  if (error || !data) {
+    // Fallback: try user_id match
+    const { data: d2 } = await sb.from('providers')
+      .select('*').eq('user_id', curUid).maybeSingle();
+    if (d2) { applyProviderData(d2); setupManageSection(d2); } 
+    else { toast('Could not load provider data', 'error'); }
+    return;
+  }
   applyProviderData(data);
   setupManageSection(data);
 
@@ -452,7 +459,7 @@ async function loadProviderData() {
 }
 
 function applyProviderData(data) {
-  curUid = data.id || curUid;
+  // Do NOT reassign curUid here — it's set correctly in boot
   currentCapacity = data.capacity || 1;
   document.getElementById('bizTitle').textContent = data.business_name || 'Dashboard';
   document.getElementById('capDisplay').textContent = currentCapacity;
@@ -609,40 +616,11 @@ async function syncProviderStats(estWait, peopleInLine) {
   }
 }
 async function startServing(id) {
-  const patch = { status: 'serving' };
-  try { patch.served_at = new Date().toISOString(); } catch(_) {}
-  const { error } = await sb.from('queues').update(patch).eq('id', id);
-  if (error) {
-    console.error('startServing error:', error);
-    toast('Could not start serving: ' + (error.message || 'Permission denied'), 'error');
-  }
+  await sb.from('queues').update({ status:'serving', served_at: new Date().toISOString() }).eq('id', id);
 }
-
 async function completeService(id) {
-  const now = new Date();
-  // Build patch safely — only include columns that exist
-  const patch = { status: 'completed' };
-  try { patch.completed_at = now.toISOString(); } catch(_) {}
-  try { patch.completed_date = now.toISOString().slice(0, 10); } catch(_) {}
-
-  const { error } = await sb.from('queues').update(patch).eq('id', id);
-  if (error) {
-    console.error('completeService error:', error);
-    // Try without completed_date in case column doesn't exist yet
-    if (error.message && error.message.includes('completed_date')) {
-      const { error: err2 } = await sb.from('queues')
-        .update({ status: 'completed', completed_at: now.toISOString() })
-        .eq('id', id);
-      if (err2) {
-        toast('Could not complete: ' + (err2.message || 'Permission denied. Run the SQL patch in Supabase.'), 'error');
-        return;
-      }
-    } else {
-      toast('Could not complete: ' + (error.message || 'Permission denied. Check RLS policies.'), 'error');
-      return;
-    }
-  }
-  toast('Customer served ✓', 'success');
+  const today = new Date().toISOString().slice(0, 10);
+  await sb.from('queues').update({ status:'completed', completed_at: new Date().toISOString(), completed_date: today }).eq('id', id);
   updateServedToday();
 }
 
@@ -989,9 +967,19 @@ async function updateCapacity(val) {
   await sb.from('providers').update({ capacity: currentCapacity }).eq('id', curUid);
 }
 async function toggleStatus() {
-  const { data } = await sb.from('providers').select('is_open').eq('id', curUid).single();
+  const { data, error } = await sb.from('providers')
+    .select('is_open').eq('id', curUid).maybeSingle();
+  if (error || !data) {
+    toast('Could not read provider status — check your connection', 'error');
+    return;
+  }
   const next = !data.is_open;
-  await sb.from('providers').update({ is_open: next }).eq('id', curUid);
+  const { error: updateErr } = await sb.from('providers')
+    .update({ is_open: next }).eq('id', curUid);
+  if (updateErr) {
+    toast('Toggle failed: ' + (updateErr.message || 'Permission denied'), 'error');
+    return;
+  }
   toast('Business is now ' + (next ? 'OPEN ✓' : 'CLOSED'));
 }
 function toggleQR() {
@@ -1008,5 +996,7 @@ document.getElementById('qrOverlay').addEventListener('click', e => {
   if (e.target.id === 'qrOverlay') toggleQR();
 });
 </script>
+<!-- AI module loaded last so window.curUid is set before it initialises -->
+<script src="ai-provider.js"></script>
 </body>
 </html>
