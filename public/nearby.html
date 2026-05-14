@@ -308,7 +308,11 @@ let userLat = 20.5937, userLng = 78.9629;
 /* ─── Auth ─── */
 sb.auth.getSession().then(({data:{session}})=>{
   const btn = document.getElementById('authBtn');
-  if (session) { btn.textContent = 'Dashboard'; btn.href = 'dashboard.html'; }
+  if (session) {
+    const { data: prov } = await sb.from('providers').select('id,is_hospital,category').or(`user_id.eq.${session.user.id},id.eq.${session.user.id}`).maybeSingle();
+    if (prov) { btn.textContent = 'Dashboard'; btn.href = prov.is_hospital || prov.category === 'Hospital' ? 'hospital-dashboard.html' : 'provider-dashboard.html'; }
+    else { btn.textContent = 'My Queues'; btn.href = 'dashboard.html'; }
+  }
 });
 
 /* ─── Mobile toggle ─── */
