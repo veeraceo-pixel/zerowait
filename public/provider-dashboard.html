@@ -398,6 +398,26 @@ let queueChannel, providerChannel, svcChannel;
 sb.auth.getSession().then(async ({ data: { session } }) => {
   if (!session) { window.location.href = 'login.html'; return; }
   curUid = session.user.id;
+
+  // Guard: if this user is NOT a provider, send them to the customer dashboard
+  const { data: provCheck } = await sb
+    .from('providers')
+    .select('id, is_hospital, category')
+    .or(`user_id.eq.${curUid},id.eq.${curUid}`)
+    .maybeSingle();
+
+  if (!provCheck) {
+    // This is a customer account — redirect to the customer dashboard
+    window.location.replace('dashboard.html');
+    return;
+  }
+
+  // If hospital provider landed on business dashboard, redirect to hospital dashboard
+  if (provCheck.is_hospital || provCheck.category === 'Hospital') {
+    window.location.replace('hospital-dashboard.html');
+    return;
+  }
+
   document.getElementById('userEmail').textContent = session.user.email || '';
   await loadProviderData();
   startLiveQ();

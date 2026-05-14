@@ -353,6 +353,12 @@ function openJoin(deptId) {
     setTimeout(()=>{ window.location.href = 'login.html'; }, 1200);
     return;
   }
+  // Guard: prevent provider from joining their own queue
+  if (session.user.id === provider.id || session.user.id === provider.user_id) {
+    toast('You cannot join your own queue. Go to your dashboard to manage it.', 'error');
+    setTimeout(()=>{ window.location.href = 'provider-dashboard.html'; }, 1800);
+    return;
+  }
   document.getElementById('joinTitle').textContent = 'Join ' + pendingDept.name + ' Queue';
   document.getElementById('joinSub').textContent = `Wait time right now: ~${pendingDept.wait_minutes||0} minutes`;
   document.getElementById('customerName').value = (session.user.user_metadata?.full_name) || '';

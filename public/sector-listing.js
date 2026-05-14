@@ -217,18 +217,44 @@
 
   loadAll();
 
-  // ── Auth: swap Login → My Queues when user is signed in ──────────────
-  function updateAuthNav(session) {
-    // Desktop + mobile: find all links pointing at login.html
+  // ── Auth: swap Login → correct dashboard when user is signed in ──────────────
+  async function updateAuthNav(session) {
     document.querySelectorAll('a[href="login.html"]').forEach(a => {
       if (session) {
-        a.textContent = 'My Queues';
-        a.href = 'dashboard.html';
+        a.textContent = 'Dashboard';
+        a.href = 'dashboard.html'; // default — updated below if provider
       } else {
         a.textContent = 'Login';
         a.href = 'login.html';
       }
     });
+
+    if (!session) return;
+
+    // Check if logged-in user is a provider — route them to their dashboard
+    try {
+      const { data: prov } = await sb
+        .from('providers')
+        .select('id, is_hospital, category')
+        .or(`user_id.eq.${session.user.id},id.eq.${session.user.id}`)
+        .maybeSingle();
+
+      if (prov) {
+        const dest = (prov.is_hospital || prov.category === 'Hospital')
+          ? 'hospital-dashboard.html'
+          : 'provider-dashboard.html';
+        document.querySelectorAll('a[href="login.html"], a[href="dashboard.html"]').forEach(a => {
+          if (a.textContent === 'Dashboard' || a.textContent === 'My Queues') {
+            a.href = dest;
+            a.textContent = 'Dashboard';
+          }
+        });
+      } else {
+        document.querySelectorAll('a[href="dashboard.html"]').forEach(a => {
+          a.textContent = 'My Queues';
+        });
+      }
+    } catch (_) {}
   }
 
   // Check on load

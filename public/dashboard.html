@@ -45,33 +45,6 @@
     .live-pill{display:inline-flex;align-items:center;gap:.35rem;background:rgba(16,185,129,.85);padding:3px 10px;border-radius:50px;font-size:.65rem;font-weight:800;letter-spacing:.4px;text-transform:uppercase;margin-bottom:.5rem;}
     .live-dot{width:6px;height:6px;border-radius:50%;background:white;animation:pulse 1.4s ease-in-out infinite;}
     @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.7)}}
-
-    /* ── MOBILE QUEUE BANNER (replaces card on small screens) ── */
-    /* On phones, the full card with timer column + actions wraps
-       into a mess. Instead we show a compact sticky banner at the
-       bottom of the screen showing business name + timer + one action. */
-    .mob-queue-banner{
-      display:none; /* shown only on mobile via @media */
-      position:fixed;bottom:0;left:0;right:0;z-index:900;
-      background:linear-gradient(90deg,#002f34 0%,#004d57 100%);
-      border-top:2px solid rgba(35,229,219,.4);
-      padding:.75rem 1rem;
-      align-items:center;gap:.7rem;
-      box-shadow:0 -4px 20px rgba(0,0,0,.25);
-    }
-    .mob-banner-info{flex:1;min-width:0;}
-    .mob-banner-biz{font-size:.88rem;font-weight:800;color:white;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    .mob-banner-status{font-size:.72rem;color:rgba(255,255,255,.6);margin-top:.1rem;}
-    .mob-banner-timer{text-align:center;flex-shrink:0;}
-    .mob-banner-timer-val{font-size:1.8rem;font-weight:800;color:var(--accent);line-height:1;font-variant-numeric:tabular-nums;}
-    .mob-banner-timer-lbl{font-size:.55rem;text-transform:uppercase;color:rgba(255,255,255,.4);font-weight:700;}
-    .mob-banner-leave{padding:.45rem .85rem;border-radius:8px;font-size:.78rem;font-weight:700;background:rgba(255,255,255,.12);color:white;border:1px solid rgba(255,255,255,.2);cursor:pointer;font-family:inherit;flex-shrink:0;}
-    /* Add bottom padding to page when banner is visible */
-    body.has-active-queue{padding-bottom:72px;}
-    @media(max-width:540px){
-      .active-queue-card{display:none!important;} /* hide card, show banner */
-      .mob-queue-banner{display:flex;}
-    }
     /* ── SECTION HEADER ── */
     .page-header{margin-bottom:1.4rem;}
     .page-header h1{font-size:1.8rem;font-weight:800;letter-spacing:-.5px;}
@@ -141,6 +114,13 @@
   </style>
 </head>
 <body>
+<!-- Covers the page while we check auth role, prevents flash of wrong UI -->
+<div id="authGuard" style="position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;">
+  <div style="text-align:center;">
+    <div style="width:36px;height:36px;border:4px solid #e2e8f0;border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 1rem;"></div>
+    <div style="font-size:.88rem;color:var(--text-muted);font-weight:600;">Loading…</div>
+  </div>
+</div>
 
 <header class="nav-bar">
   <a href="index.html" class="nav-logo">skip<span>Qs</span></a>
@@ -165,18 +145,6 @@
 
   <!-- ── ACTIVE QUEUE SECTION ── -->
   <div id="activeQueueArea"></div>
-  <!-- Mobile sticky banner (shown on screens ≤540px instead of the card above) -->
-  <div class="mob-queue-banner" id="mobQueueBanner" style="display:none;">
-    <div class="mob-banner-info">
-      <div class="mob-banner-biz" id="mobBannerBiz">—</div>
-      <div class="mob-banner-status" id="mobBannerStatus">Waiting for your turn…</div>
-    </div>
-    <div class="mob-banner-timer">
-      <div class="mob-banner-timer-val" id="mobTimerVal">—</div>
-      <div class="mob-banner-timer-lbl">min left</div>
-    </div>
-    <button class="mob-banner-leave" id="mobLeaveBtn">Leave</button>
-  </div>
 
   <div class="page-header">
     <h1>My Queues</h1>
@@ -234,6 +202,9 @@
     }
 
     currentUserId = session.user.id;
+    // Identity confirmed as customer — remove loading overlay
+    const guard = document.getElementById('authGuard');
+    if (guard) guard.remove();
     await loadActiveQueueBanner();
     loadTab('active');
   });
@@ -247,7 +218,7 @@
       .in('status',['waiting','serving'])
       .limit(1);
 
-    if (!rows || !rows.length) { area.innerHTML=''; updateMobileBanner(false); return; }
+    if (!rows || !rows.length) { area.innerHTML=''; return; }
     const q = rows[0];
 
     // Fetch provider (include lat/lng for travel alert, capacity for position math)
@@ -262,7 +233,6 @@
     const bizName = prov ? prov.business_name : 'Your Queue';
     const isHosp = prov && (prov.is_hospital || prov.category === 'Hospital');
     const detailPage = prov ? (isHosp ? `hospital-detail.html?id=${prov.id}` : `business-detail.html?id=${prov.id}`) : '#';
-    const statusText = q.status === 'serving' ? '🔔 You are being served now!' : 'Waiting for your turn…';
 
     area.innerHTML = `
       <div class="active-queue-card" id="aqCard">
@@ -271,7 +241,7 @@
           <div class="live-pill"><div class="live-dot"></div>Active</div>
           <div class="aqc-label">You are in the queue</div>
           <div class="aqc-title">${esc(bizName)}${deptName ? ' — ' + esc(deptName) : ''}</div>
-          <div class="aqc-sub" id="aqStatus">${statusText}</div>
+          <div class="aqc-sub" id="aqStatus">${q.status === 'serving' ? '🔔 You are being served now!' : 'Waiting for your turn…'}</div>
           <div class="aqc-sub" id="aqPosition" style="font-size:.75rem;opacity:.7;margin-top:.2rem;"></div>
         </div>
         <div class="aqc-timer">
@@ -283,9 +253,6 @@
           <button class="aqc-btn aqc-btn-ghost" onclick="cancelQueue('${q.id}')">Leave Queue</button>
         </div>
       </div>`;
-
-    // Show the mobile sticky banner (visible only on ≤540px screens)
-    updateMobileBanner(true, bizName + (deptName ? ' — ' + deptName : ''), statusText, q.id);
 
     // Calculate initial position-aware wait and start timer
     await recalcAndStartTimer(q, prov, deptWaitMins);
@@ -309,7 +276,6 @@
       .on('postgres_changes',{event:'UPDATE',schema:'public',table:'queues',filter:`id=eq.${q.id}`}, async payload => {
         if (['completed','cancelled','no_show'].includes(payload.new.status)) {
           area.innerHTML = '';
-          updateMobileBanner(false);
           if (timerInterval) clearInterval(timerInterval);
           if (travelCheckInterval) clearInterval(travelCheckInterval);
           loadTab(currentTab);
@@ -454,33 +420,13 @@
     if (timerInterval) clearInterval(timerInterval);
     const el = document.getElementById('aqTimerVal');
     if (el) el.textContent = '✓';
-    const mob = document.getElementById('mobTimerVal');
-    if (mob) mob.textContent = '✓';
   }
 
   function renderTimerVal(secs) {
-    const m = Math.floor(secs / 60);
-    const txt = m > 0 ? String(m) : (secs > 0 ? '<1' : '✓');
     const el = document.getElementById('aqTimerVal');
-    if (el) el.textContent = txt;
-    const mob = document.getElementById('mobTimerVal');
-    if (mob) mob.textContent = txt;
-  }
-
-  function updateMobileBanner(show, bizLabel, statusText, queueId) {
-    const banner = document.getElementById('mobQueueBanner');
-    if (!banner) return;
-    if (!show) {
-      banner.style.display = 'none';
-      document.body.classList.remove('has-active-queue');
-      return;
-    }
-    document.getElementById('mobBannerBiz').textContent    = bizLabel || '—';
-    document.getElementById('mobBannerStatus').textContent = statusText || 'Waiting for your turn…';
-    const leaveBtn = document.getElementById('mobLeaveBtn');
-    if (leaveBtn) leaveBtn.onclick = () => cancelQueue(queueId);
-    banner.style.display = 'flex';
-    document.body.classList.add('has-active-queue');
+    if (!el) return;
+    const m = Math.floor(secs / 60);
+    el.textContent = m > 0 ? String(m) : (secs > 0 ? '<1' : '✓');
   }
 
   async function cancelQueue(id) {
@@ -522,7 +468,6 @@
     }
 
     document.getElementById('activeQueueArea').innerHTML = '';
-    updateMobileBanner(false);
     if (timerInterval) clearInterval(timerInterval);
     loadTab(currentTab);
   }

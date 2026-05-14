@@ -293,6 +293,25 @@ async function init() {
   document.getElementById('userEmail').textContent = session.user.email;
 
   const uid = session.user.id;
+
+  // First check if user is any kind of provider
+  const { data: anyProv } = await sb.from('providers')
+    .select('id, is_hospital, category')
+    .or(`user_id.eq.${uid},id.eq.${uid}`)
+    .maybeSingle();
+
+  if (!anyProv) {
+    // Customer — send to customer dashboard
+    window.location.replace('dashboard.html');
+    return;
+  }
+
+  // Business provider (not hospital) — send to provider dashboard
+  if (!anyProv.is_hospital && anyProv.category !== 'Hospital') {
+    window.location.replace('provider-dashboard.html');
+    return;
+  }
+
   const { data: prov, error } = await sb.from('providers')
     .select('*')
     .or(`user_id.eq.${uid},id.eq.${uid}`)

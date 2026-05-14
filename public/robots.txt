@@ -1,0 +1,21 @@
+User-agent: *
+Allow: /
+
+# Block authenticated/private pages - no SEO value, saves crawl budget
+Disallow: /dashboard.html
+Disallow: /provider-dashboard.html
+Disallow: /hospital-dashboard.html
+Disallow: /my-queues.html
+Disallow: /login.html
+Disallow: /signup.html
+Disallow: /forgot-password.html
+Disallow: /provider-add-service.html
+Disallow: /provider-manage-queue.html
+Disallow: /menu-import.html
+Disallow: /patient-track.html
+Disallow: /popup-fragment.html
+Disallow: /article-template.html
+Disallow: /maintenance.html
+
+# Sitemap location
+Sitemap: https://skipqs.com/sitemap.xml

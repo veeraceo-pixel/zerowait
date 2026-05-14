@@ -158,6 +158,22 @@
       window.location.href = 'login.html'; return;
     }
 
+    // Guard: prevent provider from joining their own queue
+    if (session.user.id === providerId) {
+      alert('You cannot join your own queue. Use your dashboard to manage it.');
+      window.location.href = 'provider-dashboard.html'; return;
+    }
+
+    // Guard: prevent any provider from joining any queue (providers use dashboard)
+    const { data: isProvider } = await sb.from('providers')
+      .select('id')
+      .or(`user_id.eq.${session.user.id},id.eq.${session.user.id}`)
+      .maybeSingle();
+    if (isProvider) {
+      alert('Provider accounts cannot join customer queues. Please use a separate customer account.');
+      window.location.href = 'provider-dashboard.html'; return;
+    }
+
     const btn = document.getElementById('joinBtn');
     btn.disabled = true; btn.textContent = 'Joining…';
 
