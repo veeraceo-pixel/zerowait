@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="mobile-fixes.css">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
     :root{
@@ -22,6 +23,7 @@
       display:flex;justify-content:space-between;align-items:center;
       flex-shrink:0;position:relative;z-index:500;
       box-shadow:0 2px 12px rgba(0,0,0,.25);
+      border-bottom:2px solid rgba(35,229,219,.2);
     }
     .logo{font-weight:800;color:var(--accent);text-decoration:none;font-size:1.25rem;letter-spacing:-.5px;}
     .logo span{color:var(--accent2);}
@@ -30,6 +32,19 @@
     .nav-links a:hover{color:#fff;background:rgba(255,255,255,.1);}
     .nav-links a.pill{background:var(--accent);color:var(--primary);padding:7px 16px;border-radius:50px;}
     .nav-links a.pill:hover{opacity:.9;background:var(--accent);}
+
+    /* Mobile hamburger */
+    .mob-hamburger{display:none;background:none;border:none;color:var(--accent);font-size:1.4rem;cursor:pointer;padding:.2rem .4rem;line-height:1;}
+    .mob-nav-drawer{display:none;position:absolute;top:100%;left:0;right:0;background:var(--primary);border-top:1px solid rgba(255,255,255,.1);border-bottom:2px solid rgba(35,229,219,.2);padding:.8rem 1.5rem;z-index:499;box-shadow:0 8px 24px rgba(0,0,0,.3);}
+    .mob-nav-drawer.open{display:block;}
+    .mob-nav-drawer a{display:block;color:rgba(255,255,255,.8);text-decoration:none;font-size:.92rem;font-weight:600;padding:.65rem 0;border-bottom:1px solid rgba(255,255,255,.07);}
+    .mob-nav-drawer a:last-child{border-bottom:none;}
+    .mob-nav-drawer a.pill{color:var(--accent);font-weight:800;}
+
+    @media(max-width:600px){
+      .nav-links .hide-mobile{display:none;}
+      .mob-hamburger{display:block;}
+    }
 
     /* ── Filter bar ── */
     .filter-bar{
@@ -48,7 +63,7 @@
     .chip.active{background:var(--primary);color:#fff;border-color:var(--primary);}
     .chip-live{background:#ecfdf5;color:var(--success);border-color:#6ee7b7;}
     .chip-live.active{background:var(--success);color:#fff;border-color:var(--success);}
-    .divider{width:1px;height:22px;background:var(--border);flex-shrink:0;}
+    .divider{width:1px;min-width:1px;height:22px;background:var(--border);flex-shrink:0;margin:0 2px;}
 
     /* ── Mobile toggle ── */
     .mobile-toggle{
@@ -184,10 +199,20 @@
 <nav class="navbar">
   <a href="index.html" class="logo">skip<span>Qs</span></a>
   <div class="nav-links">
-    <a href="find-services.html">All Services</a>
-    <a href="hospitals.html">Hospitals</a>
-    <a href="dashboard.html">My Queues</a>
+    <a href="nearby.html" class="hide-mobile">Find Services</a>
+    <a href="hospitals.html" class="hide-mobile">Hospitals</a>
+    <a href="dashboard.html" class="hide-mobile">My Queues</a>
     <a href="login.html" id="authBtn" class="pill">Login</a>
+  </div>
+  <button class="mob-hamburger" onclick="toggleMobNav()" aria-label="Menu">☰</button>
+
+  <!-- Mobile dropdown drawer -->
+  <div class="mob-nav-drawer" id="mobNavDrawer">
+    <a href="nearby.html">📍 Find Services Near Me</a>
+    <a href="hospitals.html">🏥 Hospitals</a>
+    <a href="index.html">🏠 Home</a>
+    <a href="dashboard.html">📋 My Queues</a>
+    <a href="login.html" class="pill" id="mobAuthLink">Login / Sign Up</a>
   </div>
 </nav>
 
@@ -204,7 +229,7 @@
   <div class="chip" data-type="gov">🏛️ Gov</div>
   <div class="chip" data-type="wash">🧼 Wash</div>
   <div class="divider"></div>
-  <div class="chip" data-type="kirana">🛒 Kirana</div>
+  <div class="chip" data-type="kirana">🛒 Grocery</div>
   <div class="chip" data-type="bakery">🍞 Bakery</div>
   <div class="chip" data-type="sweet">🍬 Sweets</div>
   <div class="chip" data-type="localshop">🏪 Local Shop</div>
@@ -318,16 +343,17 @@ let userLat = 20.5937, userLng = 78.9629;
 /* ─── Auth ─── */
 sb.auth.getSession().then(({data:{session}})=>{
   const btn = document.getElementById('authBtn');
+  const mobLink = document.getElementById('mobAuthLink');
   if (!session) return;
   sb.from('providers').select('id,is_hospital,category')
     .or(`user_id.eq.${session.user.id},id.eq.${session.user.id}`).maybeSingle()
     .then(({data:prov}) => {
-      if (prov) {
-        const dest = (prov.is_hospital || prov.category==='Hospital') ? 'hospital-dashboard.html' : 'provider-dashboard.html';
-        btn.textContent = 'Dashboard'; btn.href = dest;
-      } else {
-        btn.textContent = 'My Queues'; btn.href = 'dashboard.html';
-      }
+      const dest = prov
+        ? ((prov.is_hospital || prov.category==='Hospital') ? 'hospital-dashboard.html' : 'provider-dashboard.html')
+        : 'dashboard.html';
+      const label = prov ? 'Dashboard' : 'My Queues';
+      btn.textContent = label; btn.href = dest;
+      if (mobLink) { mobLink.textContent = label; mobLink.href = dest; }
     });
 
 // Pre-populate search box if ?q= was passed (from homepage search bar)
@@ -505,65 +531,127 @@ function init(){
 
 /* ─── Main search ─── */
 async function executePlacesSearch(){
-  const MAX=10;
-  const container=document.getElementById('results');
-  container.innerHTML=`<p style="padding:20px;color:var(--text-muted);font-size:.85rem;">🔍 Searching nearby services…</p>`;
+  const container = document.getElementById('results');
+  container.innerHTML = `<div style="padding:1.5rem;text-align:center;color:var(--text-muted);font-size:.85rem;">🔍 Searching nearby services…</div>`;
 
-  const supaPlaces=[];
-  try{
-    const {data:providers}=await sb.from('providers').select('id,business_name,lat,lng,address,category,is_hospital,capacity,is_open');
-    for (const prov of (providers||[])){
-      if (!prov.lat||!prov.lng) continue;
-      const cat=(prov.category||'').toLowerCase();
-      const allowed=CATEGORY_MAP[serviceType]||[];
-      if (!allowed.some(k=>cat.includes(k))) continue;
-      const dist=haversineDistance(userLat,userLng,prov.lat,prov.lng);
-      if (dist*0.000621371>25) continue;
+  // ── Category label map ───────────────────────────────────
+  const CAT_LABELS = {
+    salon:    ['Salon','Barber'],
+    dining:   ['Restaurant','Bakery','Sweet Shop','SweetShop'],
+    clinic:   ['Clinic','Pharmacy','Hospital'],
+    banking:  ['Bank','Government'],
+    gym:      ['Gym'],
+    repair:   ['Repair'],
+    gov:      ['Government'],
+    wash:     ['CarWash','Car Wash'],
+    kirana:   ['Grocery Store','Kirana Store','Kirana'],
+    bakery:   ['Bakery'],
+    sweet:    ['Sweet Shop','SweetShop'],
+    localshop:['Local Shop','LocalShop'],
+    auto:     ['AutoStand','Auto Stand'],
+    __all__:  []
+  };
+  const allowedLabels = CAT_LABELS[serviceType] || [];
 
-      const {data:qRows}=await sb.from('queues').select('service_duration').eq('provider_id',prov.id).in('status',['waiting','serving']);
-      let totalMins=0;
-      (qRows||[]).forEach(q=>{let m=parseInt(q.service_duration,10);if(isNaN(m)||m<=0)m=15;totalMins+=m;});
-      const capacity=Math.max(1,parseInt(prov.capacity)||1);
-      const waitMins=qRows?.length?Math.max(5,Math.ceil(totalMins/capacity)):0;
+  // ── PART 1: Registered skipQs providers ─────────────────
+  // These show as full cards with live queue data + Join button.
+  const registeredPlaces = [];
+  try {
+    const { data: providers } = await sb.from('providers')
+      .select('id,business_name,lat,lng,address,category,is_hospital,capacity,is_open');
 
-      supaPlaces.push({
-        id:prov.id, displayName:prov.business_name||'Local Partner',
-        category:prov.category, is_hospital:prov.is_hospital,
-        location:{lat:prov.lat,lng:prov.lng},
-        calculatedDistance:dist, shortFormattedAddress:prov.address||'',
-        isRegistered:true, waitTime:waitMins, peopleInQueue:qRows?.length||0,
-        liveData:{peopleInLine:qRows?.length||0,queueLoadMins:waitMins,currentWaitMins:waitMins}
+    for (const prov of (providers || [])) {
+      if (!prov.lat || !prov.lng) continue;
+
+      // Category filter
+      if (serviceType !== '__all__' && allowedLabels.length) {
+        const cat = (prov.category || '').toLowerCase();
+        if (!allowedLabels.some(l => cat.includes(l.toLowerCase()))) continue;
+      }
+
+      // Distance filter (25 miles)
+      const dist = haversineDistance(userLat, userLng, parseFloat(prov.lat), parseFloat(prov.lng));
+      if (dist * 0.000621371 > 25) continue;
+
+      // Live queue data
+      const { data: qRows } = await sb.from('queues')
+        .select('service_duration').eq('provider_id', prov.id)
+        .in('status', ['waiting','serving']);
+
+      let totalMins = 0;
+      (qRows||[]).forEach(q => {
+        const m = parseInt(q.service_duration, 10);
+        totalMins += (isNaN(m) || m <= 0) ? 15 : m;
+      });
+      const capacity  = Math.max(1, parseInt(prov.capacity) || 1);
+      const waitMins  = qRows?.length ? Math.max(1, Math.ceil(totalMins/capacity)) : 0;
+
+      registeredPlaces.push({
+        id: prov.id,
+        displayName: prov.business_name || 'Local Business',
+        category: prov.category,
+        is_hospital: prov.is_hospital,
+        is_open: prov.is_open,
+        location: { lat: parseFloat(prov.lat), lng: parseFloat(prov.lng) },
+        calculatedDistance: dist,
+        shortFormattedAddress: prov.address || '',
+        isRegistered: true,
+        waitTime: waitMins,
+        peopleInQueue: qRows?.length || 0,
+        liveData: {
+          peopleInLine: qRows?.length || 0,
+          queueLoadMins: waitMins,
+          currentWaitMins: waitMins
+        }
       });
     }
-  }catch(e){console.error('Supabase error:',e);}
-
-  supaPlaces.sort((a,b)=>a.calculatedDistance-b.calculatedDistance);
-  const supaLimited=supaPlaces.slice(0,MAX);
-
-  if (supaLimited.length>=MAX){
-    currentPlaces=supaLimited; renderList(supaLimited); addMapMarkers(supaLimited); return;
+    registeredPlaces.sort((a,b) => a.calculatedDistance - b.calculatedDistance);
+  } catch(e) {
+    console.error('Supabase error:', e);
   }
 
-  const shownIds=new Set(supaLimited.map(p=>normalizeName(p.displayName)));
-  let osmPlaces=[];
-  const cached=await readCache(serviceType,userLat,userLng);
-  if (cached?.length){
-    osmPlaces=cached;
-  } else {
-    try{
-      osmPlaces=await searchOverpass(serviceType,userLat,userLng,MAX-supaLimited.length);
-      if (osmPlaces.length) await writeCache(serviceType,userLat,userLng,osmPlaces);
-    }catch(err){
-      console.warn('Overpass error:',err);
-      container.innerHTML+=`<p style="color:#ef4444;font-size:.8rem;padding:0 1rem;">⚠️ Map data temporarily unavailable.</p>`;
+  // ── PART 2: OSM unregistered places ─────────────────────
+  // Shown as MAP PINS ONLY + compact "not on skipQs" list cards.
+  // Gives users a full map experience while making it clear which
+  // businesses they can actually skip the queue at.
+  let osmPlaces = [];
+  const registeredNames = new Set(registeredPlaces.map(p => normalizeName(p.displayName)));
+  const MAX_OSM = Math.max(0, 15 - registeredPlaces.length); // fill up to 15 total
+
+  if (MAX_OSM > 0) {
+    try {
+      const cached = await readCache(serviceType, userLat, userLng);
+      osmPlaces = cached?.length ? cached : await (async () => {
+        const fresh = await searchOverpass(serviceType, userLat, userLng, MAX_OSM);
+        if (fresh.length) await writeCache(serviceType, userLat, userLng, fresh);
+        return fresh;
+      })();
+      // Deduplicate against registered
+      osmPlaces = osmPlaces.filter(p => !registeredNames.has(normalizeName(p.displayName)));
+    } catch(e) {
+      console.warn('OSM fetch failed (non-critical):', e);
     }
   }
-  osmPlaces=osmPlaces.filter(g=>{const n=normalizeName(g.displayName);if(shownIds.has(n))return false;shownIds.add(n);return true;});
-  const combined=[...supaLimited,...osmPlaces]
-    .sort((a,b)=>{if(a.isRegistered&&!b.isRegistered)return-1;if(!a.isRegistered&&b.isRegistered)return 1;return a.calculatedDistance-b.calculatedDistance;})
-    .slice(0,MAX);
-  currentPlaces=combined; renderList(combined); addMapMarkers(combined);
+
+  // ── Combine: registered first, then OSM ─────────────────
+  const combined = [...registeredPlaces, ...osmPlaces];
+  currentPlaces  = combined;
+
+  // ── Render list + map ───────────────────────────────────
+  renderList(combined);
+  addMapMarkers(combined);
+
+  // Update counter
+  const regCount = registeredPlaces.length;
+  const osmCount = osmPlaces.length;
+  const label = regCount
+    ? `${regCount} live queue${regCount>1?'s':''} · ${osmCount} other nearby`
+    : osmCount
+      ? `No live queues yet · ${osmCount} nearby businesses`
+      : 'No results found nearby';
+  document.getElementById('counter').textContent = label;
 }
+
 
 function normalizeName(n){return (n||'').toLowerCase().replace(/[^a-z0-9]/g,'');}
 
@@ -607,8 +695,8 @@ function renderList(places){
     container.innerHTML=`
       <div class="empty-state">
         <div class="icon">🔍</div>
-        <h3>No services found nearby</h3>
-        <p>Try a different category or zoom out your search area.<br>Is your business missing? Register free!</p>
+        <h3>No registered services found nearby</h3>
+        <p>skipQs shows businesses with live queue management. No one in your area is registered yet.</p>
         <a href="provider-signup.html" style="display:inline-block;margin-top:16px;background:var(--primary);color:#fff;padding:10px 22px;border-radius:8px;text-decoration:none;font-size:.82rem;font-weight:700;">Register Your Business →</a>
       </div>`;
     document.getElementById('counter').textContent='No results found.'; return;
@@ -656,33 +744,37 @@ function renderList(places){
           <a href="${osmDir}" target="_blank" rel="noopener" class="btn btn-secondary">🗺️ Directions</a>
           <a href="${detailPage}" class="btn btn-primary">View & Join →</a>
         </div>`;
+
     } else {
+      // ── Unregistered (OSM) — compact map pin card ──────────
+      // Shows the business exists on the map but makes clear
+      // it's not on skipQs. One-tap register CTA for the owner.
+      card.style.opacity = '0.75';
       card.innerHTML=`
-        <div class="card-body" onclick="selectPlace(${i})">
-          <div class="card-row">
-            <div class="card-icon unregistered" style="font-size:1.4rem;">${icon}</div>
+        <div class="card-body" onclick="selectPlace(${i})" style="padding:.75rem 1rem;">
+          <div class="card-row" style="gap:.7rem;">
+            <div class="card-icon unregistered" style="font-size:1.2rem;width:38px;height:38px;">${icon}</div>
             <div class="card-main">
-              <div class="card-name unregistered">${esc(p.displayName)}</div>
-              <div class="card-meta">
+              <div class="card-name unregistered" style="font-size:.88rem;">${esc(p.displayName)}</div>
+              <div class="card-meta" style="margin:.2rem 0;">
                 <span class="meta-pill pill-dist">📍 ${miles} mi</span>
-                <span class="meta-pill pill-drive">🚗 ${drive}m drive</span>
               </div>
-              <div class="wait-badge offline">
-                <div class="wait-dot offline"></div>
-                <div class="wait-text offline">Not on skipQs yet</div>
+              <div style="display:inline-flex;align-items:center;gap:.35rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:3px 8px;font-size:.7rem;color:#94a3b8;font-weight:600;">
+                <span style="width:6px;height:6px;border-radius:50%;background:#cbd5e1;flex-shrink:0;"></span>
+                Walk-in only · Not on skipQs
               </div>
             </div>
           </div>
         </div>
-        <div class="card-actions">
-          <a href="${osmDir}" target="_blank" rel="noopener" class="btn btn-secondary">🗺️ Directions</a>
-          <a href="provider-signup.html" class="btn btn-register">Own this business?<br>Register free →</a>
+        <div class="card-actions" style="padding:.5rem .75rem;gap:.4rem;">
+          <a href="${osmDir}" target="_blank" rel="noopener" class="btn btn-secondary" style="font-size:.75rem;padding:.45rem .7rem;">🗺️ Directions</a>
+          <a href="provider-signup.html?biz=${encodeURIComponent(p.displayName)}" class="btn btn-register" style="font-size:.72rem;padding:.45rem .7rem;flex:1;text-align:center;">Own this? Register free →</a>
         </div>`;
     }
     container.appendChild(card);
   });
 
-  document.getElementById('counter').textContent=`Found ${places.length} results nearby.`;
+  // Update counter (set by executePlacesSearch, don't overwrite here)
   applyLiveFilter();
 }
 

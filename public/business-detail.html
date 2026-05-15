@@ -107,6 +107,7 @@ main{padding:1.6rem 0 4rem;}
   .dept-cta{font-size:.82rem;padding:.6rem;}
 }
 </style>
+  <link rel="stylesheet" href="mobile-fixes.css">
 </head>
 <body>
 
@@ -353,12 +354,6 @@ function openJoin(deptId) {
     setTimeout(()=>{ window.location.href = 'login.html'; }, 1200);
     return;
   }
-  // Guard: prevent provider from joining their own queue
-  if (session.user.id === provider.id || session.user.id === provider.user_id) {
-    toast('You cannot join your own queue. Go to your dashboard to manage it.', 'error');
-    setTimeout(()=>{ window.location.href = 'provider-dashboard.html'; }, 1800);
-    return;
-  }
   document.getElementById('joinTitle').textContent = 'Join ' + pendingDept.name + ' Queue';
   document.getElementById('joinSub').textContent = `Wait time right now: ~${pendingDept.wait_minutes||0} minutes`;
   document.getElementById('customerName').value = (session.user.user_metadata?.full_name) || '';
@@ -415,7 +410,5 @@ document.getElementById('joinModal').addEventListener('click', e => {
 
 init();
 </script>
-<script src="skipqs-ai.js"></script>
-<script src="ai-widget.js"></script>
 </body>
 </html>

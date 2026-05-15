@@ -368,6 +368,7 @@ tr:last-child td{border-bottom:none;}
 <script src="sector-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/easyqrcodejs@4.4.10/dist/easy.qrcode.min.js"></script>
 <script src="skipqs-ai.js"></script>
+<script src="lucky-voice.js"></script>
 <script>
 
 /* ═══════════════════════════════════════════════
@@ -448,6 +449,15 @@ sb.auth.getSession().then(async ({ data: { session } }) => {
   loadServices();
   updateServedToday();
   document.getElementById('hDate').value = new Date().toISOString().slice(0, 10);
+  // Ask for notification permission so new order alerts work
+  requestAlertPermission();
+  // Initialise Hey Lucky voice assistant
+  if (window.LuckyVoice) {
+    window.LuckyVoice.init({
+      completeFn:     completeService,
+      startServingFn: startServing
+    });
+  }
 });
 
 /* ═══════════════════════════════════════════════
@@ -564,13 +574,179 @@ function waButtons(phone, name) {
 }
 
 /* ═══════════════════════════════════════════════
+   NEW ORDER ALERT SYSTEM
+   Plays a sound + shows push notification when
+   a new customer joins the queue — like PhonePe
+═══════════════════════════════════════════════ */
+
+// ── Audio: generate a pleasant "ding ding" using Web Audio API ──
+// No audio file needed — synthesised in the browser
+function playNewOrderSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playTone(freq, startTime, duration, volume = 0.6) {
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, startTime);
+      gain.gain.setValueAtTime(0, startTime);
+      gain.gain.linearRampToValueAtTime(volume, startTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+      osc.start(startTime);
+      osc.stop(startTime + duration);
+    }
+
+    const t = ctx.currentTime;
+    // Three ascending tones — like a shop door chime
+    playTone(880, t,        0.25);   // A5
+    playTone(1109, t + 0.18, 0.25);  // C#6
+    playTone(1318, t + 0.36, 0.4);   // E6
+  } catch (_) {
+    // Audio not supported — silently skip
+  }
+}
+
+// ── Push notification: show on lock screen ──
+async function showNewOrderNotif(customerName, serviceName) {
+  const title = '🛎️ New Order Received!';
+  const body  = `${customerName || 'A customer'} joined your queue` +
+                (serviceName ? ` for ${serviceName}` : '');
+
+  // Try Service Worker notification (works on lock screen)
+  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.postMessage({
+      type:               'SHOW_NOTIFICATION',
+      title,
+      body,
+      tag:                'skipqs-new-order',
+      requireInteraction: true,
+      url:                '/provider-dashboard.html'
+    });
+    return;
+  }
+
+  // Fallback: browser Notification API
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification(title, {
+      body,
+      icon: '/favicon.ico',
+      tag:  'skipqs-new-order',
+      requireInteraction: true
+    });
+  }
+}
+
+// ── Request notification permission on first load ──
+async function requestAlertPermission() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'default') {
+    const perm = await Notification.requestPermission();
+    if (perm === 'granted') {
+      toast('🔔 Notifications enabled — you\'ll be alerted for new orders', 'success');
+    }
+  }
+  // Register service worker for lock-screen alerts
+  if ('serviceWorker' in navigator) {
+    try {
+      await navigator.serviceWorker.register('/sw.js');
+    } catch (_) {}
+  }
+}
+
+// ── Main trigger: call this when a new queue INSERT fires ──
+async function onNewOrder(queueRow) {
+  playNewOrderSound();
+  await showNewOrderNotif(queueRow.customer_name, queueRow.selected_service);
+
+  // Flash the page title so even background tabs are obvious
+  let flashing = true;
+  const origTitle = document.title;
+  const flashInterval = setInterval(() => {
+    document.title = flashing ? '🛎️ NEW ORDER!' : origTitle;
+    flashing = !flashing;
+  }, 700);
+  setTimeout(() => {
+    clearInterval(flashInterval);
+    document.title = origTitle;
+  }, 8000);
+
+  // Show a prominent in-page banner
+  showNewOrderBanner(queueRow);
+}
+
+// ── In-page new order banner (visible even on desktop) ──
+function showNewOrderBanner(queueRow) {
+  let banner = document.getElementById('newOrderBanner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'newOrderBanner';
+    banner.style.cssText = `
+      position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-120px);
+      z-index:9999;background:#002f34;color:white;
+      border:2px solid #23e5db;border-radius:16px;
+      padding:1rem 1.4rem;min-width:280px;max-width:380px;
+      box-shadow:0 8px 32px rgba(0,0,0,.4);
+      transition:transform .4s cubic-bezier(.34,1.56,.64,1);
+      font-family:'Inter',sans-serif;display:flex;align-items:center;gap:.8rem;
+    `;
+    document.body.appendChild(banner);
+  }
+
+  banner.innerHTML = `
+    <span style="font-size:1.8rem;flex-shrink:0;">🛎️</span>
+    <div style="flex:1;">
+      <div style="font-weight:800;font-size:.95rem;color:#23e5db;">New Order Received!</div>
+      <div style="font-size:.82rem;color:rgba(255,255,255,.8);margin-top:.2rem;">
+        ${esc(queueRow.customer_name || 'A customer')} joined your queue
+        ${queueRow.selected_service ? '<br><span style="opacity:.7">for ' + esc(queueRow.selected_service) + '</span>' : ''}
+      </div>
+    </div>
+    <button onclick="document.getElementById('newOrderBanner').style.transform='translateX(-50%) translateY(-120px)'"
+      style="background:none;border:none;color:rgba(255,255,255,.5);cursor:pointer;font-size:1.2rem;padding:0;flex-shrink:0;">×</button>
+  `;
+
+  // Slide in
+  requestAnimationFrame(() => {
+    banner.style.transform = 'translateX(-50%) translateY(0)';
+  });
+
+  // Auto dismiss after 8 seconds
+  setTimeout(() => {
+    if (banner) banner.style.transform = 'translateX(-50%) translateY(-120px)';
+  }, 8000);
+}
+
+/* ═══════════════════════════════════════════════
    LIVE QUEUE
 ═══════════════════════════════════════════════ */
 function startLiveQ() {
   if (queueChannel) sb.removeChannel(queueChannel);
   queueChannel = sb.channel('queue:' + curUid)
-    .on('postgres_changes', { event:'*', schema:'public', table:'queues', filter:'provider_id=eq.'+curUid },
-      () => refreshQueue())
+    .on('postgres_changes', {
+      event:  'INSERT',
+      schema: 'public',
+      table:  'queues',
+      filter: 'provider_id=eq.' + curUid
+    }, payload => {
+      // 🛎️ NEW ORDER — fire alert immediately
+      onNewOrder(payload.new);
+      refreshQueue();
+    })
+    .on('postgres_changes', {
+      event:  'UPDATE',
+      schema: 'public',
+      table:  'queues',
+      filter: 'provider_id=eq.' + curUid
+    }, () => refreshQueue())
+    .on('postgres_changes', {
+      event:  'DELETE',
+      schema: 'public',
+      table:  'queues',
+      filter: 'provider_id=eq.' + curUid
+    }, () => refreshQueue())
     .subscribe();
   refreshQueue();
 }
@@ -627,6 +803,8 @@ async function refreshQueue() {
   let totalMins = 0, waitingCount = 0;
 
   activeRows.forEach(d => {
+    // Keep voice assistant queue in sync
+    if (window.LuckyVoice) window.LuckyVoice.updateQueue(activeRows);
     const svcLabel = esc(d.selected_service || d.department_id || '—');
     const dur = Number(d.service_duration) || 0;
 

@@ -1,0 +1,320 @@
+/* ============================================================
+   skipQs — Global Mobile Fixes  (mobile-fixes.css)
+   Include in every page: <link rel="stylesheet" href="mobile-fixes.css">
+   Add AFTER the page's own stylesheet so it overrides cleanly.
+   ============================================================ */
+
+/* ── Base: prevent horizontal overflow on all pages ── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
+img, video, iframe {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ── Nav logos — consistent across all pages ── */
+.logo, .nav-logo, .brand-logo {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── Page containers — consistent horizontal padding ── */
+.container, .page-wrap, .auth-wrapper, .nav-container {
+  width: 100%;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+/* ── Cards — prevent edge overflow on phones ── */
+.card, .auth-card, .place-card, .dept-card, .content-card {
+  width: 100%;
+}
+
+/* ── Buttons — don't let them overflow their containers ── */
+.btn, button, a.btn {
+  max-width: 100%;
+  word-break: break-word;
+}
+
+/* ── Tables — horizontal scroll instead of overflow ── */
+.table-wrap, table {
+  width: 100%;
+}
+@media(max-width: 600px) {
+  table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* ── =======================================================
+   DASHBOARD.HTML mobile fixes
+   ======================================================= */
+@media(max-width: 540px) {
+  /* Page padding */
+  .page-wrap {
+    padding: 0 .75rem 5rem;
+    margin-top: 1rem;
+  }
+  /* Page header */
+  .page-header h1 { font-size: 1.4rem; }
+  .page-header .subtitle { font-size: .82rem; }
+
+  /* Tab buttons */
+  .tab-bar {
+    gap: .4rem;
+  }
+  .tab-btn {
+    padding: .5rem .8rem;
+    font-size: .82rem;
+  }
+
+  /* Active queue card — hide on mobile (sticky banner replaces it) */
+  .active-queue-card { display: none !important; }
+
+  /* Queue history cards */
+  .queue-card {
+    padding: .9rem;
+  }
+  .queue-card-header {
+    flex-wrap: wrap;
+    gap: .4rem;
+  }
+}
+
+/* ── =======================================================
+   JOIN-QUEUE.HTML mobile fixes
+   ======================================================= */
+@media(max-width: 480px) {
+  /* Main wrapper */
+  .join-wrap, .join-page {
+    padding: 1rem .75rem 2rem;
+    align-items: flex-start;
+  }
+
+  /* Card */
+  .card {
+    padding: 1.2rem;
+    border-radius: 1rem;
+  }
+
+  /* Business name heading */
+  .biz-heading, .card h2 {
+    font-size: 1.2rem;
+  }
+
+  /* Service checkboxes — full width on mobile */
+  .svc-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: .5rem;
+  }
+  .svc-option {
+    padding: .6rem;
+    font-size: .82rem;
+  }
+
+  /* Action buttons */
+  .card-actions {
+    flex-direction: column;
+  }
+  .card-actions .btn {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* ── =======================================================
+   BUSINESS-DETAIL.HTML mobile fixes
+   ======================================================= */
+@media(max-width: 700px) {
+  /* Hero stat row */
+  .hero-stats {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: .6rem;
+  }
+  .hero-stat-value {
+    font-size: 1.3rem;
+  }
+
+  /* Department grid */
+  .dept-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .dept-card {
+    padding: 1rem;
+  }
+  .wait-num {
+    font-size: 1.8rem !important;
+  }
+
+  /* Header nav */
+  .header-nav .nav-links {
+    gap: .3rem;
+  }
+  .header-nav .nav-links a:not(.pill) {
+    display: none;
+  }
+}
+
+/* ── =======================================================
+   LOGIN.HTML + SIGNUP.HTML mobile fixes
+   ======================================================= */
+@media(max-width: 480px) {
+  .auth-page, .login-page {
+    padding: 1rem .75rem;
+    min-height: 100vh;
+    align-items: flex-start;
+    padding-top: 1.5rem;
+  }
+
+  .auth-card {
+    padding: 1.4rem 1.1rem;
+    border-radius: 1rem;
+    box-shadow: none;
+    border: 1px solid #e2e8f0;
+  }
+
+  .auth-header h1 {
+    font-size: 1.5rem;
+  }
+
+  /* OTP input row */
+  .otp-row {
+    gap: .4rem;
+  }
+  .otp-input {
+    font-size: 1.3rem;
+    padding: .6rem .3rem;
+  }
+}
+
+/* ── =======================================================
+   SECTOR PAGES (hospitals, salons etc.) mobile fixes
+   ======================================================= */
+@media(max-width: 600px) {
+  /* Sector header */
+  .sector-header {
+    padding: 1.2rem .75rem;
+  }
+  .sector-header h1 {
+    font-size: 1.4rem;
+  }
+  .sector-header p {
+    font-size: .85rem;
+  }
+
+  /* Stats bar */
+  .sector-stats {
+    flex-wrap: wrap;
+    gap: .5rem;
+  }
+  .sector-stat {
+    flex: 1 1 40%;
+  }
+
+  /* Hospital cards grid */
+  .h-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .h-card {
+    border-radius: 12px;
+  }
+
+  /* Back button */
+  .back-btn {
+    font-size: .82rem;
+    padding: .4rem .7rem;
+  }
+}
+
+/* ── =======================================================
+   PROVIDER SIGNUP mobile fixes
+   ======================================================= */
+@media(max-width: 600px) {
+  .auth-wrapper {
+    padding: 0 .75rem 4rem;
+    margin-top: 1rem;
+  }
+  .title { font-size: 1.5rem; }
+  .card { padding: 1.2rem; border-radius: 14px; }
+  .row { grid-template-columns: 1fr !important; }
+  .submit-btn { font-size: .95rem; padding: .9rem; }
+  .grocery-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* ── =======================================================
+   PROVIDER DASHBOARD mobile fixes
+   ======================================================= */
+@media(max-width: 540px) {
+  main {
+    padding: .75rem !important;
+  }
+
+  /* Stats grid — 2 cols on phone */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: .6rem;
+  }
+  .stat-card { padding: .9rem; }
+  .stat-val { font-size: 1.6rem; }
+
+  /* Queue table — key columns only */
+  th:nth-child(3), td:nth-child(3),   /* Est Mins */
+  th:nth-child(4), td:nth-child(4) {  /* Contact */
+    display: none;
+  }
+
+  /* Action buttons stack */
+  td:last-child {
+    display: flex;
+    flex-direction: column;
+    gap: .3rem;
+  }
+
+  /* Header */
+  .header-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: .5rem;
+  }
+  .biz-name { font-size: 1.2rem; }
+  .header-controls { width: 100%; justify-content: space-between; }
+}
+
+/* ── =======================================================
+   GENERAL UTILITY — apply to all pages
+   ======================================================= */
+
+/* Prevent text from overflowing cards */
+.card-name, .biz-name, .card-title, h1, h2, h3 {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* Touch targets — minimum 44px height for buttons/links */
+@media(max-width: 768px) {
+  button, .btn, a.btn, input[type="submit"] {
+    min-height: 40px;
+  }
+  input, select, textarea {
+    font-size: 16px !important; /* prevents iOS zoom on focus */
+  }
+}
+
+/* Fix iOS input zoom — inputs must be at least 16px */
+@supports (-webkit-touch-callout: none) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}

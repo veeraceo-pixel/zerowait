@@ -37,6 +37,7 @@
     .otp-box:focus { outline:none; border-color:var(--accent); }
     .info-msg { background:#eff6ff; color:#1e40af; border-radius:.5rem; padding:.75rem 1rem; font-size:.875rem; margin-bottom:1rem; display:none; }
   </style>
+  <link rel="stylesheet" href="mobile-fixes.css">
 </head>
 <body>
 
@@ -62,7 +63,7 @@
         <label class="form-label">Password</label>
         <input type="password" id="password" class="form-control" placeholder="••••••••" required>
       </div>
-      <div class="forgot"><a href="#" id="forgotLink" style="color:var(--accent);font-weight:600;">Forgot password? →</a></div>
+      <div class="forgot"><a href="#" id="forgotLink">Forgot password?</a></div>
       <button type="submit" class="btn-submit" id="submitBtn">Sign In</button>
     </form>
 
