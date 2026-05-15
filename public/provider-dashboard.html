@@ -368,7 +368,7 @@ tr:last-child td{border-bottom:none;}
 <script src="sector-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/easyqrcodejs@4.4.10/dist/easy.qrcode.min.js"></script>
 <script src="skipqs-ai.js"></script>
-<script src="lucky-voice.js"></script>
+<script src="lucky-voice.js"></script><!-- v2 -->
 <script>
 
 /* ═══════════════════════════════════════════════
@@ -658,7 +658,12 @@ async function requestAlertPermission() {
 
 // ── Main trigger: call this when a new queue INSERT fires ──
 async function onNewOrder(queueRow) {
-  playNewOrderSound();
+  // Play chime + speak the order aloud via Lucky Voice
+  if (window.LuckyVoice) {
+    window.LuckyVoice.announceNewOrder(queueRow.customer_name, queueRow.selected_service);
+  } else {
+    playNewOrderSound(); // fallback if Lucky not loaded yet
+  }
   await showNewOrderNotif(queueRow.customer_name, queueRow.selected_service);
 
   // Flash the page title so even background tabs are obvious
@@ -802,9 +807,10 @@ async function refreshQueue() {
 
   let totalMins = 0, waitingCount = 0;
 
+  // Keep voice assistant queue in sync on every refresh
+  if (window.LuckyVoice) window.LuckyVoice.updateQueue(activeRows);
+
   activeRows.forEach(d => {
-    // Keep voice assistant queue in sync
-    if (window.LuckyVoice) window.LuckyVoice.updateQueue(activeRows);
     const svcLabel = esc(d.selected_service || d.department_id || '—');
     const dur = Number(d.service_duration) || 0;
 
