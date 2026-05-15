@@ -15,9 +15,23 @@ window.LuckyVoice = (function () {
 
   /* ── Config ─────────────────────────────────────────────── */
   const WAKE_WORDS = [
-    'hey lucky', 'hey luckey', 'hey luki', 'hey lacky',
-    'a lucky', 'ok lucky', 'hello lucky',
-    'लकी', 'हे लकी', 'ஹே லக்கி', 'హే లకీ', 'ಹೇ ಲಕ್ಕಿ', 'ഹേ ലക്കി'
+    // English variations (Chrome often mishears)
+    'hey lucky', 'hey luckey', 'hey luki', 'hey lacky', 'hey lucky',
+    'a lucky', 'ok lucky', 'hello lucky', 'hey lucky hey', 'lucky',
+    // Hindi
+    'लकी', 'हे लकी', 'हेलकी', 'ए लकी',
+    // Tamil (script + romanised — Chrome returns either)
+    'ஹே லக்கி', 'he lakki', 'hey lakki', 'he lucky',
+    // Telugu (script + romanised)
+    'హే లకీ', 'he laki', 'hey laki', 'హేలకి', 'hē lakī',
+    // Kannada
+    'ಹೇ ಲಕ್ಕಿ', 'he lakki',
+    // Malayalam
+    'ഹേ ലക്കി', 'he lucky',
+    // Marathi
+    'हे लकी',
+    // Bengali
+    'হে লাকি', 'he laki',
   ];
 
   /* ── Shared AudioContext (unlocked on first user gesture) ─ */
@@ -126,14 +140,22 @@ window.LuckyVoice = (function () {
     utt.pitch   = 1.05;
     utt.volume  = 1.0;
 
-    // Pick best available voice
+    // Pick best available voice for this language
     const voices   = window.speechSynthesis.getVoices();
     const langCode = currentLang.slice(0, 2);
+    // Try exact match first, then language prefix, then Indian English, then any English
     const preferred = voices.find(v => v.lang === currentLang)
+                   || voices.find(v => v.lang.startsWith(langCode + '-'))
                    || voices.find(v => v.lang.startsWith(langCode))
+                   || voices.find(v => v.lang === 'en-IN')
                    || voices.find(v => v.lang.startsWith('en'))
                    || null;
     if (preferred) utt.voice = preferred;
+    // For languages without native voice, speak the romanised version in English
+    // rather than silence — set utt.lang to en-IN as fallback
+    if (!preferred || !voices.some(v => v.lang.startsWith(langCode))) {
+      utt.lang = 'en-IN';
+    }
 
     // Resume AudioContext so it doesn't block TTS
     unlockAudio();
@@ -231,41 +253,112 @@ window.LuckyVoice = (function () {
   function parseCommand(transcript) {
     const t = transcript.toLowerCase().trim();
 
-    // Position keywords — map to 0-based index
+    // Romanised versions of Indian language words that Chrome returns
     const posPatterns = [
-      { idx: 0, words: ['first','1st','one','number one','पहला','முதல்','మొదటి','ಮೊದಲ','ആദ്യ'] },
-      { idx: 1, words: ['second','2nd','two','number two','दूसरा','இரண்டாவது','రెండవ','ఎரڈو','ರెండನೇ','రెண్డవ','రెండాం'] },
-      { idx: 2, words: ['third','3rd','three','तीसरा','மூன்றாவது','మూడవ'] },
-      { idx: 3, words: ['fourth','4th','four','चौथा'] },
-      { idx: 'next', words: ['next','अगला','அடுத்த','తదుపరి','ಮುಂದಿನ','അടുത്ത'] },
+      { idx: 0, words: [
+        'first','1st','one','number one',
+        'pahla','pehla',                           // Hindi romanised
+        'muthal','mudal','mottam',                 // Tamil romanised
+        'modati','modal','modhal',                 // Telugu romanised
+        'modala',                                  // Kannada romanised
+        'aadya',                                   // Malayalam romanised
+      ]},
+      { idx: 1, words: [
+        'second','2nd','two','number two',
+        'dusra','doosra',                          // Hindi romanised
+        'rendu','randu','irandavathu',             // Tamil/Telugu romanised
+        'eradane',                                 // Kannada romanised
+        'randaam',                                 // Malayalam romanised
+      ]},
+      { idx: 2, words: [
+        'third','3rd','three',
+        'teesra',                                  // Hindi romanised
+        'moondu','moodu','mudu',                   // Tamil/Telugu romanised
+      ]},
+      { idx: 3, words: ['fourth','4th','four','chautha','nalgu'] },
+      { idx: 'next', words: [
+        'next','agla',                             // Hindi romanised
+        'aduttha',                                 // Tamil romanised
+        'taruvata',                                // Telugu romanised
+        'mundina',                                 // Kannada romanised
+      ]},
     ];
 
+    // Script versions (in case user has native keyboard)
+    const scriptWords = {
+      0: ['पहला','முதல்','మొదటి','మొదల','ಮೊದಲ','ആദ്യ'],
+      1: ['दूसरा','இரண்டாவது','రెండవ','రెండో','೎ರಡನೇ','രണ്ടാം'],
+      2: ['तीसरा','மூன்றாவது','మూడవ'],
+    };
+
     const isComplete = t.includes('pack') || t.includes('ready') || t.includes('done') ||
-                       t.includes('complet') || t.includes('finish') ||
-                       t.includes('तैयार') || t.includes('ரெடி') || t.includes('రెడీ') ||
-                       t.includes('ರೆಡಿ') || t.includes('റെഡി');
+      t.includes('complet') || t.includes('finish') || t.includes('over') ||
+      // Hindi romanised
+      t.includes('taiyar') || t.includes('ho gaya') || t.includes('tayar') ||
+      // Tamil romanised
+      t.includes('ready') || t.includes('aachu') ||
+      // Telugu romanised (most common)
+      t.includes('ayindi') || t.includes('ready ga') || t.includes('chesav') ||
+      // Kannada romanised
+      t.includes('aaythu') || t.includes('agide') ||
+      // Malayalam romanised
+      t.includes('aayi') || t.includes('ready ayi') ||
+      // Scripts
+      t.includes('तैयार') || t.includes('ரெடி') ||
+      t.includes('రెడీ') || t.includes('అయింది') ||
+      t.includes('ರೆಡಿ') || t.includes('റെഡി');
 
     for (const { idx, words } of posPatterns) {
       if (words.some(w => t.includes(w))) {
         return { action: isComplete ? 'complete' : 'read', pos: idx };
       }
     }
+    // Check script words
+    for (const [idxStr, scripts] of Object.entries(scriptWords)) {
+      if (scripts.some(w => t.includes(w))) {
+        const idx = parseInt(idxStr);
+        return { action: isComplete ? 'complete' : 'read', pos: idx };
+      }
+    }
 
-    if (t.includes('how many') || t.includes('kitne') || t.includes('कितने') ||
-        t.includes('எத்தனை') || t.includes('ఎన్ని') || t.includes('ಎಷ್ಟು')) {
+    if (t.includes('how many') || t.includes('kitne') || t.includes('en order') ||
+        t.includes('enni') || t.includes('yenni') || t.includes('evvalavu')) {
       return { action: 'count' };
     }
-    if (t.includes('help') || t.includes('मदद') || t.includes('உதவி')) {
+    if (t.includes('help') || t.includes('madad') || t.includes('udhavi')) {
       return { action: 'help' };
     }
-    if (t.includes('open') || t.includes('खोलो') || t.includes('திற'))  return { action: 'open' };
-    if (t.includes('close') || t.includes('बंद')  || t.includes('மூடு')) return { action: 'close' };
+    // Open/close — require context to avoid false positives
+    const openWords  = ['open the shop','open shop','open karo','shop open','kholo',
+                        'thira','tirappu','thiravu',    // Tamil romanised
+                        'tegadu','open chey',           // Telugu romanised  
+                        'tholachu','sakunnu',           // Malayalam
+                        'hudugide','open madу',         // Kannada
+                        'shop kholo','dukan kholo'];    // Hindi
+    const closeWords = ['close the shop','close shop','band karo','shop band','band karo',
+                        'moodu','mooду',                // Tamil/Kannada romanised
+                        'close chey','veseyyi',         // Telugu romanised
+                        'adachu',                       // Malayalam romanised
+                        'dukan band','shop band karo']; // Hindi
+    if (openWords.some(w => t.includes(w)))  return { action: 'open' };
+    if (closeWords.some(w => t.includes(w))) return { action: 'close' };
 
     return null;
   }
 
-  /* ── Execute command ────────────────────────────────────── */
+    /* ── Execute command ────────────────────────────────────── */
   async function executeCommand(cmd) {
+    // Pause recognition for 2.5s after any command fires
+    // This prevents the mic picking up Lucky's own voice response
+    // and re-triggering the same command
+    if (recognition && recognizing) {
+      try { recognition.stop(); } catch(_) {}
+      setTimeout(() => {
+        if (!enabled || recognizing) return;
+        try { recognition.start(); } catch(_) {}
+      }, 2500);
+    }
+
     const waiting = queueRef.filter(r => r.status === 'waiting');
     const serving = queueRef.filter(r => r.status === 'serving');
     const all     = [...serving, ...waiting];
@@ -279,8 +372,19 @@ window.LuckyVoice = (function () {
       return;
     }
     if (cmd.action === 'open' || cmd.action === 'close') {
-      document.querySelector('[onclick="toggleStatus()"]')?.click();
-      speak(cmd.action === 'open' ? 'Shop is now open' : 'Shop is now closed', true);
+      const wantOpen = cmd.action === 'open';
+      // Call toggleStatus only if current state differs from desired state
+      // This prevents the infinite loop where it keeps flipping
+      const track = document.getElementById('toggleTrack');
+      const isCurrentlyOpen = track?.classList.contains('open');
+      if (isCurrentlyOpen === wantOpen) {
+        // Already in desired state — just confirm
+        speak('Shop is already ' + (wantOpen ? 'open' : 'closed'), true);
+      } else {
+        // Need to change state — call once only
+        if (typeof toggleStatus === 'function') toggleStatus();
+        speak('Shop is now ' + (wantOpen ? 'open' : 'closed'), true);
+      }
       return;
     }
 
@@ -317,7 +421,9 @@ window.LuckyVoice = (function () {
   }
 
   /* ── Wake word + command recognition ───────────────────── */
-  let lastTranscript = '';
+  let lastCommandTime = 0;       // timestamp of last executed command
+  const CMD_COOLDOWN  = 4000;    // ms to block new commands after executing one
+  let lastTranscript  = '';
 
   function setupRecognition() {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -385,19 +491,26 @@ window.LuckyVoice = (function () {
         // ── COMMAND: only on final results ──────────────────
         if (!isFinal) continue;
 
-        // Skip if same as last (avoid duplicate firing)
-        if (transcript === lastTranscript) continue;
+        // Cooldown: ignore commands within 3s of last execution
+        const now = Date.now();
+        if (now - lastCommandTime < CMD_COOLDOWN) continue;
+        // Skip exact duplicate transcript (belt-and-braces)
+        if (transcript === lastTranscript && (now - lastCommandTime) < 8000) continue;
         lastTranscript = transcript;
 
         clearTimeout(sleepTimer);
         const cmd = parseCommand(transcript);
         if (cmd) {
+          lastCommandTime = now;  // lock out new commands for 3s
+          awake = false;          // ALWAYS sleep after any command — must say "Hey Lucky" again
+          updateUI(false);
           executeCommand(cmd);
-        } else {
+        } else if (transcript.length > 2) {
+          // Only say "not understood" for real speech, not noise
           speak(t('notUnderstood'), true);
         }
-        // Sleep after command handled
-        sleepTimer = setTimeout(() => { awake = false; updateUI(false); }, 10000);
+        // Return to sleep state
+        sleepTimer = setTimeout(() => { awake = false; updateUI(false); }, 5000);
       }
     };
 
@@ -414,6 +527,17 @@ window.LuckyVoice = (function () {
         service: serviceName  || 'an order'
       }), true);
     }, 900);
+  }
+
+  /* ── SVG mic icon (renders consistently on all platforms) ── */
+  function _micSVG(color) {
+    const c = color || '#23e5db';
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="9" y="2" width="6" height="11" rx="3"/>
+      <path d="M19 10a7 7 0 0 1-14 0"/>
+      <line x1="12" y1="19" x2="12" y2="22"/>
+      <line x1="9" y1="22" x2="15" y2="22"/>
+    </svg>`;
   }
 
   /* ── UI ─────────────────────────────────────────────────── */
@@ -447,6 +571,16 @@ window.LuckyVoice = (function () {
         opacity:0;transition:opacity .3s;
       }
       #luckyStatus.show{opacity:1;}
+      /* First-use tooltip on desktop */
+      #luckyBtn.off::after{
+        content:'Tap to activate';
+        position:absolute;right:68px;top:50%;transform:translateY(-50%);
+        background:#002f34;color:#23e5db;font-size:.72rem;font-weight:700;
+        padding:.3rem .7rem;border-radius:8px;white-space:nowrap;
+        border:1px solid rgba(35,229,219,.3);pointer-events:none;
+        opacity:0;transition:opacity .2s;
+      }
+      #luckyBtn.off:hover::after{opacity:1;}
       #luckyLangSel{
         position:fixed;bottom:92px;right:82px;z-index:8000;
         background:white;border:1.5px solid #e2e8f0;border-radius:10px;
@@ -474,14 +608,21 @@ window.LuckyVoice = (function () {
     langSel.value = currentLang;
     langSel.onchange = (e) => {
       currentLang = e.target.value;
+      // Reset dedup state so new language works fresh
+      lastTranscript  = '';
+      lastCommandTime = 0;
+      awake = false;
       if (recognition && recognizing) {
         try { recognition.stop(); } catch(_){}
       }
       recognition = setupRecognition();
       if (enabled) {
-        setTimeout(() => { try { recognition.start(); recognizing = true; } catch(_){} }, 300);
+        setTimeout(() => {
+          try { recognition.start(); recognizing = true; } catch(_){}
+          updateUI(false);
+        }, 400);
       }
-      toast('Language: ' + e.target.options[e.target.selectedIndex].text);
+      toast('Language changed: ' + e.target.options[e.target.selectedIndex].text + ' — say "Hey Lucky" to test');
     };
     document.body.appendChild(langSel);
 
@@ -489,7 +630,7 @@ window.LuckyVoice = (function () {
     const btn   = document.createElement('button');
     btn.id      = 'luckyBtn';
     btn.title   = 'Hey Lucky — Voice Assistant';
-    btn.innerHTML = '🎤';
+    btn.innerHTML = _micSVG();
     btn.onclick   = toggleVoice;
     document.body.appendChild(btn);
 
@@ -506,25 +647,28 @@ window.LuckyVoice = (function () {
 
     if (isDisabled) {
       btn.className = 'off';
-      btn.innerHTML = '🚫';
+      btn.innerHTML = '✕';
       btn.title = 'Microphone blocked — tap to retry';
     } else if (isAwake) {
       btn.className = 'awake';
-      btn.innerHTML = '🗣️';
+      btn.innerHTML = _micSVG('white');
+      btn.title = 'Listening for command…';
     } else if (enabled) {
       btn.className = 'listening';
-      btn.innerHTML = '🎙️';
+      btn.innerHTML = _micSVG('#002f34');
+      btn.title = 'Listening — say "Hey Lucky"';
     } else {
       btn.className = 'off';
-      btn.innerHTML = '🎤';
+      btn.innerHTML = _micSVG('#23e5db');
+      btn.title = 'Tap to activate voice assistant';
     }
 
     if (status) {
-      status.textContent = isDisabled ? '🚫 Mic blocked'
-                         : isAwake    ? '🟢 Listening for command…'
-                         : enabled    ? '🔵 Say "Hey Lucky"'
-                         : '';
-      status.className = (enabled || isDisabled) ? 'show' : '';
+      status.textContent = isDisabled ? 'Mic blocked — allow in browser settings'
+                         : isAwake    ? 'Listening… give a command'
+                         : enabled    ? 'Say "Hey Lucky"'
+                         : 'Tap mic to activate voice';
+      status.className = 'show';  // always show so user knows what to do
     }
   }
 
@@ -558,16 +702,21 @@ window.LuckyVoice = (function () {
     injectUI();
     loadVoices();
 
-    // AUTO-START: enable mic automatically after 2 seconds
-    // (needs slight delay so browser registers the page as active)
-    setTimeout(() => {
-      if (enabled) return; // already started
-      recognition = setupRecognition();
-      if (!recognition) return;
-      enabled = true;
-      try { recognition.start(); recognizing = true; } catch(_){}
-      updateUI(false);
-    }, 2000);
+    // AUTO-START: enable mic automatically on touch/mobile devices only.
+    // Desktop Chrome blocks recognition.start() without a user gesture.
+    // On mobile/tablet, start automatically after 2 seconds.
+    const isTouchDevice = navigator.maxTouchPoints > 0 || 'ontouchstart' in window;
+    if (isTouchDevice) {
+      setTimeout(() => {
+        if (enabled) return;
+        recognition = setupRecognition();
+        if (!recognition) return;
+        enabled = true;
+        try { recognition.start(); recognizing = true; } catch(_) {}
+        updateUI(false);
+      }, 2000);
+    }
+    // Desktop: show a clear "tap to activate" tooltip on the button
   }
 
   function updateQueue(rows) { queueRef = rows || []; }
