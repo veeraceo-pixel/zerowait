@@ -806,32 +806,71 @@
   }
 
   function travelInfo(km) {
-    if (km < 0.5)  return { mode:'🚶 Walk',  mins: Math.ceil(km/5*60) };
-    if (km < 3)    return { mode:'🚲 Cycle', mins: Math.ceil(km/15*60) };
-    return              { mode:'🚗 Drive',  mins: Math.ceil(km/25*60) };
+    // Add ~30% to straight-line distance for real walking/driving routes
+    const walkKm  = km * 1.3;
+    const driveKm = km * 1.2;
+    if (km < 0.3)  return { mode:'🚶 Walk',  mins: Math.max(1, Math.ceil(walkKm/5*60)),  emoji:'🚶' };
+    if (km < 1.5)  return { mode:'🚶 Walk',  mins: Math.max(1, Math.ceil(walkKm/5*60)),  emoji:'🚶' };
+    if (km < 5)    return { mode:'🚗 Drive', mins: Math.max(2, Math.ceil(driveKm/25*60)), emoji:'🚗' };
+    return               { mode:'🚗 Drive', mins: Math.max(5, Math.ceil(driveKm/20*60)), emoji:'🚗' };
   }
 
-  function showTravelInfo(provLat, provLng, waitMins) {
+  function getRemainingWaitMins() {
+    // Read remaining time from the live timer on the banner
+    const timerEl = document.getElementById('qbTimerVal');
+    if (!timerEl) return 0;
+    const text = timerEl.textContent; // format: "MM:SS"
+    const parts = text.split(':');
+    if (parts.length === 2) {
+      return Math.ceil((parseInt(parts[0]||0) * 60 + parseInt(parts[1]||0)) / 60);
+    }
+    return 0;
+  }
+
+  function showTravelInfo(provLat, provLng) {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(pos => {
       const km = haversineKm(pos.coords.latitude, pos.coords.longitude, provLat, provLng);
-      const { mode, mins } = travelInfo(km);
+      const { mode, mins: travelMins } = travelInfo(km);
       const distStr = km < 1 ? Math.round(km*1000)+'m' : km.toFixed(1)+'km';
-      const arrivalTime = new Date(Date.now() + mins*60000);
-      const arrStr = arrivalTime.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-      const leaveIn = Math.max(0, waitMins - mins);
+
+      // Use REMAINING wait from the live countdown, not the original wait
+      const remainingMins = getRemainingWaitMins();
+
+      // When they should leave: remaining wait minus travel time
+      const leaveInMins = Math.max(0, remainingMins - travelMins);
+
+      // When they'll arrive: current time + remaining wait + small buffer
+      const arrivalMs = Date.now() + (remainingMins * 60000);
+      const arrStr = new Date(arrivalMs).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+
       const travelEl = document.getElementById('qbTravel');
-      if (travelEl) {
-        travelEl.style.display = 'block';
-        if (leaveIn <= 2) {
-          travelEl.textContent = `${mode} · ${distStr} away · Leave NOW to arrive by ${arrStr} 🚨`;
-          travelEl.style.color = '#dc2626';
-        } else {
-          travelEl.textContent = `${mode} · ${distStr} away · Leave in ~${leaveIn} min · Arrive ~${arrStr}`;
-          travelEl.style.color = '';
-        }
+      if (!travelEl) return;
+      travelEl.style.display = 'block';
+
+      if (remainingMins === 0) {
+        // Timer at zero - they should already be there or heading now
+        travelEl.textContent = `${mode} · ${distStr} away · Head over now — your turn may be soon`;
+        travelEl.style.color = '#92400e';
+        travelEl.style.fontWeight = '700';
+      } else if (leaveInMins <= 1) {
+        // Need to leave immediately
+        travelEl.textContent = `${mode} · ${distStr} away · Leave NOW — arrive ~${arrStr} 🚨`;
+        travelEl.style.color = '#dc2626';
+        travelEl.style.fontWeight = '800';
+        if (navigator.vibrate) navigator.vibrate([200,100,200]);
+      } else if (leaveInMins <= 5) {
+        // Leave very soon
+        travelEl.textContent = `${mode} · ${distStr} away · Leave in ~${leaveInMins} min · Arrive ~${arrStr} ⚠️`;
+        travelEl.style.color = '#b45309';
+        travelEl.style.fontWeight = '700';
+      } else {
+        // Plenty of time
+        travelEl.textContent = `${mode} · ${distStr} away · Leave in ~${leaveInMins} min · Arrive ~${arrStr}`;
+        travelEl.style.color = '';
+        travelEl.style.fontWeight = '';
       }
-    }, ()=>{}, { timeout:6000, maximumAge:120000 });
+    }, () => {}, { timeout: 6000, maximumAge: 60000 });
   }
 
   async function checkActiveQueue(userId) {
@@ -857,12 +896,12 @@
 
     // Show distance + travel info if provider has coordinates
     if (prov?.lat && prov?.lng) {
-      showTravelInfo(parseFloat(prov.lat), parseFloat(prov.lng), waitMins);
-      // Refresh travel info every 90 seconds
+      showTravelInfo(parseFloat(prov.lat), parseFloat(prov.lng));
+      // Refresh every 60 seconds so "leave in X min" stays accurate
       if (window._travelInterval) clearInterval(window._travelInterval);
       window._travelInterval = setInterval(() => {
-        if (prov?.lat && prov?.lng) showTravelInfo(parseFloat(prov.lat), parseFloat(prov.lng), waitMins);
-      }, 90000);
+        if (prov?.lat && prov?.lng) showTravelInfo(parseFloat(prov.lat), parseFloat(prov.lng));
+      }, 60000);
     }
 
     const joinedAt      = q.joined_at ? new Date(q.joined_at).getTime() : Date.now();
