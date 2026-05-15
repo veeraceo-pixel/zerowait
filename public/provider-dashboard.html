@@ -134,8 +134,18 @@ tr:last-child td{border-bottom:none;}
 .toast.success{background:var(--success);}
 .toast.error{background:var(--danger);}
 
-/* ── PUBLIC LINKS ── */
-.pub-links{padding:1rem 1.4rem;display:flex;gap:.6rem;flex-wrap:wrap;}
+/* ── OPEN/CLOSED TOGGLE SWITCH ── */
+.toggle-switch-wrap{display:flex;align-items:center;gap:.6rem;background:white;border:1.5px solid var(--border);border-radius:50px;padding:.35rem .7rem .35rem .5rem;cursor:pointer;user-select:none;transition:.2s;}
+.toggle-switch-wrap:hover{border-color:var(--accent);}
+.toggle-track{width:42px;height:24px;border-radius:50px;position:relative;transition:.25s;flex-shrink:0;}
+.toggle-track.open{background:#10b981;}
+.toggle-track.closed{background:#d1d5db;}
+.toggle-thumb{position:absolute;top:3px;width:18px;height:18px;border-radius:50%;background:white;box-shadow:0 1px 4px rgba(0,0,0,.2);transition:.25s;}
+.toggle-track.open  .toggle-thumb{left:21px;}
+.toggle-track.closed .toggle-thumb{left:3px;}
+.toggle-label{font-size:.82rem;font-weight:800;min-width:44px;}
+.toggle-label.open{color:#059669;}
+.toggle-label.closed{color:#6b7280;}
 
 /* ── MOBILE SIDEBAR TOGGLE ── */
 .mob-menu-btn{display:none;position:fixed;top:12px;left:12px;z-index:1100;background:var(--sidebar);color:var(--accent);border:none;border-radius:8px;padding:.5rem .7rem;font-size:1.2rem;cursor:pointer;line-height:1;}
@@ -187,7 +197,12 @@ tr:last-child td{border-bottom:none;}
       <div id="statusBadge"></div>
     </div>
     <div class="header-controls">
-      <button class="btn btn-ghost btn-sm" onclick="toggleStatus()">Toggle Open/Closed</button>
+      <div class="toggle-switch-wrap" onclick="toggleStatus()" id="toggleWrap" title="Toggle open/closed">
+        <div class="toggle-track closed" id="toggleTrack">
+          <div class="toggle-thumb"></div>
+        </div>
+        <span class="toggle-label closed" id="toggleLabel">Closed</span>
+      </div>
       <span id="userEmail" style="font-size:.82rem;color:var(--text-muted);"></span>
     </div>
   </div>
@@ -261,7 +276,7 @@ tr:last-child td{border-bottom:none;}
       <input type="date" id="hDate" class="btn btn-ghost" onchange="loadHistory()" style="width:auto;">
     </div>
     <table>
-      <thead><tr><th>Customer</th><th>Service</th><th>Time</th></tr></thead>
+      <thead><tr><th>Customer</th><th>Service</th><th>Time</th><th>Contact</th></tr></thead>
       <tbody id="hItems"></tbody>
     </table>
   </section>
@@ -464,10 +479,24 @@ function applyProviderData(data) {
   document.getElementById('bizTitle').textContent = data.business_name || 'Dashboard';
   document.getElementById('capDisplay').textContent = currentCapacity;
   document.getElementById('capSlider').value = currentCapacity;
+
+  // Update status badge
   const badge = document.getElementById('statusBadge');
   badge.innerHTML = data.is_open
     ? '<span class="status-badge open">● Open</span>'
     : '<span class="status-badge closed">● Closed</span>';
+
+  // Update toggle switch visual
+  setToggleSwitch(data.is_open);
+}
+
+function setToggleSwitch(isOpen) {
+  const track = document.getElementById('toggleTrack');
+  const label = document.getElementById('toggleLabel');
+  if (!track || !label) return;
+  track.className = 'toggle-track ' + (isOpen ? 'open' : 'closed');
+  label.className = 'toggle-label ' + (isOpen ? 'open' : 'closed');
+  label.textContent = isOpen ? 'Open' : 'Closed';
 }
 
 function setupManageSection(data) {
@@ -553,39 +582,89 @@ async function refreshQueue() {
     .order('joined_at', { ascending: true });
 
   const tbody = document.getElementById('qItems');
+  const now = Date.now();
+
   if (!rows || !rows.length) {
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:2.5rem;color:#94a3b8;">No active customers</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2.5rem;color:#94a3b8;">No active customers</td></tr>';
     document.getElementById('waitCount').textContent = 0;
     document.getElementById('totalMins').innerHTML = '0<small style="font-size:.9rem"> m</small>';
     syncProviderStats(0, 0);
     return;
   }
 
-  let totalMins = 0, waitingCount = 0;
+  // ── AUTO NO-SHOW DETECTION ──────────────────────────────────
+  // If a waiting customer's estimated_time has passed by more than
+  // 1× their service duration, auto-mark as no_show and notify provider.
+  for (const d of rows) {
+    if (d.status !== 'waiting' || !d.estimated_time) continue;
+    const overdueBy   = now - new Date(d.estimated_time).getTime();
+    const gracePeriod = (d.service_duration || 15) * 60 * 1000;
+    if (overdueBy > gracePeriod) {
+      const { error } = await sb.from('queues')
+        .update({ status: 'no_show', completed_at: new Date().toISOString() })
+        .eq('id', d.id);
+      if (!error) {
+        toast(`⏰ ${esc(d.customer_name)} marked as no-show (${Math.round(overdueBy/60000)} min overdue)`, 'error');
+      }
+    }
+  }
+
+  // Re-fetch after potential no-show updates
+  const { data: liveRows } = await sb.from('queues')
+    .select('*').eq('provider_id', curUid)
+    .in('status', ['waiting','serving'])
+    .order('joined_at', { ascending: true });
+
+  const activeRows = liveRows || [];
   tbody.innerHTML = '';
 
-  rows.forEach(d => {
+  if (!activeRows.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2.5rem;color:#94a3b8;">No active customers</td></tr>';
+    syncProviderStats(0, 0);
+    return;
+  }
+
+  let totalMins = 0, waitingCount = 0;
+
+  activeRows.forEach(d => {
     const svcLabel = esc(d.selected_service || d.department_id || '—');
+    const dur = Number(d.service_duration) || 0;
+
     if (d.status === 'serving') {
+      // Show how long they've been in progress
+      const servedAt = d.served_at ? new Date(d.served_at).getTime() : now;
+      const servingMins = Math.round((now - servedAt) / 60000);
+      const overdueTag = servingMins > dur * 2
+        ? `<span style="background:#fee2e2;color:#b91c1c;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:4px;">+${servingMins}m</span>`
+        : '';
       tbody.insertAdjacentHTML('afterbegin', `
         <tr style="background:#f0fdf4;">
-          <td><span class="status-badge open" style="font-size:.6rem;">NOW SERVING</span><br><strong>${esc(d.customer_name)}</strong><br><small style="color:var(--text-muted)">${esc(d.customer_phone||'')}</small></td>
+          <td><span class="status-badge open" style="font-size:.6rem;">NOW SERVING</span>${overdueTag}<br><strong>${esc(d.customer_name)}</strong><br><small style="color:var(--text-muted)">${esc(d.customer_phone||'')}</small></td>
           <td>${svcLabel}</td>
           <td style="color:#16a34a;font-weight:700;">In Progress</td>
           <td>${waButtons(d.customer_phone, d.customer_name)}</td>
-          <td><button class="btn btn-green btn-sm" onclick="completeService('${d.id}')">Finish ✓</button></td>
+          <td style="display:flex;gap:.35rem;flex-wrap:wrap;">
+            <button class="btn btn-green btn-sm" onclick="completeService('${d.id}')">Finish ✓</button>
+            <button class="btn btn-danger btn-sm" onclick="markNoShow('${d.id}','${esc(d.customer_name).replace(/'/g,"\\'")}')">No-show</button>
+          </td>
         </tr>`);
     } else {
       waitingCount++;
-      const dur = Number(d.service_duration) || 0;
       totalMins += dur;
+      // Overdue label if estimated time passed
+      const estimatedMs = d.estimated_time ? new Date(d.estimated_time).getTime() : 0;
+      const overdueWait = estimatedMs && now > estimatedMs
+        ? `<span style="color:#d97706;font-size:.68rem;font-weight:700;"> ⚠️ overdue</span>` : '';
       tbody.insertAdjacentHTML('beforeend', `
         <tr>
-          <td><strong>${esc(d.customer_name)}</strong><br><small style="color:var(--text-muted)">${esc(d.customer_phone||'')}</small></td>
+          <td><strong>${esc(d.customer_name)}</strong>${overdueWait}<br><small style="color:var(--text-muted)">${esc(d.customer_phone||'')}</small></td>
           <td>${svcLabel}</td>
           <td>${dur}m</td>
           <td>${waButtons(d.customer_phone, d.customer_name)}</td>
-          <td><button class="btn btn-primary btn-sm" onclick="startServing('${d.id}')">Start →</button></td>
+          <td style="display:flex;gap:.35rem;flex-wrap:wrap;">
+            <button class="btn btn-primary btn-sm" onclick="startServing('${d.id}')">Start →</button>
+            <button class="btn btn-danger btn-sm" onclick="markNoShow('${d.id}','${esc(d.customer_name).replace(/'/g,"\\'")}')">No-show</button>
+          </td>
         </tr>`);
     }
   });
@@ -594,6 +673,15 @@ async function refreshQueue() {
   document.getElementById('waitCount').textContent = waitingCount;
   document.getElementById('totalMins').innerHTML = estWait + '<small style="font-size:.9rem"> m</small>';
   syncProviderStats(estWait, waitingCount);
+}
+
+async function markNoShow(id, name) {
+  if (!confirm(`Mark "${name}" as no-show? They will be removed from the queue.`)) return;
+  const { error } = await sb.from('queues')
+    .update({ status: 'no_show', completed_at: new Date().toISOString() })
+    .eq('id', id);
+  if (error) { toast('Could not mark no-show: ' + error.message, 'error'); return; }
+  toast(`${name} marked as no-show`);
 }
 
 async function syncProviderStats(estWait, peopleInLine) {
@@ -616,11 +704,26 @@ async function syncProviderStats(estWait, peopleInLine) {
   }
 }
 async function startServing(id) {
-  await sb.from('queues').update({ status:'serving', served_at: new Date().toISOString() }).eq('id', id);
+  const patch = { status: 'serving' };
+  try { patch.served_at = new Date().toISOString(); } catch(_) {}
+  const { error } = await sb.from('queues').update(patch).eq('id', id);
+  if (error) toast('Could not start: ' + (error.message||'Permission denied'), 'error');
 }
+
 async function completeService(id) {
-  const today = new Date().toISOString().slice(0, 10);
-  await sb.from('queues').update({ status:'completed', completed_at: new Date().toISOString(), completed_date: today }).eq('id', id);
+  const now = new Date();
+  const patch = { status: 'completed' };
+  try { patch.completed_at = now.toISOString(); } catch(_) {}
+  try { patch.completed_date = now.toISOString().slice(0,10); } catch(_) {}
+  const { error } = await sb.from('queues').update(patch).eq('id', id);
+  if (error) {
+    if (error.message?.includes('completed_date')) {
+      const { error: e2 } = await sb.from('queues')
+        .update({ status:'completed', completed_at: now.toISOString() }).eq('id', id);
+      if (e2) { toast('Could not complete: ' + e2.message, 'error'); return; }
+    } else { toast('Could not complete: ' + (error.message||'Check RLS policies'), 'error'); return; }
+  }
+  toast('Customer served ✓', 'success');
   updateServedToday();
 }
 
@@ -938,16 +1041,28 @@ document.getElementById('bulkModal').addEventListener('click', e => { if (e.targ
 async function loadHistory() {
   const date = document.getElementById('hDate').value;
   const { data } = await sb.from('queues')
-    .select('*').eq('provider_id', curUid).eq('status','completed').eq('completed_date', date)
+    .select('*').eq('provider_id', curUid)
+    .in('status', ['completed','no_show','cancelled'])
+    .eq('completed_date', date)
     .order('completed_at', { ascending: false });
   const list = document.getElementById('hItems');
   if (!data || !data.length) {
-    list.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:2rem;color:#94a3b8;">No history for this date</td></tr>';
+    list.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:2rem;color:#94a3b8;">No history for this date</td></tr>';
     return;
   }
   list.innerHTML = data.map(d => {
     const time = d.completed_at ? new Date(d.completed_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '—';
-    return `<tr><td><strong>${esc(d.customer_name)}</strong></td><td>${esc(d.selected_service||'—')}</td><td>${time}</td></tr>`;
+    const badge = d.status === 'no_show'
+      ? '<span style="background:#fee2e2;color:#b91c1c;font-size:.65rem;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:4px;">NO-SHOW</span>'
+      : d.status === 'cancelled'
+      ? '<span style="background:#f3f4f6;color:#6b7280;font-size:.65rem;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:4px;">CANCELLED</span>'
+      : '';
+    return `<tr>
+      <td><strong>${esc(d.customer_name)}</strong>${badge}</td>
+      <td>${esc(d.selected_service||'—')}</td>
+      <td>${time}</td>
+      <td>${waButtons(d.customer_phone, d.customer_name)}</td>
+    </tr>`;
   }).join('');
 }
 async function updateServedToday() {
@@ -974,9 +1089,18 @@ async function toggleStatus() {
     return;
   }
   const next = !data.is_open;
+  // Update UI instantly for snappy feel
+  setToggleSwitch(next);
+  const badge = document.getElementById('statusBadge');
+  if (badge) badge.innerHTML = next
+    ? '<span class="status-badge open">● Open</span>'
+    : '<span class="status-badge closed">● Closed</span>';
+
   const { error: updateErr } = await sb.from('providers')
     .update({ is_open: next }).eq('id', curUid);
   if (updateErr) {
+    // Revert on failure
+    setToggleSwitch(!next);
     toast('Toggle failed: ' + (updateErr.message || 'Permission denied'), 'error');
     return;
   }

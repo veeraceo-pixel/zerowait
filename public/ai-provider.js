@@ -307,15 +307,11 @@
 
   /* ── Load and render insights ─────────────────────────── */
   async function loadAIInsights() {
-    if (!window.SkipQsAI || !window.sb) return;
-    // Wait for curUid if not ready yet
-    if (!window.curUid) {
-      setTimeout(loadAIInsights, 500);
-      return;
-    }
+    if (!window.SkipQsAI || !window.sb || !window.curUid) return;
     const body = document.getElementById('sqaiInsightsBody');
     if (!body) return;
 
+    // Get category
     const { data: prov } = await window.sb
       .from('providers').select('category').eq('id', window.curUid).maybeSingle();
     const category = prov?.category || 'default';
@@ -344,22 +340,15 @@
   }
 
   /* ── Boot ──────────────────────────────────────────────── */
-  function waitForCurUid(cb, attempts = 0) {
-    if (window.curUid && window.sb && window.SkipQsAI) {
-      cb();
-    } else if (attempts < 40) {
-      setTimeout(() => waitForCurUid(cb, attempts + 1), 250);
-    }
-  }
-
   function init() {
+    if (!window.SkipQsAI) return;
     injectStyles();
     injectDashboardSection();
-    // Poll for anomalies every 2 minutes, but only after curUid is ready
-    waitForCurUid(() => {
-      setTimeout(pollAnomalies, 5000);
-      setInterval(pollAnomalies, 2 * 60 * 1000);
-    });
+
+    // Poll for anomalies every 2 minutes
+    setInterval(pollAnomalies, 2 * 60 * 1000);
+    // First check after 30 seconds (give dashboard time to fully load)
+    setTimeout(pollAnomalies, 30 * 1000);
   }
 
   if (document.readyState !== 'loading') init();

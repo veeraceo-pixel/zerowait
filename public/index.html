@@ -499,7 +499,7 @@
       <a href="government.html"      class="cat-card"><span class="cat-icon" aria-hidden="true">🏛️</span><div class="cat-name">Government</div></a>
       <a href="car-wash.html"        class="cat-card"><span class="cat-icon" aria-hidden="true">🧼</span><div class="cat-name">Car Wash</div></a>
       <a href="repairs.html"         class="cat-card"><span class="cat-icon" aria-hidden="true">🛠️</span><div class="cat-name">Repairs</div></a>
-      <a href="find-services.html"   class="cat-card"><span class="cat-icon" aria-hidden="true">🔍</span><div class="cat-name">Search All</div></a>
+      <a href="nearby.html"   class="cat-card"><span class="cat-icon" aria-hidden="true">🔍</span><div class="cat-name">Search All</div></a>
       <a href="provider-signup.html" class="cat-card"><span class="cat-icon" aria-hidden="true">➕</span><div class="cat-name">Add Yours</div></a>
     </div>
 
@@ -516,7 +516,7 @@
         <a href="government.html"      class="cat-chip"><span class="cat-chip-icon">🏛️</span><span class="cat-chip-name">Govt</span></a>
         <a href="car-wash.html"        class="cat-chip"><span class="cat-chip-icon">🧼</span><span class="cat-chip-name">Car Wash</span></a>
         <a href="repairs.html"         class="cat-chip"><span class="cat-chip-icon">🛠️</span><span class="cat-chip-name">Repairs</span></a>
-        <a href="find-services.html"   class="cat-chip"><span class="cat-chip-icon">🔍</span><span class="cat-chip-name">All</span></a>
+        <a href="nearby.html"   class="cat-chip"><span class="cat-chip-icon">🔍</span><span class="cat-chip-name">All</span></a>
         <a href="provider-signup.html" class="cat-chip"><span class="cat-chip-icon">➕</span><span class="cat-chip-name">Add</span></a>
       </div>
     </div>
@@ -530,7 +530,7 @@
   <section>
     <div class="section-header">
       <h2 class="section-title">⚡ Shortest Wait Times Right Now</h2>
-      <a href="find-services.html" class="view-all">View all →</a>
+      <a href="nearby.html" class="view-all">View all →</a>
     </div>
     <div class="listings-grid" id="shortestList">
       <div class="skel" aria-hidden="true"></div><div class="skel" aria-hidden="true"></div>
@@ -662,7 +662,7 @@
   <section>
     <div class="section-header">
       <h2 class="section-title">💼 Other Services — Open Now</h2>
-      <a href="find-services.html" class="view-all">View all →</a>
+      <a href="nearby.html" class="view-all">View all →</a>
     </div>
     <div class="listings-grid" id="featuredList">
       <div class="skel" aria-hidden="true"></div><div class="skel" aria-hidden="true"></div>
@@ -709,7 +709,7 @@
         <a href="banks.html">Banks</a>
         <a href="restaurants.html">Restaurants</a>
         <a href="gyms.html">Gyms</a>
-        <a href="find-services.html">All Services</a>
+        <a href="nearby.html">All Services</a>
       </div>
       <div class="footer-col">
         <h4>For Businesses</h4>
@@ -1065,7 +1065,7 @@
       console.error('loadListings error:', err);
       ['shortestList','hospitalList','featuredList'].forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.innerHTML = `<div class="error-state">⚠️ Unable to load listings right now. <a href="find-services.html" style="color:var(--danger);text-decoration:underline">Try searching</a> or refresh the page.</div>`;
+        if (el) el.innerHTML = `<div class="error-state">⚠️ Unable to load listings right now. <a href="nearby.html" style="color:var(--danger);text-decoration:underline">Try searching</a> or refresh the page.</div>`;
       });
     }
   }
@@ -1094,7 +1094,7 @@
     const waitLabel = wait === null ? noWaitLabel : (wait === 0 ? 'No wait' : wait + ' min');
     const badgeCls  = wait > 60 ? 'high' : wait > 30 ? 'med' : '';
     const href      = isDemo
-      ? (isHosp ? 'hospitals.html' : (p.category ? (p.category.toLowerCase().replace(/\s/g,'') + 's.html') : 'find-services.html'))
+      ? (isHosp ? 'hospitals.html' : (p.category ? (p.category.toLowerCase().replace(/\s/g,'') + 's.html') : 'nearby.html'))
       : ((isHosp ? 'hospital-detail.html' : 'business-detail.html') + '?id=' + esc(p.id));
     const unitWord  = isHosp ? (p.deptCount===1?'dept':'depts') : (p.deptCount===1?'service':'services');
     const btnLabel  = isDemo ? '📋 View Details' : '📋 View &amp; Join Queue →';
@@ -1161,7 +1161,7 @@
   function performSearch() {
     const q = searchInput.value.trim();
     searchSugg.classList.remove('open');
-    window.location.href = q ? 'find-services.html?q=' + encodeURIComponent(q) : 'find-services.html';
+    window.location.href = q ? 'nearby.html?q=' + encodeURIComponent(q) : 'nearby.html';
   }
 
   // ── HAMBURGER ──

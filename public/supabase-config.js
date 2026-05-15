@@ -16,8 +16,8 @@
    api.js reads these globals so credentials live in one place only.
    ============================================================ */
 
-const SUPABASE_URL      = 'https://idcrplpiokodcanjfolf.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_ygbeTEvM5TdJKRND4GM5dQ_YPGYQI8e';
+const SUPABASE_URL      = 'YOUR_SUPABASE_URL';
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
 
 // Initialise the Supabase client (loaded via CDN in each HTML file)
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);

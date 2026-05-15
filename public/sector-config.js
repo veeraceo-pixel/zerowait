@@ -231,11 +231,11 @@ window.SECTOR_CONFIG = {
    * queuing for. The "duration" here means average counter time, not
    * a service charge.
    */
-  Kirana: {
-    label: 'Kirana Store', plural: 'Kirana Stores', icon: '🛒',
-    unitSingular: 'Counter', unitPlural: 'Counters',
+  Grocery: {
+    label: 'Grocery Store', plural: 'Grocery Stores', icon: '🛒',
+    unitSingular: 'Section', unitPlural: 'Sections',
     listPage: 'nearby.html',
-    tagline: 'Check if your local store is busy before you walk over.',
+    tagline: 'Check live wait times at your local supermarket or grocery store.',
     noServiceStep: false,
     // Grouped presets matching BigBasket / Zepto / Blinkit categories
     presets: [
@@ -332,7 +332,7 @@ window.SECTOR_ORDER = [
   'Bank','Government',
   'Restaurant','Bakery','SweetShop',
   'Gym','CarWash','Repair',
-  'Kirana','LocalShop','AutoStand',
+  'Grocery','LocalShop','AutoStand',
   'Other'
 ];
 

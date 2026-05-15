@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Find Nearby Services | skipQs</title>
+  <title>Find Services Near You — Live Wait Times | skipQs</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
@@ -223,8 +223,17 @@
   <!-- List panel -->
   <div class="list-panel" id="listPanel">
     <div class="list-header">
-      <h2 id="title">Nearby Services</h2>
+      <h2 id="title">Find Services</h2>
       <p id="counter">Locating you…</p>
+      <div style="margin-top:.7rem;position:relative;">
+        <input type="text" id="nearbySearch"
+          placeholder="Search by name, city or category…"
+          style="width:100%;padding:.75rem 1rem .75rem 2.4rem;border:1.5px solid #e2e8f0;border-radius:50px;font-family:inherit;font-size:.9rem;outline:none;"
+          oninput="applySearchFilter(this.value)"
+          onfocus="this.style.borderColor='var(--accent)'"
+          onblur="this.style.borderColor='#e2e8f0'">
+        <span style="position:absolute;left:.9rem;top:50%;transform:translateY(-50%);font-size:.9rem;pointer-events:none;">🔍</span>
+      </div>
     </div>
     <div class="results-wrap" id="results">
       <!-- skeletons while loading -->
@@ -300,15 +309,32 @@ const OVERPASS_TAGS = {
 
 /* ─── State ─── */
 const params = new URLSearchParams(window.location.search);
-let serviceType = params.get('type') || 'salon';
+let serviceType = params.get('type') || '__all__';
 let liveOnly = false, currentPlaces = [];
+let searchQuery = (params.get('q') || '').trim().toLowerCase();
 // Default to centre of India (will be overridden immediately by geolocation)
 let userLat = 20.5937, userLng = 78.9629;
 
 /* ─── Auth ─── */
 sb.auth.getSession().then(({data:{session}})=>{
   const btn = document.getElementById('authBtn');
-  if (session) { btn.textContent = 'Dashboard'; btn.href = 'dashboard.html'; }
+  if (!session) return;
+  sb.from('providers').select('id,is_hospital,category')
+    .or(`user_id.eq.${session.user.id},id.eq.${session.user.id}`).maybeSingle()
+    .then(({data:prov}) => {
+      if (prov) {
+        const dest = (prov.is_hospital || prov.category==='Hospital') ? 'hospital-dashboard.html' : 'provider-dashboard.html';
+        btn.textContent = 'Dashboard'; btn.href = dest;
+      } else {
+        btn.textContent = 'My Queues'; btn.href = 'dashboard.html';
+      }
+    });
+
+// Pre-populate search box if ?q= was passed (from homepage search bar)
+if (searchQuery) {
+  const input = document.getElementById('nearbySearch');
+  if (input) input.value = params.get('q');
+}
 });
 
 /* ─── Mobile toggle ─── */
@@ -445,7 +471,7 @@ function init(){
       document.getElementById('counter').textContent = '📍 Enable location for results near you';
       executePlacesSearch();
     }
-  }, 5000);
+  }, 3000);
 
   if (!navigator.geolocation){
     clearTimeout(geoTimeout);
@@ -541,8 +567,40 @@ async function executePlacesSearch(){
 
 function normalizeName(n){return (n||'').toLowerCase().replace(/[^a-z0-9]/g,'');}
 
+/* ─── Text search filter ─── */
+function applySearchFilter(q) {
+  searchQuery = (q || '').trim().toLowerCase();
+  const normQ = searchQuery.replace(/\s/g,'');
+  if (!searchQuery) {
+    renderList(currentPlaces);
+    return;
+  }
+  const filtered = currentPlaces.filter(p => {
+    const name = (p.displayName||p.business_name||'').toLowerCase();
+    const addr = (p.address||p.vicinity||'').toLowerCase();
+    const cat  = (p.category||p.serviceType||serviceType||'').toLowerCase();
+    const addrNorm = addr.replace(/\s/g,'');
+    return name.includes(searchQuery) ||
+           addr.includes(searchQuery) ||
+           addrNorm.includes(normQ) ||
+           cat.includes(searchQuery);
+  });
+  renderList(filtered);
+}
+
 /* ─── Render cards ─── */
 function renderList(places){
+  // Apply search filter if active
+  if (searchQuery) {
+    const normQ = searchQuery.replace(/\s/g,'');
+    places = places.filter(p => {
+      const name = (p.displayName||p.business_name||'').toLowerCase();
+      const addr = (p.address||p.vicinity||'').toLowerCase();
+      const cat  = (p.category||p.serviceType||serviceType||'').toLowerCase();
+      return name.includes(searchQuery) || addr.includes(searchQuery) ||
+             addr.replace(/\s/g,'').includes(normQ) || cat.includes(searchQuery);
+    });
+  }
   const container=document.getElementById('results');
   container.innerHTML='';
   if (!places.length){
