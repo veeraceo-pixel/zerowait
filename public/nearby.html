@@ -337,8 +337,8 @@ const params = new URLSearchParams(window.location.search);
 let serviceType = params.get('type') || '__all__';
 let liveOnly = false, currentPlaces = [];
 let searchQuery = (params.get('q') || '').trim().toLowerCase();
-// Default to centre of UK — will be overridden by geolocation if permitted
-let userLat = 54.5, userLng = -3.5;
+// userLat/userLng are set by geolocation before any search or map init
+let userLat = null, userLng = null;
 
 /* ─── Auth ─── */
 sb.auth.getSession().then(({data:{session}})=>{
@@ -412,17 +412,19 @@ function applyLiveFilter(){
 let leafletMap = null, placeMarkers = [];
 
 function initLeafletMap(lat, lng){
-  leafletMap = L.map('leaflet-map').setView([lat,lng],14);
+  leafletMap = L.map('leaflet-map').setView([lat,lng], userLat !== null ? 14 : 6);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
     attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     maxZoom:19
   }).addTo(leafletMap);
-  // User dot
-  const userIcon = L.divIcon({
-    html:`<div style="background:var(--accent);width:14px;height:14px;border-radius:50%;border:3px solid var(--primary);box-shadow:0 2px 8px rgba(0,0,0,.4);"></div>`,
-    iconSize:[20,20],iconAnchor:[10,10],className:''
-  });
-  L.marker([lat,lng],{icon:userIcon}).addTo(leafletMap).bindPopup('<strong>📍 You are here</strong>');
+  // Only add "You are here" marker if we have the user's actual GPS coords
+  if (userLat !== null) {
+    const userIcon = L.divIcon({
+      html:`<div style="background:var(--accent);width:14px;height:14px;border-radius:50%;border:3px solid var(--primary);box-shadow:0 2px 8px rgba(0,0,0,.4);"></div>`,
+      iconSize:[20,20],iconAnchor:[10,10],className:''
+    });
+    L.marker([lat,lng],{icon:userIcon}).addTo(leafletMap).bindPopup('<strong>📍 You are here</strong>');
+  }
 }
 
 function addMapMarkers(places){
@@ -487,45 +489,66 @@ async function writeCache(svcType,lat,lng,places){
 
 /* ─── Init ─── */
 function init(){
-  initLeafletMap(userLat, userLng); // init map with default Manchester location immediately
+  const counter = document.getElementById('counter');
+  const container = document.getElementById('results');
 
-  // Start search after 3s even if geolocation hasn't resolved (prevents infinite "Locating you…")
+  // Show a "locating" state immediately — do NOT init map or search until we have real coords
+  counter.textContent = '📍 Getting your location…';
+  container.innerHTML = `
+    <div style="padding:2.5rem 1rem;text-align:center;color:var(--text-muted);">
+      <div style="font-size:2rem;margin-bottom:.6rem;">📍</div>
+      <div style="font-size:.9rem;font-weight:600;color:var(--primary);margin-bottom:.3rem;">Getting your location…</div>
+      <div style="font-size:.8rem;">Allow location access when prompted to see nearby services.</div>
+    </div>`;
+
+  // Fallback fires after 8s if the browser hasn't responded at all
   let geoResolved = false;
+  const UK_LAT = 54.5, UK_LNG = -3.5;
+
   const geoTimeout = setTimeout(()=>{
     if (!geoResolved){
       geoResolved = true;
-      document.getElementById('counter').textContent = '📍 Enable location for results near you';
+      userLat = UK_LAT; userLng = UK_LNG;
+      counter.textContent = '📍 Location unavailable — showing all UK services';
+      initLeafletMap(userLat, userLng);
       executePlacesSearch();
     }
-  }, 3000);
+  }, 8000);
 
   if (!navigator.geolocation){
     clearTimeout(geoTimeout);
     geoResolved = true;
-    document.getElementById('counter').textContent = '📍 Location not supported — enable GPS for nearby results';
+    userLat = UK_LAT; userLng = UK_LNG;
+    counter.textContent = '📍 Location not supported — showing all services';
+    initLeafletMap(userLat, userLng);
     executePlacesSearch();
     return;
   }
 
   navigator.geolocation.getCurrentPosition(
-    pos=>{
-      if (geoResolved) return; // timeout already fired
-      geoResolved = true;
-      clearTimeout(geoTimeout);
-      userLat=pos.coords.latitude; userLng=pos.coords.longitude;
-      leafletMap.setView([userLat,userLng],14);
-      const userIcon=L.divIcon({html:`<div style="background:var(--accent);width:14px;height:14px;border-radius:50%;border:3px solid var(--primary);box-shadow:0 2px 8px rgba(0,0,0,.4);"></div>`,iconSize:[20,20],iconAnchor:[10,10],className:''});
-      L.marker([userLat,userLng],{icon:userIcon}).addTo(leafletMap).bindPopup('<strong>📍 You are here</strong>');
-      executePlacesSearch();
-    },
-    ()=>{
+    pos => {
       if (geoResolved) return;
       geoResolved = true;
       clearTimeout(geoTimeout);
-      document.getElementById('counter').textContent = '📍 Location unavailable — please enable GPS';
+      userLat = pos.coords.latitude;
+      userLng = pos.coords.longitude;
+      // Init map centred on user's actual location
+      initLeafletMap(userLat, userLng);
       executePlacesSearch();
     },
-    { timeout: 8000, maximumAge: 60000 }
+    err => {
+      if (geoResolved) return;
+      geoResolved = true;
+      clearTimeout(geoTimeout);
+      userLat = UK_LAT; userLng = UK_LNG;
+      const msg = err.code === 1
+        ? '📍 Location access denied — showing all UK services. <a href="#" onclick="location.reload()" style="color:var(--primary);font-weight:700;">Retry</a>'
+        : '📍 Location unavailable — showing all UK services';
+      counter.innerHTML = msg;
+      initLeafletMap(userLat, userLng);
+      executePlacesSearch();
+    },
+    { timeout: 7500, maximumAge: 60000, enableHighAccuracy: false }
   );
 }
 
