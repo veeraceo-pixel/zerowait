@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Live Wait Times | skipQs</title>
+<title>Loading… | skipQs</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{--primary:#002f34;--accent:#23e5db;--accent2:#ffce32;--bg:#f7f8f8;--border:#e2e8f0;--danger:#dc2626;--success:#059669;--warning:#d97706;--text-muted:#406367;}
@@ -193,7 +193,7 @@ main{padding:1.6rem 0 4rem;}
     <a href="index.html"         class="mob-nav-item"><span>🏠</span><p>Home</p></a>
     <a href="hospitals.html"     class="mob-nav-item"><span>🏥</span><p>Hospitals</p></a>
     <a href="dashboard.html"     class="mob-nav-item active"><span>📋</span><p>My Queues</p></a>
-    <a href="find-services.html" class="mob-nav-item"><span>🔍</span><p>Search</p></a>
+    <a href="nearby.html" class="mob-nav-item"><span>📍</span><p>Near Me</p></a>
     <a href="login.html"         class="mob-nav-item" id="mobDetailLoginBtn"><span>👤</span><p>Account</p></a>
   </div>
 </nav>
@@ -408,8 +408,20 @@ function openJoin(deptId) {
   if (!pendingDept) return;
   if (!session) {
     sessionStorage.setItem('redirectAfterLogin', location.href);
-    toast('Please log in to join a queue', 'error');
-    setTimeout(()=>{ window.location.href = 'login.html'; }, 1200);
+    // Show a clear modal explaining login is required, then redirect
+    const loginNotice = document.createElement('div');
+    loginNotice.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem;';
+    loginNotice.innerHTML = `<div style="background:white;border-radius:16px;padding:2rem;max-width:380px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+      <div style="font-size:2.5rem;margin-bottom:.8rem;">🔐</div>
+      <h3 style="font-size:1.1rem;font-weight:800;color:#002f34;margin-bottom:.5rem;">Sign in to join the queue</h3>
+      <p style="font-size:.88rem;color:#406367;line-height:1.6;margin-bottom:1.4rem;">You need a free skipQs account to secure your spot. It only takes 30 seconds to create one.</p>
+      <div style="display:flex;gap:.6rem;flex-direction:column;">
+        <a href="login.html" style="background:#002f34;color:white;padding:12px;border-radius:10px;font-weight:700;text-decoration:none;font-size:.9rem;">Sign In →</a>
+        <a href="signup.html" style="background:#23e5db;color:#002f34;padding:12px;border-radius:10px;font-weight:700;text-decoration:none;font-size:.9rem;">Create Free Account →</a>
+        <button onclick="this.closest('[style]').remove()" style="background:none;border:none;color:#406367;font-size:.82rem;cursor:pointer;padding:.4rem;">Cancel</button>
+      </div>
+    </div>`;
+    document.body.appendChild(loginNotice);
     return;
   }
   document.getElementById('joinTitle').textContent = 'Join ' + pendingDept.name + ' Queue';

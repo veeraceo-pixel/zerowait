@@ -153,9 +153,10 @@ td input{padding:.6rem .7rem;font-size:.9rem;}
       <label for="addressInput">Business Address</label>
       <div class="geo">
         <input type="text" id="addressInput" placeholder="25 King Street, Manchester" autocomplete="street-address">
-        <button type="button" class="lookup-btn" id="lookupBtn" onclick="geocodeAddress()">Look Up</button>
+        <button type="button" class="lookup-btn" id="lookupBtn" onclick="geocodeAddress()" title="Verify your address and pin it on the map">Verify Address</button>
       </div>
-      <div id="geoResult" class="success-msg"></div>
+      <p style="font-size:.75rem;color:#64748b;margin-top:.3rem;">Enter your full address or postcode, then click <strong>Verify Address</strong> to confirm the location on the map.</p>
+    <div id="geoResult" class="success-msg"></div>
       <input type="hidden" id="lat">
       <input type="hidden" id="lng">
     </div>
@@ -171,8 +172,21 @@ td input{padding:.6rem .7rem;font-size:.9rem;}
         <input type="email" id="email" placeholder="admin@business.com" autocomplete="email">
       </div>
       <div class="group">
-        <label for="password">Password</label>
-        <input type="password" id="password" placeholder="Minimum 6 characters" autocomplete="new-password">
+        <label for="password">Password <span style="font-size:.75rem;color:#64748b;font-weight:400;">(minimum 8 characters)</span></label>
+        <input type="password" id="password" placeholder="At least 8 characters" autocomplete="new-password" oninput="checkPasswordStrength(this.value)">
+        <div id="pwStrengthBar" style="height:4px;border-radius:2px;background:#e2e8f0;margin-top:.4rem;overflow:hidden;"><div id="pwStrengthFill" style="height:100%;width:0;border-radius:2px;transition:.3s;"></div></div>
+        <div id="pwStrengthLabel" style="font-size:.72rem;color:#64748b;margin-top:.25rem;"></div>
+      </div>
+      <div class="group">
+        <label for="passwordConfirm">Confirm Password</label>
+        <input type="password" id="passwordConfirm" placeholder="Repeat your password" autocomplete="new-password">
+      </div>
+      <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:.9rem 1rem;font-size:.82rem;color:#166534;display:flex;gap:.6rem;align-items:flex-start;margin-top:.5rem;">
+        <span style="flex-shrink:0;">🔒</span>
+        <label style="cursor:pointer;line-height:1.5;">
+          <input type="checkbox" id="gdprConsent" style="margin-right:.4rem;vertical-align:middle;">
+          I agree to skipQs's <a href="terms.html" target="_blank" style="color:#166534;font-weight:700;">Terms of Service</a> and <a href="privacy.html" target="_blank" style="color:#166534;font-weight:700;">Privacy Policy</a>. I understand that by using this platform I am acting as a data controller for my customers' queue data under UK GDPR.
+        </label>
       </div>
     </div>
   </div>
@@ -282,6 +296,9 @@ td input{padding:.6rem .7rem;font-size:.9rem;}
         <div style="font-size:1.8rem;margin-bottom:.4rem;">📄</div>
         <div style="font-size:.88rem;color:#64748b;"><strong style="color:var(--primary);">Click to upload</strong> or drag & drop</div>
         <div style="font-size:.75rem;color:#94a3b8;margin-top:.25rem;">.csv or .txt · Max 500 rows</div>
+        <div style="margin-top:.5rem;">
+          <a href="#" onclick="downloadSampleCsv(event)" style="font-size:.78rem;color:var(--primary);font-weight:700;text-decoration:underline;">⬇ Download sample CSV template</a>
+        </div>
       </div>
     </div>
 
@@ -495,7 +512,20 @@ function addRow(name='', duration='', price='') {
     Object.assign(el, extra); return el;
   };
   const del = document.createElement('button');
-  del.type='button'; del.className='delete-btn'; del.textContent='×'; del.onclick=()=>tr.remove();
+  del.type='button'; del.className='delete-btn'; del.textContent='×'; del.title='Remove this service';
+  del.onclick = () => {
+    const nameVal = tr.querySelector('.s-name')?.value || '';
+    const durVal  = tr.querySelector('.s-dur')?.value  || '';
+    const priceVal= tr.querySelector('.s-price')?.value || '';
+    tr.style.opacity = '0.4';
+    tr.style.transition = 'opacity .2s';
+    const undoBar = document.createElement('tr');
+    undoBar.innerHTML = `<td colspan="4" style="padding:.35rem .6rem;background:#fef9c3;font-size:.78rem;color:#854d0e;">
+      Row removed. <a href="#" style="font-weight:700;color:#854d0e;text-decoration:underline;" onclick="event.preventDefault();this.closest('tr').nextSibling && this.closest('tr').nextSibling.remove();this.closest('tr').remove();addRow('${nameVal.replace(/'/g,"\'")}','${durVal}','${priceVal}')">Undo</a>
+    </td>`;
+    tr.parentNode.insertBefore(undoBar, tr.nextSibling);
+    setTimeout(() => { tr.remove(); undoBar.remove(); }, 5000);
+  };
   [mkInput('s-name','text','e.g. Haircut',name),
    mkInput('s-dur','number','30',duration,{min:'1'}),
    mkInput('s-price','number','0',price,{min:'0',step:'0.01'}),
@@ -574,6 +604,42 @@ function readSignupCsv(file){
 /* ── HELPERS ────────────────────────────────────────────────── */
 function showError(msg){const e=document.getElementById('errorMsg');e.textContent=msg;e.style.display='block';e.scrollIntoView({behavior:'smooth',block:'center'});}
 function hideError(){document.getElementById('errorMsg').style.display='none';}
+function downloadSampleCsv(e) {
+  e.preventDefault();
+  const rows = [
+    'Name,Wait (min),Price (£)',
+    'Haircut,30,15',
+    'Colour & Highlights,90,65',
+    'Beard Trim,20,10',
+    'Kids Cut,20,10',
+    'Blow Dry,30,25'
+  ];
+  const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'skipqs-services-template.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function checkPasswordStrength(pw) {
+  const bar = document.getElementById('pwStrengthFill');
+  const lbl = document.getElementById('pwStrengthLabel');
+  if (!bar || !lbl) return;
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (pw.length >= 12) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  const levels = ['','Weak','Fair','Good','Strong','Very Strong'];
+  const colours = ['','#dc2626','#d97706','#ca8a04','#16a34a','#15803d'];
+  bar.style.width = (score * 20) + '%';
+  bar.style.background = colours[score] || '#e2e8f0';
+  lbl.textContent = score > 0 ? levels[score] : '';
+  lbl.style.color = colours[score] || '#64748b';
+}
+
 function showSuccess(msg){const e=document.getElementById('successMsg');e.textContent=msg;e.style.display='block';e.scrollIntoView({behavior:'smooth',block:'center'});}
 function resetBtn(){document.getElementById('submitBtn').disabled=false;document.getElementById('spinner').style.display='none';document.getElementById('btnText').textContent='Complete Registration';isSubmitting=false;}
 
@@ -603,7 +669,11 @@ async function register() {
   if (!address)     { showError('Please enter your business address.'); return; }
   if (isNaN(lat) || isNaN(lng)) { showError('Please click "Look Up" to verify your address.'); return; }
   if (!email)       { showError('Please enter your email address.'); return; }
-  if (!password || password.length < 6) { showError('Password must be at least 6 characters.'); return; }
+  const passwordConfirm = document.getElementById('passwordConfirm').value;
+  const gdprConsent = document.getElementById('gdprConsent').checked;
+  if (!password || password.length < 8) { showError('Password must be at least 8 characters.'); return; }
+  if (password !== passwordConfirm) { showError('Passwords do not match. Please re-enter your password.'); return; }
+  if (!gdprConsent) { showError('Please accept the Terms of Service and Privacy Policy to continue.'); return; }
 
   // Determine which services to save
   const cfg = Object.values(SECTOR_CONFIG).find(c => c.label === category) || null;

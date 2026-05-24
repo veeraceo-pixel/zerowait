@@ -337,8 +337,8 @@ const params = new URLSearchParams(window.location.search);
 let serviceType = params.get('type') || '__all__';
 let liveOnly = false, currentPlaces = [];
 let searchQuery = (params.get('q') || '').trim().toLowerCase();
-// Default to centre of India (will be overridden immediately by geolocation)
-let userLat = 20.5937, userLng = 78.9629;
+// Default to centre of UK — will be overridden by geolocation if permitted
+let userLat = 54.5, userLng = -3.5;
 
 /* ─── Auth ─── */
 sb.auth.getSession().then(({data:{session}})=>{
@@ -692,11 +692,29 @@ function renderList(places){
   const container=document.getElementById('results');
   container.innerHTML='';
   if (!places.length){
+    // Fallback: widen the search to all registered businesses regardless of distance
+    try {
+      const { data: allProviders } = await sb.from('providers').select('id,business_name,category,address,is_hospital,is_open,lat,lng').eq('is_open', true).limit(20);
+      if (allProviders && allProviders.length > 0) {
+        container.innerHTML = `<div style="background:#fef9c3;border:1px solid #fde68a;border-radius:10px;padding:.8rem 1rem;font-size:.82rem;color:#854d0e;margin-bottom:1rem;">📍 No businesses found near your location — showing all registered services instead.</div>`;
+        document.getElementById('counter').textContent = allProviders.length + ' businesses on skipQs';
+        allProviders.forEach(p => {
+          const isHosp = p.is_hospital || p.category === 'Hospital';
+          const href = (isHosp ? 'hospital-detail.html' : 'business-detail.html') + '?id=' + encodeURIComponent(p.id);
+          const card = document.createElement('a');
+          card.href = href;
+          card.style.cssText = 'display:flex;align-items:center;gap:.8rem;background:white;border:1.5px solid #e2e8f0;border-radius:12px;padding:.9rem 1rem;text-decoration:none;color:inherit;margin-bottom:.6rem;transition:.15s;';
+          card.innerHTML = `<span style="font-size:1.8rem;">${ICONS[serviceType] || (isHosp ? '🏥' : '🏪')}</span><div style="flex:1;min-width:0;"><div style="font-weight:700;font-size:.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.business_name || 'Business'}</div><div style="font-size:.78rem;color:#406367;">${p.address || ''}</div></div><span style="color:#002f34;font-weight:700;font-size:.8rem;flex-shrink:0;">View →</span>`;
+          container.appendChild(card);
+        });
+        return;
+      }
+    } catch(e) { /* ignore fallback errors */ }
     container.innerHTML=`
       <div class="empty-state">
         <div class="icon">🔍</div>
-        <h3>No registered services found nearby</h3>
-        <p>skipQs shows businesses with live queue management. No one in your area is registered yet.</p>
+        <h3>No services on skipQs yet</h3>
+        <p>skipQs shows businesses with live queue management. Be the first in your area to register!</p>
         <a href="provider-signup.html" style="display:inline-block;margin-top:16px;background:var(--primary);color:#fff;padding:10px 22px;border-radius:8px;text-decoration:none;font-size:.82rem;font-weight:700;">Register Your Business →</a>
       </div>`;
     document.getElementById('counter').textContent='No results found.'; return;

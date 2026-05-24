@@ -716,8 +716,8 @@
         <a href="provider-signup.html">Register Free</a>
         <a href="business-pricing.html">Pricing</a>
         <a href="how-it-works.html">How It Works</a>
-        <a href="hospital-dashboard.html">Hospital Dashboard</a>
-        <a href="provider-dashboard.html">Business Dashboard</a>
+        <a href="hospital-dashboard.html" title="Sign in required">Hospital Dashboard</a>
+        <a href="provider-dashboard.html" title="Sign in required">Business Dashboard</a>
       </div>
       <div class="footer-col">
         <h4>Company</h4>
@@ -984,6 +984,12 @@
       } else {
         animStat('statQueue', 0); animStat('statAvg', 0); animStat('statServed', 0);
       }
+      // Hide the live stats panel if there's genuinely no activity to show
+      const totalActivity = (qCount || 0) + (served || 0);
+      const statsPanel = document.querySelector('.hero-stats-panel');
+      if (statsPanel && openCount === 0) {
+        statsPanel.style.opacity = '0.45';
+      }
     } catch(err) {
       console.warn('Stats load failed:', err);
     }
@@ -1074,7 +1080,7 @@
     const el = document.getElementById(id);
     if (!el) return;
     if (!items.length) {
-      el.innerHTML = `<div class="empty-state"><h4>No services listed here yet</h4><p>Be the first in your area — register free in minutes.</p><a href="provider-signup.html">Register Your Business →</a></div>`;
+      el.innerHTML = `<div class="empty-state"><h4>Be the first hospital in your city</h4><p>Patients in your area are already looking for live wait times. Join skipQs free — no hardware, no app.</p><a href="hospital-signup.html">Register Your Hospital →</a></div>`;
       return;
     }
     el.innerHTML = items.map(p => listingCard(p, isDemo)).join('');
@@ -1084,14 +1090,7 @@
     const icon      = ICONS[p.category] || (p.is_hospital ? '🏥' : '🏪');
     const wait      = p.minWait;
     const isHosp    = p.is_hospital || p.category === 'Hospital';
-    const noWaitLabel = isHosp ? 'See depts'
-      : ['Clinic','Pharmacy'].includes(p.category) ? 'See depts'
-      : ['Salon','Barber'].includes(p.category)    ? 'See services'
-      : p.category === 'Restaurant'                ? 'Check wait'
-      : p.category === 'Bank'                      ? 'See services'
-      : p.category === 'Gym'                       ? 'See services'
-      : 'See services';
-    const waitLabel = wait === null ? noWaitLabel : (wait === 0 ? 'No wait' : wait + ' min');
+    const waitLabel = wait === null ? 'No data' : (wait === 0 ? 'No wait' : wait + ' min');
     const badgeCls  = wait > 60 ? 'high' : wait > 30 ? 'med' : '';
     const href      = isDemo
       ? (isHosp ? 'hospitals.html' : (p.category ? (p.category.toLowerCase().replace(/\s/g,'') + 's.html') : 'nearby.html'))
@@ -1108,7 +1107,7 @@
       </div>
       <div class="listing-info">
         <div class="listing-name" title="${esc(p.business_name||'Business')}">${esc(p.business_name||'Business')}</div>
-        <div class="listing-wait">${wait === null ? '—' : (wait === 0 ? '0' : wait)} <span style="font-size:12px;font-weight:500;color:var(--text-muted);">min wait</span></div>
+        <div class="listing-wait">${wait === null ? '<span style="font-size:14px;font-weight:600;color:var(--text-muted);">No queue data yet</span>' : (wait === 0 ? 'No wait' : wait + ' <span style="font-size:12px;font-weight:500;color:var(--text-muted);">min wait</span>')}</div>
         <div class="listing-addr">📍 ${esc(p.address||'')}</div>
         <div class="listing-meta">
           <div class="listing-cat">${esc(p.category||'Service')}</div>
