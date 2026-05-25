@@ -113,8 +113,12 @@ textarea{resize:vertical;min-height:60px;}
         <input type="tel" id="phone" placeholder="07900 123456" autocomplete="tel">
       </div>
       <div class="group">
-        <label for="capacityField">Total Concurrent Customers (auto)</label>
-        <input type="number" id="capacityField" value="1" min="1" max="500" disabled style="background:var(--bg);">
+        <label for="capacityField">
+          Max customers served at the same time
+          <span title="How many people your staff can serve simultaneously. E.g. a salon with 3 chairs = 3. Affects how wait times are calculated."
+                style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:#cbd5e1;color:#475569;font-size:.65rem;font-weight:800;cursor:help;margin-left:.3rem;vertical-align:middle;">?</span>
+        </label>
+        <input type="number" id="capacityField" value="1" min="1" max="500" style="background:var(--bg);">
       </div>
     </div>
 
@@ -179,7 +183,7 @@ textarea{resize:vertical;min-height:60px;}
   </button>
 </main>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
 <script src="supabase-config.js"></script>
 <script src="sector-config.js"></script>
 <script>

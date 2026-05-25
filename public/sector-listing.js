@@ -136,10 +136,29 @@
     const allDepts = allItems.flatMap(h => h.departments);
     const openDepts = allDepts.filter(d => d.is_open);
     const isDemo = allItems[0]?.isDemo;
-    setTextIfPresent('statTotal',    isDemo ? '—' : allItems.length);
-    setTextIfPresent('statUnits',    isDemo ? '—' : allDepts.length);
-    setTextIfPresent('statAvgWait',  openDepts.length ? Math.round(openDepts.reduce((s,d)=>s+(d.wait_minutes||0),0)/openDepts.length) : '—');
-    setTextIfPresent('statShortest', openDepts.length ? Math.min(...openDepts.map(d=>d.wait_minutes||0)) : '—');
+
+    if (isDemo) {
+      // Show consistent sample numbers for all four cards — but label them clearly
+      setTextIfPresent('statTotal',    allItems.length);
+      setTextIfPresent('statUnits',    allDepts.length);
+      setTextIfPresent('statAvgWait',  openDepts.length ? Math.round(openDepts.reduce((s,d)=>s+(d.wait_minutes||0),0)/openDepts.length) : '—');
+      setTextIfPresent('statShortest', openDepts.length ? Math.min(...openDepts.map(d=>d.wait_minutes||0)) : '—');
+      // Add a "sample data" disclaimer under each stat card so users know these aren't live
+      document.querySelectorAll('.hero-stat').forEach(card => {
+        if (!card.querySelector('.sample-badge')) {
+          const badge = document.createElement('div');
+          badge.className = 'sample-badge';
+          badge.style.cssText = 'font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.45);margin-top:.2rem;';
+          badge.textContent = 'sample';
+          card.appendChild(badge);
+        }
+      });
+    } else {
+      setTextIfPresent('statTotal',    allItems.length);
+      setTextIfPresent('statUnits',    allDepts.length);
+      setTextIfPresent('statAvgWait',  openDepts.length ? Math.round(openDepts.reduce((s,d)=>s+(d.wait_minutes||0),0)/openDepts.length) : '—');
+      setTextIfPresent('statShortest', openDepts.length ? Math.min(...openDepts.map(d=>d.wait_minutes||0)) : '—');
+    }
   }
 
   function render(items) {
