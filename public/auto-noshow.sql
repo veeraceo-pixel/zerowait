@@ -17,23 +17,35 @@ CREATE OR REPLACE FUNCTION public.auto_mark_no_shows()
 RETURNS void AS $$
 DECLARE
   no_show_count INT;
+  grace_minutes INT := 2; -- grace multiplier: mark no-show after 2x service_duration past estimated_time
 BEGIN
-  -- Mark as no_show if:
-  -- status = 'waiting' AND
-  -- estimated_time has passed by >= 1x service_duration (grace period)
+  -- Case A: estimated_time is set — mark no-show if we're > grace_minutes * service_duration past it
   UPDATE public.queues
-  SET 
+  SET
     status       = 'no_show',
     completed_at = NOW()
   WHERE
     status           = 'waiting'
     AND estimated_time IS NOT NULL
-    AND estimated_time < NOW() - (service_duration * INTERVAL '1 minute');
+    AND estimated_time < NOW() - (grace_minutes * service_duration * INTERVAL '1 minute');
+
+  -- Case B: estimated_time is NULL (e.g. first person in queue, or legacy entry)
+  -- Fall back to using joined_at + a reasonable max wait (2 hours)
+  UPDATE public.queues
+  SET
+    status       = 'no_show',
+    completed_at = NOW()
+  WHERE
+    status           = 'waiting'
+    AND estimated_time IS NULL
+    AND joined_at < NOW() - INTERVAL '2 hours';
 
   GET DIAGNOSTICS no_show_count = ROW_COUNT;
 
   IF no_show_count > 0 THEN
     RAISE NOTICE 'Auto no-show: % entries marked', no_show_count;
+    -- The trg_recalculate_positions trigger fires automatically on each
+    -- status UPDATE above, so no manual position recalculation is needed here.
   END IF;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -57,6 +69,20 @@ SELECT public.auto_mark_no_shows();
 SELECT jobname, schedule, command, active
 FROM cron.job
 WHERE jobname = 'skipqs-auto-noshow';
+
+-- ── pg_cron NOT available? Use this JS fallback instead ──────────
+-- If you're on Supabase free tier and pg_cron isn't enabled,
+-- add this to your provider-dashboard.html <script> block.
+-- It polls every 5 minutes while the dashboard is open.
+--
+-- (function startNoShowPoller() {
+--   async function runNoShow() {
+--     await sb.rpc('auto_mark_no_shows');
+--   }
+--   runNoShow(); // run immediately on load
+--   setInterval(runNoShow, 5 * 60 * 1000); // then every 5 min
+-- })();
+-- ─────────────────────────────────────────────────────────────────
 
 -- 6. Add no_show to history queries (so providers can see who was no-shows)
 -- Check current history section loads no_show entries

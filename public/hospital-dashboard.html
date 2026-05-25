@@ -120,6 +120,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--primary);li
 </style>
 </head>
 <body>
+<script>
+  // Hide body immediately; revealed once auth is confirmed (or redirect fires)
+  document.body.classList.add('auth-pending');
+</script>
+
 
 <header class="navbar">
   <a href="index.html" class="logo">skip<span>Qs</span></a>
@@ -289,6 +294,7 @@ async function logout(e) {
 async function init() {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) { window.location.href = 'login.html'; return; }
+    document.body.classList.remove('auth-pending'); // auth confirmed — show page
 
   document.getElementById('userEmail').textContent = session.user.email;
 

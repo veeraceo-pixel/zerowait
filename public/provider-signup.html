@@ -169,7 +169,8 @@ td input{padding:.6rem .7rem;font-size:.9rem;}
     <div class="row">
       <div class="group">
         <label for="email">Email</label>
-        <input type="email" id="email" placeholder="admin@business.com" autocomplete="email">
+        <input type="email" id="email" placeholder="admin@business.com" autocomplete="email" onblur="checkEmailExists(this.value)">
+        <div id="emailExistsMsg" style="display:none;font-size:.76rem;color:#dc2626;margin-top:.3rem;padding:.4rem .6rem;background:#fee2e2;border-radius:6px;">⚠️ An account with this email already exists. <a href="login.html" style="color:#dc2626;font-weight:700;text-decoration:underline;">Sign in instead →</a></div>
       </div>
       <div class="group">
         <label for="password">Password <span style="font-size:.75rem;color:#64748b;font-weight:400;">(minimum 8 characters)</span></label>
@@ -620,6 +621,23 @@ function downloadSampleCsv(e) {
   a.download = 'skipqs-services-template.csv';
   a.click();
   URL.revokeObjectURL(a.href);
+}
+
+async function checkEmailExists(email) {
+  const msgEl = document.getElementById('emailExistsMsg');
+  if (!msgEl || !email || !email.includes('@')) { if(msgEl) msgEl.style.display='none'; return; }
+  // Supabase returns an error on signInWithOtp if the email isn't registered,
+  // but we can't call that non-destructively. Instead, attempt signInWithPassword
+  // with a dummy password — if the error is 'Invalid login credentials' the account
+  // EXISTS (wrong password); if it's 'Email not confirmed' it also exists.
+  // Any other outcome means the email is free.
+  const { error } = await sb.auth.signInWithPassword({ email: email.trim().toLowerCase(), password: '__check_only__' });
+  const emailTaken = error && (
+    /invalid login credentials/i.test(error.message) ||
+    /email not confirmed/i.test(error.message) ||
+    /user already registered/i.test(error.message)
+  );
+  msgEl.style.display = emailTaken ? 'block' : 'none';
 }
 
 function checkPasswordStrength(pw) {

@@ -102,7 +102,13 @@
   });
 
   window.onload = () => {
-    if (!providerId) { showError('No Business ID found in URL.'); return; }
+    if (!providerId) {
+      // Hide the entire join form so it's not confusingly rendered alongside the error
+      const joinSection = document.getElementById('joinSection');
+      if (joinSection) joinSection.style.display = 'none';
+      showError('No business ID found in the URL. Please scan a QR code or use a valid link. <a href="index.html" style="color:#dc2626;font-weight:700;text-decoration:underline;">Go to homepage →</a>');
+      return;
+    }
     fetchBusiness();
     fetchServices();
     previewQueue();

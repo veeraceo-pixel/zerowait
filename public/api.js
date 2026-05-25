@@ -1,5 +1,5 @@
 // api.js
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
 
 // FIX: Supabase credentials are read from the globally-loaded supabase-config.js
 // (which defines SUPABASE_URL and SUPABASE_ANON_KEY) so that credentials live in
@@ -11,14 +11,16 @@ if (typeof SUPABASE_URL === 'undefined' || typeof SUPABASE_ANON_KEY === 'undefin
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Helper: current user (cached on window)
-window.sqGetCurrentUser = async function sqGetCurrentUser() {
+// Helper: current user (cached; exported AND placed on window for non-module pages)
+export async function sqGetCurrentUser() {
   if (window._sqUser) return window._sqUser;
   const { data, error } = await supabase.auth.getUser();
-  if (error || !data.user) return null;
+  if (error || !data.user) { window._sqUser = null; return null; }
   window._sqUser = data.user;
   return data.user;
-};
+}
+// Also expose on window so pages that load api.js as a classic script can call it
+window.sqGetCurrentUser = sqGetCurrentUser;
 
 // Auth
 
@@ -103,23 +105,50 @@ export async function getProviderProfile(providerId) {
 
 // Queue logic
 
-export function computeEtaMinutes(position, serviceDuration) {
-  const pos = Number(position) || 0;
-  const dur = Number(serviceDuration) || 15;
-  return Math.max(0, pos * dur);
+/**
+ * computeEtaMinutes
+ * @param {number} position       – 1-based position in queue
+ * @param {number} serviceDuration – minutes per customer for this department
+ * @param {number} capacity        – how many customers the counter serves simultaneously (default 1)
+ * @returns {number} estimated wait in minutes
+ */
+export function computeEtaMinutes(position, serviceDuration, capacity = 1) {
+  const pos = Math.max(0, Number(position) || 0);
+  const dur = Math.max(1, Number(serviceDuration) || 15);
+  const cap = Math.max(1, Number(capacity) || 1);
+  // With capacity > 1, multiple slots run in parallel:
+  // effective positions = ceil(pos / cap), then multiply by duration
+  const effectiveSlot = Math.ceil(pos / cap);
+  return Math.max(0, effectiveSlot * dur);
 }
 
 export async function joinQueue(payload) {
   const {
     user_id,
     provider_id,
+    department_id,
     customer_name,
     customer_phone,
     selected_service,
     service_duration
   } = payload;
 
-  // Optional: compute estimated_time client-side
+  // Guard: prevent duplicate active entries for the same user+provider+department
+  if (user_id) {
+    let dupQ = supabase
+      .from('queues')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user_id)
+      .eq('provider_id', provider_id)
+      .in('status', ['waiting', 'serving']);
+    if (department_id) dupQ = dupQ.eq('department_id', department_id);
+    const { count } = await dupQ;
+    if (count > 0) {
+      return { error: 'already_in_queue' };
+    }
+  }
+
+  // Compute estimated_time client-side based on current queue length
   const now = new Date();
   const estimated_time = new Date(
     now.getTime() + service_duration * 60 * 1000
@@ -225,6 +254,12 @@ export async function updateQueueStatus(queueId, status) {
   } else if (status === 'completed') {
     patch.completed_at = now;
     patch.completed_date = now.slice(0, 10);
+  } else if (status === 'cancelled') {
+    patch.completed_at = now;
+    // Position recalculation for sibling entries is handled by the DB trigger
+    // trg_recalculate_positions (see queue-recalc.sql). No extra client call needed.
+  } else if (status === 'no_show') {
+    patch.completed_at = now;
   }
 
   const { error } = await supabase

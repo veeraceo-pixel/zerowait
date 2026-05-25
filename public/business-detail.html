@@ -221,8 +221,19 @@ function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
 
 async function init() {
   if (!providerId) {
-    document.getElementById('heroContent').innerHTML = `<h1>Not found</h1><a href="index.html" class="btn btn-primary" style="margin-top:1rem;display:inline-block;">Home</a>`;
-    document.getElementById('deptGrid').innerHTML = '';
+    document.title = 'Not Found | skipQs';
+    // Hide the entire queue-join body so nothing confusing shows
+    document.getElementById('heroContent').innerHTML = `
+      <h1 style="font-size:1.4rem;">Business not found</h1>
+      <p style="color:rgba(255,255,255,.7);margin:.5rem 0 1rem;">No business ID was provided in the URL.</p>
+      <a href="index.html" class="btn btn-primary">← Back to Home</a>`;
+    const deptGrid = document.getElementById('deptGrid');
+    if (deptGrid) deptGrid.innerHTML = '';
+    // Hide the section subtitle and any join modal so nothing contradictory shows
+    const sectionSubtle = document.getElementById('sectionSubtle');
+    if (sectionSubtle) sectionSubtle.closest('section')?.style && (sectionSubtle.closest('section').style.display = 'none');
+    const joinModal = document.getElementById('joinModal');
+    if (joinModal) joinModal.remove();
     return;
   }
   const r = await sb.auth.getSession();
@@ -459,10 +470,10 @@ async function confirmJoin() {
       ...(pendingDept._legacy ? { selected_service: pendingDept.name } : {})
     });
     if (error) {
-      if (error.code === '23505' || /one_active_queue_per_user/.test(error.message)) {
-        toast('You already have an active queue', 'error');
+      if (error === 'already_in_queue' || error.code === '23505' || /one_active_queue_per_user/.test(error?.message||'')) {
+        toast('You are already in a queue at this counter. Check My Queues to see your position.', 'error');
       } else {
-        toast('Could not join: ' + error.message, 'error');
+        toast('Could not join: ' + (error.message || error), 'error');
       }
       return;
     }

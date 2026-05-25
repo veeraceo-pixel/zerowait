@@ -111,10 +111,17 @@
     .leave-banner.tracking .lb-dist{background:var(--border);color:var(--text-muted);}
     @keyframes slideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
     @media(max-width:500px){.leave-banner{padding:.8rem 1rem;}.lb-icon{font-size:1.5rem;}}
+  /* Auth gate: hide body until session check completes — prevents flash of unauth content */
+  body.auth-pending { visibility: hidden; }
   </style>
   <link rel="stylesheet" href="mobile-fixes.css">
 </head>
 <body>
+<script>
+  // Hide body immediately; revealed once auth is confirmed (or redirect fires)
+  document.body.classList.add('auth-pending');
+</script>
+
 
 <header class="nav-bar">
   <a href="index.html" class="nav-logo">skip<span>Qs</span></a>
@@ -177,6 +184,7 @@
   // ── INIT ──
   sb.auth.getSession().then(async ({ data: { session } }) => {
     if (!session) { window.location.href = 'login.html'; return; }
+    document.body.classList.remove('auth-pending'); // auth confirmed — show page
 
     // Guard: if this user is a provider, send them to their own dashboard
     // Check BOTH user_id (new registrations) AND id (legacy registrations)

@@ -261,6 +261,11 @@ tr:last-child td{border-bottom:none;}
 </style>
 </head>
 <body>
+<script>
+  // Hide body immediately; revealed once auth is confirmed (or redirect fires)
+  document.body.classList.add('auth-pending');
+</script>
+
 <button class="mob-menu-btn" id="mobMenuBtn" onclick="toggleSidebar()" aria-label="Menu">☰</button>
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
@@ -505,6 +510,7 @@ let queueChannel, providerChannel, svcChannel;
 ═══════════════════════════════════════════════ */
 sb.auth.getSession().then(async ({ data: { session } }) => {
   if (!session) { window.location.href = 'login.html'; return; }
+    document.body.classList.remove('auth-pending'); // auth confirmed — show page
   const authUid = session.user.id;
 
   // Guard: if this user is NOT a provider, send them to the customer dashboard
@@ -1390,6 +1396,12 @@ document.getElementById('qrOverlay').addEventListener('click', e => {
 });
 </script>
 <!-- AI module loaded last so window.curUid is set before it initialises -->
-<script src="ai-provider.js"></script>
+<script src="ai-provider.js">  // Auto no-show poller
+  (async function startNoShowPoller() {
+    async function runNoShow() { try { await sb.rpc('auto_mark_no_shows'); } catch(e) {} }
+    runNoShow();
+    setInterval(runNoShow, 5 * 60 * 1000);
+  })();
+</script>
 </body>
 </html>

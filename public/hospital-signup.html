@@ -157,7 +157,7 @@ textarea{resize:vertical;min-height:60px;}
       <div>Icon</div>
       <div>Department Name</div>
       <div>Wait (min)</div>
-      <div>Capacity</div>
+      <div title="How many patients this department can serve simultaneously">Max Simultaneous</div>
       <div></div>
     </div>
     <div id="deptBody"></div>
@@ -231,6 +231,11 @@ function addRow(icon='🏥', name='', wait=15, capacity=2) {
 
   const capEl = document.createElement('input');
   capEl.type='number'; capEl.min='1'; capEl.value=capacity;
+  // Visually flag pre-filled rows so staff know to update them
+  if (wait > 0) {
+    tr.style.background = '#fffbeb';
+    tr.title = 'Sample wait time — please update before going live';
+  }
   capEl.className='dept-cap';
 
   const del = document.createElement('button');
@@ -243,6 +248,8 @@ function addRow(icon='🏥', name='', wait=15, capacity=2) {
 }
 
 function quickAdd(icon, name, wait, capacity) {
+  // Note: pre-filled wait times are examples only — staff must update them to reflect
+  // actual current wait times before going live. They are shown in amber to prompt review.
   // Don't add duplicates
   const exists = Array.from(document.querySelectorAll('.dept-name')).some(i => i.value.trim().toLowerCase() === name.toLowerCase());
   if (exists) return;

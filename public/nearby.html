@@ -667,10 +667,12 @@ async function executePlacesSearch(){
   // Update counter
   const regCount = registeredPlaces.length;
   const osmCount = osmPlaces.length;
+  // "live queues" was misleading when businesses have 0 people in them;
+  // "open on skipQs" is accurate regardless of current queue activity
   const label = regCount
-    ? `${regCount} live queue${regCount>1?'s':''} · ${osmCount} other nearby`
+    ? `${regCount} open on skipQs · ${osmCount} other nearby`
     : osmCount
-      ? `No live queues yet · ${osmCount} nearby businesses`
+      ? `${osmCount} nearby businesses · none on skipQs yet`
       : 'No results found nearby';
   document.getElementById('counter').textContent = label;
 }
