@@ -110,7 +110,12 @@ window.skipQsNotify = (function () {
   /* ── Subscribe to Web Push (Phase 2) ─── */
   async function subscribePush(userId) {
     if (!VAPID_PUBLIC_KEY || VAPID_PUBLIC_KEY.startsWith('BEl62')) {
-      // Placeholder key — skip silently until configured
+      console.warn(
+        '[skipQs] Web Push is NOT active. VAPID_PUBLIC_KEY in notify.js is still the placeholder value.\n' +
+        'Run: npm i -g web-push && web-push generate-vapid-keys\n' +
+        'Then replace VAPID_PUBLIC_KEY at the top of notify.js with your own public key.\n' +
+        'Store the private key as a Supabase secret (VAPID_PRIVATE_KEY).'
+      );
       return null;
     }
     if (!('PushManager' in window)) return null;

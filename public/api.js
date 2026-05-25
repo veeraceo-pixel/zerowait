@@ -1,15 +1,24 @@
 // api.js
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
+// api.js reuses the single Supabase client created by supabase-config.js (window.sb).
+// This avoids two separate WebSocket connections, two auth sessions, and split
+// Realtime subscriptions. No second createClient() call is made here.
+//
+// supabase-config.js MUST be loaded as a <script> before this module is imported.
+// The guard below throws early with a clear message if that order is wrong.
 
-// FIX: Supabase credentials are read from the globally-loaded supabase-config.js
-// (which defines SUPABASE_URL and SUPABASE_ANON_KEY) so that credentials live in
-// exactly one place and can be updated without touching this file.
-// supabase-config.js must be loaded via <script> before this module is imported.
-if (typeof SUPABASE_URL === 'undefined' || typeof SUPABASE_ANON_KEY === 'undefined') {
-  throw new Error('[skipQs] supabase-config.js must be loaded before api.js');
+if (typeof window === 'undefined' || !window.sb) {
+  // In rare cases (e.g. unit tests or SSR), window may not be available yet.
+  // For browser use: supabase-config.js must run first.
+  if (typeof SUPABASE_URL === 'undefined') {
+    throw new Error('[skipQs] supabase-config.js must be loaded before api.js');
+  }
+  // Fallback: create client if window.sb somehow not set yet (should not happen in prod)
+  const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2.49.1');
+  window.sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Single shared client — all modules use this reference
+export const supabase = window.sb;
 
 // Helper: current user (cached; exported AND placed on window for non-module pages)
 export async function sqGetCurrentUser() {

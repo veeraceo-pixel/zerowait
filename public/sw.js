@@ -4,9 +4,24 @@
        and generic SHOW_NOTIFICATION for Leave Now alerts.
    ============================================================ */
 
+// SW_VERSION drives cache naming — bump ONLY this string to invalidate all caches
 const SW_VERSION  = 'skipqs-sw-v2';
-const CACHE_NAME  = 'skipqs-v2';
-const CACHE_URLS  = ['/index.html', '/dashboard.html', '/manifest.json'];
+const CACHE_NAME  = `skipqs-cache-${SW_VERSION}`;  // tied to SW_VERSION — never out of sync
+
+// Core shell — extend this list as new critical pages are added
+const CACHE_URLS  = [
+  '/index.html',
+  '/dashboard.html',
+  '/manifest.json',
+  '/nearby.html',
+  '/hospitals.html',
+  '/how-it-works.html',
+  '/business-pricing.html',
+  '/supabase-config.js',
+  '/auth-nav.js',
+  '/sector-config.js',
+  '/sector-listing.js',
+];
 
 /* ── Install: pre-cache ──────────────────────────────── */
 self.addEventListener('install', event => {

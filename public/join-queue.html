@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Join Queue | skipQs</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
@@ -153,6 +154,22 @@
   async function handleCustomerJoin() {
     const name  = document.getElementById('custName').value.trim();
     const phone = document.getElementById('custPhone').value.trim();
+
+    // JS-side validation (required attribute alone can be bypassed via DevTools)
+    if (!name || name.length < 2) {
+      showError('Please enter your full name (at least 2 characters).');
+      return;
+    }
+    if (!phone) {
+      showError('Please enter your mobile number so we can notify you.');
+      return;
+    }
+    // Basic phone sanity check: strip spaces/dashes, must be 7–15 digits
+    const phoneDigits = phone.replace(/[\s\-().+]/g, '');
+    if (!/^\d{7,15}$/.test(phoneDigits)) {
+      showError('Please enter a valid phone number (digits only, 7–15 characters).');
+      return;
+    }
     const boxes = document.querySelectorAll('input[name=svc]:checked');
 
     if (!boxes.length) { alert('Please select at least one service.'); return; }
@@ -160,9 +177,11 @@
 
     const { data: { session } } = await sb.auth.getSession();
     if (!session) {
-      alert('Please log in to join the queue.');
+      // Show a proper modal instead of alert — explain why login is needed
       sessionStorage.setItem('redirectAfterLogin', window.location.href);
-      window.location.href = 'login.html'; return;
+      showError('You need a free skipQs account to join a queue. <a href="signup.html" style="color:#dc2626;font-weight:700;text-decoration:underline;">Create free account →</a> or <a href="login.html" style="color:#dc2626;font-weight:700;text-decoration:underline;">sign in</a>.');
+      btn.disabled = false; btn.textContent = 'Confirm & Join Queue';
+      return;
     }
 
     const btn = document.getElementById('joinBtn');

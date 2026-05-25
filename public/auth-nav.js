@@ -18,6 +18,10 @@
 
   const CACHE_KEY = 'sq_role_cache';
 
+  /* ── Logout handler string — defined ONCE, reused everywhere ─── */
+  const LOGOUT_FN = "(async()=>{await window.sb.auth.signOut();window.location.href='index.html';})()";
+
+
   /* ── XSS sanitiser ──────────────────────────────────────────────
      FIX: rawName and initial come from user-controlled metadata
      (display_name / full_name fields set at sign-up). They must be
@@ -39,10 +43,12 @@
       try { return JSON.parse(cached); } catch { /* fall through */ }
     }
 
+    // Use user_id column only — this is the canonical FK to auth.users.
+    // The old .or(user_id,id) pattern was redundant and fragile.
     const { data } = await window.sb
       .from('providers')
       .select('is_hospital, category')
-      .or(`user_id.eq.${userId},id.eq.${userId}`)
+      .eq('user_id', userId)
       .maybeSingle();
 
     let info;
@@ -77,29 +83,25 @@
      written into HTML attribute values and text nodes.
   ─────────────────────────────────────────────────────────────── */
   function buildCluster(initial, rawName, dashUrl, dashLabel) {
-    const logoutFn = "(async()=>{await window.sb.auth.signOut();window.location.href='index.html';})()";
     const div = document.createElement('div');
     div.className = 'sq-auth-cluster';
     div.style.cssText = 'display:flex;align-items:center;gap:8px;flex-shrink:0;';
-    // FIX: esc() applied to all user-supplied values in HTML attributes and content.
     div.innerHTML =
       '<a href="' + esc(dashUrl) + '" class="sq-dash-link" style="padding:8px 16px;border-radius:50px;font-size:13px;font-weight:700;background:#23e5db;color:#002f34;text-decoration:none;white-space:nowrap;border:none;">' + esc(dashLabel) + '</a>' +
       '<div class="sq-avatar" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.2);color:white;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex-shrink:0;cursor:default;border:2px solid rgba(255,255,255,.4);" title="' + esc(rawName) + '">' + esc(initial) + '</div>' +
-      '<button onclick="' + logoutFn + '" style="padding:8px 16px;border-radius:50px;font-size:13px;font-weight:700;background:rgba(255,255,255,.15);color:white;border:1.5px solid rgba(255,255,255,.35);cursor:pointer;font-family:inherit;white-space:nowrap;">Logout</button>';
+      '<button onclick="' + LOGOUT_FN + '" style="padding:8px 16px;border-radius:50px;font-size:13px;font-weight:700;background:rgba(255,255,255,.15);color:white;border:1.5px solid rgba(255,255,255,.35);cursor:pointer;font-family:inherit;white-space:nowrap;">Logout</button>';
     return div;
   }
 
   /* ── Light-background variant (for white-header content pages) ── */
   function buildClusterLight(initial, rawName, dashUrl, dashLabel) {
-    const logoutFn = "(async()=>{await window.sb.auth.signOut();window.location.href='index.html';})()";
     const div = document.createElement('div');
     div.className = 'sq-auth-cluster';
     div.style.cssText = 'display:flex;align-items:center;gap:8px;flex-shrink:0;';
-    // FIX: esc() applied to all user-supplied values.
     div.innerHTML =
       '<a href="' + esc(dashUrl) + '" style="padding:8px 16px;border-radius:50px;font-size:13px;font-weight:700;background:#23e5db;color:#002f34;text-decoration:none;white-space:nowrap;">' + esc(dashLabel) + '</a>' +
       '<div style="width:34px;height:34px;border-radius:50%;background:#23e5db;color:#002f34;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex-shrink:0;cursor:default;border:2px solid rgba(0,47,52,.15);" title="' + esc(rawName) + '">' + esc(initial) + '</div>' +
-      '<button onclick="' + logoutFn + '" style="padding:8px 16px;border-radius:50px;font-size:13px;font-weight:700;background:#f7f8f8;color:#002f34;border:1.5px solid #e2e8f0;cursor:pointer;font-family:inherit;white-space:nowrap;">Logout</button>';
+      '<button onclick="' + LOGOUT_FN + '" style="padding:8px 16px;border-radius:50px;font-size:13px;font-weight:700;background:#f7f8f8;color:#002f34;border:1.5px solid #e2e8f0;cursor:pointer;font-family:inherit;white-space:nowrap;">Logout</button>';
     return div;
   }
 
@@ -126,8 +128,7 @@
   function applyLoggedIn(info, userMeta) {
     const { dashUrl, dashLabel } = info;
     const { rawName, initial }   = userMeta;
-    const logoutFn = "(async()=>{await window.sb.auth.signOut();window.location.href='index.html';})()";
-
+    /* /* logoutFn uses module-level LOGOUT_FN constant */
     /* ─── INDEX.HTML — dedicated IDs pattern ─────────────────────
        index.html uses #dashBtn + #loginLink + #logoutLink.
        We show #dashBtn (My Queues pill), insert avatar, style logout.
@@ -177,12 +178,12 @@
     document.querySelectorAll('.mobile-actions').forEach(function (el) {
       if (el.querySelector('.sq-auth-cluster')) return;
       el.innerHTML = '';
-      const logoutFnStr = "(async()=>{await window.sb.auth.signOut();window.location.href='index.html';})()";
+      // Using module-level LOGOUT_FN constant
       // FIX: dashUrl/dashLabel escaped; these values originate from
       // our own code (not user input) but we escape defensively.
       el.innerHTML =
         '<a href="' + esc(dashUrl) + '" style="padding:8px 18px;border-radius:50px;font-size:13px;font-weight:700;background:#23e5db;color:#002f34;text-decoration:none;">' + esc(dashLabel) + '</a>' +
-        '<button onclick="' + logoutFnStr + '" style="padding:8px 18px;border-radius:50px;font-size:13px;font-weight:700;background:rgba(255,255,255,.15);color:white;border:1.5px solid rgba(255,255,255,.3);cursor:pointer;font-family:inherit;">Logout</button>';
+        '<button onclick="' + LOGOUT_FN + '" style="padding:8px 18px;border-radius:50px;font-size:13px;font-weight:700;background:rgba(255,255,255,.15);color:white;border:1.5px solid rgba(255,255,255,.3);cursor:pointer;font-family:inherit;">Logout</button>';
     });
 
     /* ─── Pattern 10 – content pages with inline login/signup links

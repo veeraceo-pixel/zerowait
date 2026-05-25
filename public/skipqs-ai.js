@@ -79,7 +79,13 @@ window.SkipQsAI = (function () {
   // Exponential weighted moving average — recent data matters more
   function ewma(arr, alpha = 0.3) {
     if (!arr.length) return 0;
-    return arr.reduce((acc, x) => alpha * x + (1 - alpha) * acc);
+    if (arr.length === 1) return arr[0]; // single element — no smoothing to apply
+    // Use first element as explicit initial accumulator so the formula is applied
+    // correctly from index 1 onwards: alpha*x + (1-alpha)*prev
+    return arr.slice(1).reduce(
+      (acc, x) => alpha * x + (1 - alpha) * acc,
+      arr[0]
+    );
   }
 
   // Hour-of-day multiplier: how busy is this hour vs average?

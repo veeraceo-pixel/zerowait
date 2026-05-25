@@ -16,10 +16,19 @@
    api.js reads these globals so credentials live in one place only.
    ============================================================ */
 
-const SUPABASE_URL      = 'https://idcrplpiokodcanjfolf.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_ygbeTEvM5TdJKRND4GM5dQ_YPGYQI8e';
+// ── Set your own credentials below ───────────────────────────────────────────
+// ⚠️  NEVER commit real keys to a public repository.
+// For production: use your build tool (Netlify/Vercel env vars, GitHub Actions
+// secrets) to inject __SUPABASE_URL__ and __SUPABASE_ANON_KEY__ at build time.
+// Locally: replace the placeholder strings directly, but keep the file in .gitignore.
+const SUPABASE_URL      = typeof __SUPABASE_URL__      !== 'undefined' ? __SUPABASE_URL__      : 'YOUR_SUPABASE_URL_HERE';
+const SUPABASE_ANON_KEY = typeof __SUPABASE_ANON_KEY__ !== 'undefined' ? __SUPABASE_ANON_KEY__ : 'YOUR_SUPABASE_ANON_KEY_HERE';
 
-// Initialise the Supabase client (loaded via CDN in each HTML file)
+if (SUPABASE_URL === 'YOUR_SUPABASE_URL_HERE' || SUPABASE_ANON_KEY === 'YOUR_SUPABASE_ANON_KEY_HERE') {
+  console.warn('[skipQs] ⚠️  supabase-config.js has not been configured with real credentials.');
+}
+
+// Initialise the single shared Supabase client (reused by api.js via window.sb)
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Convenience exports
