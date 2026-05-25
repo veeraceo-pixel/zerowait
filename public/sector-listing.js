@@ -173,30 +173,38 @@
       ? null  // Demo cards are not clickable
       : ((category === 'Hospital' || p.is_hospital) ? 'hospital-detail.html' : 'business-detail.html') + '?id=' + esc(p.id);
 
-    const demoOverlay = p.isDemo ? `
-      <div style="position:absolute;top:10px;right:10px;background:var(--accent2);color:var(--primary);font-size:.6rem;font-weight:800;letter-spacing:.8px;padding:3px 8px;border-radius:20px;text-transform:uppercase;z-index:2;">SAMPLE</div>` : '';
-    const demoNote = p.isDemo ? `<div style="font-size:.7rem;color:var(--text-muted);margin-top:.4rem;">📋 Sample data — <a href="provider-signup.html" style="color:var(--accent);font-weight:700;">Register your business</a> to appear here</div>` : '';
+    const demoOverlay = p.isDemo
+      ? `<div style="position:absolute;top:10px;right:10px;background:var(--accent2);color:var(--primary);font-size:.6rem;font-weight:800;letter-spacing:.8px;padding:3px 8px;border-radius:20px;text-transform:uppercase;z-index:2;">SAMPLE</div>`
+      : '';
+    const demoNote = p.isDemo
+      ? `<div style="font-size:.7rem;color:var(--text-muted);margin-top:.4rem;">📋 Sample data — <a href="provider-signup.html" style="color:var(--accent);font-weight:700;">Register your business</a> to appear here</div>`
+      : '';
+    const ctaText = p.isDemo ? 'Register your business →' : 'View &amp; join queue →';
+    const businessName = esc(p.business_name || 'Business').replace(/\w/g, c => c.toUpperCase());
+    const statusPill = isOpen
+      ? `<div class="status-pill"><div class="live-dot"></div> OPEN</div>`
+      : `<div class="status-pill closed">CLOSED</div>`;
 
-    return p.isDemo ? `
-      <div class="h-card" style="position:relative;cursor:default;" onclick="void(0)">` : `
-      <a href="${detailPage}" class="h-card" style="position:relative;">`
-        ${demoOverlay}
-        <div class="h-card-top">
-          <h3>${esc(p.business_name)}</h3>
-          <div class="addr">📍 ${esc(formatAddr(p.address || ''))}</div>
-          <div class="status-pill ${isOpen?'':'closed'}">
-            ${isOpen ? '<div class="live-dot"></div> OPEN' : 'CLOSED'}
-          </div>
-        </div>
-        <div class="h-card-body">
-          ${deptRows}${more}
-        </div>
-        <div class="h-card-foot">
-          <span class="meta">${depts.length} ${depts.length===1?cfg.unitSingular.toLowerCase():cfg.unitPlural.toLowerCase()}</span>
-          <span class="cta-text">${p.isDemo ? 'Register your business →' : 'View &amp; join queue →'}</span>
-        </div>
-        ${demoNote}
-      </a>`;
+    const inner = `
+      ${demoOverlay}
+      <div class="h-card-top">
+        <h3>${businessName}</h3>
+        <div class="addr">📍 ${esc(formatAddr(p.address || ''))}</div>
+        ${statusPill}
+      </div>
+      <div class="h-card-body">
+        ${deptRows}${more}
+      </div>
+      <div class="h-card-foot">
+        <span class="meta">${depts.length} ${depts.length===1?cfg.unitSingular.toLowerCase():cfg.unitPlural.toLowerCase()}</span>
+        <span class="cta-text">${ctaText}</span>
+      </div>
+      ${demoNote}`;
+
+    if (p.isDemo) {
+      return `<div class="h-card" style="position:relative;cursor:default;">${inner}</div>`;
+    }
+    return `<a href="${detailPage}" class="h-card" style="position:relative;">${inner}</a>`;
   }
 
   function showEmpty(msg) {

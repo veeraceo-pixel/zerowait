@@ -282,7 +282,7 @@
     .idx-hamburger.open span:nth-child(1){transform:translateY(7.5px) rotate(45deg);}
     .idx-hamburger.open span:nth-child(2){opacity:0;}
     .idx-hamburger.open span:nth-child(3){transform:translateY(-7.5px) rotate(-45deg);}
-    .idx-mobile-dropdown{display:none;position:absolute;top:100%;left:0;right:0;background:var(--primary);z-index:998;border-top:1px solid rgba(255,255,255,.1);box-shadow:0 8px 24px rgba(0,0,0,.45);padding:.8rem 1.4rem 1.2rem;}
+    .idx-mobile-dropdown{display:none;position:fixed;top:56px;left:0;right:0;background:var(--primary);z-index:998;border-top:1px solid rgba(255,255,255,.1);box-shadow:0 8px 24px rgba(0,0,0,.45);padding:.8rem 1.4rem 1.2rem;}
     .idx-mobile-dropdown.open{display:block;}
     .idx-mobile-dropdown a{display:block;padding:.65rem 0;color:rgba(255,255,255,.8);text-decoration:none;font-size:.95rem;font-weight:600;border-bottom:1px solid rgba(255,255,255,.07);}
     .idx-mobile-dropdown a:hover{color:white;}
@@ -716,8 +716,8 @@
         <a href="provider-signup.html">Register Free</a>
         <a href="business-pricing.html">Pricing</a>
         <a href="how-it-works.html">How It Works</a>
-        <a href="hospital-dashboard.html" title="Sign in required">Hospital Dashboard</a>
-        <a href="provider-dashboard.html" title="Sign in required">Business Dashboard</a>
+        <a href="login.html?next=hospital-dashboard" id="footHospDash">Hospital Dashboard</a>
+        <a href="login.html?next=business-dashboard" id="footBizDash">Business Dashboard</a>
       </div>
       <div class="footer-col">
         <h4>Company</h4>
@@ -1164,6 +1164,14 @@
   }
 
   // ── HAMBURGER ──
+  // Update footer dashboard links based on auth state
+  sb.auth.getSession().then(({data:{session}}) => {
+    const hospLink = document.getElementById('footHospDash');
+    const bizLink  = document.getElementById('footBizDash');
+    if (session && hospLink) hospLink.href = 'hospital-dashboard.html';
+    if (session && bizLink)  bizLink.href  = 'provider-dashboard.html';
+  });
+
   function toggleMobileMenu() {
     const btn      = document.getElementById('idxHamburger');
     const dropdown = document.getElementById('idxMobileDropdown');
