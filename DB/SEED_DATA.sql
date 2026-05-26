@@ -18,9 +18,28 @@
 --
 -- ================================================================
 
--- Disable FK checks for this session so demo UUIDs don't need
--- real auth.users rows. Constraints are fully restored after.
-SET session_replication_role = 'replica';
+-- Insert stub rows into auth.users so FK constraints are satisfied.
+-- These are minimal placeholder rows — no real email/password, just enough
+-- for the FK to resolve. Supabase does not allow session_replication_role
+-- so we must satisfy the FK properly instead.
+INSERT INTO auth.users (
+  id, email, encrypted_password, email_confirmed_at,
+  created_at, updated_at, raw_app_meta_data, raw_user_meta_data,
+  is_super_admin, role, aud
+)
+VALUES
+  -- Provider stub users (owners of demo hospitals/businesses)
+  ('00000000-0000-0000-0000-000000000001', 'demo-provider-1@skipqs.internal', '', NOW(), NOW(), NOW(), '{"provider":"email","providers":["email"]}', '{}', false, 'authenticated', 'authenticated'),
+  ('00000000-0000-0000-0000-000000000002', 'demo-provider-2@skipqs.internal', '', NOW(), NOW(), NOW(), '{"provider":"email","providers":["email"]}', '{}', false, 'authenticated', 'authenticated'),
+  ('00000000-0000-0000-0000-000000000003', 'demo-provider-3@skipqs.internal', '', NOW(), NOW(), NOW(), '{"provider":"email","providers":["email"]}', '{}', false, 'authenticated', 'authenticated'),
+  ('00000000-0000-0000-0000-000000000004', 'demo-provider-4@skipqs.internal', '', NOW(), NOW(), NOW(), '{"provider":"email","providers":["email"]}', '{}', false, 'authenticated', 'authenticated'),
+  ('00000000-0000-0000-0000-000000000005', 'demo-provider-5@skipqs.internal', '', NOW(), NOW(), NOW(), '{"provider":"email","providers":["email"]}', '{}', false, 'authenticated', 'authenticated'),
+  -- Patient stub users (for demo queue entries)
+  ('00000000-0000-0000-0000-000000000010', 'demo-patient-1@skipqs.internal', '', NOW(), NOW(), NOW(), '{"provider":"email","providers":["email"]}', '{}', false, 'authenticated', 'authenticated'),
+  ('00000000-0000-0000-0000-000000000011', 'demo-patient-2@skipqs.internal', '', NOW(), NOW(), NOW(), '{"provider":"email","providers":["email"]}', '{}', false, 'authenticated', 'authenticated'),
+  ('00000000-0000-0000-0000-000000000012', 'demo-patient-3@skipqs.internal', '', NOW(), NOW(), NOW(), '{"provider":"email","providers":["email"]}', '{}', false, 'authenticated', 'authenticated'),
+  ('00000000-0000-0000-0000-000000000013', 'demo-patient-4@skipqs.internal', '', NOW(), NOW(), NOW(), '{"provider":"email","providers":["email"]}', '{}', false, 'authenticated', 'authenticated')
+ON CONFLICT (id) DO NOTHING;
 
 -- ────────────────────────────────────────────────────────────────
 -- 1. DEMO PROVIDERS (hospitals & businesses)
@@ -222,9 +241,11 @@ CREATE POLICY "places_cache_all"
 
 
 -- ────────────────────────────────────────────────────────────────
--- 9. Re-enable FK checks (MUST run — restores normal constraint enforcement)
+-- 9. Clean up stub auth users (optional — remove demo rows from auth.users)
+--    Leave these in place if you want to log in as demo providers/patients.
+--    Uncomment and run only if you want to remove them after seeding:
 -- ────────────────────────────────────────────────────────────────
-SET session_replication_role = 'origin';
+-- DELETE FROM auth.users WHERE email LIKE '%@skipqs.internal';
 
 -- ────────────────────────────────────────────────────────────────
 -- 10. VERIFY – run this SELECT to confirm data loaded:
