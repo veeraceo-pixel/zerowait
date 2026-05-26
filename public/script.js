@@ -1,2 +1,2 @@
-// This file is intentionally empty. It is retained to prevent 404s on existing deployments.
-// Global initialisation is handled by supabase-config.js and auth-nav.js.
+// Intentionally empty — retained to prevent 404s on existing deployments.
+// All functionality is in supabase-config.js and auth-nav.js.

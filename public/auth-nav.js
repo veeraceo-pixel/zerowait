@@ -128,7 +128,7 @@
   function applyLoggedIn(info, userMeta) {
     const { dashUrl, dashLabel } = info;
     const { rawName, initial }   = userMeta;
-    /* /* logoutFn uses module-level LOGOUT_FN constant */
+    // logoutFn uses module-level LOGOUT_FN constant
     /* ─── INDEX.HTML — dedicated IDs pattern ─────────────────────
        index.html uses #dashBtn + #loginLink + #logoutLink.
        We show #dashBtn (My Queues pill), insert avatar, style logout.

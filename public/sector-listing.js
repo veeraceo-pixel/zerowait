@@ -199,7 +199,8 @@
       ? `<div style="font-size:.7rem;color:var(--text-muted);margin-top:.4rem;">📋 Sample data — <a href="provider-signup.html" style="color:var(--accent);font-weight:700;">Register your business</a> to appear here</div>`
       : '';
     const ctaText = p.isDemo ? 'Register your business →' : 'View &amp; join queue →';
-    const businessName = esc(p.business_name || 'Business').replace(/\w/g, c => c.toUpperCase());
+    const rawName = p.business_name || 'Business';
+    const businessName = esc(rawName.charAt(0).toUpperCase() + rawName.slice(1));
     const statusPill = isOpen
       ? `<div class="status-pill"><div class="live-dot"></div> OPEN</div>`
       : `<div class="status-pill closed">CLOSED</div>`;

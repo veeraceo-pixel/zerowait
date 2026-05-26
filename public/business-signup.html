@@ -150,8 +150,14 @@ textarea{resize:vertical;min-height:60px;}
         <input type="email" id="email" placeholder="admin@business.com" autocomplete="email">
       </div>
       <div class="group">
-        <label for="password">Password</label>
-        <input type="password" id="password" placeholder="Minimum 6 characters" autocomplete="new-password">
+        <label for="password">Password <span style="font-size:.73rem;color:#64748b;font-weight:400;">(min 8 characters)</span></label>
+        <input type="password" id="password" placeholder="At least 8 characters" autocomplete="new-password" oninput="checkBizPwStrength(this.value)">
+        <div id="bizPwBar" style="height:4px;border-radius:2px;background:#e2e8f0;margin-top:.4rem;overflow:hidden;"><div id="bizPwFill" style="height:100%;width:0;border-radius:2px;transition:.3s;"></div></div>
+        <div id="bizPwLabel" style="font-size:.72rem;color:#64748b;margin-top:.2rem;"></div>
+      </div>
+      <div class="group">
+        <label for="passwordConfirm">Confirm Password</label>
+        <input type="password" id="passwordConfirm" placeholder="Repeat your password" autocomplete="new-password">
       </div>
     </div>
   </div>
@@ -370,7 +376,9 @@ async function register() {
   if (isNaN(lat) || isNaN(lng)) { showError('Please click "Look Up" to verify your address.'); return; }
   if (!email) { showError('Please enter your email.'); return; }
   if (!password) { showError('Please enter a password.'); return; }
-  if (password.length < 6) { showError('Password must be at least 6 characters.'); return; }
+  const passwordConfirm = document.getElementById('passwordConfirm')?.value || '';
+  if (password.length < 8) { showError('Password must be at least 8 characters.'); return; }
+  if (password !== passwordConfirm) { showError('Passwords do not match.'); return; }
 
   const units = Array.from(document.querySelectorAll('#deptBody .dept-row')).map((row, i) => ({
     icon: row.querySelector('.dept-icon').value.trim() || cfg.icon,

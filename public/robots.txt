@@ -16,6 +16,10 @@ Disallow: /patient-track.html
 Disallow: /popup-fragment.html
 Disallow: /article-template.html
 Disallow: /maintenance.html
+Disallow: /enterprise.html
+Disallow: /hospital-signup.html
+Disallow: /business-signup.html
+Disallow: /provider-signup.html
 
 # Sitemap location
 Sitemap: https://skipqs.com/sitemap.xml

@@ -82,7 +82,7 @@
 
     <!-- Phase B: email entry + send -->
     <div id="otpPhaseB" style="display:none;">
-      <input type="email" id="otpEmail" class="form-control" placeholder="your@email.com" style="margin-bottom:.6rem;">
+      <input type="email" id="otpEmail" class="form-control" placeholder="your@email.com" autocomplete="off" style="margin-bottom:.6rem;">
       <button type="button" class="btn-submit" id="otpSendBtn" onclick="sendCustomerOTP()">Send Code</button>
       <button type="button" style="width:100%;background:none;border:none;color:var(--text-muted);font-size:.85rem;margin-top:.5rem;cursor:pointer;font-family:inherit;" onclick="hideOTPInput()">← Back to password login</button>
     </div>
@@ -104,7 +104,7 @@
     </div>
 
     <div class="auth-footer" style="margin-top:1.2rem;">
-      New here? <a href="signup.html">Create a free account</a> — join queues, track wait times, get SMS alerts
+      New here? <a href="signup.html">Create a free account</a> — join queues, track wait times, get alerts
     </div>
     <div class="auth-footer" style="margin-top:.6rem;font-size:.82rem;">
       Registering a business? <a href="provider-signup.html">Sign up as a provider →</a>
@@ -173,10 +173,15 @@
     if (error) {
       btn.disabled = false;
       btn.textContent = 'Sign In';
-      if (error.message.includes('Invalid login')) {
-        showError('Incorrect email or password. Please try again.');
+      const msg = (error.message || '').toLowerCase();
+      if (msg.includes('invalid login') || msg.includes('invalid credentials')) {
+        showError("Incorrect email or password. If you're new, create a free account below.");
+      } else if (msg.includes('email not confirmed')) {
+        showError('Please confirm your email first — check your inbox for a verification link.');
+      } else if (msg.includes('too many requests') || error.status === 429) {
+        showError('Too many attempts. Please wait a minute then try again.');
       } else {
-        showError(error.message);
+        showError(error.message || 'Sign in failed. Please try again.');
       }
       return;
     }
@@ -189,6 +194,8 @@
   function showOTPInput() {
     document.getElementById('otpPhaseA').style.display = 'none';
     document.getElementById('otpPhaseB').style.display = 'block';
+    document.getElementById('otpEmail').value = '';
+    document.getElementById('infoMsgOTP').style.display = 'none';
     document.getElementById('otpEmail').focus();
   }
   function hideOTPInput() {
@@ -204,24 +211,29 @@
 
   async function sendCustomerOTP() {
     const email = document.getElementById('otpEmail').value.trim().toLowerCase();
-    if (!email) return;
-    const btn = document.getElementById('otpSendBtn');
-    btn.disabled = true; btn.textContent = 'Sending…';
+    const infoEl = document.getElementById('infoMsgOTP');
+    if (!email) {
+      infoEl.style.background='#fee2e2'; infoEl.style.color='#b91c1c';
+      infoEl.textContent = 'Please enter your email address.';
+      infoEl.style.display = 'block'; return;
+    }
+    const sendBtn = document.getElementById('otpSendBtn');
+    sendBtn.disabled = true; sendBtn.textContent = 'Sending…';
+    infoEl.style.display = 'none';
     const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: false } });
-    btn.disabled = false; btn.textContent = 'Send Code';
+    sendBtn.disabled = false; sendBtn.textContent = 'Send Code';
     if (error) {
-      // If user doesn't exist, redirect to signup
-      if (error.message.toLowerCase().includes('not found') || error.message.toLowerCase().includes('signups')) {
-        document.getElementById('infoMsgOTP').textContent = 'No account found. Please sign up first.';
-        document.getElementById('infoMsgOTP').style.display = 'block';
-        setTimeout(() => { window.location.href = 'signup.html'; }, 1800);
-        return;
+      infoEl.style.background = '#fee2e2'; infoEl.style.color = '#b91c1c';
+      const msg = (error.message || '').toLowerCase();
+      if (msg.includes('not found') || msg.includes('signups not allowed') ||
+          msg.includes('user not found') || msg.includes('unable to validate') ||
+          msg.includes('email not confirmed') || msg.includes('invalid') ||
+          error.status === 422 || error.status === 400) {
+        infoEl.innerHTML = 'No account found for that email. <a href="signup.html" style="color:#b91c1c;font-weight:700;text-decoration:underline;">Create a free account →</a>';
+      } else {
+        infoEl.textContent = error.message;
       }
-      document.getElementById('infoMsgOTP').style.background='#fee2e2';
-      document.getElementById('infoMsgOTP').style.color='#b91c1c';
-      document.getElementById('infoMsgOTP').textContent = error.message;
-      document.getElementById('infoMsgOTP').style.display = 'block';
-      return;
+      infoEl.style.display = 'block'; return;
     }
     otpTargetEmail = email;
     document.getElementById('otpEmailShow').textContent = email;

@@ -1,1 +1,1 @@
-// This file is intentionally empty. Authentication is handled in login.html directly.
+// Intentionally empty — authentication is handled directly in login.html.
