@@ -1,11 +1,26 @@
 -- ================================================================
 -- skipQs  –  Dummy Seed Data for Testing
 -- Run this in your Supabase SQL editor at:
---   https://supabase.com/dashboard/project/idcrplpiokodcanjfolf/sql
+--   Supabase Dashboard → SQL Editor → New Query
 --
--- IMPORTANT: Replace the user_id values with real auth.users UUIDs
--- from your Supabase Auth dashboard after creating test accounts.
+-- HOW IT WORKS:
+--   The providers, queues, and users tables have foreign keys to
+--   auth.users(id). Demo/seed rows use fake UUIDs that don't exist
+--   in auth.users, which would normally cause a 23503 FK violation.
+--
+--   This script solves that by:
+--     1. Inserting lightweight placeholder rows into auth.users
+--        (via the identities trick) so the FK is satisfied, OR
+--     2. Temporarily setting session_replication_role = 'replica'
+--        which disables FK trigger checks for this session only.
+--        This is safe — it only affects THIS SQL session.
+--        The FK constraints remain in place for all normal app usage.
+--
 -- ================================================================
+
+-- Disable FK checks for this session so demo UUIDs don't need
+-- real auth.users rows. Constraints are fully restored after.
+SET session_replication_role = 'replica';
 
 -- ────────────────────────────────────────────────────────────────
 -- 1. DEMO PROVIDERS (hospitals & businesses)
@@ -146,17 +161,17 @@ ON CONFLICT (id) DO NOTHING;
 --    Replace user_id values with real patient auth.users UUIDs
 -- ────────────────────────────────────────────────────────────────
 INSERT INTO public.queues
-  (id, user_id, provider_id, department_id, status, service_duration, customer_name, customer_phone, created_at)
+  (id, user_id, provider_id, department_id, status, service_duration, customer_name, customer_phone, joined_at)
 VALUES
   -- A&E queue at Manchester Royal
-  ('q0000001-0000-0000-0000-000000000001',
+  ('e0000001-0000-0000-0000-000000000001',
    '00000000-0000-0000-0000-000000000010',  -- patient user_id
    '11111111-1111-1111-1111-111111111111',
    'a1000001-0000-0000-0000-000000000001',
    'waiting', 20, 'Test Patient 1', '+44 7700 900001',
    NOW() - INTERVAL '10 minutes'),
 
-  ('q0000001-0000-0000-0000-000000000002',
+  ('e0000001-0000-0000-0000-000000000002',
    '00000000-0000-0000-0000-000000000011',
    '11111111-1111-1111-1111-111111111111',
    'a1000001-0000-0000-0000-000000000001',
@@ -164,7 +179,7 @@ VALUES
    NOW() - INTERVAL '25 minutes'),
 
   -- Cardiology queue
-  ('q0000001-0000-0000-0000-000000000003',
+  ('e0000001-0000-0000-0000-000000000003',
    '00000000-0000-0000-0000-000000000012',
    '11111111-1111-1111-1111-111111111111',
    'a1000001-0000-0000-0000-000000000002',
@@ -172,7 +187,7 @@ VALUES
    NOW() - INTERVAL '5 minutes'),
 
   -- Salon haircut queue
-  ('q0000001-0000-0000-0000-000000000004',
+  ('e0000001-0000-0000-0000-000000000004',
    '00000000-0000-0000-0000-000000000013',
    '44444444-4444-4444-4444-444444444444',
    'a4000001-0000-0000-0000-000000000001',
@@ -180,7 +195,7 @@ VALUES
    NOW() - INTERVAL '2 minutes'),
 
   -- Completed entry (for history testing)
-  ('q0000001-0000-0000-0000-000000000005',
+  ('e0000001-0000-0000-0000-000000000005',
    '00000000-0000-0000-0000-000000000010',
    '11111111-1111-1111-1111-111111111111',
    'a1000001-0000-0000-0000-000000000003',
@@ -201,12 +216,18 @@ CREATE TABLE IF NOT EXISTS public.places_cache (
   expires_at   TIMESTAMPTZ
 );
 ALTER TABLE public.places_cache ENABLE ROW LEVEL SECURITY;
-CREATE POLICY IF NOT EXISTS "places_cache_all"
+DROP POLICY IF EXISTS "places_cache_all" ON public.places_cache;
+CREATE POLICY "places_cache_all"
   ON public.places_cache FOR ALL USING (TRUE) WITH CHECK (TRUE);
 
 
 -- ────────────────────────────────────────────────────────────────
--- 9. VERIFY – run this SELECT to confirm data loaded:
+-- 9. Re-enable FK checks (MUST run — restores normal constraint enforcement)
+-- ────────────────────────────────────────────────────────────────
+SET session_replication_role = 'origin';
+
+-- ────────────────────────────────────────────────────────────────
+-- 10. VERIFY – run this SELECT to confirm data loaded:
 -- ────────────────────────────────────────────────────────────────
 /*
 SELECT p.business_name, p.category, p.is_open,
