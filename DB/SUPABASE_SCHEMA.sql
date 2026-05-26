@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS public.services (
 -- ---------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.queues (
   id                UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id           UUID REFERENCES auth.users(id) ON DELETE CASCADE,  -- NULL allowed for staff-added queue entries
+  user_id           UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   provider_id       UUID NOT NULL REFERENCES public.providers(id) ON DELETE CASCADE,
   department_id     UUID REFERENCES public.departments(id) ON DELETE SET NULL,
   business_name     TEXT,
@@ -192,22 +192,10 @@ CREATE POLICY "queues_update_customer" ON public.queues FOR UPDATE
 -- ---------------------------------------------------------------
 -- Realtime publications
 -- ---------------------------------------------------------------
--- Safely add tables to Realtime publication — ignore if already a member (42710)
-DO $$ BEGIN
-  ALTER PUBLICATION supabase_realtime ADD TABLE public.queues;
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
-DO $$ BEGIN
-  ALTER PUBLICATION supabase_realtime ADD TABLE public.providers;
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
-DO $$ BEGIN
-  ALTER PUBLICATION supabase_realtime ADD TABLE public.services;
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
-DO $$ BEGIN
-  ALTER PUBLICATION supabase_realtime ADD TABLE public.departments;
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.queues;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.providers;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.services;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.departments;
 ALTER TABLE public.departments REPLICA IDENTITY FULL;
 
 -- ---------------------------------------------------------------

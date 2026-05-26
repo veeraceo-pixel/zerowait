@@ -25,9 +25,8 @@ ALTER TABLE public.queues ENABLE ROW LEVEL SECURITY;
 
 -- ─── 3. SELECT policies ──────────────────────────────────────────────────────
 
--- Drop ALL pre-existing select policies so we can cleanly replace them
+-- Drop any pre-existing select policies so we can cleanly replace them
 DROP POLICY IF EXISTS "queues_select_own"       ON public.queues;
-DROP POLICY IF EXISTS "queues_select_staff"     ON public.queues;  -- was missing, caused 42710
 DROP POLICY IF EXISTS "queues_select_by_token"  ON public.queues;
 DROP POLICY IF EXISTS "queues_select_all"       ON public.queues;
 DROP POLICY IF EXISTS "Enable read access for all users" ON public.queues;

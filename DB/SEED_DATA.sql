@@ -1,45 +1,11 @@
 -- ================================================================
 -- skipQs  –  Dummy Seed Data for Testing
 -- Run this in your Supabase SQL editor at:
---   Supabase Dashboard → SQL Editor → New Query
+--   https://supabase.com/dashboard/project/idcrplpiokodcanjfolf/sql
 --
--- HOW IT WORKS:
---   The providers, queues, and users tables have foreign keys to
---   auth.users(id). Demo/seed rows use fake UUIDs that don't exist
---   in auth.users, which would normally cause a 23503 FK violation.
---
---   This script solves that by:
---     1. Inserting lightweight placeholder rows into auth.users
---        (via the identities trick) so the FK is satisfied, OR
---     2. Temporarily setting session_replication_role = 'replica'
---        which disables FK trigger checks for this session only.
---        This is safe — it only affects THIS SQL session.
---        The FK constraints remain in place for all normal app usage.
---
+-- IMPORTANT: Replace the user_id values with real auth.users UUIDs
+-- from your Supabase Auth dashboard after creating test accounts.
 -- ================================================================
-
--- Insert stub rows into auth.users so FK constraints are satisfied.
--- These are minimal placeholder rows — no real email/password, just enough
--- for the FK to resolve. Supabase does not allow session_replication_role
--- so we must satisfy the FK properly instead.
-INSERT INTO auth.users (
-  id, email, encrypted_password, email_confirmed_at,
-  created_at, updated_at, raw_app_meta_data, raw_user_meta_data,
-  is_super_admin, role, aud
-)
-VALUES
-  -- Provider stub users (owners of demo hospitals/businesses)
-  ('00000000-0000-0000-0000-000000000001', 'demo-provider-1@skipqs.internal', '', NOW(), NOW(), NOW(), '{"provider":"email","providers":["email"]}', '{}', false, 'authenticated', 'authenticated'),
-  ('00000000-0000-0000-0000-000000000002', 'demo-provider-2@skipqs.internal', '', NOW(), NOW(), NOW(), '{"provider":"email","providers":["email"]}', '{}', false, 'authenticated', 'authenticated'),
-  ('00000000-0000-0000-0000-000000000003', 'demo-provider-3@skipqs.internal', '', NOW(), NOW(), NOW(), '{"provider":"email","providers":["email"]}', '{}', false, 'authenticated', 'authenticated'),
-  ('00000000-0000-0000-0000-000000000004', 'demo-provider-4@skipqs.internal', '', NOW(), NOW(), NOW(), '{"provider":"email","providers":["email"]}', '{}', false, 'authenticated', 'authenticated'),
-  ('00000000-0000-0000-0000-000000000005', 'demo-provider-5@skipqs.internal', '', NOW(), NOW(), NOW(), '{"provider":"email","providers":["email"]}', '{}', false, 'authenticated', 'authenticated'),
-  -- Patient stub users (for demo queue entries)
-  ('00000000-0000-0000-0000-000000000010', 'demo-patient-1@skipqs.internal', '', NOW(), NOW(), NOW(), '{"provider":"email","providers":["email"]}', '{}', false, 'authenticated', 'authenticated'),
-  ('00000000-0000-0000-0000-000000000011', 'demo-patient-2@skipqs.internal', '', NOW(), NOW(), NOW(), '{"provider":"email","providers":["email"]}', '{}', false, 'authenticated', 'authenticated'),
-  ('00000000-0000-0000-0000-000000000012', 'demo-patient-3@skipqs.internal', '', NOW(), NOW(), NOW(), '{"provider":"email","providers":["email"]}', '{}', false, 'authenticated', 'authenticated'),
-  ('00000000-0000-0000-0000-000000000013', 'demo-patient-4@skipqs.internal', '', NOW(), NOW(), NOW(), '{"provider":"email","providers":["email"]}', '{}', false, 'authenticated', 'authenticated')
-ON CONFLICT (id) DO NOTHING;
 
 -- ────────────────────────────────────────────────────────────────
 -- 1. DEMO PROVIDERS (hospitals & businesses)
@@ -180,17 +146,17 @@ ON CONFLICT (id) DO NOTHING;
 --    Replace user_id values with real patient auth.users UUIDs
 -- ────────────────────────────────────────────────────────────────
 INSERT INTO public.queues
-  (id, user_id, provider_id, department_id, status, service_duration, customer_name, customer_phone, joined_at)
+  (id, user_id, provider_id, department_id, status, service_duration, customer_name, customer_phone, created_at)
 VALUES
   -- A&E queue at Manchester Royal
-  ('e0000001-0000-0000-0000-000000000001',
+  ('q0000001-0000-0000-0000-000000000001',
    '00000000-0000-0000-0000-000000000010',  -- patient user_id
    '11111111-1111-1111-1111-111111111111',
    'a1000001-0000-0000-0000-000000000001',
    'waiting', 20, 'Test Patient 1', '+44 7700 900001',
    NOW() - INTERVAL '10 minutes'),
 
-  ('e0000001-0000-0000-0000-000000000002',
+  ('q0000001-0000-0000-0000-000000000002',
    '00000000-0000-0000-0000-000000000011',
    '11111111-1111-1111-1111-111111111111',
    'a1000001-0000-0000-0000-000000000001',
@@ -198,7 +164,7 @@ VALUES
    NOW() - INTERVAL '25 minutes'),
 
   -- Cardiology queue
-  ('e0000001-0000-0000-0000-000000000003',
+  ('q0000001-0000-0000-0000-000000000003',
    '00000000-0000-0000-0000-000000000012',
    '11111111-1111-1111-1111-111111111111',
    'a1000001-0000-0000-0000-000000000002',
@@ -206,7 +172,7 @@ VALUES
    NOW() - INTERVAL '5 minutes'),
 
   -- Salon haircut queue
-  ('e0000001-0000-0000-0000-000000000004',
+  ('q0000001-0000-0000-0000-000000000004',
    '00000000-0000-0000-0000-000000000013',
    '44444444-4444-4444-4444-444444444444',
    'a4000001-0000-0000-0000-000000000001',
@@ -214,7 +180,7 @@ VALUES
    NOW() - INTERVAL '2 minutes'),
 
   -- Completed entry (for history testing)
-  ('e0000001-0000-0000-0000-000000000005',
+  ('q0000001-0000-0000-0000-000000000005',
    '00000000-0000-0000-0000-000000000010',
    '11111111-1111-1111-1111-111111111111',
    'a1000001-0000-0000-0000-000000000003',
@@ -235,20 +201,12 @@ CREATE TABLE IF NOT EXISTS public.places_cache (
   expires_at   TIMESTAMPTZ
 );
 ALTER TABLE public.places_cache ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "places_cache_all" ON public.places_cache;
-CREATE POLICY "places_cache_all"
+CREATE POLICY IF NOT EXISTS "places_cache_all"
   ON public.places_cache FOR ALL USING (TRUE) WITH CHECK (TRUE);
 
 
 -- ────────────────────────────────────────────────────────────────
--- 9. Clean up stub auth users (optional — remove demo rows from auth.users)
---    Leave these in place if you want to log in as demo providers/patients.
---    Uncomment and run only if you want to remove them after seeding:
--- ────────────────────────────────────────────────────────────────
--- DELETE FROM auth.users WHERE email LIKE '%@skipqs.internal';
-
--- ────────────────────────────────────────────────────────────────
--- 10. VERIFY – run this SELECT to confirm data loaded:
+-- 9. VERIFY – run this SELECT to confirm data loaded:
 -- ────────────────────────────────────────────────────────────────
 /*
 SELECT p.business_name, p.category, p.is_open,
