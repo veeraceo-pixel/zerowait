@@ -184,7 +184,7 @@
 
   // ── INIT ──
   sb.auth.getSession().then(async ({ data: { session } }) => {
-    if (!session) { window.location.href = 'login.html'; return; }
+    if (!session) { sessionStorage.setItem('loginReason', 'view your active queues'); window.location.href = 'login.html'; return; }
     document.body.classList.remove('auth-pending'); // auth confirmed — show page
 
     // Guard: if this user is a provider, send them to their own dashboard

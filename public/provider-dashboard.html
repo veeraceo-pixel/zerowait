@@ -510,7 +510,7 @@ let queueChannel, providerChannel, svcChannel;
    BOOT
 ═══════════════════════════════════════════════ */
 sb.auth.getSession().then(async ({ data: { session } }) => {
-  if (!session) { window.location.href = 'login.html'; return; }
+  if (!session) { sessionStorage.setItem('loginReason', 'access your provider dashboard'); window.location.href = 'login.html'; return; }
     document.body.classList.remove('auth-pending'); // auth confirmed — show page
   const authUid = session.user.id;
 

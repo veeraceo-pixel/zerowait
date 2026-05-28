@@ -152,6 +152,39 @@
 <script>
 function handleSubmit(e) {
   e.preventDefault();
+
+  // Clear previous errors
+  document.querySelectorAll('.field-error').forEach(el => el.remove());
+  document.querySelectorAll('.form-control-error').forEach(el => el.classList.remove('form-control-error'));
+
+  const fname   = document.getElementById('fname').value.trim();
+  const lname   = document.getElementById('lname').value.trim();
+  const email   = document.getElementById('email').value.trim();
+  const topic   = document.getElementById('topic').value;
+  const message = document.getElementById('message').value.trim();
+
+  let hasError = false;
+
+  function markError(id, msg) {
+    const el = document.getElementById(id);
+    el.style.borderColor = '#ef4444';
+    const errEl = document.createElement('p');
+    errEl.className = 'field-error';
+    errEl.style.cssText = 'color:#dc2626;font-size:.78rem;margin:.25rem 0 0;font-weight:600;';
+    errEl.textContent = msg;
+    el.insertAdjacentElement('afterend', errEl);
+    if (!hasError) { el.focus(); hasError = true; }
+  }
+
+  if (!fname) markError('fname', 'Please enter your first name.');
+  if (!lname) markError('lname', 'Please enter your last name.');
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) markError('email', 'Please enter a valid email address.');
+  if (!topic) markError('topic', 'Please select a topic.');
+  if (!message || message.length < 10) markError('message', 'Please enter a message (at least 10 characters).');
+
+  if (hasError) return;
+
+  // Show success
   document.getElementById('contact-form').style.display = 'none';
   document.getElementById('success-msg').style.display = 'block';
 }

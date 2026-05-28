@@ -199,9 +199,16 @@
     spin.style.display = 'block';
     txt.textContent = 'Sending…';
 
+    // Use signInWithOtp with channel:'email' which forces a 6-digit OTP
+    // rather than a magic link. Requires "Email OTP" enabled in Supabase
+    // Auth → Email → Enable Email OTP (6-digit code).
     const { error } = await sb.auth.signInWithOtp({
       email,
-      options: { shouldCreateUser: true, emailRedirectTo: null }
+      options: {
+        shouldCreateUser: true,
+        channel: 'email',        // forces numeric OTP, not magic link
+        data: { display_name: storedName }  // store name in user metadata
+      }
     });
 
     spin.style.display = 'none';
@@ -249,7 +256,14 @@
       btn.disabled = false;
       txt.textContent = 'Verify & Create Account';
       boxes.forEach(b => { b.value=''; b.style.borderColor='#ef4444'; });
-      showOTPError('Invalid or expired code. Please try again.');
+      const emsg = (error.message||'').toLowerCase();
+      if (emsg.includes('expired') || emsg.includes('invalid')) {
+        showOTPError('Code expired or incorrect. Click "Resend code" to get a new one.');
+      } else if (emsg.includes('email link') || emsg.includes('magic link')) {
+        showOTPError('Check your email — click the verification link we sent you, or request a new code.');
+      } else {
+        showOTPError('Verification failed: ' + (error.message || 'please try again.'));
+      }
       boxes[0].focus();
       return;
     }
@@ -261,12 +275,15 @@
     const { data: existing } = await sb.from('users').select('id').eq('id', uid).maybeSingle();
 
     if (!existing) {
-      await sb.from('users').insert({
+      // Try inserting user profile — ignore error if RLS prevents it (user still authed)
+      await sb.from('users').upsert({
         id:           uid,
-        display_name: storedName,
+        display_name: storedName || data.user?.user_metadata?.display_name || '',
         email:        storedEmail,
         role:         'customer'
-      });
+      }, { onConflict: 'id', ignoreDuplicates: true }).catch(() => {});
+      // Also update auth user metadata so display_name persists
+      await sb.auth.updateUser({ data: { display_name: storedName } }).catch(() => {});
     }
 
     const pending = sessionStorage.getItem('redirectAfterLogin');

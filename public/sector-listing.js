@@ -154,10 +154,31 @@
         }
       });
     } else {
-      setTextIfPresent('statTotal',    allItems.length);
-      setTextIfPresent('statUnits',    allDepts.length);
-      setTextIfPresent('statAvgWait',  openDepts.length ? Math.round(openDepts.reduce((s,d)=>s+(d.wait_minutes||0),0)/openDepts.length) : '—');
-      setTextIfPresent('statShortest', openDepts.length ? Math.min(...openDepts.map(d=>d.wait_minutes||0)) : '—');
+      setTextIfPresent('statTotal',    allItems.length || '—');
+      setTextIfPresent('statUnits',    allDepts.length || '—');
+      // Show 'No data' instead of bare dash when no departments have wait data
+      const avgWait = openDepts.length
+        ? Math.round(openDepts.reduce((s,d)=>s+(d.wait_minutes||0),0)/openDepts.length)
+        : null;
+      const shortest = openDepts.length
+        ? Math.min(...openDepts.map(d=>d.wait_minutes||0))
+        : null;
+      setTextIfPresent('statAvgWait',  avgWait  !== null ? avgWait  : '—');
+      setTextIfPresent('statShortest', shortest !== null ? shortest : '—');
+
+      // Add "no data yet" label under wait stats when they're empty
+      if (avgWait === null) {
+        document.querySelectorAll('.hero-stat').forEach(card => {
+          const valEl = card.querySelector('.hero-stat-value');
+          if (valEl && valEl.textContent === '—' && !card.querySelector('.no-data-lbl')) {
+            const lbl = document.createElement('div');
+            lbl.className = 'no-data-lbl';
+            lbl.style.cssText = 'font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.35);margin-top:.2rem;';
+            lbl.textContent = 'no data yet';
+            card.appendChild(lbl);
+          }
+        });
+      }
     }
   }
 
