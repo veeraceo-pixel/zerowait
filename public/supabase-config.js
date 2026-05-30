@@ -10,7 +10,7 @@ if (SUPABASE_URL === 'YOUR_SUPABASE_URL_HERE' || SUPABASE_ANON_KEY === 'YOUR_SUP
 }
 
 // Initialise the single shared Supabase client (reused by api.js via window.sb)
-const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const _supabase = window.sb || supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Convenience exports
 window.sb   = _supabase;
