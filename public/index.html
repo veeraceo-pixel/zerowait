@@ -977,10 +977,10 @@
         } else {
           animStat('statAvg', 0);
         }
-        const { count: qCount } = await sb.from('queues').select('id',{count:'exact',head:true}).in('status',['waiting','serving']);
+        var { count: qCount } = await sb.from('queues').select('id',{count:'exact',head:true}).in('status',['waiting','serving']);
         animStat('statQueue', qCount || 0);
         const today = new Date().toISOString().split('T')[0];
-        const { count: served } = await sb.from('queues').select('id',{count:'exact',head:true}).eq('status','completed').gte('joined_at', today + 'T00:00:00');
+        var { count: served } = await sb.from('queues').select('id',{count:'exact',head:true}).eq('status','completed').gte('joined_at', today + 'T00:00:00');
         animStat('statServed', served || 0);
       } else {
         animStat('statQueue', 0); animStat('statAvg', 0); animStat('statServed', 0);
