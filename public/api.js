@@ -168,6 +168,7 @@ export async function joinQueue(payload) {
     .insert({
       user_id,
       provider_id,
+      department_id: department_id || null,
       business_name: payload.business_name || null,
       customer_name,
       customer_phone,

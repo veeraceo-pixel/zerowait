@@ -139,10 +139,41 @@
   }
 
   async function fetchServices() {
-    const { data } = await sb.from('services').select('*').eq('provider_id', providerId).order('created_at');
     const container = document.getElementById('serviceChecklist');
-    if (!data || !data.length) { container.innerHTML = "<p style='padding:1rem;color:#94a3b8;'>No services listed.</p>"; return; }
     container.innerHTML = '';
+
+    const { data: depts } = await sb.from('departments')
+      .select('id, name, avg_consult_minutes, is_open, wait_minutes')
+      .eq('provider_id', providerId)
+      .order('display_order', { ascending: true });
+
+    if (depts && depts.length) {
+      const open = depts.filter(d => d.is_open !== false);
+      if (!open.length) {
+        container.innerHTML = '<p style="padding:1rem;color:#94a3b8;">All counters are closed right now.</p>';
+        return;
+      }
+      open.forEach(d => {
+        const dur = d.avg_consult_minutes || 15;
+        const item = document.createElement('div');
+        item.className = 'svc-item';
+        item.innerHTML = `
+          <input type="radio" name="svc" value="${dur}" data-name="${esc(d.name)}" data-dept="${d.id}">
+          <div class="svc-info">
+            <span class="svc-name">${esc(d.name)}</span>
+            <span class="svc-meta">~${d.wait_minutes || 0} min wait · ${dur} mins</span>
+          </div>`;
+        item.onclick = (e) => { if (e.target.type !== 'radio') item.querySelector('input').click(); };
+        container.appendChild(item);
+      });
+      return;
+    }
+
+    const { data } = await sb.from('services').select('*').eq('provider_id', providerId).order('created_at');
+    if (!data || !data.length) {
+      container.innerHTML = '<p style="padding:1rem;color:#94a3b8;">No services listed. Ask staff for a QR link to the business page.</p>';
+      return;
+    }
     data.forEach(s => {
       const item = document.createElement('div');
       item.className = 'svc-item';
@@ -189,9 +220,7 @@
       return;
     }
     const boxes = document.querySelectorAll('input[name=svc]:checked');
-
-    if (!boxes.length) { alert('Please select at least one service.'); return; }
-    if (!name || !phone) { alert('Please enter your name and phone number.'); return; }
+    if (!boxes.length) { alert('Please select at least one service or counter.'); return; }
 
     const btn = document.getElementById('joinBtn');
     btn.disabled = true;
@@ -224,6 +253,8 @@
           .eq('id', savedId)
           .maybeSingle();
         if (savedRow && ['waiting', 'serving'].includes(savedRow.status)) {
+          btn.disabled = false;
+          btn.textContent = 'Confirm & Join Queue';
           startLiveTracking(savedRow.id, savedRow.selected_service || '');
           return;
         }
@@ -235,9 +266,12 @@
     const totalDur    = Array.from(boxes).reduce((s,b) => s + Number(b.value), 0);
     const currentWait = parseInt(document.getElementById('estWait').textContent) || 0;
 
+    const deptId = boxes[0].dataset.dept || null;
+
     const { data: newRow, error } = await sb.from('queues').insert({
       user_id:          userId,
       provider_id:      providerId,
+      department_id:    deptId,
       business_name:    businessName,
       customer_name:    name,
       customer_phone:   phone,
@@ -268,6 +302,8 @@
   }
 
   function startLiveTracking(myQueueId, svcNames) {
+    const btn = document.getElementById('joinBtn');
+    if (btn) { btn.disabled = false; btn.textContent = 'Confirm & Join Queue'; }
     document.getElementById('joinSection').classList.add('hidden');
     document.getElementById('statusSection').classList.remove('hidden');
     document.getElementById('selectedSvcLabel').textContent = 'Services: ' + svcNames;

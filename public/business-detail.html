@@ -428,27 +428,9 @@ function deptCard(d) {
 function openJoin(deptId) {
   pendingDept = departments.find(d => d.id === deptId);
   if (!pendingDept) return;
-  if (!session) {
-    sessionStorage.setItem('redirectAfterLogin', location.href);
-    // Show a clear modal explaining login is required, then redirect
-    const loginNotice = document.createElement('div');
-    loginNotice.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem;';
-    loginNotice.innerHTML = `<div style="background:white;border-radius:16px;padding:2rem;max-width:380px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3);">
-      <div style="font-size:2.5rem;margin-bottom:.8rem;">🔐</div>
-      <h3 style="font-size:1.1rem;font-weight:800;color:#002f34;margin-bottom:.5rem;">Sign in to join the queue</h3>
-      <p style="font-size:.88rem;color:#406367;line-height:1.6;margin-bottom:1.4rem;">You need a free skipQs account to secure your spot. It only takes 30 seconds to create one.</p>
-      <div style="display:flex;gap:.6rem;flex-direction:column;">
-        <a href="login.html" style="background:#002f34;color:white;padding:12px;border-radius:10px;font-weight:700;text-decoration:none;font-size:.9rem;">Sign In →</a>
-        <a href="signup.html" style="background:#23e5db;color:#002f34;padding:12px;border-radius:10px;font-weight:700;text-decoration:none;font-size:.9rem;">Create Free Account →</a>
-        <button onclick="this.closest('[style]').remove()" style="background:none;border:none;color:#406367;font-size:.82rem;cursor:pointer;padding:.4rem;">Cancel</button>
-      </div>
-    </div>`;
-    document.body.appendChild(loginNotice);
-    return;
-  }
   document.getElementById('joinTitle').textContent = 'Join ' + pendingDept.name + ' Queue';
-  document.getElementById('joinSub').textContent = `Wait time right now: ~${pendingDept.wait_minutes||0} minutes`;
-  document.getElementById('customerName').value = (session.user.user_metadata?.full_name) || '';
+  document.getElementById('joinSub').textContent = `Wait time right now: ~${pendingDept.wait_minutes||0} minutes · No account required`;
+  document.getElementById('customerName').value = session?.user?.user_metadata?.full_name || '';
   document.getElementById('customerPhone').value = '';
   document.getElementById('joinModal').classList.add('show');
 }
@@ -469,20 +451,26 @@ async function confirmJoin() {
     // `departments`, so we pass null to avoid the FK constraint violation.
     const deptId = pendingDept._legacy ? null : pendingDept.id;
 
-    const { error } = await sb.from('queues').insert({
+    const userId = session?.user?.id ?? null;
+
+    const { data: newRow, error } = await sb.from('queues').insert({
       provider_id:      provider.id,
       department_id:    deptId,
-      user_id:          session.user.id,
+      user_id:          userId,
+      business_name:    provider.business_name,
       customer_name:    name,
       customer_phone:   phone,
       service_duration: pendingDept.avg_consult_minutes || 15,
       status:           'waiting',
       joined_at:        new Date().toISOString(),
       ...(pendingDept._legacy ? { selected_service: pendingDept.name } : {})
-    });
+    }).select('id').single();
+
     if (error) {
-      if (error === 'already_in_queue' || error.code === '23505' || /one_active_queue_per_user/.test(error?.message||'')) {
-        toast('You are already in a queue at this counter. Check My Queues to see your position.', 'error');
+      if (error.code === '23505' || /one_active_queue_per_user/.test(error?.message||'')) {
+        toast(userId
+          ? 'You are already in a queue at this counter. Check My Queues to see your position.'
+          : 'You already joined this queue in this browser.', 'error');
       } else {
         toast('Could not join: ' + (error.message || error), 'error');
       }
@@ -490,16 +478,18 @@ async function confirmJoin() {
     }
     closeJoin();
 
+    if (!userId && newRow?.id) {
+      sessionStorage.setItem('skipqs_guest_queue_' + provider.id, newRow.id);
+    }
+
     // ── Success confirmation overlay ──────────────────────────────
-    // Fetch the user's actual position before showing the screen
     let position = '—', waitMins = pendingDept.wait_minutes || 0;
     try {
-      const { data: ahead } = await sb.from('queues')
+      const { count } = await sb.from('queues')
         .select('id', { count: 'exact', head: true })
         .eq('provider_id', provider.id)
-        .eq('department_id', deptId || pendingDept.id)
-        .eq('status', 'waiting');
-      position = (ahead?.count ?? 0);
+        .in('status', ['waiting', 'serving']);
+      position = count ?? 1;
       waitMins = position * (pendingDept.avg_consult_minutes || 15);
     } catch (_) {}
 
@@ -521,7 +511,7 @@ async function confirmJoin() {
           </div>
         </div>
         <p style="font-size:.78rem;color:#64748b;margin-bottom:1.2rem;">We'll update your position live. Stay nearby — you'll be called soon.</p>
-        <a href="dashboard.html" style="display:block;background:#002f34;color:white;padding:12px;border-radius:10px;font-weight:700;text-decoration:none;font-size:.9rem;">View My Queue →</a>
+        <a href="${userId ? 'dashboard.html' : 'join-queue.html?id=' + encodeURIComponent(provider.id)}" style="display:block;background:#002f34;color:white;padding:12px;border-radius:10px;font-weight:700;text-decoration:none;font-size:.9rem;">${userId ? 'View My Queue →' : 'Track Live Wait →'}</a>
         <button onclick="this.closest('[style*=fixed]').remove()" style="background:none;border:none;color:#94a3b8;font-size:.78rem;cursor:pointer;margin-top:.8rem;padding:.3rem;">Stay on this page</button>
       </div>`;
     document.body.appendChild(overlay);

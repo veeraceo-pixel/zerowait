@@ -721,8 +721,9 @@ async function showNearbyFallback(container) {
         card.href = href;
         card.style.cssText = 'display:flex;align-items:center;gap:.8rem;background:white;border:1.5px solid #e2e8f0;border-radius:12px;padding:.9rem 1rem;text-decoration:none;color:inherit;margin-bottom:.6rem;transition:.15s;';
         const icon = ICONS[p.category] || (isHosp ? '🏥' : '🏪');
-        const name = p.business_name || 'Business';
-        card.innerHTML = `<span style="font-size:1.8rem;">${icon}</span><div style="flex:1;min-width:0;"><div style="font-weight:700;font-size:.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${name}</div><div style="font-size:.78rem;color:#406367;">${p.address||''}</div></div><span style="color:#002f34;font-weight:700;font-size:.8rem;flex-shrink:0;">View →</span>`;
+        const name = esc(p.business_name || 'Business');
+        const addr = esc(p.address || '');
+        card.innerHTML = `<span style="font-size:1.8rem;">${icon}</span><div style="flex:1;min-width:0;"><div style="font-weight:700;font-size:.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${name}</div><div style="font-size:.78rem;color:#406367;">${addr}</div></div><span style="color:#002f34;font-weight:700;font-size:.8rem;flex-shrink:0;">View →</span>`;
         container.appendChild(card);
       });
       return;
@@ -754,6 +755,11 @@ function renderList(places){
   const container=document.getElementById('results');
   container.innerHTML='';
   if (!places.length){
+    if (searchQuery) {
+      container.innerHTML = `<div class="empty-state"><div class="icon">🔍</div><h3>No matches for “${esc(searchQuery)}”</h3><p>Try a different search or browse all categories.</p></div>`;
+      document.getElementById('counter').textContent = '0 results';
+      return;
+    }
     showNearbyFallback(container);
     return;
   }

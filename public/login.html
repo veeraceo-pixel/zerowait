@@ -126,28 +126,34 @@
   async function redirectUser(session) {
     if (!session) return;
     try {
-      // Check if this user is a registered provider (hospital or business)
+      const uid = session.user.id;
+      const nextUrl = new URLSearchParams(window.location.search).get('next');
+      const pending = sessionStorage.getItem('redirectAfterLogin');
+
       const { data: prov } = await sb
         .from('providers')
         .select('id, is_hospital, category')
-        .eq('user_id', session.user.id)   // ← correct field
+        .or(`user_id.eq.${uid},id.eq.${uid}`)
         .maybeSingle();
 
-      const pending = sessionStorage.getItem('redirectAfterLogin');
-
+      if (pending) {
+        sessionStorage.removeItem('redirectAfterLogin');
+        window.location.replace(pending);
+        return;
+      }
+      if (nextUrl && /^[\w\-./]+\.html(\?.*)?$/.test(nextUrl)) {
+        window.location.replace(nextUrl);
+        return;
+      }
       if (prov) {
-        // Route to the right dashboard
         if (prov.category === 'Hospital' || prov.is_hospital === true) {
           window.location.replace('hospital-dashboard.html');
         } else {
           window.location.replace('provider-dashboard.html');
         }
-      } else if (pending) {
-        sessionStorage.removeItem('redirectAfterLogin');
-        window.location.replace(pending);
-      } else {
-        window.location.replace('dashboard.html'); // patient dashboard
+        return;
       }
+      window.location.replace('dashboard.html');
     } catch {
       window.location.replace('dashboard.html');
     }
@@ -158,7 +164,7 @@
   if (loginReason) {
     const reasonBanner = document.createElement('div');
     reasonBanner.style.cssText = 'background:#eff6ff;color:#1e40af;border-radius:.5rem;padding:.7rem 1rem;font-size:.875rem;margin-bottom:1rem;border:1px solid #bfdbfe;';
-    reasonBanner.innerHTML = '🔐 Please sign in to: <strong>' + loginReason + '</strong>';
+    reasonBanner.textContent = 'Please sign in to: ' + loginReason;
     document.getElementById('errorMsg').insertAdjacentElement('afterend', reasonBanner);
     sessionStorage.removeItem('loginReason');
   }

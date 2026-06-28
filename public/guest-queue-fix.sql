@@ -1,7 +1,6 @@
 -- ============================================================
+-- DEPRECATED — use RUN_ALL_FIXES.sql instead (superset of this file)
 -- skipQs — Guest Queue Join Fix
--- Run this in Supabase SQL Editor
--- Allows customers to join queues without creating an account
 -- ============================================================
 
 -- 1. Make user_id nullable so guests can join without an account
