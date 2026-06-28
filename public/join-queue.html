@@ -113,7 +113,25 @@
     fetchBusiness();
     fetchServices();
     previewQueue();
+    resumeGuestQueueIfAny();
   };
+
+  async function resumeGuestQueueIfAny() {
+    const guestKey = 'skipqs_guest_queue_' + providerId;
+    const savedId = sessionStorage.getItem(guestKey);
+    if (!savedId) return;
+
+    const { data: savedRow } = await sb.from('queues')
+      .select('id, status, selected_service')
+      .eq('id', savedId)
+      .maybeSingle();
+
+    if (savedRow && ['waiting', 'serving'].includes(savedRow.status)) {
+      startLiveTracking(savedRow.id, savedRow.selected_service || '');
+    } else {
+      sessionStorage.removeItem(guestKey);
+    }
+  }
 
   async function fetchBusiness() {
     const { data } = await sb.from('providers').select('business_name').eq('id', providerId).single();
@@ -175,24 +193,42 @@
     if (!boxes.length) { alert('Please select at least one service.'); return; }
     if (!name || !phone) { alert('Please enter your name and phone number.'); return; }
 
-    const { data: { session } } = await sb.auth.getSession();
-    if (!session) {
-      // Show a proper modal instead of alert — explain why login is needed
-      sessionStorage.setItem('redirectAfterLogin', window.location.href);
-      showError('You need a free skipQs account to join a queue. <a href="signup.html" style="color:#dc2626;font-weight:700;text-decoration:underline;">Create free account →</a> or <a href="login.html" style="color:#dc2626;font-weight:700;text-decoration:underline;">sign in</a>.');
-      btn.disabled = false; btn.textContent = 'Confirm & Join Queue';
-      return;
-    }
-
     const btn = document.getElementById('joinBtn');
-    btn.disabled = true; btn.textContent = 'Joining…';
+    btn.disabled = true;
+    btn.textContent = 'Joining…';
 
-    // Check already in queue
-    const { data: existing } = await sb.from('queues')
-      .select('id').eq('provider_id', providerId).eq('user_id', session.user.id).eq('status','waiting').maybeSingle();
-    if (existing) {
-      alert('You are already in this queue!');
-      btn.disabled = false; btn.textContent = 'Confirm & Join Queue'; return;
+    const { data: { session } } = await sb.auth.getSession();
+    const userId = session?.user?.id || null;
+
+    // Logged-in users: block duplicate active entry at this provider
+    if (userId) {
+      const { data: existing } = await sb.from('queues')
+        .select('id')
+        .eq('provider_id', providerId)
+        .eq('user_id', userId)
+        .in('status', ['waiting', 'serving'])
+        .maybeSingle();
+      if (existing) {
+        alert('You are already in this queue!');
+        btn.disabled = false;
+        btn.textContent = 'Confirm & Join Queue';
+        return;
+      }
+    } else {
+      // Guest: resume tracking if they already joined this provider in this browser
+      const guestKey = 'skipqs_guest_queue_' + providerId;
+      const savedId = sessionStorage.getItem(guestKey);
+      if (savedId) {
+        const { data: savedRow } = await sb.from('queues')
+          .select('id, status, selected_service')
+          .eq('id', savedId)
+          .maybeSingle();
+        if (savedRow && ['waiting', 'serving'].includes(savedRow.status)) {
+          startLiveTracking(savedRow.id, savedRow.selected_service || '');
+          return;
+        }
+        sessionStorage.removeItem(guestKey);
+      }
     }
 
     const svcNames    = Array.from(boxes).map(b => b.dataset.name).join(', ');
@@ -200,7 +236,7 @@
     const currentWait = parseInt(document.getElementById('estWait').textContent) || 0;
 
     const { data: newRow, error } = await sb.from('queues').insert({
-      user_id:          session.user.id,
+      user_id:          userId,
       provider_id:      providerId,
       business_name:    businessName,
       customer_name:    name,
@@ -219,8 +255,15 @@
       } else {
         alert('Could not join queue: ' + error.message);
       }
-      btn.disabled = false; btn.textContent = 'Confirm & Join Queue'; return;
+      btn.disabled = false;
+      btn.textContent = 'Confirm & Join Queue';
+      return;
     }
+
+    if (!userId) {
+      sessionStorage.setItem('skipqs_guest_queue_' + providerId, newRow.id);
+    }
+
     startLiveTracking(newRow.id, svcNames);
   }
 
