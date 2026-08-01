@@ -1,0 +1,1429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Provider Dashboard | skipQs</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--primary:#002f34;--accent:#23e5db;--accent2:#ffce32;--bg:#f7f8f8;--sidebar:#0f172a;--border:#e2e8f0;--danger:#dc2626;--success:#059669;--warning:#d97706;--text-muted:#406367;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--primary);display:flex;min-height:100vh;}
+
+/* ── SIDEBAR NAV ── */
+nav{width:240px;background:var(--sidebar);color:white;display:flex;flex-direction:column;padding:1.4rem 1rem;position:fixed;height:100vh;z-index:1000;transition:width .25s;}
+.nav-logo{font-size:1.5rem;font-weight:800;color:var(--accent);margin-bottom:2rem;padding-left:.5rem;white-space:nowrap;overflow:hidden;}
+.nav-link{padding:.75rem 1rem;color:#94a3b8;text-decoration:none;border-radius:.5rem;margin-bottom:.3rem;cursor:pointer;display:flex;align-items:center;gap:10px;font-weight:600;border:none;background:none;width:100%;text-align:left;font-family:inherit;font-size:.9rem;white-space:nowrap;}
+.nav-link:hover{background:rgba(255,255,255,.07);color:#cbd5e1;}
+.nav-link.active{background:#1e293b;color:white;border-left:3px solid var(--accent);padding-left:calc(1rem - 3px);}
+.nav-icon{font-size:1.1rem;flex-shrink:0;width:22px;text-align:center;}
+
+/* ── MAIN ── */
+main{flex:1;margin-left:240px;padding:1.8rem 2rem;min-width:0;}
+
+/* ── HEADER BAR ── */
+.header-bar{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.6rem;flex-wrap:wrap;gap:.8rem;}
+.biz-name{font-size:1.6rem;font-weight:800;letter-spacing:-.5px;}
+.status-badge{padding:.3rem .9rem;border-radius:2rem;font-size:.72rem;font-weight:700;display:inline-block;margin-top:6px;}
+.open{background:#dcfce7;color:#15803d;}.closed{background:#fee2e2;color:#b91c1c;}
+.header-controls{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;}
+
+/* ── STATS GRID ── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.6rem;}
+.stat-card{background:white;padding:1.2rem;border-radius:14px;border:1px solid var(--border);}
+.stat-card h4{margin:0;font-size:.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700;}
+.stat-val{font-size:2rem;font-weight:800;margin-top:.4rem;line-height:1;}
+.stat-sub{font-size:.75rem;color:var(--text-muted);margin-top:.2rem;}
+
+/* ── CONTENT CARDS ── */
+.content-card{background:white;border-radius:14px;border:1px solid var(--border);margin-bottom:1.4rem;overflow:hidden;}
+.card-header{padding:1rem 1.4rem;border-bottom:1px solid var(--border);font-weight:700;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;}
+
+/* ── QUEUE TABLE ── */
+table{width:100%;border-collapse:collapse;}
+th{text-align:left;padding:.75rem 1.4rem;font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border);background:#fafbfc;font-weight:700;}
+td{padding:1rem 1.4rem;border-bottom:1px solid var(--border);font-size:.9rem;}
+tr:last-child td{border-bottom:none;}
+
+/* ── BUTTONS ── */
+.btn{padding:.6rem 1.1rem;border-radius:8px;font-weight:700;cursor:pointer;border:1.5px solid var(--border);background:white;font-family:inherit;font-size:.82rem;text-decoration:none;display:inline-flex;align-items:center;gap:.35rem;}
+.btn-primary{background:var(--primary);color:white;border-color:var(--primary);}
+.btn-primary:hover{background:#001f24;}
+.btn-accent{background:var(--accent);color:var(--primary);border-color:var(--accent);}
+.btn-accent:hover{background:#1bcabf;}
+.btn-ghost{background:var(--bg);color:var(--primary);}
+.btn-ghost:hover{background:#e9ecef;}
+.btn-danger{background:#fee2e2;color:#b91c1c;border-color:#fecaca;}
+.btn-danger:hover{background:#fecaca;}
+.btn-green{background:#16a34a;color:white;border-color:#16a34a;}
+.btn-sm{padding:.4rem .8rem;font-size:.78rem;border-radius:6px;}
+
+/* ── SERVICE FORM ── */
+.form-row{display:flex;gap:.6rem;padding:1.2rem 1.4rem;border-bottom:1px solid var(--border);flex-wrap:wrap;align-items:center;}
+.form-row input{padding:.65rem .9rem;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:.9rem;}
+.form-row input:focus{outline:none;border-color:var(--accent);}
+.edit-input{width:70px;padding:.4rem .5rem;border:1.5px solid var(--border);border-radius:6px;text-align:center;font-family:inherit;}
+.svc-del{color:#ef4444;cursor:pointer;font-weight:700;font-size:1.1rem;border:none;background:none;line-height:1;}
+
+/* ── DEPARTMENT CARDS ── */
+.dept-card{border:1.5px solid var(--border);border-radius:12px;padding:1rem 1.2rem;margin:0 1.4rem 1rem;display:grid;grid-template-columns:42px 1fr auto;gap:1rem;align-items:center;transition:.2s;}
+.dept-card:hover{border-color:var(--accent);}
+.dept-icon-lg{font-size:1.8rem;text-align:center;}
+.dept-info .dept-name{font-size:1rem;font-weight:800;margin-bottom:.2rem;}
+.dept-info .dept-meta{font-size:.75rem;color:var(--text-muted);display:flex;gap:.7rem;flex-wrap:wrap;}
+.dept-controls{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;justify-content:flex-end;}
+.wait-input{width:64px;padding:.45rem .5rem;border:1.5px solid var(--border);border-radius:8px;text-align:center;font-weight:700;font-family:inherit;}
+.wait-input:focus{outline:none;border-color:var(--accent);}
+.dept-status-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:.25rem;}
+.dot-open{background:#10b981;}.dot-closed{background:#9ca3af;}
+.preset-strip{padding:.8rem 1.4rem;border-bottom:1px solid var(--border);display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;}
+.preset-chip{background:var(--bg);border:1px solid var(--border);color:var(--primary);padding:.3rem .65rem;border-radius:50px;font-size:.73rem;font-weight:600;cursor:pointer;font-family:inherit;}
+.preset-chip:hover{background:var(--accent);border-color:var(--accent);}
+
+/* ── MODALS ── */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:2000;padding:1rem;}
+.modal.show{display:flex;}
+.modal-card{background:white;border-radius:18px;padding:1.5rem;max-width:460px;width:100%;}
+.modal-card h3{margin-bottom:1rem;font-size:1.1rem;font-weight:800;}
+.modal-row{display:grid;grid-template-columns:56px 1fr 80px 80px;gap:.5rem;margin-bottom:.8rem;}
+.modal-row input{padding:.65rem .8rem;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:.9rem;width:100%;}
+.modal-row input:focus{outline:none;border-color:var(--accent);}
+.modal-actions{display:flex;gap:.6rem;justify-content:flex-end;margin-top:1rem;}
+
+/* ── BULK IMPORT MODAL ── */
+.bulk-modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:flex-start;justify-content:center;z-index:2100;padding:1rem;overflow-y:auto;}
+.bulk-modal.show{display:flex;}
+.bulk-card{background:white;border-radius:20px;padding:1.6rem;width:100%;max-width:680px;margin:auto;}
+.bulk-card h3{font-size:1.15rem;font-weight:800;margin-bottom:.3rem;}
+.bulk-card .sub{font-size:.85rem;color:var(--text-muted);margin-bottom:1.2rem;}
+.bulk-tabs{display:flex;gap:.5rem;margin-bottom:1.2rem;}
+.bulk-tab{padding:.5rem 1rem;border-radius:8px;font-weight:700;font-size:.82rem;cursor:pointer;border:1.5px solid var(--border);background:var(--bg);color:var(--text-muted);font-family:inherit;}
+.bulk-tab.active{background:var(--primary);color:white;border-color:var(--primary);}
+.bulk-paste{width:100%;min-height:120px;padding:.8rem;border:1.5px dashed var(--border);border-radius:12px;font-family:inherit;font-size:.9rem;resize:vertical;background:var(--bg);}
+.bulk-paste:focus{outline:none;border-color:var(--accent);}
+.bulk-hint{font-size:.78rem;color:var(--text-muted);margin-top:.4rem;line-height:1.5;}
+.bulk-upload-zone{border:2px dashed var(--border);border-radius:12px;padding:2rem;text-align:center;cursor:pointer;transition:.2s;background:var(--bg);}
+.bulk-upload-zone:hover,.bulk-upload-zone.drag{border-color:var(--accent);background:#f0fdfc;}
+.bulk-upload-zone input{display:none;}
+.review-table{width:100%;border-collapse:collapse;margin-top:1rem;}
+.review-table th{font-size:.72rem;text-transform:uppercase;letter-spacing:.4px;color:var(--text-muted);padding:.5rem .6rem;text-align:left;border-bottom:2px solid var(--border);}
+.review-table td{padding:.35rem .4rem;}
+.review-table td input{width:100%;padding:.4rem .6rem;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:.85rem;}
+.review-table td input:focus{outline:none;border-color:var(--accent);}
+.review-table .icon-td input{width:50px;text-align:center;font-size:1.1rem;}
+.review-table .wait-td input{width:62px;text-align:center;}
+.review-table .rm-td{text-align:center;cursor:pointer;color:#9ca3af;font-size:1.1rem;}
+.review-table .rm-td:hover{color:var(--danger);}
+.review-table tr:nth-child(even) td{background:#fafbfc;}
+.bulk-progress{margin-top:.8rem;font-size:.85rem;color:var(--text-muted);}
+.bulk-progress b{color:var(--primary);}
+
+.btn-wa{background:#25d366;color:white;border-color:#25d366;}
+.btn-wa:hover{background:#1ebe5d;}
+.btn-wa-call{background:#128c7e;color:white;border-color:#128c7e;}
+.btn-wa-call:hover{background:#0e7a6e;}
+.btn-no-phone{font-size:.72rem;color:var(--text-muted);cursor:default;}
+
+/* ── QR OVERLAY ── */
+#qrOverlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:3000;display:none;align-items:center;justify-content:center;}
+.qr-card{background:white;padding:2rem;border-radius:18px;text-align:center;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--primary);color:white;padding:.9rem 1.4rem;border-radius:50px;font-weight:600;font-size:.9rem;z-index:9999;transition:.3s;opacity:0;pointer-events:none;}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+.toast.success{background:var(--success);}
+.toast.error{background:var(--danger);}
+
+/* ── OPEN/CLOSED TOGGLE SWITCH ── */
+.toggle-switch-wrap{display:flex;align-items:center;gap:.6rem;background:white;border:1.5px solid var(--border);border-radius:50px;padding:.35rem .7rem .35rem .5rem;cursor:pointer;user-select:none;transition:.2s;}
+.toggle-switch-wrap:hover{border-color:var(--accent);}
+.toggle-track{width:42px;height:24px;border-radius:50px;position:relative;transition:.25s;flex-shrink:0;}
+.toggle-track.open{background:#10b981;}
+.toggle-track.closed{background:#d1d5db;}
+.toggle-thumb{position:absolute;top:3px;width:18px;height:18px;border-radius:50%;background:white;box-shadow:0 1px 4px rgba(0,0,0,.2);transition:.25s;}
+.toggle-track.open  .toggle-thumb{left:21px;}
+.toggle-track.closed .toggle-thumb{left:3px;}
+.toggle-label{font-size:.82rem;font-weight:800;min-width:44px;}
+.toggle-label.open{color:#059669;}
+.toggle-label.closed{color:#6b7280;}
+
+/* ── MOBILE SIDEBAR TOGGLE ── */
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:999;}
+.sidebar-overlay.open{display:block;}
+/* ── MOBILE SIDEBAR & LAYOUT ── */
+.mob-menu-btn{
+  display:none;position:fixed;top:12px;left:12px;z-index:1100;
+  background:#0f172a;color:var(--accent);border:none;border-radius:8px;
+  padding:.5rem .7rem;font-size:1.3rem;cursor:pointer;line-height:1;
+  box-shadow:0 2px 8px rgba(0,0,0,.3);
+}
+.sidebar-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.65);z-index:999;
+  -webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);
+}
+.sidebar-overlay.open{display:block;}
+
+@media(max-width:860px){
+  /* Show hamburger */
+  .mob-menu-btn{display:block;}
+
+  /* ── iOS SIDEBAR FIX ──────────────────────────────────────
+     iOS Safari composites off-screen elements against the body
+     background — causing the mint/green bleed.
+     Fix: explicit background-color (not CSS var), will-change,
+     isolation:isolate, and z-index above the overlay.
+  ─────────────────────────────────────────────────────────── */
+  nav{
+    transform:translateX(-100%);
+    transition:transform .28s cubic-bezier(.4,0,.2,1);
+    background-color:#0f172a !important;
+    background:#0f172a !important;
+    will-change:transform;
+    isolation:isolate;
+    z-index:1000;
+    box-shadow:none;
+  }
+  nav.open{
+    transform:translateX(0);
+    box-shadow:6px 0 40px rgba(0,0,0,.55);
+  }
+  /* Force nav link colours through the compositing issue */
+  nav .nav-link{color:#94a3b8 !important;opacity:1 !important;}
+  nav .nav-link.active{
+    color:#fff !important;
+    background:#1e293b !important;
+    border-left-color:var(--accent) !important;
+  }
+  nav .nav-logo,
+  nav a.nav-logo{color:var(--accent) !important;opacity:1 !important;}
+
+  /* Main content full-width */
+  main{margin-left:0 !important;padding:1rem !important;}
+
+  /* Stats 2-column */
+  .stats-grid{grid-template-columns:repeat(2,1fr) !important;gap:.7rem !important;}
+
+  /* Dept card */
+  .dept-card{grid-template-columns:36px 1fr !important;gap:.7rem !important;}
+  .dept-controls{grid-column:1/-1 !important;justify-content:flex-start !important;}
+
+  /* Modal */
+  .modal-row{grid-template-columns:50px 1fr !important;gap:.4rem !important;}
+  .modal-row input.dept-wait,
+  .modal-row input.dept-cap{grid-column:1/-1 !important;}
+
+  /* Table */
+  table{font-size:.82rem;}
+  td,th{padding:.6rem .8rem !important;}
+
+  /* Hide less important table columns on tablet */
+  th:nth-child(3),td:nth-child(3){display:none;} /* Est Mins */
+}
+
+@media(max-width:540px){
+  /* Stats 2-column tighter */
+  .stats-grid{grid-template-columns:1fr 1fr !important;gap:.5rem !important;}
+  .stat-val{font-size:1.7rem !important;}
+
+  /* Header stacks */
+  .header-bar{flex-direction:column;align-items:flex-start;gap:.5rem;margin-bottom:1rem;}
+  .biz-name{font-size:1.2rem;}
+  .header-controls{width:100%;justify-content:space-between;}
+
+  /* Tighter padding */
+  main{padding:.65rem !important;}
+  .dept-card{margin:0 .5rem .7rem;}
+  .form-row{padding:.7rem;}
+
+  /* Hide contact column too on phones — too cramped */
+  th:nth-child(4),td:nth-child(4){display:none;} /* Contact */
+
+  /* Action buttons stack vertically */
+  td:last-child{
+    display:flex !important;
+    flex-direction:column !important;
+    gap:.3rem !important;
+    padding:.5rem .6rem !important;
+  }
+  .btn-sm{width:100%;text-align:center;justify-content:center;}
+
+  /* Lucky voice button — move up so it doesn't overlap bottom */
+  #luckyBtn{bottom:16px !important;right:12px !important;}
+  #luckyStatus{bottom:80px !important;right:8px !important;}
+  #luckyLangSel{bottom:16px !important;right:76px !important;}
+}
+
+/* ── iOS input zoom prevention ── */
+@supports (-webkit-touch-callout:none){
+  input,select,textarea{font-size:16px !important;}
+}
+</style>
+</head>
+<body>
+<script>
+  // Hide body immediately; revealed once auth is confirmed (or redirect fires)
+  document.body.classList.add('auth-pending');
+</script>
+
+<button class="mob-menu-btn" id="mobMenuBtn" onclick="toggleSidebar()" aria-label="Menu">☰</button>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<nav id="sidebar">
+  <a href="index.html" class="nav-logo" style="text-decoration:none;">skipQs</a>
+  <button class="nav-link active"   onclick="showSection('live',     this)"><span class="nav-icon">📡</span><span>Live Queue</span></button>
+  <button class="nav-link"          onclick="showSection('services', this)"><span class="nav-icon">🛠️</span><span>Services</span></button>
+  <button class="nav-link"          onclick="showSection('manage',   this)"><span class="nav-icon">🏪</span><span>Manage</span></button>
+  <button class="nav-link"          onclick="showSection('history',  this)"><span class="nav-icon">📊</span><span>History</span></button>
+  <button class="nav-link"          onclick="toggleQR()">              <span class="nav-icon">📱</span><span>QR Code</span></button>
+  <button class="nav-link"          onclick="handleLogout()" style="margin-top:auto;"><span class="nav-icon">🚪</span><span>Logout</span></button>
+</nav>
+
+<main>
+  <!-- HEADER -->
+  <div class="header-bar">
+    <div>
+      <div class="biz-name" id="bizTitle">Dashboard</div>
+      <div id="statusBadge"></div>
+    </div>
+    <div class="header-controls">
+      <div class="toggle-switch-wrap" onclick="toggleStatus()" id="toggleWrap" title="Toggle open/closed">
+        <div class="toggle-track closed" id="toggleTrack">
+          <div class="toggle-thumb"></div>
+        </div>
+        <span class="toggle-label closed" id="toggleLabel">Closed</span>
+      </div>
+      <span id="userEmail" style="font-size:.82rem;color:var(--text-muted);"></span>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-grid">
+    <div class="stat-card"><h4>Waiting</h4><div class="stat-val" id="waitCount">0</div></div>
+    <div class="stat-card">
+      <h4>Capacity</h4>
+      <div class="stat-val" id="capDisplay">1</div>
+      <input type="range" id="capSlider" min="1" max="20" value="1" step="1"
+             oninput="updateCapacity(this.value)" style="width:100%;margin-top:8px;cursor:pointer;accent-color:var(--accent);">
+    </div>
+    <div class="stat-card"><h4>Est. Wait</h4><div class="stat-val" id="totalMins">0<small style="font-size:.9rem"> m</small></div></div>
+    <div class="stat-card"><h4>Served Today</h4><div class="stat-val" id="servedToday">0</div></div>
+  </div>
+
+  <!-- LIVE QUEUE SECTION -->
+  <section id="sec-live" class="content-card">
+    <div class="card-header">
+      <span>📡 Active Queue</span>
+    </div>
+    <table>
+      <thead><tr><th>Customer</th><th>Service / Dept</th><th>Est. Mins</th><th>Contact</th><th>Action</th></tr></thead>
+      <tbody id="qItems"></tbody>
+    </table>
+  </section>
+
+  <!-- SERVICES (legacy services table for non-department providers) -->
+  <section id="sec-services" class="content-card" style="display:none;">
+    <div class="card-header">
+      <span>🛠️ Services</span>
+      <div style="display:flex;gap:.5rem;">
+        <button class="btn btn-ghost btn-sm" onclick="openBulkModal()">📥 Bulk Import</button>
+        <button class="btn btn-primary btn-sm" onclick="addSvc()">+ Add Service</button>
+      </div>
+    </div>
+    <div class="form-row">
+      <input type="text"   id="sName"  placeholder="Service name"  style="flex:2;">
+      <input type="number" id="sTime"  placeholder="Mins"          style="flex:1;">
+      <input type="number" id="sPrice" placeholder="Price (£)"     style="flex:1;" step="0.01">
+    </div>
+    <table>
+      <thead><tr><th>Name</th><th>Price</th><th>Duration</th><th style="text-align:right;">Del</th></tr></thead>
+      <tbody id="svcList"></tbody>
+    </table>
+  </section>
+
+  <!-- MANAGE DEPARTMENTS SECTION (for businesses with departments) -->
+  <section id="sec-manage" class="content-card" style="display:none;">
+    <div class="card-header">
+      <span id="manageSectionTitle">🏪 Departments &amp; Wait Times</span>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+        <button class="btn btn-ghost btn-sm" onclick="openBulkModal()">📥 Bulk Import</button>
+        <button class="btn btn-primary btn-sm" id="addDeptBtn" onclick="openAddModal()">+ Add</button>
+      </div>
+    </div>
+    <div class="preset-strip" id="presetStrip" style="display:none;"></div>
+    <div id="deptList" style="padding:.6rem 0;"></div>
+    <!-- Public pages links -->
+    <div class="pub-links" style="border-top:1px solid var(--border);margin-top:.5rem;">
+      <a class="btn btn-ghost btn-sm" id="viewPageLink" href="#" target="_blank">👀 Customer page</a>
+      <a class="btn btn-ghost btn-sm" id="listingLink" href="#" target="_blank">📋 Listing page</a>
+    </div>
+  </section>
+
+  <!-- HISTORY SECTION -->
+  <section id="sec-history" class="content-card" style="display:none;">
+    <div class="card-header"><span>📊 Daily History</span></div>
+    <div style="padding:1rem 1.4rem;border-bottom:1px solid var(--border);">
+      <input type="date" id="hDate" class="btn btn-ghost" onchange="loadHistory()" style="width:auto;">
+    </div>
+    <table>
+      <thead><tr><th>Customer</th><th>Service</th><th>Time</th><th>Contact</th></tr></thead>
+      <tbody id="hItems"></tbody>
+    </table>
+  </section>
+</main>
+
+<!-- ADD/EDIT DEPT MODAL -->
+<div class="modal" id="addModal">
+  <div class="modal-card">
+    <h3 id="modalTitle">Add Service</h3>
+    <div class="modal-row">
+      <input type="text"   id="m_icon" placeholder="🏪" maxlength="2" style="text-align:center;">
+      <input type="text"   id="m_name" placeholder="Name">
+      <input type="number" id="m_wait" placeholder="Wait" min="0" value="15" class="dept-wait">
+      <input type="number" id="m_cap"  placeholder="Capacity" min="1" value="2" class="dept-cap">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveDept()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- BULK IMPORT MODAL -->
+<div class="bulk-modal" id="bulkModal">
+  <div class="bulk-card">
+    <h3>📥 Bulk Import Services</h3>
+    <p class="sub">Import multiple services at once. Review and adjust before saving.</p>
+    <div class="bulk-tabs">
+      <button class="bulk-tab active" onclick="switchBulkTab('paste',event)">📋 Paste List</button>
+      <button class="bulk-tab"        onclick="switchBulkTab('csv',event)">📄 Upload CSV</button>
+    </div>
+    <div id="bulkPasteTab">
+      <textarea class="bulk-paste" id="bulkPasteInput" placeholder="One service per line, e.g.:&#10;Haircut&#10;Colour &amp; Highlights&#10;Beard Trim&#10;Or CSV: Name, Icon, Wait(min), Capacity"></textarea>
+      <p class="bulk-hint">💡 One service per line · or CSV: <code>Name, Icon, Wait(min), Capacity</code></p>
+      <div style="margin-top:1rem;display:flex;gap:.6rem;justify-content:flex-end;">
+        <button class="btn btn-ghost" onclick="closeBulkModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="parsePasteInput()">Parse →</button>
+      </div>
+    </div>
+    <div id="bulkCsvTab" style="display:none;">
+      <div class="bulk-upload-zone" onclick="document.getElementById('csvFileInput').click()"
+           ondragover="event.preventDefault();this.classList.add('drag')"
+           ondragleave="this.classList.remove('drag')" ondrop="handleDrop(event)">
+        <input type="file" id="csvFileInput" accept=".csv,.txt" onchange="handleFileSelect(event)">
+        <div style="font-size:2.2rem;margin-bottom:.5rem;">📄</div>
+        <div style="font-size:.9rem;color:var(--text-muted);"><strong style="color:var(--primary);">Click to upload</strong> or drag &amp; drop</div>
+        <div style="font-size:.78rem;color:var(--text-muted);margin-top:.3rem;">.csv or .txt · Max 500 rows</div>
+      </div>
+      <p class="bulk-hint" style="margin-top:.8rem;">CSV columns: <code>Name, Icon, Wait Minutes, Capacity</code></p>
+      <div style="margin-top:1rem;display:flex;gap:.6rem;justify-content:flex-end;">
+        <button class="btn btn-ghost" onclick="closeBulkModal()">Cancel</button>
+      </div>
+    </div>
+    <div id="bulkReview" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem;">
+        <strong id="reviewCount" style="font-size:.9rem;"></strong>
+        <button class="btn btn-ghost btn-sm" onclick="addReviewRow()">+ Add row</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="review-table" id="reviewTable">
+          <thead><tr><th>Icon</th><th>Service Name</th><th>Wait (min)</th><th>Capacity</th><th></th></tr></thead>
+          <tbody id="reviewBody"></tbody>
+        </table>
+      </div>
+      <div class="bulk-progress" id="bulkProgress" style="display:none;"></div>
+      <div style="margin-top:1.2rem;display:flex;gap:.6rem;justify-content:flex-end;flex-wrap:wrap;">
+        <button class="btn btn-ghost" onclick="backToBulkInput()">← Back</button>
+        <button class="btn btn-ghost" onclick="closeBulkModal()">Cancel</button>
+        <button class="btn btn-primary" id="importBtn" onclick="importDepartments()">💾 Import All</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- QR OVERLAY -->
+<div id="qrOverlay">
+  <div class="qr-card">
+    <h3>Customer QR Code</h3>
+    <p style="color:#64748b;font-size:.85rem;margin:.4rem 0 1.2rem;">Scan to join the queue</p>
+    <div id="qrcode-box" style="display:flex;justify-content:center;"></div>
+    <button class="btn btn-primary" style="margin-top:1.4rem;width:100%;" onclick="toggleQR()">Close</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
+<script src="supabase-config.js"></script>
+<script src="sector-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/easyqrcodejs@4.4.10/dist/easy.qrcode.min.js"></script>
+<script src="skipqs-ai.js"></script>
+<script src="lucky-voice.js"></script><!-- v2 -->
+<script>
+
+/* ═══════════════════════════════════════════════
+   UTILITIES
+═══════════════════════════════════════════════ */
+function esc(s) {
+  return String(s || '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
+}
+function toast(msg, kind='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + kind;
+  setTimeout(() => { t.className = 'toast'; }, 2800);
+}
+function showSection(id, el) {
+  document.querySelectorAll('section').forEach(s => s.style.display = 'none');
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  document.getElementById('sec-' + id).style.display = 'block';
+  if (el) el.classList.add('active');
+  if (id === 'history') loadHistory();
+  // Close mobile sidebar after navigation
+  closeSidebar();
+}
+function handleLogout() {
+  sb.auth.signOut().then(() => { window.location.href = 'index.html'; });
+}
+function toggleSidebar() {
+  const nav = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  const isOpen = nav.classList.toggle('open');
+  overlay.classList.toggle('open', isOpen);
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+}
+
+/* ═══════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════ */
+let curUid, currentCapacity = 1, cfg = null;
+let departments = [], queueCounts = {}, editId = null;
+let queueChannel, providerChannel, svcChannel;
+
+/* ═══════════════════════════════════════════════
+   BOOT
+═══════════════════════════════════════════════ */
+sb.auth.getSession().then(async ({ data: { session } }) => {
+  if (!session) { sessionStorage.setItem('loginReason', 'access your provider dashboard'); window.location.href = 'login.html'; return; }
+    document.body.classList.remove('auth-pending'); // auth confirmed — show page
+  const authUid = session.user.id;
+
+  // Guard: if this user is NOT a provider, send them to the customer dashboard
+  const { data: provCheck } = await sb
+    .from('providers')
+    .select('id, is_hospital, category')
+    .or(`user_id.eq.${authUid},id.eq.${authUid}`)
+    .maybeSingle();
+
+  if (!provCheck) {
+    window.location.replace('dashboard.html');
+    return;
+  }
+  if (provCheck.is_hospital || provCheck.category === 'Hospital') {
+    window.location.replace('hospital-dashboard.html');
+    return;
+  }
+
+  // FIX: always use the provider row's actual ID (not auth UID)
+  // These can differ if provider was registered with user_id field
+  curUid = provCheck.id;
+  window.curUid = curUid; // AI module reads this
+
+  document.getElementById('userEmail').textContent = session.user.email || '';
+  await loadProviderData();
+  startLiveQ();
+  loadServices();
+  updateServedToday();
+  document.getElementById('hDate').value = new Date().toISOString().slice(0, 10);
+  // Ask for notification permission so new order alerts work
+  requestAlertPermission();
+  // Initialise Hey Lucky voice assistant
+  if (window.LuckyVoice) {
+    window.LuckyVoice.init({
+      completeFn:     completeService,
+      startServingFn: startServing
+    });
+  }
+});
+
+/* ═══════════════════════════════════════════════
+   PROVIDER DATA
+═══════════════════════════════════════════════ */
+async function loadProviderData() {
+  const { data, error } = await sb.from('providers')
+    .select('*').eq('id', curUid).maybeSingle();
+  if (error || !data) {
+    // Fallback: try user_id match
+    const { data: d2 } = await sb.from('providers')
+      .select('*').eq('user_id', curUid).maybeSingle();
+    if (d2) { applyProviderData(d2); setupManageSection(d2); } 
+    else { toast('Could not load provider data', 'error'); }
+    return;
+  }
+  applyProviderData(data);
+  setupManageSection(data);
+
+  providerChannel = sb.channel('provider:' + curUid)
+    .on('postgres_changes', { event:'UPDATE', schema:'public', table:'providers', filter:'id=eq.'+curUid },
+      p => applyProviderData(p.new))
+    .subscribe();
+}
+
+function applyProviderData(data) {
+  // Do NOT reassign curUid here — it's set correctly in boot
+  currentCapacity = data.capacity || 1;
+  document.getElementById('bizTitle').textContent = data.business_name || 'Dashboard';
+  document.getElementById('capDisplay').textContent = currentCapacity;
+  document.getElementById('capSlider').value = currentCapacity;
+
+  // Update status badge
+  const badge = document.getElementById('statusBadge');
+  badge.innerHTML = data.is_open
+    ? '<span class="status-badge open">● Open</span>'
+    : '<span class="status-badge closed">● Closed</span>';
+
+  // Update toggle switch visual
+  setToggleSwitch(data.is_open);
+}
+
+function setToggleSwitch(isOpen) {
+  const track = document.getElementById('toggleTrack');
+  const label = document.getElementById('toggleLabel');
+  if (!track || !label) return;
+  track.className = 'toggle-track ' + (isOpen ? 'open' : 'closed');
+  label.className = 'toggle-label ' + (isOpen ? 'open' : 'closed');
+  label.textContent = isOpen ? 'Open' : 'Closed';
+}
+
+function setupManageSection(data) {
+  cfg = (typeof window.getSectorConfig === 'function')
+    ? window.getSectorConfig(data.category)
+    : { label: data.category || 'Service', unitSingular: 'Service', unitPlural: 'Services',
+        icon: '🏪', listPage: 'find-services.html', presets: [] };
+
+  document.getElementById('manageSectionTitle').textContent =
+    cfg.unitPlural + ' & Wait Times';
+  document.getElementById('addDeptBtn').textContent = '+ Add ' + cfg.unitSingular;
+
+  // Public page links
+  document.getElementById('viewPageLink').href =
+    (data.is_hospital || data.category === 'Hospital')
+      ? 'hospital-detail.html?id=' + data.id
+      : 'business-detail.html?id=' + data.id;
+  document.getElementById('listingLink').href = cfg.listPage || 'find-services.html';
+
+  // Presets
+  const strip = document.getElementById('presetStrip');
+  if (cfg.presets && cfg.presets.length) {
+    strip.style.display = 'flex';
+    strip.innerHTML = '<span style="font-size:.72rem;color:var(--text-muted);font-weight:700;align-self:center;">Quick add:</span>';
+    cfg.presets.forEach(([icon, name, wait, cap]) => {
+      const btn = document.createElement('button');
+      btn.className = 'preset-chip';
+      btn.textContent = icon + ' ' + name;
+      btn.onclick = () => quickAddPreset(icon, name, wait, cap);
+      strip.appendChild(btn);
+    });
+  }
+
+  loadDepartments();
+
+  // Live department updates
+  sb.channel('biz-' + data.id)
+    .on('postgres_changes', { event:'*', schema:'public', table:'departments', filter:'provider_id=eq.'+data.id },
+      async () => { await loadDepartments(); renderDepts(); })
+    .subscribe();
+}
+
+/* ═══════════════════════════════════════════════
+   WHATSAPP HELPERS
+═══════════════════════════════════════════════ */
+function cleanPhone(p) {
+  if (!p) return '';
+  p = p.trim();
+  const digits = p.replace(/\D/g, '');
+  if (!p.startsWith('+') && digits.startsWith('07') && digits.length === 11)
+    return '44' + digits.slice(1);
+  return digits;
+}
+function waLink(phone, name) {
+  const p = cleanPhone(phone); if (!p) return '';
+  const biz = document.getElementById('bizTitle')?.textContent || 'skipQs';
+  return `https://wa.me/${p}?text=${encodeURIComponent(`Hi ${name}, it's your turn at ${biz}! Please come in now 😊`)}`;
+}
+function waButtons(phone, name) {
+  if (!phone || !phone.replace(/\D/g,''))
+    return `<span class="btn-no-phone">No phone</span>`;
+  const p = cleanPhone(phone);
+  return `<a href="${waLink(phone,name)}" target="_blank" rel="noopener" class="btn btn-wa btn-sm" title="Send WhatsApp message">💬</a>
+          <a href="https://wa.me/${p}" target="_blank" rel="noopener" class="btn btn-wa-call btn-sm" title="WhatsApp call">📞</a>`;
+}
+
+/* ═══════════════════════════════════════════════
+   NEW ORDER ALERT SYSTEM
+   Plays a sound + shows push notification when
+   a new customer joins the queue — like PhonePe
+═══════════════════════════════════════════════ */
+
+// ── Audio: generate a pleasant "ding ding" using Web Audio API ──
+// No audio file needed — synthesised in the browser
+function playNewOrderSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playTone(freq, startTime, duration, volume = 0.6) {
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, startTime);
+      gain.gain.setValueAtTime(0, startTime);
+      gain.gain.linearRampToValueAtTime(volume, startTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+      osc.start(startTime);
+      osc.stop(startTime + duration);
+    }
+
+    const t = ctx.currentTime;
+    // Three ascending tones — like a shop door chime
+    playTone(880, t,        0.25);   // A5
+    playTone(1109, t + 0.18, 0.25);  // C#6
+    playTone(1318, t + 0.36, 0.4);   // E6
+  } catch (_) {
+    // Audio not supported — silently skip
+  }
+}
+
+// ── Push notification: show on lock screen ──
+async function showNewOrderNotif(customerName, serviceName) {
+  const title = '🛎️ New Order Received!';
+  const body  = `${customerName || 'A customer'} joined your queue` +
+                (serviceName ? ` for ${serviceName}` : '');
+
+  // Try Service Worker notification (works on lock screen)
+  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.postMessage({
+      type:               'SHOW_NOTIFICATION',
+      title,
+      body,
+      tag:                'skipqs-new-order',
+      requireInteraction: true,
+      url:                '/provider-dashboard.html'
+    });
+    return;
+  }
+
+  // Fallback: browser Notification API
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification(title, {
+      body,
+      icon: '/favicon.ico',
+      tag:  'skipqs-new-order',
+      requireInteraction: true
+    });
+  }
+}
+
+// ── Request notification permission on first load ──
+async function requestAlertPermission() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'default') {
+    const perm = await Notification.requestPermission();
+    if (perm === 'granted') {
+      toast('🔔 Notifications enabled — you\'ll be alerted for new orders', 'success');
+    }
+  }
+  // Register service worker for lock-screen alerts
+  if ('serviceWorker' in navigator) {
+    try {
+      await navigator.serviceWorker.register('/sw.js');
+    } catch (_) {}
+  }
+}
+
+// ── Main trigger: call this when a new queue INSERT fires ──
+async function onNewOrder(queueRow) {
+  // Play chime + speak the order aloud via Lucky Voice
+  if (window.LuckyVoice) {
+    window.LuckyVoice.announceNewOrder(queueRow.customer_name, queueRow.selected_service);
+  } else {
+    playNewOrderSound(); // fallback if Lucky not loaded yet
+  }
+  await showNewOrderNotif(queueRow.customer_name, queueRow.selected_service);
+
+  // Flash the page title so even background tabs are obvious
+  let flashing = true;
+  const origTitle = document.title;
+  const flashInterval = setInterval(() => {
+    document.title = flashing ? '🛎️ NEW ORDER!' : origTitle;
+    flashing = !flashing;
+  }, 700);
+  setTimeout(() => {
+    clearInterval(flashInterval);
+    document.title = origTitle;
+  }, 8000);
+
+  // Show a prominent in-page banner
+  showNewOrderBanner(queueRow);
+}
+
+// ── In-page new order banner (visible even on desktop) ──
+function showNewOrderBanner(queueRow) {
+  let banner = document.getElementById('newOrderBanner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'newOrderBanner';
+    banner.style.cssText = `
+      position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-120px);
+      z-index:9999;background:#002f34;color:white;
+      border:2px solid #23e5db;border-radius:16px;
+      padding:1rem 1.4rem;min-width:280px;max-width:380px;
+      box-shadow:0 8px 32px rgba(0,0,0,.4);
+      transition:transform .4s cubic-bezier(.34,1.56,.64,1);
+      font-family:'Inter',sans-serif;display:flex;align-items:center;gap:.8rem;
+    `;
+    document.body.appendChild(banner);
+  }
+
+  banner.innerHTML = `
+    <span style="font-size:1.8rem;flex-shrink:0;">🛎️</span>
+    <div style="flex:1;">
+      <div style="font-weight:800;font-size:.95rem;color:#23e5db;">New Order Received!</div>
+      <div style="font-size:.82rem;color:rgba(255,255,255,.8);margin-top:.2rem;">
+        ${esc(queueRow.customer_name || 'A customer')} joined your queue
+        ${queueRow.selected_service ? '<br><span style="opacity:.7">for ' + esc(queueRow.selected_service) + '</span>' : ''}
+      </div>
+    </div>
+    <button onclick="document.getElementById('newOrderBanner').style.transform='translateX(-50%) translateY(-120px)'"
+      style="background:none;border:none;color:rgba(255,255,255,.5);cursor:pointer;font-size:1.2rem;padding:0;flex-shrink:0;">×</button>
+  `;
+
+  // Slide in
+  requestAnimationFrame(() => {
+    banner.style.transform = 'translateX(-50%) translateY(0)';
+  });
+
+  // Auto dismiss after 8 seconds
+  setTimeout(() => {
+    if (banner) banner.style.transform = 'translateX(-50%) translateY(-120px)';
+  }, 8000);
+}
+
+/* ═══════════════════════════════════════════════
+   LIVE QUEUE
+═══════════════════════════════════════════════ */
+function startLiveQ() {
+  if (queueChannel) sb.removeChannel(queueChannel);
+  queueChannel = sb.channel('queue:' + curUid)
+    .on('postgres_changes', {
+      event:  'INSERT',
+      schema: 'public',
+      table:  'queues',
+      filter: 'provider_id=eq.' + curUid
+    }, payload => {
+      // 🛎️ NEW ORDER — fire alert immediately
+      onNewOrder(payload.new);
+      refreshQueue();
+    })
+    .on('postgres_changes', {
+      event:  'UPDATE',
+      schema: 'public',
+      table:  'queues',
+      filter: 'provider_id=eq.' + curUid
+    }, () => refreshQueue())
+    .on('postgres_changes', {
+      event:  'DELETE',
+      schema: 'public',
+      table:  'queues',
+      filter: 'provider_id=eq.' + curUid
+    }, () => refreshQueue())
+    .subscribe();
+  refreshQueue();
+}
+
+async function refreshQueue() {
+  const { data: rows } = await sb.from('queues')
+    .select('*').eq('provider_id', curUid)
+    .in('status', ['waiting','serving'])
+    .order('joined_at', { ascending: true });
+
+  const tbody = document.getElementById('qItems');
+  const now = Date.now();
+
+  if (!rows || !rows.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2.5rem;color:#94a3b8;">No active customers</td></tr>';
+    document.getElementById('waitCount').textContent = 0;
+    document.getElementById('totalMins').innerHTML = '0<small style="font-size:.9rem"> m</small>';
+    syncProviderStats(0, 0);
+    return;
+  }
+
+  // ── AUTO NO-SHOW DETECTION ──────────────────────────────────
+  // If a waiting customer's estimated_time has passed by more than
+  // 1× their service duration, auto-mark as no_show and notify provider.
+  for (const d of rows) {
+    if (d.status !== 'waiting' || !d.estimated_time) continue;
+    const overdueBy   = now - new Date(d.estimated_time).getTime();
+    const gracePeriod = (d.service_duration || 15) * 60 * 1000;
+    if (overdueBy > gracePeriod) {
+      const { error } = await sb.from('queues')
+        .update({ status: 'no_show', completed_at: new Date().toISOString() })
+        .eq('id', d.id);
+      if (!error) {
+        toast(`⏰ ${esc(d.customer_name)} marked as no-show (${Math.round(overdueBy/60000)} min overdue)`, 'error');
+      }
+    }
+  }
+
+  // Re-fetch after potential no-show updates
+  const { data: liveRows } = await sb.from('queues')
+    .select('*').eq('provider_id', curUid)
+    .in('status', ['waiting','serving'])
+    .order('joined_at', { ascending: true });
+
+  const activeRows = liveRows || [];
+  tbody.innerHTML = '';
+
+  if (!activeRows.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2.5rem;color:#94a3b8;">No active customers</td></tr>';
+    syncProviderStats(0, 0);
+    return;
+  }
+
+  let totalMins = 0, waitingCount = 0;
+
+  // Keep voice assistant queue in sync on every refresh
+  if (window.LuckyVoice) window.LuckyVoice.updateQueue(activeRows);
+
+  activeRows.forEach(d => {
+    const svcLabel = esc(d.selected_service || d.department_id || '—');
+    const dur = Number(d.service_duration) || 0;
+
+    if (d.status === 'serving') {
+      // Show how long they've been in progress
+      const servedAt = d.served_at ? new Date(d.served_at).getTime() : now;
+      const servingMins = Math.round((now - servedAt) / 60000);
+      const overdueTag = servingMins > dur * 2
+        ? `<span style="background:#fee2e2;color:#b91c1c;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:4px;">+${servingMins}m</span>`
+        : '';
+      tbody.insertAdjacentHTML('afterbegin', `
+        <tr style="background:#f0fdf4;">
+          <td><span class="status-badge open" style="font-size:.6rem;">NOW SERVING</span>${overdueTag}<br><strong>${esc(d.customer_name)}</strong><br><small style="color:var(--text-muted)">${esc(d.customer_phone||'')}</small></td>
+          <td>${svcLabel}</td>
+          <td style="color:#16a34a;font-weight:700;">In Progress</td>
+          <td>${waButtons(d.customer_phone, d.customer_name)}</td>
+          <td style="display:flex;gap:.35rem;flex-wrap:wrap;">
+            <button class="btn btn-green btn-sm" onclick="completeService('${d.id}')">Finish ✓</button>
+            <button class="btn btn-danger btn-sm" onclick="markNoShow('${d.id}','${esc(d.customer_name).replace(/'/g,"\\'")}')">No-show</button>
+          </td>
+        </tr>`);
+    } else {
+      waitingCount++;
+      totalMins += dur;
+      // Overdue label if estimated time passed
+      const estimatedMs = d.estimated_time ? new Date(d.estimated_time).getTime() : 0;
+      const overdueWait = estimatedMs && now > estimatedMs
+        ? `<span style="color:#d97706;font-size:.68rem;font-weight:700;"> ⚠️ overdue</span>` : '';
+      tbody.insertAdjacentHTML('beforeend', `
+        <tr>
+          <td><strong>${esc(d.customer_name)}</strong>${overdueWait}<br><small style="color:var(--text-muted)">${esc(d.customer_phone||'')}</small></td>
+          <td>${svcLabel}</td>
+          <td class="est-mins" data-target="${d.estimated_time || ''}">${dur}m</td>
+          <td>${waButtons(d.customer_phone, d.customer_name)}</td>
+          <td style="display:flex;gap:.35rem;flex-wrap:wrap;">
+            <button class="btn btn-primary btn-sm" onclick="startServing('${d.id}')">Start →</button>
+            <button class="btn btn-danger btn-sm" onclick="markNoShow('${d.id}','${esc(d.customer_name).replace(/'/g,"\\'")}')">No-show</button>
+          </td>
+        </tr>`);
+    }
+  });
+
+  const estWait = Math.ceil(totalMins / (currentCapacity || 1));
+  document.getElementById('waitCount').textContent = waitingCount;
+  document.getElementById('totalMins').innerHTML = estWait + '<small style="font-size:.9rem"> m</small>';
+  syncProviderStats(estWait, waitingCount, activeRows);
+}
+
+// ── LIVE COUNTDOWN TICKER ───────────────────────────────────
+// Runs every second and re-renders each waiting customer's "Est. Mins"
+// cell by counting down from their estimated_time, instead of showing
+// a static number that only updates when the queue data changes.
+function tickEstMins() {
+  const now = Date.now();
+  document.querySelectorAll('#qItems td.est-mins').forEach(td => {
+    const target = td.dataset.target;
+    if (!target) return; // no estimated_time yet — leave the static "Xm" fallback
+    const diffMs = new Date(target).getTime() - now;
+    if (diffMs <= 0) {
+      td.innerHTML = '<span style="color:#d97706;font-weight:700;">Overdue</span>';
+    } else {
+      const mins = Math.floor(diffMs / 60000);
+      const secs = Math.floor((diffMs % 60000) / 1000);
+      td.textContent = mins + 'm ' + String(secs).padStart(2, '0') + 's';
+    }
+  });
+}
+setInterval(tickEstMins, 1000);
+
+async function markNoShow(id, name) {
+  if (!confirm(`Mark "${name}" as no-show? They will be removed from the queue.`)) return;
+  const { error } = await sb.from('queues')
+    .update({ status: 'no_show', completed_at: new Date().toISOString() })
+    .eq('id', id);
+  if (error) { toast('Could not mark no-show: ' + error.message, 'error'); return; }
+  toast(`${name} marked as no-show`);
+}
+
+async function syncProviderStats(estWait, peopleInLine, activeRows = []) {
+  await sb.from('providers').update({
+    current_wait_mins: estWait, people_in_line: peopleInLine, last_sync: new Date().toISOString()
+  }).eq('id', curUid);
+
+  if (departments && departments.length) {
+    for (const dept of departments.filter(d => d.is_open)) {
+      const waiting = activeRows.filter(r =>
+        r.status === 'waiting' &&
+        (r.department_id === dept.id || (!r.department_id && departments.length === 1))
+      );
+      const totalMins = waiting.reduce((s, r) => s + (Number(r.service_duration) || 15), 0);
+      const cap = Math.max(1, dept.capacity || 1);
+      await sb.from('departments')
+        .update({ wait_minutes: Math.ceil(totalMins / cap) })
+        .eq('id', dept.id);
+    }
+  }
+}
+async function startServing(id) {
+  const patch = { status: 'serving' };
+  try { patch.served_at = new Date().toISOString(); } catch(_) {}
+  const { error } = await sb.from('queues').update(patch).eq('id', id);
+  if (error) toast('Could not start: ' + (error.message||'Permission denied'), 'error');
+}
+
+async function completeService(id) {
+  const now = new Date();
+  const patch = { status: 'completed' };
+  try { patch.completed_at = now.toISOString(); } catch(_) {}
+  try { patch.completed_date = now.toISOString().slice(0,10); } catch(_) {}
+  const { error } = await sb.from('queues').update(patch).eq('id', id);
+  if (error) {
+    if (error.message?.includes('completed_date')) {
+      const { error: e2 } = await sb.from('queues')
+        .update({ status:'completed', completed_at: now.toISOString() }).eq('id', id);
+      if (e2) { toast('Could not complete: ' + e2.message, 'error'); return; }
+    } else { toast('Could not complete: ' + (error.message||'Check RLS policies'), 'error'); return; }
+  }
+  toast('Customer served ✓', 'success');
+  updateServedToday();
+}
+
+/* ═══════════════════════════════════════════════
+   LEGACY SERVICES (simple service list)
+═══════════════════════════════════════════════ */
+function loadServices() {
+  if (svcChannel) sb.removeChannel(svcChannel);
+  svcChannel = sb.channel('services:' + curUid)
+    .on('postgres_changes', { event:'*', schema:'public', table:'services', filter:'provider_id=eq.'+curUid },
+      () => refreshServices())
+    .subscribe();
+  refreshServices();
+}
+
+async function refreshServices() {
+  const { data } = await sb.from('services').select('*').eq('provider_id', curUid).order('created_at');
+  const list = document.getElementById('svcList');
+  list.innerHTML = '';
+  (data || []).forEach(s => {
+    list.insertAdjacentHTML('beforeend', `
+      <tr>
+        <td><strong>${esc(s.name)}</strong></td>
+        <td>£${Number(s.price||0).toFixed(2)}</td>
+        <td><input class="edit-input" type="number" value="${Number(s.duration)||15}" onchange="updateSvcDuration('${s.id}',this.value)"> m</td>
+        <td style="text-align:right"><button class="svc-del" onclick="delSvc('${s.id}')">×</button></td>
+      </tr>`);
+  });
+}
+
+async function addSvc() {
+  const n = document.getElementById('sName').value.trim();
+  const t = document.getElementById('sTime').value;
+  const p = document.getElementById('sPrice').value;
+  if (!n || !t) { toast('Name and duration are required', 'error'); return; }
+  const { error } = await sb.from('services').insert({ provider_id: curUid, name: n, duration: parseInt(t), price: parseFloat(p)||0 });
+  if (error) { toast('Add failed: ' + error.message, 'error'); return; }
+  document.getElementById('sName').value = '';
+  document.getElementById('sTime').value = '';
+  document.getElementById('sPrice').value = '';
+}
+async function updateSvcDuration(id, val) {
+  await sb.from('services').update({ duration: parseInt(val)||15 }).eq('id', id);
+}
+async function delSvc(id) {
+  if (!confirm('Delete this service?')) return;
+  await sb.from('services').delete().eq('id', id);
+}
+
+/* ═══════════════════════════════════════════════
+   DEPARTMENT MANAGEMENT
+═══════════════════════════════════════════════ */
+async function loadDepartments() {
+  const { data, error } = await sb.from('departments')
+    .select('*').eq('provider_id', curUid).order('display_order', { ascending: true });
+  if (error) { toast('Could not load services', 'error'); return; }
+  departments = data || [];
+
+  if (departments.length) {
+    const ids = departments.map(d => d.id);
+    const { data: qRows } = await sb.from('queues')
+      .select('department_id').in('department_id', ids).in('status', ['waiting','serving']);
+    queueCounts = {};
+    (qRows || []).forEach(q => {
+      if (q.department_id) queueCounts[q.department_id] = (queueCounts[q.department_id] || 0) + 1;
+    });
+  }
+  renderDepts();
+}
+
+function renderDepts() {
+  const container = document.getElementById('deptList');
+  if (!departments.length) {
+    const label = cfg ? cfg.unitPlural.toLowerCase() : 'services';
+    const singular = cfg ? cfg.unitSingular : 'Service';
+    container.innerHTML = `<div style="text-align:center;padding:3rem 1rem;color:var(--text-muted);"><h3 style="color:var(--primary);margin-bottom:.4rem;">No ${label} yet</h3><p>Click "Add ${singular}" or use the quick-add above.</p></div>`;
+    return;
+  }
+  container.innerHTML = departments.map(deptCard).join('');
+}
+
+function deptCard(d) {
+  const wait = d.wait_minutes || 0;
+  const cap = Math.max(1, d.capacity || 1);
+  const consultMins = d.avg_consult_minutes || 15;
+  const inQueue = queueCounts[d.id] || 0;
+  const suggested = Math.ceil(inQueue / cap) * consultMins;
+  const showSugg = inQueue > 0 && suggested !== wait;
+  return `
+    <div class="dept-card">
+      <div class="dept-icon-lg">${esc(d.icon || (cfg ? cfg.icon : '🏪'))}</div>
+      <div class="dept-info">
+        <div class="dept-name">${esc(d.name)}</div>
+        <div class="dept-meta">
+          <span><span class="dept-status-dot ${d.is_open?'dot-open':'dot-closed'}"></span>${d.is_open?'Open':'Closed'}</span>
+          <span title="Parallel slots">🪑 ${cap} slot${cap>1?'s':''}</span>
+          <span title="Avg time per customer">⏱ ${consultMins} min</span>
+          <span title="Currently in queue">👥 ${inQueue} in queue</span>
+        </div>
+        ${showSugg ? `<div style="margin-top:.3rem;font-size:.73rem;color:var(--warning);font-weight:700;">
+          💡 Suggested: ${suggested} min <button class="btn btn-accent btn-sm" style="font-size:.7rem;padding:.25rem .5rem;" onclick="quickSetWait('${d.id}',${suggested})">Apply</button>
+        </div>` : ''}
+      </div>
+      <div class="dept-controls">
+        <input type="number" class="wait-input" min="0" value="${wait}" onchange="quickSetWait('${d.id}',this.value)" title="Wait time shown to customers">
+        <span style="font-size:.68rem;color:var(--text-muted);font-weight:600;">min</span>
+        <button class="btn btn-accent btn-sm" onclick="bumpWait('${d.id}',-5)">−5</button>
+        <button class="btn btn-accent btn-sm" onclick="bumpWait('${d.id}',5)">+5</button>
+        <button class="btn btn-ghost btn-sm" onclick="toggleDept('${d.id}')">${d.is_open?'Close':'Open'}</button>
+        <button class="btn btn-ghost btn-sm" onclick="editDept('${d.id}')">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteDept('${d.id}','${esc(d.name).replace(/'/g,"\\'")}')">×</button>
+      </div>
+    </div>`;
+}
+
+async function quickSetWait(id, value) {
+  const v = Math.max(0, parseInt(value) || 0);
+  const { error } = await sb.from('departments').update({ wait_minutes: v }).eq('id', id);
+  if (error) { toast('Update failed', 'error'); return; }
+  toast('Wait updated to ' + v + ' min');
+}
+async function bumpWait(id, delta) {
+  const d = departments.find(x => x.id === id); if (!d) return;
+  await quickSetWait(id, Math.max(0, (d.wait_minutes||0) + delta));
+}
+async function toggleDept(id) {
+  const d = departments.find(x => x.id === id); if (!d) return;
+  const { error } = await sb.from('departments').update({ is_open: !d.is_open }).eq('id', id);
+  if (error) { toast('Failed', 'error'); return; }
+  toast((!d.is_open ? 'Opened ' : 'Closed ') + d.name);
+}
+async function deleteDept(id, name) {
+  if (!confirm('Delete "' + name + '"? This cannot be undone.')) return;
+  const { error } = await sb.from('departments').delete().eq('id', id);
+  if (error) { toast('Delete failed', 'error'); return; }
+  toast('Deleted');
+}
+async function quickAddPreset(icon, name, wait, cap) {
+  if (departments.some(d => d.name.toLowerCase() === name.toLowerCase())) {
+    toast('"' + name + '" already exists', 'error'); return;
+  }
+  const { error } = await sb.from('departments').insert({
+    provider_id: curUid, icon, name, wait_minutes: wait, capacity: cap,
+    display_order: departments.length, is_open: true
+  });
+  if (error) { toast('Add failed: '+error.message, 'error'); return; }
+  toast('Added ' + name);
+}
+
+/* ── ADD / EDIT MODAL ── */
+function openAddModal() {
+  editId = null;
+  document.getElementById('modalTitle').textContent = 'Add ' + (cfg ? cfg.unitSingular : 'Service');
+  document.getElementById('m_icon').value = cfg ? cfg.icon : '🏪';
+  document.getElementById('m_name').value = '';
+  document.getElementById('m_name').placeholder = (cfg ? cfg.unitSingular : 'Service') + ' name';
+  document.getElementById('m_wait').value = '15';
+  document.getElementById('m_cap').value = '2';
+  document.getElementById('addModal').classList.add('show');
+  setTimeout(() => document.getElementById('m_name').focus(), 50);
+}
+function editDept(id) {
+  const d = departments.find(x => x.id === id); if (!d) return;
+  editId = id;
+  document.getElementById('modalTitle').textContent = 'Edit ' + (cfg ? cfg.unitSingular : 'Service');
+  document.getElementById('m_icon').value = d.icon || (cfg ? cfg.icon : '🏪');
+  document.getElementById('m_name').value = d.name;
+  document.getElementById('m_wait').value = d.wait_minutes || 15;
+  document.getElementById('m_cap').value  = d.capacity || 2;
+  document.getElementById('addModal').classList.add('show');
+}
+function closeModal() { document.getElementById('addModal').classList.remove('show'); }
+async function saveDept() {
+  const icon = document.getElementById('m_icon').value.trim() || (cfg ? cfg.icon : '🏪');
+  const name = document.getElementById('m_name').value.trim();
+  const wait = Math.max(0, parseInt(document.getElementById('m_wait').value) || 0);
+  const cap  = Math.max(1, parseInt(document.getElementById('m_cap').value)  || 1);
+  if (!name) { toast('Name is required', 'error'); return; }
+  if (editId) {
+    const { error } = await sb.from('departments').update({ icon, name, wait_minutes: wait, capacity: cap }).eq('id', editId);
+    if (error) { toast('Save failed: '+error.message, 'error'); return; }
+    toast('Updated');
+  } else {
+    const { error } = await sb.from('departments').insert({
+      provider_id: curUid, icon, name, wait_minutes: wait, capacity: cap,
+      display_order: departments.length, is_open: true
+    });
+    if (error) { toast('Add failed: '+error.message, 'error'); return; }
+    toast('Added');
+  }
+  closeModal();
+}
+document.getElementById('addModal').addEventListener('click', e => { if (e.target.id === 'addModal') closeModal(); });
+
+/* ═══════════════════════════════════════════════
+   BULK IMPORT
+═══════════════════════════════════════════════ */
+function openBulkModal() {
+  document.getElementById('bulkModal').classList.add('show');
+  document.getElementById('bulkPasteInput').value = '';
+  document.getElementById('bulkReview').style.display = 'none';
+  document.getElementById('bulkPasteTab').style.display = 'block';
+  document.getElementById('bulkCsvTab').style.display = 'none';
+  document.querySelectorAll('.bulk-tab').forEach((b,i) => b.classList.toggle('active', i===0));
+}
+function closeBulkModal() { document.getElementById('bulkModal').classList.remove('show'); }
+function switchBulkTab(tab, ev) {
+  document.querySelectorAll('.bulk-tab').forEach(b => b.classList.remove('active'));
+  if (ev && ev.target) ev.target.classList.add('active');
+  document.getElementById('bulkPasteTab').style.display = tab==='paste' ? 'block' : 'none';
+  document.getElementById('bulkCsvTab').style.display   = tab==='csv'   ? 'block' : 'none';
+  document.getElementById('bulkReview').style.display   = 'none';
+}
+function parseCsvLine(line) {
+  const result=[]; let current='', inQ=false;
+  for (const c of line) {
+    if(c==='"'){inQ=!inQ;}else if(c===','&&!inQ){result.push(current.trim());current='';}else{current+=c;}
+  }
+  result.push(current.trim()); return result;
+}
+function parseRawText(text) {
+  const rows=[], lines=text.split('\n').map(l=>l.trim()).filter(l=>l);
+  const hasCsv = lines.some(l=>l.includes(','));
+  for (const line of lines) {
+    const parts = hasCsv ? parseCsvLine(line) : [line];
+    const name = (parts[0]||'').trim();
+    if (!name || name.toLowerCase()==='name' || name.toLowerCase()==='service') continue;
+    rows.push({ name, icon:(parts[1]||'').trim()||(cfg?cfg.icon:'🏪'), wait:parseInt(parts[2])||15, capacity:parseInt(parts[3])||2 });
+  }
+  return rows;
+}
+function parsePasteInput() {
+  const rows = parseRawText(document.getElementById('bulkPasteInput').value);
+  if (!rows.length) { toast('No valid services found.', 'error'); return; }
+  showReviewTable(rows);
+}
+function showReviewTable(rows) {
+  document.getElementById('bulkPasteTab').style.display = 'none';
+  document.getElementById('bulkCsvTab').style.display = 'none';
+  document.getElementById('bulkReview').style.display = 'block';
+  document.getElementById('reviewCount').textContent = rows.length + ' service' + (rows.length===1?'':'s') + ' ready to import';
+  document.getElementById('bulkProgress').style.display = 'none';
+  const tbody = document.getElementById('reviewBody');
+  tbody.innerHTML = '';
+  rows.forEach((r,i) => tbody.appendChild(makeReviewRow(i, r)));
+}
+function makeReviewRow(i, r) {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td class="icon-td"><input type="text" value="${esc(r.icon)}" placeholder="${esc(cfg?cfg.icon:'🏪')}" maxlength="2"></td>
+    <td><input type="text" value="${esc(r.name)}" placeholder="Service name" required></td>
+    <td class="wait-td"><input type="number" value="${r.wait}" min="0" max="999"></td>
+    <td class="wait-td"><input type="number" value="${r.capacity||2}" min="1" max="999"></td>
+    <td class="rm-td" onclick="this.closest('tr').remove();updateReviewCount();">×</td>`;
+  return tr;
+}
+function addReviewRow() {
+  const tbody = document.getElementById('reviewBody');
+  tbody.appendChild(makeReviewRow(tbody.rows.length, { name:'', icon: cfg?cfg.icon:'🏪', wait:15, capacity:2 }));
+}
+function updateReviewCount() {
+  const n = document.getElementById('reviewBody').rows.length;
+  document.getElementById('reviewCount').textContent = n + ' service' + (n===1?'':'s') + ' ready to import';
+}
+function backToBulkInput() {
+  document.getElementById('bulkReview').style.display = 'none';
+  document.getElementById('bulkPasteTab').style.display = 'block';
+  document.querySelectorAll('.bulk-tab').forEach((b,i) => b.classList.toggle('active', i===0));
+}
+async function importDepartments() {
+  const rows = [];
+  document.querySelectorAll('#reviewBody tr').forEach(tr => {
+    const inp = tr.querySelectorAll('input');
+    const icon = inp[0].value.trim() || (cfg?cfg.icon:'🏪');
+    const name = inp[1].value.trim();
+    const wait = Math.max(0, parseInt(inp[2].value)||15);
+    const cap  = Math.max(1, parseInt(inp[3].value)||2);
+    if (name) rows.push({ icon, name, wait_minutes: wait, capacity: cap });
+  });
+  if (!rows.length) { toast('No services to import.', 'error'); return; }
+  const btn  = document.getElementById('importBtn');
+  const prog = document.getElementById('bulkProgress');
+  btn.disabled = true; btn.textContent = '⏳ Importing…'; prog.style.display = 'block';
+  let ok=0, fail=0;
+  const start = departments.length;
+  for (let i=0; i<rows.length; i++) {
+    prog.innerHTML = `Importing <b>${i+1} of ${rows.length}</b>: ${esc(rows[i].name)}…`;
+    const { error } = await sb.from('departments').insert({
+      provider_id: curUid, icon: rows[i].icon, name: rows[i].name,
+      wait_minutes: rows[i].wait_minutes, capacity: rows[i].capacity,
+      display_order: start+i, is_open: true, avg_consult_minutes: rows[i].wait_minutes
+    });
+    if (error) { console.error(error); fail++; } else { ok++; }
+  }
+  prog.style.display = 'none'; btn.disabled = false; btn.textContent = '💾 Import All';
+  closeBulkModal();
+  toast(fail>0 ? `Imported ${ok} · ${fail} failed` : `✓ ${ok} service${ok===1?'':'s'} imported!`, fail>0?'error':'success');
+}
+function handleFileSelect(e) { const f=e.target.files[0]; if (f) readCsvFile(f); }
+function handleDrop(e) {
+  e.preventDefault();
+  document.querySelector('.bulk-upload-zone').classList.remove('drag');
+  const f=e.dataTransfer.files[0]; if (f) readCsvFile(f);
+}
+function readCsvFile(file) {
+  const r = new FileReader();
+  r.onload = ev => { const rows=parseRawText(ev.target.result); if(!rows.length){toast('No valid services in file.','error');return;} showReviewTable(rows); };
+  r.readAsText(file);
+}
+document.getElementById('bulkModal').addEventListener('click', e => { if (e.target.id==='bulkModal') closeBulkModal(); });
+
+/* ═══════════════════════════════════════════════
+   HISTORY
+═══════════════════════════════════════════════ */
+async function loadHistory() {
+  const date = document.getElementById('hDate').value;
+  const { data } = await sb.from('queues')
+    .select('*').eq('provider_id', curUid)
+    .in('status', ['completed','no_show','cancelled'])
+    .eq('completed_date', date)
+    .order('completed_at', { ascending: false });
+  const list = document.getElementById('hItems');
+  if (!data || !data.length) {
+    list.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:2rem;color:#94a3b8;">No history for this date</td></tr>';
+    return;
+  }
+  list.innerHTML = data.map(d => {
+    const time = d.completed_at ? new Date(d.completed_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '—';
+    const badge = d.status === 'no_show'
+      ? '<span style="background:#fee2e2;color:#b91c1c;font-size:.65rem;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:4px;">NO-SHOW</span>'
+      : d.status === 'cancelled'
+      ? '<span style="background:#f3f4f6;color:#6b7280;font-size:.65rem;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:4px;">CANCELLED</span>'
+      : '';
+    return `<tr>
+      <td><strong>${esc(d.customer_name)}</strong>${badge}</td>
+      <td>${esc(d.selected_service||'—')}</td>
+      <td>${time}</td>
+      <td>${waButtons(d.customer_phone, d.customer_name)}</td>
+    </tr>`;
+  }).join('');
+}
+async function updateServedToday() {
+  const today = new Date().toISOString().slice(0, 10);
+  const { count } = await sb.from('queues')
+    .select('id', { count:'exact', head:true })
+    .eq('provider_id', curUid).eq('status','completed').eq('completed_date', today);
+  document.getElementById('servedToday').textContent = count || 0;
+}
+
+/* ═══════════════════════════════════════════════
+   UTILITIES
+═══════════════════════════════════════════════ */
+async function updateCapacity(val) {
+  document.getElementById('capDisplay').textContent = val;
+  currentCapacity = parseInt(val);
+  await sb.from('providers').update({ capacity: currentCapacity }).eq('id', curUid);
+}
+async function toggleStatus() {
+  const { data, error } = await sb.from('providers')
+    .select('is_open').eq('id', curUid).maybeSingle();
+  if (error || !data) {
+    toast('Could not read provider status — check your connection', 'error');
+    return;
+  }
+  const next = !data.is_open;
+  // Update UI instantly for snappy feel
+  setToggleSwitch(next);
+  const badge = document.getElementById('statusBadge');
+  if (badge) badge.innerHTML = next
+    ? '<span class="status-badge open">● Open</span>'
+    : '<span class="status-badge closed">● Closed</span>';
+
+  const { error: updateErr } = await sb.from('providers')
+    .update({ is_open: next }).eq('id', curUid);
+  if (updateErr) {
+    // Revert on failure
+    setToggleSwitch(!next);
+    toast('Toggle failed: ' + (updateErr.message || 'Permission denied'), 'error');
+    return;
+  }
+  toast('Business is now ' + (next ? 'OPEN ✓' : 'CLOSED'));
+}
+function toggleQR() {
+  const overlay = document.getElementById('qrOverlay');
+  const isOpen = overlay.style.display === 'flex';
+  overlay.style.display = isOpen ? 'none' : 'flex';
+  if (!isOpen) {
+    const box = document.getElementById('qrcode-box');
+    box.innerHTML = '';
+    new QRCode(box, { text: window.location.origin + '/business-detail.html?id=' + curUid, width: 240, height: 240 });
+  }
+}
+document.getElementById('qrOverlay').addEventListener('click', e => {
+  if (e.target.id === 'qrOverlay') toggleQR();
+});
+</script>
+<!-- AI module loaded last so window.curUid is set before it initialises -->
+<script src="ai-provider.js">  // Auto no-show poller
+  (async function startNoShowPoller() {
+    async function runNoShow() { try { await sb.rpc('auto_mark_no_shows'); } catch(e) {} }
+    runNoShow();
+    setInterval(runNoShow, 5 * 60 * 1000);
+  })();
+</script>
+</body>
+</html>
