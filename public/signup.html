@@ -202,20 +202,53 @@
     // Use signInWithOtp with channel:'email' which forces a 6-digit OTP
     // rather than a magic link. Requires "Email OTP" enabled in Supabase
     // Auth → Email → Enable Email OTP (6-digit code).
-    const { error } = await sb.auth.signInWithOtp({
-      email,
-      options: {
-        shouldCreateUser: true,
-        channel: 'email',        // forces numeric OTP, not magic link
-        data: { display_name: storedName }  // store name in user metadata
-      }
-    });
+    //
+    // Guarded with a client-side timeout + try/catch so a network hiccup
+    // (dropped connection, backgrounded tab, ad-blocker, etc.) can never
+    // leave the button stuck on "Sending…" forever or surface a useless
+    // bare "{}" — we always fall back to a readable message and log the
+    // raw error to the console for debugging.
+    let error;
+    try {
+      const otpPromise = sb.auth.signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser: true,
+          channel: 'email',        // forces numeric OTP, not magic link
+          data: { display_name: storedName }  // store name in user metadata
+        }
+      });
+      const timeout = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('TIMEOUT')), 20000)
+      );
+      ({ error } = await Promise.race([otpPromise, timeout]));
+    } catch (err) {
+      console.error('[skipQs] signInWithOtp failed:', err);
+      spin.style.display = 'none';
+      btn.disabled = false;
+      txt.textContent = 'Send Verification Code';
+      showError(
+        err?.message === 'TIMEOUT'
+          ? 'This is taking longer than expected. Please check your connection and try again.'
+          : 'Could not reach the server. Please check your connection and try again.'
+      );
+      return;
+    }
 
     spin.style.display = 'none';
     btn.disabled = false;
     txt.textContent = 'Send Verification Code';
 
-    if (error) { showError(error.message); return; }
+    if (error) {
+      console.error('[skipQs] signInWithOtp returned an error:', error);
+      // Guard against a bare/empty error object (e.g. an unexpected
+      // response shape) rendering as a useless "{}" or "undefined".
+      const msg = (error.message && error.message.trim() && error.message.trim() !== '{}')
+        ? error.message
+        : 'Something went wrong sending your code. Please try again in a moment.';
+      showError(msg);
+      return;
+    }
 
     // Move to step 2
     document.getElementById('step1').style.display  = 'none';
