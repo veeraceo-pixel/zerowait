@@ -75,14 +75,6 @@ main{padding:1.6rem 0 4rem;}
 .modal-card input:focus{outline:none;border-color:var(--accent);}
 .modal-actions{display:flex;gap:.6rem;justify-content:flex-end;}
 .modal-actions .btn-primary{background:var(--primary);color:white;padding:.7rem 1.4rem;}
-/* ── QR SCAN AUTH GATE ── */
-.auth-gate{max-width:420px;margin:3rem auto;background:white;border-radius:20px;padding:2.2rem 1.8rem;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.06);}
-.auth-gate .icon{font-size:2.6rem;margin-bottom:.6rem;}
-.auth-gate h2{font-size:1.25rem;font-weight:800;color:var(--primary);margin-bottom:.5rem;}
-.auth-gate p{font-size:.88rem;color:var(--text-muted);margin-bottom:1.4rem;}
-.auth-gate .btn{width:100%;padding:.9rem;border-radius:10px;font-size:.92rem;justify-content:center;}
-.auth-gate .btn-primary{background:var(--primary);color:white;margin-bottom:.7rem;}
-.auth-gate .btn-ghost{border:1.5px solid var(--border);}
 /* ── MOBILE BOTTOM NAV ── */
 .mob-nav-bar{display:none;position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--border);z-index:999;box-shadow:0 -4px 16px rgba(0,0,0,.07);}
 .mob-nav-inner{display:flex;justify-content:space-around;padding:8px 0 6px;}
@@ -168,16 +160,6 @@ main{padding:1.6rem 0 4rem;}
   </div>
 </div>
 
-<div class="container" id="authGate" style="display:none;">
-  <div class="auth-gate">
-    <div class="icon">🔒</div>
-    <h2>Sign in to see live wait times</h2>
-    <p>Log in or create a free account to view this queue and get real-time wait updates.</p>
-    <button class="btn btn-primary" onclick="goAuth('login.html')">Log In</button>
-    <button class="btn btn-ghost" onclick="goAuth('signup.html')">Sign Up</button>
-  </div>
-</div>
-
 <main id="mainContent">
   <div class="container">
     <h2 class="section-title" id="sectionTitle">Available now</h2>
@@ -237,13 +219,6 @@ function toast(msg, kind='success') {
 }
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-// Remember this page (with its src=qr tag) so login.html / signup.html
-// send the customer straight back to the wait-time banner after auth.
-function goAuth(page) {
-  sessionStorage.setItem('redirectAfterLogin', window.location.href);
-  window.location.href = page;
-}
-
 async function init() {
   if (!providerId) {
     document.title = 'Not Found | skipQs';
@@ -264,24 +239,6 @@ async function init() {
     document.getElementById('myQueuesBtn').style.display='inline-flex';
     const mob = document.getElementById('mobDetailLoginBtn');
     if (mob) { mob.href = 'dashboard.html'; mob.querySelector('span').textContent = '📋'; mob.querySelector('p').textContent = 'Queues'; }
-  }
-
-  // ── QR-SCAN AUTH GATE ──────────────────────────────────────
-  // Links generated from a business's "QR Code" panel are tagged with
-  // &src=qr. Anyone scanning that code must sign up or log in before
-  // they can see live wait times / the queue banner.
-  const cameFromQr = params.get('src') === 'qr';
-  if (cameFromQr && !session) {
-    document.querySelectorAll('.section-bar, #mainContent, #joinModal').forEach(el => { if (el) el.style.display = 'none'; });
-    document.getElementById('authGate').style.display = 'block';
-    // Still populate the hero (business name/photo) so the gate has context
-    await loadProvider();
-    if (provider) {
-      cfg = window.getSectorConfig(provider.category);
-      document.title = provider.business_name + ' | skipQs';
-      renderHero();
-    }
-    return;
   }
 
   await loadAll();
@@ -488,6 +445,19 @@ async function confirmJoin() {
 
   const btn = document.getElementById('joinSubmitBtn');
   btn.disabled = true; btn.textContent = 'Joining…';
+
+  // Lightweight spam guard — no OTP/verification, just a sanity check:
+  // block a phone number from being active in more than 2 queues at once,
+  // anywhere on the platform.
+  const { count: activeForPhone } = await sb.from('queues')
+    .select('id', { count: 'exact', head: true })
+    .eq('customer_phone', phone)
+    .in('status', ['waiting', 'serving']);
+  if ((activeForPhone || 0) >= 2) {
+    toast('This phone number is already in 2 active queues. Finish or leave one before joining another.', 'error');
+    btn.disabled = false; btn.textContent = 'Join Queue';
+    return;
+  }
 
   try {
     // For legacy services (from old `services` table) the id doesn't exist in

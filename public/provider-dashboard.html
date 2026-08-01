@@ -1410,7 +1410,7 @@ function toggleQR() {
   if (!isOpen) {
     const box = document.getElementById('qrcode-box');
     box.innerHTML = '';
-    new QRCode(box, { text: window.location.origin + '/business-detail.html?id=' + curUid + '&src=qr', width: 240, height: 240 });
+    new QRCode(box, { text: window.location.origin + '/business-detail.html?id=' + curUid, width: 240, height: 240 });
   }
 }
 document.getElementById('qrOverlay').addEventListener('click', e => {

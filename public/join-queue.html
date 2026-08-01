@@ -226,6 +226,20 @@
     btn.disabled = true;
     btn.textContent = 'Joining…';
 
+    // Lightweight spam guard — no OTP/verification, just a sanity check:
+    // block a phone number from being active in more than 2 queues at once,
+    // anywhere on the platform.
+    const { count: activeForPhone } = await sb.from('queues')
+      .select('id', { count: 'exact', head: true })
+      .eq('customer_phone', phone)
+      .in('status', ['waiting', 'serving']);
+    if ((activeForPhone || 0) >= 2) {
+      showError('This phone number is already in 2 active queues. Finish or leave one before joining another.');
+      btn.disabled = false;
+      btn.textContent = 'Confirm & Join Queue';
+      return;
+    }
+
     const { data: { session } } = await sb.auth.getSession();
     const userId = session?.user?.id || null;
 
