@@ -935,7 +935,7 @@ async function refreshQueue() {
         <tr>
           <td><strong>${esc(d.customer_name)}</strong>${overdueWait}<br><small style="color:var(--text-muted)">${esc(d.customer_phone||'')}</small></td>
           <td>${svcLabel}</td>
-          <td>${dur}m</td>
+          <td class="est-mins" data-target="${d.estimated_time || ''}">${dur}m</td>
           <td>${waButtons(d.customer_phone, d.customer_name)}</td>
           <td style="display:flex;gap:.35rem;flex-wrap:wrap;">
             <button class="btn btn-primary btn-sm" onclick="startServing('${d.id}')">Start →</button>
@@ -950,6 +950,27 @@ async function refreshQueue() {
   document.getElementById('totalMins').innerHTML = estWait + '<small style="font-size:.9rem"> m</small>';
   syncProviderStats(estWait, waitingCount, activeRows);
 }
+
+// ── LIVE COUNTDOWN TICKER ───────────────────────────────────
+// Runs every second and re-renders each waiting customer's "Est. Mins"
+// cell by counting down from their estimated_time, instead of showing
+// a static number that only updates when the queue data changes.
+function tickEstMins() {
+  const now = Date.now();
+  document.querySelectorAll('#qItems td.est-mins').forEach(td => {
+    const target = td.dataset.target;
+    if (!target) return; // no estimated_time yet — leave the static "Xm" fallback
+    const diffMs = new Date(target).getTime() - now;
+    if (diffMs <= 0) {
+      td.innerHTML = '<span style="color:#d97706;font-weight:700;">Overdue</span>';
+    } else {
+      const mins = Math.floor(diffMs / 60000);
+      const secs = Math.floor((diffMs % 60000) / 1000);
+      td.textContent = mins + 'm ' + String(secs).padStart(2, '0') + 's';
+    }
+  });
+}
+setInterval(tickEstMins, 1000);
 
 async function markNoShow(id, name) {
   if (!confirm(`Mark "${name}" as no-show? They will be removed from the queue.`)) return;
@@ -1389,7 +1410,7 @@ function toggleQR() {
   if (!isOpen) {
     const box = document.getElementById('qrcode-box');
     box.innerHTML = '';
-    new QRCode(box, { text: window.location.origin + '/business-detail.html?id=' + curUid, width: 240, height: 240 });
+    new QRCode(box, { text: window.location.origin + '/business-detail.html?id=' + curUid + '&src=qr', width: 240, height: 240 });
   }
 }
 document.getElementById('qrOverlay').addEventListener('click', e => {

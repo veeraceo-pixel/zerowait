@@ -1,0 +1,147 @@
+diff --git a/public/business-detail.html b/public/business-detail.html
+index 315e345..04531c1 100644
+--- a/public/business-detail.html
++++ b/public/business-detail.html
+@@ -75,6 +75,14 @@ main{padding:1.6rem 0 4rem;}
+ .modal-card input:focus{outline:none;border-color:var(--accent);}
+ .modal-actions{display:flex;gap:.6rem;justify-content:flex-end;}
+ .modal-actions .btn-primary{background:var(--primary);color:white;padding:.7rem 1.4rem;}
++/* ── QR SCAN AUTH GATE ── */
++.auth-gate{max-width:420px;margin:3rem auto;background:white;border-radius:20px;padding:2.2rem 1.8rem;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.06);}
++.auth-gate .icon{font-size:2.6rem;margin-bottom:.6rem;}
++.auth-gate h2{font-size:1.25rem;font-weight:800;color:var(--primary);margin-bottom:.5rem;}
++.auth-gate p{font-size:.88rem;color:var(--text-muted);margin-bottom:1.4rem;}
++.auth-gate .btn{width:100%;padding:.9rem;border-radius:10px;font-size:.92rem;justify-content:center;}
++.auth-gate .btn-primary{background:var(--primary);color:white;margin-bottom:.7rem;}
++.auth-gate .btn-ghost{border:1.5px solid var(--border);}
+ /* ── MOBILE BOTTOM NAV ── */
+ .mob-nav-bar{display:none;position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--border);z-index:999;box-shadow:0 -4px 16px rgba(0,0,0,.07);}
+ .mob-nav-inner{display:flex;justify-content:space-around;padding:8px 0 6px;}
+@@ -160,7 +168,17 @@ main{padding:1.6rem 0 4rem;}
+   </div>
+ </div>
+ 
+-<main>
++<div class="container" id="authGate" style="display:none;">
++  <div class="auth-gate">
++    <div class="icon">🔒</div>
++    <h2>Sign in to see live wait times</h2>
++    <p>Log in or create a free account to view this queue and get real-time wait updates.</p>
++    <button class="btn btn-primary" onclick="goAuth('login.html')">Log In</button>
++    <button class="btn btn-ghost" onclick="goAuth('signup.html')">Sign Up</button>
++  </div>
++</div>
++
++<main id="mainContent">
+   <div class="container">
+     <h2 class="section-title" id="sectionTitle">Available now</h2>
+     <div class="subtle" id="sectionSubtle">Tap to join a virtual queue.</div>
+@@ -219,6 +237,13 @@ function toast(msg, kind='success') {
+ }
+ function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+ 
++// Remember this page (with its src=qr tag) so login.html / signup.html
++// send the customer straight back to the wait-time banner after auth.
++function goAuth(page) {
++  sessionStorage.setItem('redirectAfterLogin', window.location.href);
++  window.location.href = page;
++}
++
+ async function init() {
+   if (!providerId) {
+     document.title = 'Not Found | skipQs';
+@@ -241,6 +266,24 @@ async function init() {
+     if (mob) { mob.href = 'dashboard.html'; mob.querySelector('span').textContent = '📋'; mob.querySelector('p').textContent = 'Queues'; }
+   }
+ 
++  // ── QR-SCAN AUTH GATE ──────────────────────────────────────
++  // Links generated from a business's "QR Code" panel are tagged with
++  // &src=qr. Anyone scanning that code must sign up or log in before
++  // they can see live wait times / the queue banner.
++  const cameFromQr = params.get('src') === 'qr';
++  if (cameFromQr && !session) {
++    document.querySelectorAll('.section-bar, #mainContent, #joinModal').forEach(el => { if (el) el.style.display = 'none'; });
++    document.getElementById('authGate').style.display = 'block';
++    // Still populate the hero (business name/photo) so the gate has context
++    await loadProvider();
++    if (provider) {
++      cfg = window.getSectorConfig(provider.category);
++      document.title = provider.business_name + ' | skipQs';
++      renderHero();
++    }
++    return;
++  }
++
+   await loadAll();
+ 
+   sb.channel('biz-detail-' + providerId)
+@@ -453,6 +496,11 @@ async function confirmJoin() {
+ 
+     const userId = session?.user?.id ?? null;
+ 
++    // Give the new ticket a concrete target time so the provider dashboard
++    // and the customer's own tracking page can count down live, instead of
++    // showing a static number until the next status change recalculates it.
++    const etaMinutes = pendingDept.wait_minutes || pendingDept.avg_consult_minutes || 15;
++
+     const { data: newRow, error } = await sb.from('queues').insert({
+       provider_id:      provider.id,
+       department_id:    deptId,
+@@ -463,6 +511,7 @@ async function confirmJoin() {
+       service_duration: pendingDept.avg_consult_minutes || 15,
+       status:           'waiting',
+       joined_at:        new Date().toISOString(),
++      estimated_time:   new Date(Date.now() + etaMinutes * 60000).toISOString(),
+       ...(pendingDept._legacy ? { selected_service: pendingDept.name } : {})
+     }).select('id').single();
+ 
+diff --git a/public/provider-dashboard.html b/public/provider-dashboard.html
+index 5b759e5..742a9ad 100644
+--- a/public/provider-dashboard.html
++++ b/public/provider-dashboard.html
+@@ -935,7 +935,7 @@ async function refreshQueue() {
+         <tr>
+           <td><strong>${esc(d.customer_name)}</strong>${overdueWait}<br><small style="color:var(--text-muted)">${esc(d.customer_phone||'')}</small></td>
+           <td>${svcLabel}</td>
+-          <td>${dur}m</td>
++          <td class="est-mins" data-target="${d.estimated_time || ''}">${dur}m</td>
+           <td>${waButtons(d.customer_phone, d.customer_name)}</td>
+           <td style="display:flex;gap:.35rem;flex-wrap:wrap;">
+             <button class="btn btn-primary btn-sm" onclick="startServing('${d.id}')">Start →</button>
+@@ -951,6 +951,27 @@ async function refreshQueue() {
+   syncProviderStats(estWait, waitingCount, activeRows);
+ }
+ 
++// ── LIVE COUNTDOWN TICKER ───────────────────────────────────
++// Runs every second and re-renders each waiting customer's "Est. Mins"
++// cell by counting down from their estimated_time, instead of showing
++// a static number that only updates when the queue data changes.
++function tickEstMins() {
++  const now = Date.now();
++  document.querySelectorAll('#qItems td.est-mins').forEach(td => {
++    const target = td.dataset.target;
++    if (!target) return; // no estimated_time yet — leave the static "Xm" fallback
++    const diffMs = new Date(target).getTime() - now;
++    if (diffMs <= 0) {
++      td.innerHTML = '<span style="color:#d97706;font-weight:700;">Overdue</span>';
++    } else {
++      const mins = Math.floor(diffMs / 60000);
++      const secs = Math.floor((diffMs % 60000) / 1000);
++      td.textContent = mins + 'm ' + String(secs).padStart(2, '0') + 's';
++    }
++  });
++}
++setInterval(tickEstMins, 1000);
++
+ async function markNoShow(id, name) {
+   if (!confirm(`Mark "${name}" as no-show? They will be removed from the queue.`)) return;
+   const { error } = await sb.from('queues')
+@@ -1389,7 +1410,7 @@ function toggleQR() {
+   if (!isOpen) {
+     const box = document.getElementById('qrcode-box');
+     box.innerHTML = '';
+-    new QRCode(box, { text: window.location.origin + '/business-detail.html?id=' + curUid, width: 240, height: 240 });
++    new QRCode(box, { text: window.location.origin + '/business-detail.html?id=' + curUid + '&src=qr', width: 240, height: 240 });
+   }
+ }
+ document.getElementById('qrOverlay').addEventListener('click', e => {
