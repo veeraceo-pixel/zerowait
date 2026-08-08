@@ -1,0 +1,529 @@
+diff --git a/public/business-detail.html b/public/business-detail.html
+index 315e345..0d59ab3 100644
+--- a/public/business-detail.html
++++ b/public/business-detail.html
+@@ -160,7 +160,7 @@ main{padding:1.6rem 0 4rem;}
+   </div>
+ </div>
+ 
+-<main>
++<main id="mainContent">
+   <div class="container">
+     <h2 class="section-title" id="sectionTitle">Available now</h2>
+     <div class="subtle" id="sectionSubtle">Tap to join a virtual queue.</div>
+@@ -446,6 +446,19 @@ async function confirmJoin() {
+   const btn = document.getElementById('joinSubmitBtn');
+   btn.disabled = true; btn.textContent = 'Joining…';
+ 
++  // Lightweight spam guard — no OTP/verification, just a sanity check:
++  // block a phone number from being active in more than 2 queues at once,
++  // anywhere on the platform.
++  const { count: activeForPhone } = await sb.from('queues')
++    .select('id', { count: 'exact', head: true })
++    .eq('customer_phone', phone)
++    .in('status', ['waiting', 'serving']);
++  if ((activeForPhone || 0) >= 2) {
++    toast('This phone number is already in 2 active queues. Finish or leave one before joining another.', 'error');
++    btn.disabled = false; btn.textContent = 'Join Queue';
++    return;
++  }
++
+   try {
+     // For legacy services (from old `services` table) the id doesn't exist in
+     // `departments`, so we pass null to avoid the FK constraint violation.
+@@ -453,6 +466,11 @@ async function confirmJoin() {
+ 
+     const userId = session?.user?.id ?? null;
+ 
++    // Give the new ticket a concrete target time so the provider dashboard
++    // and the customer's own tracking page can count down live, instead of
++    // showing a static number until the next status change recalculates it.
++    const etaMinutes = pendingDept.wait_minutes || pendingDept.avg_consult_minutes || 15;
++
+     const { data: newRow, error } = await sb.from('queues').insert({
+       provider_id:      provider.id,
+       department_id:    deptId,
+@@ -463,8 +481,9 @@ async function confirmJoin() {
+       service_duration: pendingDept.avg_consult_minutes || 15,
+       status:           'waiting',
+       joined_at:        new Date().toISOString(),
++      estimated_time:   new Date(Date.now() + etaMinutes * 60000).toISOString(),
+       ...(pendingDept._legacy ? { selected_service: pendingDept.name } : {})
+-    }).select('id').single();
++    }).select('id, tracking_token').single();
+ 
+     if (error) {
+       if (error.code === '23505' || /one_active_queue_per_user/.test(error?.message||'')) {
+@@ -493,6 +512,8 @@ async function confirmJoin() {
+       waitMins = position * (pendingDept.avg_consult_minutes || 15);
+     } catch (_) {}
+ 
++    const trackUrl = window.location.origin + '/patient-track.html?t=' + newRow.tracking_token;
++
+     const overlay = document.createElement('div');
+     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,47,52,.92);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1.5rem;';
+     overlay.innerHTML = `
+@@ -510,8 +531,14 @@ async function confirmJoin() {
+             <div style="font-size:.72rem;font-weight:700;color:#406367;text-transform:uppercase;letter-spacing:.5px;margin-top:.2rem;">Est. minutes</div>
+           </div>
+         </div>
++        ${userId ? `
+         <p style="font-size:.78rem;color:#64748b;margin-bottom:1.2rem;">We'll update your position live. Stay nearby — you'll be called soon.</p>
+-        <a href="${userId ? 'dashboard.html' : 'join-queue.html?id=' + encodeURIComponent(provider.id)}" style="display:block;background:#002f34;color:white;padding:12px;border-radius:10px;font-weight:700;text-decoration:none;font-size:.9rem;">${userId ? 'View My Queue →' : 'Track Live Wait →'}</a>
++        <a href="dashboard.html" style="display:block;background:#002f34;color:white;padding:12px;border-radius:10px;font-weight:700;text-decoration:none;font-size:.9rem;">View My Queue →</a>
++        ` : `
++        <p style="font-size:.78rem;color:#64748b;margin-bottom:.8rem;">No account needed — this private link tracks your ticket live, on any device. Save it before you leave this page.</p>
++        <a href="${trackUrl}" style="display:block;background:#002f34;color:white;padding:12px;border-radius:10px;font-weight:700;text-decoration:none;font-size:.9rem;margin-bottom:.6rem;">Track Live Wait →</a>
++        <button onclick="navigator.clipboard.writeText('${trackUrl}').then(()=>toast('Link copied!')).catch(()=>{})" style="display:block;width:100%;background:#f0fdfc;color:#002f34;border:1.5px solid #e2e8f0;padding:.7rem;border-radius:10px;font-weight:700;font-size:.82rem;cursor:pointer;font-family:inherit;">📋 Copy tracking link</button>
++        `}
+         <button onclick="this.closest('[style*=fixed]').remove()" style="background:none;border:none;color:#94a3b8;font-size:.78rem;cursor:pointer;margin-top:.8rem;padding:.3rem;">Stay on this page</button>
+       </div>`;
+     document.body.appendChild(overlay);
+diff --git a/public/dashboard.html b/public/dashboard.html
+index f86e2ec..c31150b 100644
+--- a/public/dashboard.html
++++ b/public/dashboard.html
+@@ -114,6 +114,7 @@
+     @media(max-width:500px){.leave-banner{padding:.8rem 1rem;}.lb-icon{font-size:1.5rem;}}
+   /* Auth gate: hide body until session check completes — prevents flash of unauth content */
+   body.auth-pending { visibility: hidden; }
++  .hidden { display: none !important; }
+   </style>
+   <link rel="stylesheet" href="mobile-fixes.css">
+ </head>
+@@ -133,7 +134,23 @@
+   </div>
+ </header>
+ 
+-<div class="page-wrap">
++<div class="page-wrap" id="dashboardMain">
++
++  <!-- ── GUEST GATE: shown instead of a forced redirect when not logged in ── -->
++  <div id="guestGate" class="hidden" style="background:white;border-radius:16px;padding:2rem 1.6rem;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.06);">
++    <div style="font-size:2.4rem;margin-bottom:.6rem;">🎫</div>
++    <h1 style="font-size:1.3rem;font-weight:800;margin-bottom:.5rem;">Joined a queue as a guest?</h1>
++    <p style="font-size:.88rem;color:var(--text-muted);max-width:420px;margin:0 auto 1.4rem;">
++      You don't need an account to track it. Use the private tracking link you got right after joining
++      (check the confirmation screen or your clipboard) — it works on any device, no login required.
++    </p>
++    <hr style="border:0;border-top:1px solid var(--border);max-width:280px;margin:0 auto 1.4rem;">
++    <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:.8rem;">Want your queue history saved across visits and devices?</p>
++    <a href="login.html?next=dashboard.html" class="nav-btn" style="background:var(--primary);color:white;display:inline-block;padding:.6rem 1.4rem;margin-right:.5rem;">Log In</a>
++    <a href="signup.html" style="font-size:.85rem;color:var(--text-muted);text-decoration:underline;">Create a free account</a>
++  </div>
++
++  <div id="dashboardContent">
+ 
+   <!-- ── LEAVE NOW TRAVEL BANNER ── -->
+   <div class="leave-banner" id="leaveBanner">
+@@ -162,6 +179,7 @@
+     <div class="loading-box"><div class="spinner"></div><p>Loading your queues…</p></div>
+   </div>
+ 
++  </div>
+ </div>
+ 
+ <div class="toast" id="toast"></div>
+@@ -184,7 +202,15 @@
+ 
+   // ── INIT ──
+   sb.auth.getSession().then(async ({ data: { session } }) => {
+-    if (!session) { sessionStorage.setItem('loginReason', 'view your active queues'); window.location.href = 'login.html'; return; }
++    if (!session) {
++      // No forced redirect — guests already have a login-free way to track
++      // their queue (the tracking link they got when they joined). Only
++      // people who actively want an account see a Login/Sign Up option here.
++      document.getElementById('dashboardContent').classList.add('hidden');
++      document.getElementById('guestGate').classList.remove('hidden');
++      document.body.classList.remove('auth-pending');
++      return;
++    }
+     document.body.classList.remove('auth-pending'); // auth confirmed — show page
+ 
+     // Guard: if this user is a provider, send them to their own dashboard
+diff --git a/public/index.html b/public/index.html
+index c5a53a8..5563356 100644
+--- a/public/index.html
++++ b/public/index.html
+@@ -427,10 +427,14 @@
+     <a href="provider-signup.html" style="color:var(--accent);font-weight:700;">➕ Register Your Business — Free</a>
+     <a href="hospital-signup.html">🏥 Register Hospital / Clinic</a>
+     <a href="business-pricing.html">💰 Pricing</a>
+-    <div class="idx-mob-actions">
++    <div class="idx-mob-actions" id="idxMobActionsGuest">
+       <a href="login.html" class="ghost" id="mobNavLoginBtn">Login</a>
+       <a href="signup.html" class="solid">Sign Up</a>
+     </div>
++    <div class="idx-mob-actions" id="idxMobActionsAuthed" style="display:none;">
++      <a href="dashboard.html" class="solid" id="mobNavDashLink">My Queues</a>
++      <a href="#" class="ghost" id="mobNavLogoutLink" onclick="handleLogout(event)">Logout</a>
++    </div>
+   </div>
+ </header>
+ <div class="idx-nav-backdrop" id="idxNavBackdrop" onclick="toggleMobileMenu()"></div>
+@@ -1222,6 +1226,16 @@
+     detectLocation();
+ 
+     const { data: { session } } = await sb.auth.getSession();
++
++    const dashBtn        = document.getElementById('dashBtn');
++    const loginLink       = document.getElementById('loginLink');
++    const logoutLink      = document.getElementById('logoutLink');
++    const queueNav        = document.getElementById('mobNavQueue');
++    const acctTab          = document.getElementById('mobileLoginBtn');
++    const guestActions    = document.getElementById('idxMobActionsGuest');
++    const authedActions   = document.getElementById('idxMobActionsAuthed');
++    const mobNavDashLink  = document.getElementById('mobNavDashLink');
++
+     if (session) {
+       // Check provider or customer
+       const { data: prov } = await sb.from('providers')
+@@ -1229,22 +1243,36 @@
+         .or(`user_id.eq.${session.user.id},id.eq.${session.user.id}`)
+         .maybeSingle();
+ 
+-      const queueNav = document.getElementById('mobNavQueue');
+-      const mob      = document.getElementById('mobileLoginBtn');
+-
++      let dest = 'dashboard.html', label = 'My Queues', icon = '📋';
+       if (prov) {
+-        // PROVIDER: show Dashboard in footer, hide My Queues
+-        const dest = (prov.is_hospital || prov.category === 'Hospital')
+-          ? 'hospital-dashboard.html' : 'provider-dashboard.html';
+-        if (queueNav) { queueNav.href = dest; queueNav.querySelector('span').textContent = '📊'; queueNav.querySelector('p').textContent = 'Dashboard'; }
+-        if (mob)      { mob.href = dest; mob.querySelector('span').textContent = '📊'; mob.querySelector('p').textContent = 'Dashboard'; }
+-      } else {
+-        // CUSTOMER: show My Queues
+-        if (queueNav) { queueNav.href = 'dashboard.html'; queueNav.querySelector('span').textContent = '📋'; queueNav.querySelector('p').textContent = 'My Queues'; }
+-        if (mob)      { mob.href = 'dashboard.html'; mob.querySelector('span').textContent = '📋'; mob.querySelector('p').textContent = 'My Queues'; }
++        // PROVIDER: every nav entry points at their dashboard
++        dest  = (prov.is_hospital || prov.category === 'Hospital') ? 'hospital-dashboard.html' : 'provider-dashboard.html';
++        label = 'Dashboard'; icon = '📊';
++      }
++
++      // Desktop nav: hide Login, reveal My Queues/Dashboard + Logout
++      if (loginLink)  loginLink.style.display  = 'none';
++      if (logoutLink) logoutLink.style.display = 'inline-flex';
++      if (dashBtn)    { dashBtn.href = dest; dashBtn.textContent = label; dashBtn.style.display = 'inline-flex'; }
++
++      // Bottom tab bar: 3rd tab is the primary action (My Queues / Dashboard)…
++      if (queueNav) { queueNav.href = dest; queueNav.querySelector('span').textContent = icon; queueNav.querySelector('p').textContent = label; }
++      // …and the 5th tab becomes Logout instead of duplicating that same label.
++      if (acctTab) {
++        acctTab.href = '#';
++        acctTab.onclick = handleLogout;
++        acctTab.querySelector('span').textContent = '🚪';
++        acctTab.querySelector('p').textContent = 'Logout';
+       }
+ 
+-      checkActiveQueue(session.user.id);
++      // Hamburger dropdown: swap Login/Sign Up pills for Dashboard/Logout pills
++      if (guestActions)   guestActions.style.display  = 'none';
++      if (authedActions)  authedActions.style.display = 'flex';
++      if (mobNavDashLink) { mobNavDashLink.href = dest; mobNavDashLink.textContent = label; }
++
++      // Active-queue banner is a CUSTOMER feature only — providers always
++      // land on their dashboard and should never see it.
++      if (!prov) checkActiveQueue(session.user.id);
+     }
+ 
+     prefetchProviders();
+diff --git a/public/join-queue.html b/public/join-queue.html
+index d1ae674..fa17be2 100644
+--- a/public/join-queue.html
++++ b/public/join-queue.html
+@@ -81,7 +81,14 @@
+         <p style="margin:0;font-weight:800;color:var(--primary);" id="livePos">—</p>
+       </div>
+       <p id="selectedSvcLabel" style="font-size:.9rem;color:#1e293b;margin-top:1rem;font-weight:600;"></p>
+-      <p style="font-size:.8rem;color:#94a3b8;margin-top:2rem;">Stay close! We'll update your position live.</p>
++      <div id="saveLinkBox" class="hidden" style="margin-top:1.4rem;padding:.9rem;background:#f0fdfc;border:1.5px solid #e2e8f0;border-radius:.7rem;text-align:left;">
++        <p style="font-size:.78rem;font-weight:700;color:#1e293b;margin-bottom:.4rem;">📎 Save this link to check back later — no login needed:</p>
++        <div style="display:flex;gap:.5rem;">
++          <input type="text" id="trackLinkInput" readonly style="flex:1;font-size:.72rem;padding:.5rem;border:1px solid #e2e8f0;border-radius:.4rem;background:white;color:#64748b;">
++          <button onclick="copyTrackLink()" style="padding:.5rem .8rem;background:var(--primary);color:white;border:none;border-radius:.4rem;font-weight:700;font-size:.78rem;cursor:pointer;font-family:inherit;white-space:nowrap;">Copy</button>
++        </div>
++      </div>
++      <p style="font-size:.8rem;color:#94a3b8;margin-top:1.2rem;">Stay close! We'll update your position live.</p>
+     </div>
+   </div>
+ </div>
+@@ -122,12 +129,12 @@
+     if (!savedId) return;
+ 
+     const { data: savedRow } = await sb.from('queues')
+-      .select('id, status, selected_service')
++      .select('id, status, selected_service, tracking_token')
+       .eq('id', savedId)
+       .maybeSingle();
+ 
+     if (savedRow && ['waiting', 'serving'].includes(savedRow.status)) {
+-      startLiveTracking(savedRow.id, savedRow.selected_service || '');
++      startLiveTracking(savedRow.id, savedRow.selected_service || '', savedRow.tracking_token, null);
+     } else {
+       sessionStorage.removeItem(guestKey);
+     }
+@@ -226,6 +233,20 @@
+     btn.disabled = true;
+     btn.textContent = 'Joining…';
+ 
++    // Lightweight spam guard — no OTP/verification, just a sanity check:
++    // block a phone number from being active in more than 2 queues at once,
++    // anywhere on the platform.
++    const { count: activeForPhone } = await sb.from('queues')
++      .select('id', { count: 'exact', head: true })
++      .eq('customer_phone', phone)
++      .in('status', ['waiting', 'serving']);
++    if ((activeForPhone || 0) >= 2) {
++      showError('This phone number is already in 2 active queues. Finish or leave one before joining another.');
++      btn.disabled = false;
++      btn.textContent = 'Confirm & Join Queue';
++      return;
++    }
++
+     const { data: { session } } = await sb.auth.getSession();
+     const userId = session?.user?.id || null;
+ 
+@@ -249,13 +270,13 @@
+       const savedId = sessionStorage.getItem(guestKey);
+       if (savedId) {
+         const { data: savedRow } = await sb.from('queues')
+-          .select('id, status, selected_service')
++          .select('id, status, selected_service, tracking_token')
+           .eq('id', savedId)
+           .maybeSingle();
+         if (savedRow && ['waiting', 'serving'].includes(savedRow.status)) {
+           btn.disabled = false;
+           btn.textContent = 'Confirm & Join Queue';
+-          startLiveTracking(savedRow.id, savedRow.selected_service || '');
++          startLiveTracking(savedRow.id, savedRow.selected_service || '', savedRow.tracking_token, null);
+           return;
+         }
+         sessionStorage.removeItem(guestKey);
+@@ -298,16 +319,31 @@
+       sessionStorage.setItem('skipqs_guest_queue_' + providerId, newRow.id);
+     }
+ 
+-    startLiveTracking(newRow.id, svcNames);
++    startLiveTracking(newRow.id, svcNames, newRow.tracking_token, userId);
++  }
++
++  function copyTrackLink() {
++    const input = document.getElementById('trackLinkInput');
++    navigator.clipboard.writeText(input.value)
++      .then(() => { const b = event.target; const old = b.textContent; b.textContent = 'Copied!'; setTimeout(() => b.textContent = old, 1500); })
++      .catch(() => { input.select(); document.execCommand('copy'); });
+   }
+ 
+-  function startLiveTracking(myQueueId, svcNames) {
++  function startLiveTracking(myQueueId, svcNames, trackingToken, userId) {
+     const btn = document.getElementById('joinBtn');
+     if (btn) { btn.disabled = false; btn.textContent = 'Confirm & Join Queue'; }
+     document.getElementById('joinSection').classList.add('hidden');
+     document.getElementById('statusSection').classList.remove('hidden');
+     document.getElementById('selectedSvcLabel').textContent = 'Services: ' + svcNames;
+ 
++    // Guests get a persistent, login-free tracking link (works on any device,
++    // survives closing this tab) — logged-in users already have dashboard.html.
++    if (!userId && trackingToken) {
++      const trackUrl = window.location.origin + '/patient-track.html?t=' + trackingToken;
++      document.getElementById('trackLinkInput').value = trackUrl;
++      document.getElementById('saveLinkBox').classList.remove('hidden');
++    }
++
+     if (queueChannel) sb.removeChannel(queueChannel);
+ 
+     // Subscribe to ANY queue change for this provider (someone joins, leaves, completes)
+diff --git a/public/patient-track.html b/public/patient-track.html
+index 5a8c3e8..42e2ac8 100644
+--- a/public/patient-track.html
++++ b/public/patient-track.html
+@@ -100,7 +100,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--primary);mi
+ 
+ <nav class="nav">
+   <a href="index.html" class="logo">skip<span>Qs</span></a>
+-  <a href="hospitals.html" class="nav-link">Browse Hospitals →</a>
++  <a href="nearby.html" class="nav-link">Find Services →</a>
+ </nav>
+ 
+ <div class="page">
+@@ -119,8 +119,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--primary);mi
+   <div id="errorState" class="error-card hidden">
+     <div class="error-icon">🔍</div>
+     <h2 class="error-title">Tracking link not found</h2>
+-    <p class="error-sub">This link may have expired or been entered incorrectly. Please ask the reception staff for a new tracking link.</p>
+-    <a href="hospitals.html" class="btn btn-primary">← Back to Hospitals</a>
++    <p class="error-sub">This link may have expired or been entered incorrectly. Please ask staff for a new tracking link.</p>
++    <a href="nearby.html" class="btn btn-primary">← Find Services</a>
+   </div>
+ 
+   <!-- MAIN TRACKING CARD -->
+@@ -236,8 +236,8 @@ async function init() {
+ 
+ function renderCard() {
+   // Update header
+-  document.getElementById('hospName').textContent = provider?.business_name || 'Hospital';
+-  document.getElementById('deptName').textContent = (department?.icon || '🏥') + ' ' + (department?.name || 'Department');
++  document.getElementById('hospName').textContent = provider?.business_name || 'skipQs';
++  document.getElementById('deptName').textContent = (department?.icon || '📍') + ' ' + (department?.name || queueEntry?.selected_service || 'Queue');
+ 
+   const status = queueEntry?.status || 'waiting';
+   const body   = document.getElementById('cardBody');
+@@ -260,7 +260,7 @@ function renderCard() {
+       <div class="status-badge serving">● YOU'RE BEING SEEN</div>
+       <div class="serving-banner">
+         <div class="serving-title">Please come in 🚪</div>
+-        <div class="serving-sub">The staff is ready for you right now. Please proceed to ${esc(department?.name || 'the department')}.</div>
++        <div class="serving-sub">The staff is ready for you right now. Please proceed to ${esc(department?.name || queueEntry?.selected_service || 'the counter')}.</div>
+       </div>
+       ${infoRows()}`;
+     return;
+@@ -277,13 +277,13 @@ function renderCard() {
+     <div class="wait-block">
+       <div class="wait-num ${waitClass}">${waitMins}</div>
+       <div class="wait-label">${waitText}</div>
+-      <div class="wait-note">minutes · set live by hospital staff</div>
++      <div class="wait-note">minutes · set live by staff</div>
+     </div>
+ 
+     ${infoRows()}
+ 
+     <p style="font-size:.75rem;color:#94a3b8;margin-top:1rem;text-align:center;line-height:1.5;">
+-      You don't need to stay at reception. Keep this page open anywhere —<br>it'll update automatically when your turn is near.
++      You don't need to stay in line. Keep this page open anywhere —<br>it'll update automatically when your turn is near.
+     </p>`;
+ }
+ 
+@@ -294,19 +294,19 @@ function infoRows() {
+   return `
+     <div style="border-top:1px solid var(--border);margin-top:1rem;padding-top:.8rem;">
+       <div class="info-row">
+-        <span class="info-label">Patient</span>
++        <span class="info-label">Name</span>
+         <span class="info-value">${esc(queueEntry?.customer_name || '—')}</span>
+       </div>
+       <div class="info-row">
+-        <span class="info-label">Department</span>
+-        <span class="info-value">${esc(department?.name || '—')}</span>
++        <span class="info-label">Service</span>
++        <span class="info-value">${esc(department?.name || queueEntry?.selected_service || '—')}</span>
+       </div>
+       <div class="info-row">
+-        <span class="info-label">Registered at</span>
++        <span class="info-label">Joined at</span>
+         <span class="info-value">${addedAt}</span>
+       </div>
+       <div class="info-row">
+-        <span class="info-label">Hospital</span>
++        <span class="info-label">Business</span>
+         <span class="info-value">${esc(provider?.business_name || '—')}</span>
+       </div>
+     </div>`;
+diff --git a/public/provider-dashboard.html b/public/provider-dashboard.html
+index 5b759e5..ab3626d 100644
+--- a/public/provider-dashboard.html
++++ b/public/provider-dashboard.html
+@@ -935,7 +935,7 @@ async function refreshQueue() {
+         <tr>
+           <td><strong>${esc(d.customer_name)}</strong>${overdueWait}<br><small style="color:var(--text-muted)">${esc(d.customer_phone||'')}</small></td>
+           <td>${svcLabel}</td>
+-          <td>${dur}m</td>
++          <td class="est-mins" data-target="${d.estimated_time || ''}">${dur}m</td>
+           <td>${waButtons(d.customer_phone, d.customer_name)}</td>
+           <td style="display:flex;gap:.35rem;flex-wrap:wrap;">
+             <button class="btn btn-primary btn-sm" onclick="startServing('${d.id}')">Start →</button>
+@@ -951,6 +951,27 @@ async function refreshQueue() {
+   syncProviderStats(estWait, waitingCount, activeRows);
+ }
+ 
++// ── LIVE COUNTDOWN TICKER ───────────────────────────────────
++// Runs every second and re-renders each waiting customer's "Est. Mins"
++// cell by counting down from their estimated_time, instead of showing
++// a static number that only updates when the queue data changes.
++function tickEstMins() {
++  const now = Date.now();
++  document.querySelectorAll('#qItems td.est-mins').forEach(td => {
++    const target = td.dataset.target;
++    if (!target) return; // no estimated_time yet — leave the static "Xm" fallback
++    const diffMs = new Date(target).getTime() - now;
++    if (diffMs <= 0) {
++      td.innerHTML = '<span style="color:#d97706;font-weight:700;">Overdue</span>';
++    } else {
++      const mins = Math.floor(diffMs / 60000);
++      const secs = Math.floor((diffMs % 60000) / 1000);
++      td.textContent = mins + 'm ' + String(secs).padStart(2, '0') + 's';
++    }
++  });
++}
++setInterval(tickEstMins, 1000);
++
+ async function markNoShow(id, name) {
+   if (!confirm(`Mark "${name}" as no-show? They will be removed from the queue.`)) return;
+   const { error } = await sb.from('queues')
+diff --git a/public/signup.html b/public/signup.html
+index fe9decf..5a68cc1 100644
+--- a/public/signup.html
++++ b/public/signup.html
+@@ -202,20 +202,53 @@
+     // Use signInWithOtp with channel:'email' which forces a 6-digit OTP
+     // rather than a magic link. Requires "Email OTP" enabled in Supabase
+     // Auth → Email → Enable Email OTP (6-digit code).
+-    const { error } = await sb.auth.signInWithOtp({
+-      email,
+-      options: {
+-        shouldCreateUser: true,
+-        channel: 'email',        // forces numeric OTP, not magic link
+-        data: { display_name: storedName }  // store name in user metadata
+-      }
+-    });
++    //
++    // Guarded with a client-side timeout + try/catch so a network hiccup
++    // (dropped connection, backgrounded tab, ad-blocker, etc.) can never
++    // leave the button stuck on "Sending…" forever or surface a useless
++    // bare "{}" — we always fall back to a readable message and log the
++    // raw error to the console for debugging.
++    let error;
++    try {
++      const otpPromise = sb.auth.signInWithOtp({
++        email,
++        options: {
++          shouldCreateUser: true,
++          channel: 'email',        // forces numeric OTP, not magic link
++          data: { display_name: storedName }  // store name in user metadata
++        }
++      });
++      const timeout = new Promise((_, reject) =>
++        setTimeout(() => reject(new Error('TIMEOUT')), 20000)
++      );
++      ({ error } = await Promise.race([otpPromise, timeout]));
++    } catch (err) {
++      console.error('[skipQs] signInWithOtp failed:', err);
++      spin.style.display = 'none';
++      btn.disabled = false;
++      txt.textContent = 'Send Verification Code';
++      showError(
++        err?.message === 'TIMEOUT'
++          ? 'This is taking longer than expected. Please check your connection and try again.'
++          : 'Could not reach the server. Please check your connection and try again.'
++      );
++      return;
++    }
+ 
+     spin.style.display = 'none';
+     btn.disabled = false;
+     txt.textContent = 'Send Verification Code';
+ 
+-    if (error) { showError(error.message); return; }
++    if (error) {
++      console.error('[skipQs] signInWithOtp returned an error:', error);
++      // Guard against a bare/empty error object (e.g. an unexpected
++      // response shape) rendering as a useless "{}" or "undefined".
++      const msg = (error.message && error.message.trim() && error.message.trim() !== '{}')
++        ? error.message
++        : 'Something went wrong sending your code. Please try again in a moment.';
++      showError(msg);
++      return;
++    }
+ 
+     // Move to step 2
+     document.getElementById('step1').style.display  = 'none';

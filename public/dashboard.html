@@ -114,6 +114,7 @@
     @media(max-width:500px){.leave-banner{padding:.8rem 1rem;}.lb-icon{font-size:1.5rem;}}
   /* Auth gate: hide body until session check completes — prevents flash of unauth content */
   body.auth-pending { visibility: hidden; }
+  .hidden { display: none !important; }
   </style>
   <link rel="stylesheet" href="mobile-fixes.css">
 </head>
@@ -133,7 +134,23 @@
   </div>
 </header>
 
-<div class="page-wrap">
+<div class="page-wrap" id="dashboardMain">
+
+  <!-- ── GUEST GATE: shown instead of a forced redirect when not logged in ── -->
+  <div id="guestGate" class="hidden" style="background:white;border-radius:16px;padding:2rem 1.6rem;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.06);">
+    <div style="font-size:2.4rem;margin-bottom:.6rem;">🎫</div>
+    <h1 style="font-size:1.3rem;font-weight:800;margin-bottom:.5rem;">Joined a queue as a guest?</h1>
+    <p style="font-size:.88rem;color:var(--text-muted);max-width:420px;margin:0 auto 1.4rem;">
+      You don't need an account to track it. Use the private tracking link you got right after joining
+      (check the confirmation screen or your clipboard) — it works on any device, no login required.
+    </p>
+    <hr style="border:0;border-top:1px solid var(--border);max-width:280px;margin:0 auto 1.4rem;">
+    <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:.8rem;">Want your queue history saved across visits and devices?</p>
+    <a href="login.html?next=dashboard.html" class="nav-btn" style="background:var(--primary);color:white;display:inline-block;padding:.6rem 1.4rem;margin-right:.5rem;">Log In</a>
+    <a href="signup.html" style="font-size:.85rem;color:var(--text-muted);text-decoration:underline;">Create a free account</a>
+  </div>
+
+  <div id="dashboardContent">
 
   <!-- ── LEAVE NOW TRAVEL BANNER ── -->
   <div class="leave-banner" id="leaveBanner">
@@ -162,6 +179,7 @@
     <div class="loading-box"><div class="spinner"></div><p>Loading your queues…</p></div>
   </div>
 
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -184,7 +202,15 @@
 
   // ── INIT ──
   sb.auth.getSession().then(async ({ data: { session } }) => {
-    if (!session) { sessionStorage.setItem('loginReason', 'view your active queues'); window.location.href = 'login.html'; return; }
+    if (!session) {
+      // No forced redirect — guests already have a login-free way to track
+      // their queue (the tracking link they got when they joined). Only
+      // people who actively want an account see a Login/Sign Up option here.
+      document.getElementById('dashboardContent').classList.add('hidden');
+      document.getElementById('guestGate').classList.remove('hidden');
+      document.body.classList.remove('auth-pending');
+      return;
+    }
     document.body.classList.remove('auth-pending'); // auth confirmed — show page
 
     // Guard: if this user is a provider, send them to their own dashboard

@@ -100,7 +100,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--primary);mi
 
 <nav class="nav">
   <a href="index.html" class="logo">skip<span>Qs</span></a>
-  <a href="hospitals.html" class="nav-link">Browse Hospitals →</a>
+  <a href="nearby.html" class="nav-link">Find Services →</a>
 </nav>
 
 <div class="page">
@@ -119,8 +119,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--primary);mi
   <div id="errorState" class="error-card hidden">
     <div class="error-icon">🔍</div>
     <h2 class="error-title">Tracking link not found</h2>
-    <p class="error-sub">This link may have expired or been entered incorrectly. Please ask the reception staff for a new tracking link.</p>
-    <a href="hospitals.html" class="btn btn-primary">← Back to Hospitals</a>
+    <p class="error-sub">This link may have expired or been entered incorrectly. Please ask staff for a new tracking link.</p>
+    <a href="nearby.html" class="btn btn-primary">← Find Services</a>
   </div>
 
   <!-- MAIN TRACKING CARD -->
@@ -236,8 +236,8 @@ async function init() {
 
 function renderCard() {
   // Update header
-  document.getElementById('hospName').textContent = provider?.business_name || 'Hospital';
-  document.getElementById('deptName').textContent = (department?.icon || '🏥') + ' ' + (department?.name || 'Department');
+  document.getElementById('hospName').textContent = provider?.business_name || 'skipQs';
+  document.getElementById('deptName').textContent = (department?.icon || '📍') + ' ' + (department?.name || queueEntry?.selected_service || 'Queue');
 
   const status = queueEntry?.status || 'waiting';
   const body   = document.getElementById('cardBody');
@@ -260,7 +260,7 @@ function renderCard() {
       <div class="status-badge serving">● YOU'RE BEING SEEN</div>
       <div class="serving-banner">
         <div class="serving-title">Please come in 🚪</div>
-        <div class="serving-sub">The staff is ready for you right now. Please proceed to ${esc(department?.name || 'the department')}.</div>
+        <div class="serving-sub">The staff is ready for you right now. Please proceed to ${esc(department?.name || queueEntry?.selected_service || 'the counter')}.</div>
       </div>
       ${infoRows()}`;
     return;
@@ -277,13 +277,13 @@ function renderCard() {
     <div class="wait-block">
       <div class="wait-num ${waitClass}">${waitMins}</div>
       <div class="wait-label">${waitText}</div>
-      <div class="wait-note">minutes · set live by hospital staff</div>
+      <div class="wait-note">minutes · set live by staff</div>
     </div>
 
     ${infoRows()}
 
     <p style="font-size:.75rem;color:#94a3b8;margin-top:1rem;text-align:center;line-height:1.5;">
-      You don't need to stay at reception. Keep this page open anywhere —<br>it'll update automatically when your turn is near.
+      You don't need to stay in line. Keep this page open anywhere —<br>it'll update automatically when your turn is near.
     </p>`;
 }
 
@@ -294,19 +294,19 @@ function infoRows() {
   return `
     <div style="border-top:1px solid var(--border);margin-top:1rem;padding-top:.8rem;">
       <div class="info-row">
-        <span class="info-label">Patient</span>
+        <span class="info-label">Name</span>
         <span class="info-value">${esc(queueEntry?.customer_name || '—')}</span>
       </div>
       <div class="info-row">
-        <span class="info-label">Department</span>
-        <span class="info-value">${esc(department?.name || '—')}</span>
+        <span class="info-label">Service</span>
+        <span class="info-value">${esc(department?.name || queueEntry?.selected_service || '—')}</span>
       </div>
       <div class="info-row">
-        <span class="info-label">Registered at</span>
+        <span class="info-label">Joined at</span>
         <span class="info-value">${addedAt}</span>
       </div>
       <div class="info-row">
-        <span class="info-label">Hospital</span>
+        <span class="info-label">Business</span>
         <span class="info-value">${esc(provider?.business_name || '—')}</span>
       </div>
     </div>`;

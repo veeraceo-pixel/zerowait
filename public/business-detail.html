@@ -483,7 +483,7 @@ async function confirmJoin() {
       joined_at:        new Date().toISOString(),
       estimated_time:   new Date(Date.now() + etaMinutes * 60000).toISOString(),
       ...(pendingDept._legacy ? { selected_service: pendingDept.name } : {})
-    }).select('id').single();
+    }).select('id, tracking_token').single();
 
     if (error) {
       if (error.code === '23505' || /one_active_queue_per_user/.test(error?.message||'')) {
@@ -512,6 +512,8 @@ async function confirmJoin() {
       waitMins = position * (pendingDept.avg_consult_minutes || 15);
     } catch (_) {}
 
+    const trackUrl = window.location.origin + '/patient-track.html?t=' + newRow.tracking_token;
+
     const overlay = document.createElement('div');
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,47,52,.92);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1.5rem;';
     overlay.innerHTML = `
@@ -529,8 +531,14 @@ async function confirmJoin() {
             <div style="font-size:.72rem;font-weight:700;color:#406367;text-transform:uppercase;letter-spacing:.5px;margin-top:.2rem;">Est. minutes</div>
           </div>
         </div>
+        ${userId ? `
         <p style="font-size:.78rem;color:#64748b;margin-bottom:1.2rem;">We'll update your position live. Stay nearby — you'll be called soon.</p>
-        <a href="${userId ? 'dashboard.html' : 'join-queue.html?id=' + encodeURIComponent(provider.id)}" style="display:block;background:#002f34;color:white;padding:12px;border-radius:10px;font-weight:700;text-decoration:none;font-size:.9rem;">${userId ? 'View My Queue →' : 'Track Live Wait →'}</a>
+        <a href="dashboard.html" style="display:block;background:#002f34;color:white;padding:12px;border-radius:10px;font-weight:700;text-decoration:none;font-size:.9rem;">View My Queue →</a>
+        ` : `
+        <p style="font-size:.78rem;color:#64748b;margin-bottom:.8rem;">No account needed — this private link tracks your ticket live, on any device. Save it before you leave this page.</p>
+        <a href="${trackUrl}" style="display:block;background:#002f34;color:white;padding:12px;border-radius:10px;font-weight:700;text-decoration:none;font-size:.9rem;margin-bottom:.6rem;">Track Live Wait →</a>
+        <button onclick="navigator.clipboard.writeText('${trackUrl}').then(()=>toast('Link copied!')).catch(()=>{})" style="display:block;width:100%;background:#f0fdfc;color:#002f34;border:1.5px solid #e2e8f0;padding:.7rem;border-radius:10px;font-weight:700;font-size:.82rem;cursor:pointer;font-family:inherit;">📋 Copy tracking link</button>
+        `}
         <button onclick="this.closest('[style*=fixed]').remove()" style="background:none;border:none;color:#94a3b8;font-size:.78rem;cursor:pointer;margin-top:.8rem;padding:.3rem;">Stay on this page</button>
       </div>`;
     document.body.appendChild(overlay);

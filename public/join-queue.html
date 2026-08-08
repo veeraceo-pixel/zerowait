@@ -81,7 +81,14 @@
         <p style="margin:0;font-weight:800;color:var(--primary);" id="livePos">—</p>
       </div>
       <p id="selectedSvcLabel" style="font-size:.9rem;color:#1e293b;margin-top:1rem;font-weight:600;"></p>
-      <p style="font-size:.8rem;color:#94a3b8;margin-top:2rem;">Stay close! We'll update your position live.</p>
+      <div id="saveLinkBox" class="hidden" style="margin-top:1.4rem;padding:.9rem;background:#f0fdfc;border:1.5px solid #e2e8f0;border-radius:.7rem;text-align:left;">
+        <p style="font-size:.78rem;font-weight:700;color:#1e293b;margin-bottom:.4rem;">📎 Save this link to check back later — no login needed:</p>
+        <div style="display:flex;gap:.5rem;">
+          <input type="text" id="trackLinkInput" readonly style="flex:1;font-size:.72rem;padding:.5rem;border:1px solid #e2e8f0;border-radius:.4rem;background:white;color:#64748b;">
+          <button onclick="copyTrackLink()" style="padding:.5rem .8rem;background:var(--primary);color:white;border:none;border-radius:.4rem;font-weight:700;font-size:.78rem;cursor:pointer;font-family:inherit;white-space:nowrap;">Copy</button>
+        </div>
+      </div>
+      <p style="font-size:.8rem;color:#94a3b8;margin-top:1.2rem;">Stay close! We'll update your position live.</p>
     </div>
   </div>
 </div>
@@ -122,12 +129,12 @@
     if (!savedId) return;
 
     const { data: savedRow } = await sb.from('queues')
-      .select('id, status, selected_service')
+      .select('id, status, selected_service, tracking_token')
       .eq('id', savedId)
       .maybeSingle();
 
     if (savedRow && ['waiting', 'serving'].includes(savedRow.status)) {
-      startLiveTracking(savedRow.id, savedRow.selected_service || '');
+      startLiveTracking(savedRow.id, savedRow.selected_service || '', savedRow.tracking_token, null);
     } else {
       sessionStorage.removeItem(guestKey);
     }
@@ -263,13 +270,13 @@
       const savedId = sessionStorage.getItem(guestKey);
       if (savedId) {
         const { data: savedRow } = await sb.from('queues')
-          .select('id, status, selected_service')
+          .select('id, status, selected_service, tracking_token')
           .eq('id', savedId)
           .maybeSingle();
         if (savedRow && ['waiting', 'serving'].includes(savedRow.status)) {
           btn.disabled = false;
           btn.textContent = 'Confirm & Join Queue';
-          startLiveTracking(savedRow.id, savedRow.selected_service || '');
+          startLiveTracking(savedRow.id, savedRow.selected_service || '', savedRow.tracking_token, null);
           return;
         }
         sessionStorage.removeItem(guestKey);
@@ -312,15 +319,30 @@
       sessionStorage.setItem('skipqs_guest_queue_' + providerId, newRow.id);
     }
 
-    startLiveTracking(newRow.id, svcNames);
+    startLiveTracking(newRow.id, svcNames, newRow.tracking_token, userId);
   }
 
-  function startLiveTracking(myQueueId, svcNames) {
+  function copyTrackLink() {
+    const input = document.getElementById('trackLinkInput');
+    navigator.clipboard.writeText(input.value)
+      .then(() => { const b = event.target; const old = b.textContent; b.textContent = 'Copied!'; setTimeout(() => b.textContent = old, 1500); })
+      .catch(() => { input.select(); document.execCommand('copy'); });
+  }
+
+  function startLiveTracking(myQueueId, svcNames, trackingToken, userId) {
     const btn = document.getElementById('joinBtn');
     if (btn) { btn.disabled = false; btn.textContent = 'Confirm & Join Queue'; }
     document.getElementById('joinSection').classList.add('hidden');
     document.getElementById('statusSection').classList.remove('hidden');
     document.getElementById('selectedSvcLabel').textContent = 'Services: ' + svcNames;
+
+    // Guests get a persistent, login-free tracking link (works on any device,
+    // survives closing this tab) — logged-in users already have dashboard.html.
+    if (!userId && trackingToken) {
+      const trackUrl = window.location.origin + '/patient-track.html?t=' + trackingToken;
+      document.getElementById('trackLinkInput').value = trackUrl;
+      document.getElementById('saveLinkBox').classList.remove('hidden');
+    }
 
     if (queueChannel) sb.removeChannel(queueChannel);
 
